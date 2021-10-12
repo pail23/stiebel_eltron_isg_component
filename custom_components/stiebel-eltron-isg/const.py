@@ -1,11 +1,14 @@
-"""Constants for integration_blueprint."""
+"""Constants for stiebel_eltron_isg."""
 # Base component constants
-NAME = "Integration blueprint"
-DOMAIN = "integration_blueprint"
+NAME = "Stiebel Eltron ISG"
+ATTR_MANUFACTURER = "Stiebel Eltron"
+DOMAIN = "stiebel_eltron_isg"
 DOMAIN_DATA = f"{DOMAIN}_data"
 VERSION = "0.0.1"
 ATTRIBUTION = "Data provided by http://jsonplaceholder.typicode.com/"
-ISSUE_URL = "https://github.com/custom-components/integration_blueprint/issues"
+ISSUE_URL = "https://github.com/pail23/stiebel_eltron_isg/issues"
+DEFAULT_SCAN_INTERVAL = 30
+DEFAULT_PORT = 502
 
 # Icons
 ICON = "mdi:format-quote-close"
@@ -22,8 +25,6 @@ PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
 
 # Configuration and options
 CONF_ENABLED = "enabled"
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"
 
 # Defaults
 DEFAULT_NAME = DOMAIN

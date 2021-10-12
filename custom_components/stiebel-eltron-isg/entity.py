@@ -1,10 +1,10 @@
-"""BlueprintEntity class"""
+"""StiebelEltronISGEntity class"""
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, NAME, VERSION, ATTRIBUTION
+from .const import DOMAIN, NAME, VERSION, ATTRIBUTION, ATTR_MANUFACTURER
 
 
-class IntegrationBlueprintEntity(CoordinatorEntity):
+class StiebelEltronISGEntity(CoordinatorEntity):
     def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
         self.config_entry = config_entry
@@ -20,7 +20,7 @@ class IntegrationBlueprintEntity(CoordinatorEntity):
             "identifiers": {(DOMAIN, self.unique_id)},
             "name": NAME,
             "model": VERSION,
-            "manufacturer": NAME,
+            "manufacturer": ATTR_MANUFACTURER,
         }
 
     @property
@@ -28,6 +28,6 @@ class IntegrationBlueprintEntity(CoordinatorEntity):
         """Return the state attributes."""
         return {
             "attribution": ATTRIBUTION,
-            "id": str(self.coordinator.data.get("id")),
+            "id": 34,  # TODO str(self.coordinator.data.get("id")),
             "integration": DOMAIN,
         }

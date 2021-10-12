@@ -1,1 +1,1 @@
-"""Tests for integration_blueprint integration."""
+"""Tests for stiebel_eltron_isg integration."""

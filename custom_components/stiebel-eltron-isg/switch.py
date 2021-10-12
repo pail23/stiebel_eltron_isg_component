@@ -1,18 +1,18 @@
-"""Switch platform for integration_blueprint."""
+"""Switch platform for stiebel_eltron_isg."""
 from homeassistant.components.switch import SwitchEntity
 
 from .const import DEFAULT_NAME, DOMAIN, ICON, SWITCH
-from .entity import IntegrationBlueprintEntity
+from .entity import StiebelEltronISGEntity
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([IntegrationBlueprintBinarySwitch(coordinator, entry)])
+    async_add_devices([StiebelEltronISGBinarySwitch(coordinator, entry)])
 
 
-class IntegrationBlueprintBinarySwitch(IntegrationBlueprintEntity, SwitchEntity):
-    """integration_blueprint switch class."""
+class StiebelEltronISGBinarySwitch(StiebelEltronISGEntity, SwitchEntity):
+    """stiebel_eltron_isg switch class."""
 
     async def async_turn_on(self, **kwargs):  # pylint: disable=unused-argument
         """Turn on the switch."""
@@ -37,4 +37,4 @@ class IntegrationBlueprintBinarySwitch(IntegrationBlueprintEntity, SwitchEntity)
     @property
     def is_on(self):
         """Return true if the switch is on."""
-        return self.coordinator.data.get("title", "") == "foo"
+        return False

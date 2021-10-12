@@ -1,16 +1,16 @@
-"""Sensor platform for integration_blueprint."""
+"""Sensor platform for stiebel_eltron_isg."""
 from .const import DEFAULT_NAME, DOMAIN, ICON, SENSOR
-from .entity import IntegrationBlueprintEntity
+from .entity import StiebelEltronISGEntity
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([IntegrationBlueprintSensor(coordinator, entry)])
+    async_add_devices([StiebelEltronISGSensor(coordinator, entry)])
 
 
-class IntegrationBlueprintSensor(IntegrationBlueprintEntity):
-    """integration_blueprint Sensor class."""
+class StiebelEltronISGSensor(StiebelEltronISGEntity):
+    """stiebel_eltron_isg Sensor class."""
 
     @property
     def name(self):
@@ -20,7 +20,7 @@ class IntegrationBlueprintSensor(IntegrationBlueprintEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.get("body")
+        return 1.23
 
     @property
     def icon(self):

@@ -1,0 +1,21 @@
+{
+    "config": {
+        "title": "Stiebel Eltron ISG",
+        "step": {
+            "user": {
+                "title": "Konfiguriere Deine modbus-Verbindung zum Stiebel Eltron ISG",
+                "description": "If you need help with the configuration have a look here: https://github.com/pail23/stiebel_eltron_isg",
+                "data": {
+                    "host": "The ip-address of your ISG",
+                    "port": "The TCP port on which to connect to the ISG",
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Device is already configured"
+        },
+        "abort": {
+            "already_configured": "Device is already configured"
+        }
+    }
+}

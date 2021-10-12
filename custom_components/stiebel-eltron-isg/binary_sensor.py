@@ -1,4 +1,4 @@
-"""Binary sensor platform for integration_blueprint."""
+"""Binary sensor platform for stiebel_eltron_isg."""
 from homeassistant.components.binary_sensor import BinarySensorEntity
 
 from .const import (
@@ -7,17 +7,17 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .entity import IntegrationBlueprintEntity
+from .entity import StiebelEltronISGEntity
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Setup binary_sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_devices([IntegrationBlueprintBinarySensor(coordinator, entry)])
+    async_add_devices([StiebelEltronISGBinarySensor(coordinator, entry)])
 
 
-class IntegrationBlueprintBinarySensor(IntegrationBlueprintEntity, BinarySensorEntity):
-    """integration_blueprint binary_sensor class."""
+class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
+    """stiebel_eltron_isg binary_sensor class."""
 
     @property
     def name(self):
@@ -32,4 +32,4 @@ class IntegrationBlueprintBinarySensor(IntegrationBlueprintEntity, BinarySensorE
     @property
     def is_on(self):
         """Return true if the binary_sensor is on."""
-        return self.coordinator.data.get("title", "") == "foo"
+        return True
