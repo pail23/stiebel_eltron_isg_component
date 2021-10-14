@@ -20,7 +20,35 @@ BINARY_SENSOR_DEVICE_CLASS = "connectivity"
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+PLATFORMS = [SENSOR]  # [BINARY_SENSOR, SENSOR, SWITCH]
+
+
+ENERGY_SENSOR_TYPES = {
+    "Produced_Heating_Today": [
+        "Produced Heating Today",
+        "producedheatingtoday",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+    "Produced_Heating_Total": [
+        "Produced Heating Total",
+        "producedheatingtotal",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+    "Produced_Water_Heating_Today": [
+        "Produced Water Heating Today",
+        "producedwaterheatingtoday",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+    "Produced_Water_Heating_Total": [
+        "Produced Water Heating Total",
+        "producedwaterheatingtotal",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+}
 
 
 # Configuration and options
