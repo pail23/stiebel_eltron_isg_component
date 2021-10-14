@@ -25,8 +25,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .api import StiebelEltronISGApiClient
-
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -185,6 +183,13 @@ class StiebelEltronModbusHub:  # (DataUpdateCoordinator):
             produced_water_today = decoder.decode_16bit_uint()
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
+            decoder.skip_bytes(8)  # Skip NHZ
+            consumed_heating_today = decoder.decode_16bit_uint()
+            consumed_heating_total_low = decoder.decode_16bit_uint()
+            consumed_heating_total_high = decoder.decode_16bit_uint()
+            consumed_water_today = decoder.decode_16bit_uint()
+            consumed_water_total_low = decoder.decode_16bit_uint()
+            consumed_water_total_high = decoder.decode_16bit_uint()
 
             self.data["producedheatingtoday"] = produced_heating_today
             self.data["producedheatingtotal"] = (
@@ -193,6 +198,14 @@ class StiebelEltronModbusHub:  # (DataUpdateCoordinator):
             self.data["producedwaterheatingtoday"] = produced_water_today
             self.data["producedwaterheatingtotal"] = (
                 produced_water_total_high * 1000 + produced_water_total_low
+            )
+            self.data["consumedheatingtoday"] = consumed_heating_today
+            self.data["consumedheatingtotal"] = (
+                consumed_heating_total_high * 1000 + consumed_heating_total_low
+            )
+            self.data["consumedwaterheatingtoday"] = consumed_water_today
+            self.data["consumedwaterheatingtotal"] = (
+                consumed_water_total_high * 1000 + consumed_water_total_low
             )
             return True
         else:

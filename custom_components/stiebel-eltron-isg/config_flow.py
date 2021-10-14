@@ -7,7 +7,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
-from .api import StiebelEltronISGApiClient
 from .const import (
     DOMAIN,
     PLATFORMS,

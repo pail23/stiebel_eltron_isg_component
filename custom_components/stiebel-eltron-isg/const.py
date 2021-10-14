@@ -48,6 +48,30 @@ ENERGY_SENSOR_TYPES = {
         "kWh",
         "mdi:lightning-bolt",
     ],
+    "Consumed_Heating_Today": [
+        "Consumed Heating Today",
+        "consumedheatingtoday",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+    "Consumed_Heating_Total": [
+        "Consumed Heating Total",
+        "consumedheatingtotal",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+    "Consumed_Water_Heating_Today": [
+        "Consumed Water Heating Today",
+        "consumedwaterheatingtoday",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
+    "Consumed_Water_Heating_Total": [
+        "Consumed Water Heating Total",
+        "consumedwaterheatingtotal",
+        "kWh",
+        "mdi:lightning-bolt",
+    ],
 }
 
 
