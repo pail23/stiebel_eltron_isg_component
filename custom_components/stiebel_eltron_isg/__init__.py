@@ -2,7 +2,7 @@
 Custom integration to integrate stiebel_eltron_isg with Home Assistant.
 
 For more details about this integration, please refer to
-https://github.com/custom-components/stiebel_eltron_isg
+https://github.com/pail23/stiebel_eltron_isg
 """
 import asyncio
 from datetime import timedelta

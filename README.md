@@ -1,54 +1,8 @@
-# Notice
+# Stiebel Eltron ISG intergation with modus
 
-The component and platforms in this repository are not meant to be used by a
-user, but as a "blueprint" that custom component developers can build
-upon, to make more awesome stuff.
+This integration allows you to communicate with a Stiebel Eltron Heatpump through the ISG module.
 
-HAVE FUN! 😎
-
-## Why?
-
-This is simple, by having custom_components look (README + structure) the same
-it is easier for developers to help each other and for users to start using them.
-
-If you are a developer and you want to add things to this "blueprint" that you think more
-developers will have use for, please open a PR to add it :)
-
-## What?
-
-This repository contains multiple files, here is a overview:
-
-File | Purpose
--- | --
-`.devcontainer/*` | Used for development/testing with VSCODE, more info in the readme file in that dir.
-`.github/ISSUE_TEMPLATE/feature_request.md` | Template for Feature Requests
-`.github/ISSUE_TEMPLATE/issue.md` | Template for issues
-`.vscode/tasks.json` | Tasks for the devcontainer.
-`custom_components/stiebel_eltron_isg/translations/*` | [Translation files.](https://developers.home-assistant.io/docs/internationalization/custom_integration)
-`custom_components/stiebel_eltron_isg/__init__.py` | The component file for the integration.
-`custom_components/stiebel_eltron_isg/api.py` | This is a sample API client.
-`custom_components/stiebel_eltron_isg/binary_sensor.py` | Binary sensor platform for the integration.
-`custom_components/stiebel_eltron_isg/config_flow.py` | Config flow file, this adds the UI configuration possibilities.
-`custom_components/stiebel_eltron_isg/const.py` | A file to hold shared variables/constants for the entire integration.
-`custom_components/stiebel_eltron_isg/manifest.json` | A [manifest file](https://developers.home-assistant.io/docs/en/creating_integration_manifest.html) for Home Assistant.
-`custom_components/stiebel_eltron_isg/sensor.py` | Sensor platform for the integration.
-`custom_components/stiebel_eltron_isg/switch.py` | Switch sensor platform for the integration.
-`tests/__init__.py` | Makes the `tests` folder a module.
-`tests/conftest.py` | Global [fixtures](https://docs.pytest.org/en/stable/fixture.html) used in tests to [patch](https://docs.python.org/3/library/unittest.mock.html#unittest.mock.patch) functions.
-`tests/test_api.py` | Tests for `custom_components/stiebel_eltron_isg/api.py`.
-`tests/test_config_flow.py` | Tests for `custom_components/stiebel_eltron_isg/config_flow.py`.
-`tests/test_init.py` | Tests for `custom_components/stiebel_eltron_isg/__init__.py`.
-`tests/test_switch.py` | Tests for `custom_components/stiebel_eltron_isg/switch.py`.
-`CONTRIBUTING.md` | Guidelines on how to contribute.
-`example.png` | Screenshot that demonstrate how it might look in the UI.
-`info.md` | An example on a info file (used by [hacs][hacs]).
-`LICENSE` | The license file for the project.
-`README.md` | The file you are reading now, should contain info about the integration, installation and configuration instructions.
-`requirements.txt` | Python packages used by this integration.
-`requirements_dev.txt` | Python packages used to provide [IntelliSense](https://code.visualstudio.com/docs/editor/intellisense)/code hints during development of this integration, typically includes packages in `requirements.txt` but may include additional packages
-`requirements_test.txt` | Python packages required to run the tests for this integration, typically includes packages in `requirements_dev.txt` but may include additional packages
-
-## How?
+## Development
 
 If you want to use all the potential and features of this blueprint template you
 should use Visual Studio Code to develop in a container. In this container you
@@ -80,9 +34,7 @@ README content if this was a published component:
 
 [![hacs][hacsbadge]][hacs]
 ![Project Maintenance][maintenance-shield]
-[![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
 
-[![Discord][discord-shield]][discord]
 [![Community Forum][forum-shield]][forum]
 
 _Component to integrate with [stiebel_eltron_isg][stiebel_eltron_isg]._
@@ -114,13 +66,11 @@ custom_components/stiebel_eltron_isg/translations/en.json
 custom_components/stiebel_eltron_isg/translations/nb.json
 custom_components/stiebel_eltron_isg/translations/sensor.nb.json
 custom_components/stiebel_eltron_isg/__init__.py
-custom_components/stiebel_eltron_isg/api.py
 custom_components/stiebel_eltron_isg/binary_sensor.py
 custom_components/stiebel_eltron_isg/config_flow.py
 custom_components/stiebel_eltron_isg/const.py
 custom_components/stiebel_eltron_isg/manifest.json
 custom_components/stiebel_eltron_isg/sensor.py
-custom_components/stiebel_eltron_isg/switch.py
 ```
 
 ## Configuration is done in the UI
@@ -133,19 +83,19 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 
 ***
 
-[stiebel_eltron_isg]: https://github.com/custom-components/stiebel_eltron_isg
+[stiebel_eltron_isg]: https://github.com/pail23/stiebel_eltron_isg
 [buymecoffee]: https://www.buymeacoffee.com/ludeeus
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/custom-components/blueprint.svg?style=for-the-badge
-[commits]: https://github.com/custom-components/stiebel_eltron_isg/commits/master
-[hacs]: https://github.com/custom-components/hacs
+[commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/blueprint.svg?style=for-the-badge
+[commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
+[hacs]: https://github.com/pail23/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
 [discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/custom-components/blueprint.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/pail23/blueprint.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Joakim%20Sørensen%20%40ludeeus-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/custom-components/blueprint.svg?style=for-the-badge
-[releases]: https://github.com/custom-components/stiebel_eltron_isg/releases
+[releases-shield]: https://img.shields.io/github/release/pail23/blueprint.svg?style=for-the-badge
+[releases]: https://github.com/pail23/stiebel_eltron_isg/releases

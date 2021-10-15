@@ -36,11 +36,11 @@ Platform | Description
 
 ***
 
-[stiebel_eltron_isg]: https://github.com/custom-components/stiebel_eltron_isg
+[stiebel_eltron_isg]: https://github.com/pail23/stiebel_eltron_isg
 [buymecoffee]: https://www.buymeacoffee.com/ludeeus
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/custom-components/stiebel_eltron_isg.svg?style=for-the-badge
-[commits]: https://github.com/custom-components/stiebel_eltron_isg/commits/master
+[commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/stiebel_eltron_isg.svg?style=for-the-badge
+[commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
 [hacs]: https://hacs.xyz
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
 [discord]: https://discord.gg/Qa5fW2R
@@ -48,9 +48,9 @@ Platform | Description
 [exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license]: https://github.com/custom-components/stiebel_eltron_isg/blob/main/LICENSE
-[license-shield]: https://img.shields.io/github/license/custom-components/stiebel_eltron_isg.svg?style=for-the-badge
+[license]: https://github.com/pail23/stiebel_eltron_isg/blob/main/LICENSE
+[license-shield]: https://img.shields.io/github/license/pail23/stiebel_eltron_isg.svg?style=for-the-badge
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Joakim%20Sørensen%20%40ludeeus-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/custom-components/stiebel_eltron_isg.svg?style=for-the-badge
-[releases]: https://github.com/custom-components/stiebel_eltron_isg/releases
+[releases-shield]: https://img.shields.io/github/release/pail23/stiebel_eltron_isg.svg?style=for-the-badge
+[releases]: https://github.com/pail23/stiebel_eltron_isg/releases
 [user_profile]: https://github.com/ludeeus
