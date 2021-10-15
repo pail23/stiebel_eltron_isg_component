@@ -5,6 +5,8 @@ from .const import DOMAIN, NAME, VERSION, ATTR_MANUFACTURER
 
 
 class StiebelEltronISGEntity(CoordinatorEntity):
+    """stiebel_eltron_isg entity base class."""
+
     def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
         self.config_entry = config_entry

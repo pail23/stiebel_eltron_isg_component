@@ -1,12 +1,7 @@
 """Sensor platform for stiebel_eltron_isg."""
 import logging
-from typing import Optional, Dict, Any
-from .const import (
-    NAME,
-    DOMAIN,
-    ENERGY_SENSOR_TYPES,
-)
-from .entity import StiebelEltronISGEntity
+from typing import Optional
+
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
@@ -14,9 +9,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME, DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
-from homeassistant.core import callback
-from homeassistant.util import dt as dt_util
+from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
+
+from .const import (
+    NAME,
+    DOMAIN,
+    ENERGY_SENSOR_TYPES,
+)
+from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 

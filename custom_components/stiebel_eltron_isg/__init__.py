@@ -8,7 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import threading
-from typing import Dict, Optional
+from typing import Dict
 
 
 import voluptuous as vol
@@ -38,6 +38,10 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    IS_HEATING,
+    IS_HEATING_WATER,
+    IS_SUMMER_MODE,
+    IS_COOLING,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -139,7 +143,22 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed() from exception
 
     def read_modbus_data(self) -> Dict:
-        result = self.read_modbus_energy()
+        result = {**self.read_modbus_energy(), **self.read_modbus_system_state()}
+        return result
+
+    def read_modbus_system_state(self) -> Dict:
+        result = {}
+        inverter_data = self.read_input_registers(unit=1, address=2500, count=1)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            state = decoder.decode_16bit_uint()
+            result[IS_HEATING] = (state & (1 << 4)) != 0
+            result[IS_HEATING_WATER] = (state & (1 << 5)) != 0
+            result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
+            result[IS_COOLING] = (state & (1 << 8)) != 0
+
         return result
 
     def read_modbus_energy(self) -> Dict:

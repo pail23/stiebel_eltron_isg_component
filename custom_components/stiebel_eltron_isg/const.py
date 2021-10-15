@@ -1,4 +1,6 @@
 """Constants for stiebel_eltron_isg."""
+from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+
 # Base component constants
 NAME = "Stiebel Eltron ISG"
 ATTR_MANUFACTURER = "Stiebel Eltron"
@@ -14,7 +16,7 @@ DEFAULT_PORT = 502
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [SENSOR]  # [BINARY_SENSOR, SENSOR, SWITCH]
+PLATFORMS = [BINARY_SENSOR, SENSOR]  # [BINARY_SENSOR, SENSOR, SWITCH]
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
 PRODUCED_HEATING_TOTAL = "produced_heating_total"
@@ -76,6 +78,34 @@ ENERGY_SENSOR_TYPES = [
         "kWh",
         "mdi:lightning-bolt",
     ],
+]
+
+IS_HEATING = "is_heating"
+IS_HEATING_WATER = "is_heating_water"
+IS_SUMMER_MODE = "is_summer_mode"
+IS_COOLING = "is_cooling"
+
+BINARY_SENSOR_TYPES = [
+    BinarySensorEntityDescription(
+        name=f"{NAME} is heating",
+        key=IS_HEATING,
+        icon="mdi:radiator",
+    ),
+    BinarySensorEntityDescription(
+        name=f"{NAME} is heating boiler",
+        key=IS_HEATING_WATER,
+        icon="mdi:water-boiler",
+    ),
+    BinarySensorEntityDescription(
+        name=f"{NAME} is in summer mode",
+        key=IS_SUMMER_MODE,
+        icon="mdi:weather-sunny",
+    ),
+    BinarySensorEntityDescription(
+        name=f"{NAME} is cooling",
+        key=IS_COOLING,
+        icon="mdi:snow-flake",
+    ),
 ]
 
 
