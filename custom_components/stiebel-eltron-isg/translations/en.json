@@ -8,6 +8,7 @@
                 "data": {
                     "host": "The ip-address of your ISG",
                     "port": "The TCP port on which to connect to the ISG",
+                    "scan_interval": "The polling frequentie of the modbus registers in seconds"
                 }
             }
         },

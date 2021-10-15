@@ -6,8 +6,9 @@
                 "title": "Konfiguriere Deine modbus-Verbindung zum Stiebel Eltron ISG",
                 "description": "If you need help with the configuration have a look here: https://github.com/pail23/stiebel_eltron_isg",
                 "data": {
-                    "host": "The ip-address of your ISG",
-                    "port": "The TCP port on which to connect to the ISG",
+                    "host": "Die IP-Adresse des Stiebel Eltron ISG",
+                    "port": "Der TCP Port des SolarEdge Wechselrichters (z.B. 502)",
+                    "scan_interval": "Das Abfrageintervall der modbus Register in Sekunden"
                 }
             }
         },
