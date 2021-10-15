@@ -1,6 +1,5 @@
 {
     "config": {
-        "title": "Stiebel Eltron ISG",
         "step": {
             "user": {
                 "title": "Konfiguriere Deine modbus-Verbindung zum Stiebel Eltron ISG",
