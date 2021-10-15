@@ -1,33 +1,5 @@
 # Stiebel Eltron ISG intergation with modus
 
-This integration allows you to communicate with a Stiebel Eltron Heatpump through the ISG module.
-
-## Development
-
-If you want to use all the potential and features of this blueprint template you
-should use Visual Studio Code to develop in a container. In this container you
-will have all the tools to ease your python development and a dedicated Home
-Assistant core instance to run your integration. See `.devcontainer/README.md` for more information.
-
-If you need to work on the python library in parallel of this integration
-(`sampleclient` in this example) there are different options. The following one seems
-easy to implement:
-
-- Create a dedicated branch for your python library on a public git repository (example: branch
-`dev` on `https://github.com/ludeeus/sampleclient`)
-- Update in the `manifest.json` file the `requirements` key to point on your development branch
-( example: `"requirements": ["git+https://github.com/ludeeus/sampleclient.git@dev#devp==0.0.1beta1"]`)
-- Each time you need to make a modification to your python library, push it to your
-development branch and increase the number of the python library version in `manifest.json` file
-to ensure Home Assistant update the code of the python library. (example `"requirements": ["git+https://...==0.0.1beta2"]`).
-
-
-***
-README content if this was a published component:
-***
-
-# stiebel_eltron_isg
-
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
 [![License][license-shield]](LICENSE)
