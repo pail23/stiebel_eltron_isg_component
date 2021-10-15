@@ -73,7 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     host = entry.data.get(CONF_HOST)
     port = entry.data.get(CONF_PORT)
-
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
     coordinator = StiebelEltronModbusDataCoordinator(hass, host, port, scan_interval)
