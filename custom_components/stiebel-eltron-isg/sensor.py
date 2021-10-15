@@ -2,17 +2,13 @@
 import logging
 from typing import Optional, Dict, Any
 from .const import (
-    DEFAULT_NAME,
+    NAME,
     DOMAIN,
-    ICON,
-    SENSOR,
-    ATTR_MANUFACTURER,
     ENERGY_SENSOR_TYPES,
 )
 from .entity import StiebelEltronISGEntity
 
 from homeassistant.components.sensor import (
-    PLATFORM_SCHEMA,
     STATE_CLASS_MEASUREMENT,
     SensorEntity,
 )
@@ -30,17 +26,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
     """Setup sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
-    device_info = {
-        "identifiers": {(DOMAIN, entry.entry_id)},
-        "name": entry.entry_id,
-        "manufacturer": ATTR_MANUFACTURER,
-    }
     entities = []
-    for meter_sensor_info in ENERGY_SENSOR_TYPES.values():
+    for meter_sensor_info in ENERGY_SENSOR_TYPES:
         sensor = StiebelEltronISGSensor(
-            DOMAIN,
             coordinator,
-            device_info,
+            entry,
             meter_sensor_info[0],
             meter_sensor_info[1],
             meter_sensor_info[2],
@@ -51,47 +41,37 @@ async def async_setup_entry(hass, entry, async_add_devices):
     async_add_devices(entities)
 
 
-class StiebelEltronISGSensor(SensorEntity):
+class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     """stiebel_eltron_isg Sensor class."""
 
-    def __init__(self, platform_name, hub, device_info, name, key, unit, icon):
+    def __init__(
+        self,
+        coordinator,
+        config_entry,
+        name,
+        key,
+        unit,
+        icon,
+    ):
         """Initialize the sensor."""
-        self._platform_name = platform_name
-        self._hub = hub
+        super().__init__(coordinator, config_entry, key)
         self._key = key
-        self._name = name
+        self.sensor_name = name
         self._unit_of_measurement = unit
         self._icon = icon
-        self._device_info = device_info
         self._attr_state_class = STATE_CLASS_MEASUREMENT
         if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
             self._attr_device_class = DEVICE_CLASS_ENERGY
 
-    async def async_added_to_hass(self):
-        """Register callbacks."""
-        self._hub.async_add_isg_sensor(self._modbus_data_updated)
-
-    async def async_will_remove_from_hass(self) -> None:
-        self._hub.async_remove_isg_sensor(self._modbus_data_updated)
-
-    @callback
-    def _modbus_data_updated(self):
-        self.async_write_ha_state()
-
-    @callback
-    def _update_state(self):
-        if self._key in self._hub.data:
-            self._state = self._hub.data[self._key]
-
     @property
     def name(self):
-        """Return the name."""
-        return f"{self._platform_name} ({self._name})"
+        """Return the name of the sensor."""
+        return f"{NAME} {self.sensor_name}"
 
     @property
     def unique_id(self) -> Optional[str]:
-        return f"{self._platform_name}_{self._key}"
+        return f"{self.coordinator.name}_{self._key}"
 
     @property
     def unit_of_measurement(self):
@@ -106,18 +86,4 @@ class StiebelEltronISGSensor(SensorEntity):
     @property
     def state(self):
         """Return the state of the sensor."""
-        if self._key in self._hub.data:
-            return self._hub.data[self._key]
-
-    @property
-    def extra_state_attributes(self):
-        return None
-
-    @property
-    def should_poll(self) -> bool:
-        """Data is delivered by the hub"""
-        return False
-
-    @property
-    def device_info(self) -> Optional[Dict[str, Any]]:
-        return self._device_info
+        return self.coordinator.data.get(self._key)

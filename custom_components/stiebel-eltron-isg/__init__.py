@@ -8,7 +8,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import threading
-from typing import Optional
+from typing import Dict, Optional
 
 
 import voluptuous as vol
@@ -30,6 +30,14 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
+    PRODUCED_HEATING_TODAY,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING_TODAY,
+    PRODUCED_WATER_HEATING_TOTAL,
+    CONSUMED_HEATING_TODAY,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING_TODAY,
+    CONSUMED_WATER_HEATING_TOTAL,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -68,18 +76,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
-    coordinator = StiebelEltronModbusHub(
-        hass, entry.entry_id, host, port, scan_interval
-    )
-    #    await coordinator.async_refresh()
+    coordinator = StiebelEltronModbusDataCoordinator(hass, host, port, scan_interval)
+    await coordinator.async_refresh()
 
-    #    if not coordinator.last_update_success:
-    #        raise ConfigEntryNotReady
+    if not coordinator.last_update_success:
+        raise ConfigEntryNotReady
 
     hass.data[DOMAIN][entry.entry_id] = coordinator
 
     for platform in PLATFORMS:
         if entry.options.get(platform, True):
+            coordinator.platforms.append(platform)
             hass.async_add_job(
                 hass.config_entries.async_forward_entry_setup(entry, platform)
             )
@@ -88,13 +95,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-class StiebelEltronModbusHub:  # (DataUpdateCoordinator):
+class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     """Thread safe wrapper class for pymodbus."""
 
     def __init__(
         self,
         hass,
-        name,
         host,
         port,
         scan_interval,
@@ -103,43 +109,12 @@ class StiebelEltronModbusHub:  # (DataUpdateCoordinator):
         self._hass = hass
         self._client = ModbusTcpClient(host=host, port=port)
         self._lock = threading.Lock()
-        self._name = name
         self._scan_interval = timedelta(seconds=scan_interval)
-        self._unsub_interval_method = None
-        self._sensors = []
-        self.data = {}
+        self.platforms = []
 
-    #        super().__init__(
-    #            hass, _LOGGER, name=DOMAIN, update_interval=self._scan_interval
-    #        )
-
-    @callback
-    def async_add_isg_sensor(self, update_callback):
-        """Listen for data updates."""
-        # This is the first sensor, set up interval.
-        if not self._sensors:
-            self.connect()
-            self._unsub_interval_method = async_track_time_interval(
-                self._hass, self.async_refresh_modbus_data, self._scan_interval
-            )
-
-        self._sensors.append(update_callback)
-
-    @callback
-    def async_remove_isg_sensor(self, update_callback):
-        """Remove data update."""
-        self._sensors.remove(update_callback)
-
-        if not self._sensors:
-            """stop the interval timer upon removal of last sensor"""
-            self._unsub_interval_method()
-            self._unsub_interval_method = None
-            self.close()
-
-    @property
-    def name(self):
-        """Return the name of this hub."""
-        return self._name
+        super().__init__(
+            hass, _LOGGER, name=DOMAIN, update_interval=self._scan_interval
+        )
 
     def close(self):
         """Disconnect client."""
@@ -157,21 +132,19 @@ class StiebelEltronModbusHub:  # (DataUpdateCoordinator):
             kwargs = {"unit": unit} if unit else {}
             return self._client.read_input_registers(address, count, **kwargs)
 
-    async def async_refresh_modbus_data(self, _now) -> None:
+    async def _async_update_data(self) -> Dict:
         """Time to update."""
-        if not self._sensors:
-            return
+        try:
+            return self.read_modbus_data()
+        except Exception as exception:
+            raise UpdateFailed() from exception
 
-        update_result = self.read_modbus_data()
+    def read_modbus_data(self) -> Dict:
+        result = self.read_modbus_energy()
+        return result
 
-        if update_result:
-            for update_callback in self._sensors:
-                update_callback()
-
-    def read_modbus_data(self):
-        return self.read_modbus_energy()
-
-    def read_modbus_energy(self):
+    def read_modbus_energy(self) -> Dict:
+        result = {}
         inverter_data = self.read_input_registers(unit=1, address=3500, count=22)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -191,37 +164,23 @@ class StiebelEltronModbusHub:  # (DataUpdateCoordinator):
             consumed_water_total_low = decoder.decode_16bit_uint()
             consumed_water_total_high = decoder.decode_16bit_uint()
 
-            self.data["producedheatingtoday"] = produced_heating_today
-            self.data["producedheatingtotal"] = (
+            result[PRODUCED_HEATING_TODAY] = produced_heating_today
+            result[PRODUCED_HEATING_TOTAL] = (
                 produced_heating_total_high * 1000 + produced_heating_total_low
             )
-            self.data["producedwaterheatingtoday"] = produced_water_today
-            self.data["producedwaterheatingtotal"] = (
+            result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
+            result[PRODUCED_WATER_HEATING_TOTAL] = (
                 produced_water_total_high * 1000 + produced_water_total_low
             )
-            self.data["consumedheatingtoday"] = consumed_heating_today
-            self.data["consumedheatingtotal"] = (
+            result[CONSUMED_HEATING_TODAY] = consumed_heating_today
+            result[CONSUMED_HEATING_TOTAL] = (
                 consumed_heating_total_high * 1000 + consumed_heating_total_low
             )
-            self.data["consumedwaterheatingtoday"] = consumed_water_today
-            self.data["consumedwaterheatingtotal"] = (
+            result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
+            result[CONSUMED_WATER_HEATING_TOTAL] = (
                 consumed_water_total_high * 1000 + consumed_water_total_low
             )
-            return True
-        else:
-            return False
-
-        #    async def _async_update_data(self):
-        #        pass
-        """Update data via library."""
-
-
-"""
-       try:
-            return await self.api.async_get_data()
-        except Exception as exception:
-            raise UpdateFailed() from exception
-"""
+        return result
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

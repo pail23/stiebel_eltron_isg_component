@@ -9,7 +9,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 from .const import (
     DOMAIN,
-    PLATFORMS,
+    DEFAULT_HOST_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_PORT,
 )
@@ -46,7 +46,7 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow for Stiebel Eltron ISG."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_CLOUD_POLL
+    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -79,15 +79,31 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
                 )
+            return await self._show_config_form(user_input)
 
-        return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=self._errors
-        )
+        user_input = {}
+        # Provide defaults for form
+        user_input[CONF_HOST] = DEFAULT_HOST_NAME
+        user_input[CONF_PORT] = DEFAULT_PORT
+        user_input[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
+        return await self._show_config_form(user_input)
+
+    #        return self.async_show_form(
+    #            step_id="user", data_schema=DATA_SCHEMA, errors=self._errors
+    #        )
 
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]
+                    ): int,
+                }
+            ),
             errors=self._errors,
         )
