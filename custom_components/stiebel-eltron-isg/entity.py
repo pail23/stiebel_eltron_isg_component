@@ -5,10 +5,9 @@ from .const import DOMAIN, NAME, VERSION, ATTR_MANUFACTURER
 
 
 class StiebelEltronISGEntity(CoordinatorEntity):
-    def __init__(self, coordinator, config_entry, key):
+    def __init__(self, coordinator, config_entry):
         super().__init__(coordinator)
         self.config_entry = config_entry
-        self._key = key
 
     @property
     def unique_id(self):
@@ -29,6 +28,6 @@ class StiebelEltronISGEntity(CoordinatorEntity):
         """Return the state attributes."""
         return {
             #            "attribution": ATTRIBUTION,
-            "id": str(self._key),
+            "id": str(self.entity_description.key),
             "integration": DOMAIN,
         }

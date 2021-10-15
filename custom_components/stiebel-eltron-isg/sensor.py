@@ -10,12 +10,11 @@ from .entity import StiebelEltronISGEntity
 
 from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
+    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
+    SensorEntityDescription,
 )
 from homeassistant.const import CONF_NAME, DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
-from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT as STATE_CLASS_TOTAL_INCREASING,
-)
 from homeassistant.core import callback
 from homeassistant.util import dt as dt_util
 
@@ -28,13 +27,21 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     entities = []
     for meter_sensor_info in ENERGY_SENSOR_TYPES:
+        description = SensorEntityDescription(
+            name=f"{NAME} {meter_sensor_info[0]}",
+            key=meter_sensor_info[1],
+            native_unit_of_measurement=meter_sensor_info[2],
+            icon=meter_sensor_info[3],
+            state_class=STATE_CLASS_MEASUREMENT,
+        )
+        if description.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
+            description.state_class = STATE_CLASS_TOTAL_INCREASING
+            description.device_class = DEVICE_CLASS_ENERGY
+
         sensor = StiebelEltronISGSensor(
             coordinator,
             entry,
-            meter_sensor_info[0],
-            meter_sensor_info[1],
-            meter_sensor_info[2],
-            meter_sensor_info[3],
+            description,
         )
         entities.append(sensor)
 
@@ -48,42 +55,17 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
         self,
         coordinator,
         config_entry,
-        name,
-        key,
-        unit,
-        icon,
+        description,
     ):
         """Initialize the sensor."""
-        super().__init__(coordinator, config_entry, key)
-        self._key = key
-        self.sensor_name = name
-        self._unit_of_measurement = unit
-        self._icon = icon
-        self._attr_state_class = STATE_CLASS_MEASUREMENT
-        if self._unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-            self._attr_state_class = STATE_CLASS_TOTAL_INCREASING
-            self._attr_device_class = DEVICE_CLASS_ENERGY
-
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return f"{NAME} {self.sensor_name}"
+        self.entity_description = description
+        super().__init__(coordinator, config_entry)
 
     @property
     def unique_id(self) -> Optional[str]:
-        return f"{self.coordinator.name}_{self._key}"
-
-    @property
-    def unit_of_measurement(self):
-        """Return the unit of measurement."""
-        return self._unit_of_measurement
-
-    @property
-    def icon(self):
-        """Return the sensor icon."""
-        return self._icon
+        return f"{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def state(self):
         """Return the state of the sensor."""
-        return self.coordinator.data.get(self._key)
+        return self.coordinator.data.get(self.entity_description.key)
