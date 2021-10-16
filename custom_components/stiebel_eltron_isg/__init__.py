@@ -102,6 +102,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
+def get_isg_temperature(temp) -> float:
+    return temp * 0.1 if temp != -1 else None
+
+
 class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     """Thread safe wrapper class for pymodbus."""
 
@@ -176,10 +180,15 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
             )
-            result[ACTUAL_TEMPERATURE] = decoder.decode_16bit_uint() * 0.1
-            result[TARGET_TEMPERATURE] = decoder.decode_16bit_uint() * 0.1
-            result[ACTUAL_TEMPERATURE_FEK] = decoder.decode_16bit_uint() * 0.1
-            result[TARGET_TEMPERATURE_FEK] = decoder.decode_16bit_uint() * 0.1
+            result[ACTUAL_TEMPERATURE] = get_isg_temperature(decoder.decode_16bit_int())
+            result[TARGET_TEMPERATURE] = get_isg_temperature(decoder.decode_16bit_int())
+            result[ACTUAL_TEMPERATURE_FEK] = get_isg_temperature(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_FEK] = get_isg_temperature(
+                decoder.decode_16bit_int()
+            )
+        return result
 
     def read_modbus_energy(self) -> Dict:
         result = {}
