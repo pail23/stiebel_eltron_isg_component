@@ -59,10 +59,10 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/stiebel_eltron_isg_component
 [commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
 [hacs]: https://github.com/hacs
-[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
+[hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
 [license-shield]: https://img.shields.io/github/license/pail23/stiebel_eltron_isg_component
-[maintenance-shield]: https://img.shields.io/badge/maintainer-Joakim%20Sørensen%20%40ludeeus-blue.svg?style=for-the-badge
-[releases-shield]: https://img.shields.io/github/release/pail23/blueprint.svg?style=for-the-badge
+[maintenance-shield]: https://img.shields.io/badge/maintainer-Paul%20Frank-green
+[releases-shield]: https://img.shields.io/github/release/pail23stiebel_eltron_isg_component
 [releases]: https://github.com/pail23/stiebel_eltron_isg/releases
