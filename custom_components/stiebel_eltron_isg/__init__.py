@@ -30,6 +30,10 @@ from .const import (
     DOMAIN,
     PLATFORMS,
     STARTUP_MESSAGE,
+    ACTUAL_TEMPERATURE,
+    TARGET_TEMPERATURE,
+    ACTUAL_TEMPERATURE_FEK,
+    TARGET_TEMPERATURE_FEK,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING_TODAY,
@@ -143,7 +147,11 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed() from exception
 
     def read_modbus_data(self) -> Dict:
-        result = {**self.read_modbus_energy(), **self.read_modbus_system_state()}
+        result = {
+            **self.read_modbus_energy(),
+            **self.read_modbus_system_state(),
+            **self.read_modbus_system_values(),
+        }
         return result
 
     def read_modbus_system_state(self) -> Dict:
@@ -160,6 +168,18 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[IS_COOLING] = (state & (1 << 8)) != 0
 
         return result
+
+    def read_modbus_system_values(self) -> Dict:
+        result = {}
+        inverter_data = self.read_input_registers(unit=1, address=500, count=22)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[ACTUAL_TEMPERATURE] = decoder.decode_16bit_uint() * 0.1
+            result[TARGET_TEMPERATURE] = decoder.decode_16bit_uint() * 0.1
+            result[ACTUAL_TEMPERATURE_FEK] = decoder.decode_16bit_uint() * 0.1
+            result[TARGET_TEMPERATURE_FEK] = decoder.decode_16bit_uint() * 0.1
 
     def read_modbus_energy(self) -> Dict:
         result = {}

@@ -15,11 +15,9 @@ _Component to integrate with [stiebel_eltron_isg][stiebel_eltron_isg]._
 
 Platform | Description
 -- | --
-`binary_sensor` | Show something `True` or `False`.
-`sensor` | Show info from blueprint API.
-`switch` | Switch something `True` or `False`.
+`Produced Heating Today` | Produced energy for heating today.
+`Produced Heating Total` | Produced energy for heating in the lifetime of the heatpump.
 
-![example][exampleimg]
 
 ## Installation
 
@@ -35,12 +33,12 @@ Using your HA configuration directory (folder) as a starting point you should no
 
 ```text
 custom_components/stiebel_eltron_isg/translations/en.json
-custom_components/stiebel_eltron_isg/translations/nb.json
-custom_components/stiebel_eltron_isg/translations/sensor.nb.json
+custom_components/stiebel_eltron_isg/translations/de.json
 custom_components/stiebel_eltron_isg/__init__.py
 custom_components/stiebel_eltron_isg/binary_sensor.py
 custom_components/stiebel_eltron_isg/config_flow.py
 custom_components/stiebel_eltron_isg/const.py
+custom_components/stiebel_eltron_isg/entity.py
 custom_components/stiebel_eltron_isg/manifest.json
 custom_components/stiebel_eltron_isg/sensor.py
 ```
@@ -60,9 +58,9 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
 [hacs]: https://github.com/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange
-[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
+[forum-shield]: https://img.shields.io/badge/community-forum-brightgreen
 [forum]: https://community.home-assistant.io/
 [license-shield]: https://img.shields.io/github/license/pail23/stiebel_eltron_isg_component
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Paul%20Frank-green
-[releases-shield]: https://img.shields.io/github/release/pail23stiebel_eltron_isg_component
+[releases-shield]: https://img.shields.io/github/v/release/pail23/stiebel_eltron_isg_component
 [releases]: https://github.com/pail23/stiebel_eltron_isg/releases

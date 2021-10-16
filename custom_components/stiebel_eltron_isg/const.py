@@ -1,5 +1,10 @@
 """Constants for stiebel_eltron_isg."""
 from homeassistant.components.binary_sensor import BinarySensorEntityDescription
+from homeassistant.components.sensor import (
+    STATE_CLASS_MEASUREMENT,
+    SensorEntityDescription,
+)
+from homeassistant.const import TEMP_CELSIUS
 
 # Base component constants
 NAME = "Stiebel Eltron ISG"
@@ -17,6 +22,34 @@ BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
 PLATFORMS = [BINARY_SENSOR, SENSOR]  # [BINARY_SENSOR, SENSOR, SWITCH]
+
+
+ACTUAL_TEMPERATURE = "actual_temperature"
+TARGET_TEMPERATURE = "target_temperature"
+ACTUAL_TEMPERATURE_FEK = "actual_temperature_fek"
+TARGET_TEMPERATURE_FEK = "target_temperature_fek"
+
+
+def create_temperature_entity_description(name, key):
+    return SensorEntityDescription(
+        key,
+        name=f"{NAME} {name}",
+        native_unit_of_measurement=TEMP_CELSIUS,
+        icon="mdi:thermometer",
+        state_class=STATE_CLASS_MEASUREMENT,
+    )
+
+
+SYSTEM_VALUES_SENSOR_TYPES = [
+    create_temperature_entity_description("Actual Temperature", ACTUAL_TEMPERATURE),
+    create_temperature_entity_description("Target Temperature", TARGET_TEMPERATURE),
+    create_temperature_entity_description(
+        "Actual Temperature FEK", ACTUAL_TEMPERATURE_FEK
+    ),
+    create_temperature_entity_description(
+        "Target Temperature FEK", TARGET_TEMPERATURE_FEK
+    ),
+]
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
 PRODUCED_HEATING_TOTAL = "produced_heating_total"

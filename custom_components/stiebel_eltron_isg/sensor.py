@@ -15,6 +15,7 @@ from .const import (
     NAME,
     DOMAIN,
     ENERGY_SENSOR_TYPES,
+    SYSTEM_VALUES_SENSOR_TYPES,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -26,6 +27,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
+    for description in SYSTEM_VALUES_SENSOR_TYPES:
+        sensor = StiebelEltronISGSensor(
+            coordinator,
+            entry,
+            description,
+        )
+        entities.append(sensor)
+
     for meter_sensor_info in ENERGY_SENSOR_TYPES:
         description = SensorEntityDescription(
             name=f"{NAME} {meter_sensor_info[0]}",
