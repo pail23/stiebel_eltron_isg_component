@@ -4,7 +4,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import (
-    BlueprintDataUpdateCoordinator,
+    StiebelEltronModbusDataCoordinator,
     async_reload_entry,
     async_setup_entry,
     async_unload_entry,
@@ -25,19 +25,21 @@ async def test_setup_unload_and_reload_entry(hass, bypass_get_data):
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
 
     # Set up the entry and assert that the values set during setup are where we expect
-    # them to be. Because we have patched the BlueprintDataUpdateCoordinator.async_get_data
+    # them to be. Because we have patched the StiebelEltronModbusDataCoordinator.async_get_data
     # call, no code from custom_components/stiebel_eltron_isg/api.py actually runs.
     assert await async_setup_entry(hass, config_entry)
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == BlueprintDataUpdateCoordinator
+        type(hass.data[DOMAIN][config_entry.entry_id])
+        == StiebelEltronModbusDataCoordinator
     )
 
     # Reload the entry and assert that the data from above is still there
     assert await async_reload_entry(hass, config_entry) is None
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert (
-        type(hass.data[DOMAIN][config_entry.entry_id]) == BlueprintDataUpdateCoordinator
+        type(hass.data[DOMAIN][config_entry.entry_id])
+        == StiebelEltronModbusDataCoordinator
     )
 
     # Unload the entry and verify that the data has been removed

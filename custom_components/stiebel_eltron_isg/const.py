@@ -104,7 +104,7 @@ BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name=f"{NAME} is cooling",
         key=IS_COOLING,
-        icon="mdi:snow-flake",
+        icon="mdi:snowflake",
     ),
 ]
 

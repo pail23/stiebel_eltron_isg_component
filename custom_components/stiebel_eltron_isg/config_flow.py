@@ -72,7 +72,7 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             if self._host_in_configuration_exists(host):
                 self._errors[CONF_HOST] = "already_configured"
             elif not host_valid(user_input[CONF_HOST]):
-                self._errors[CONF_HOST] = "invalid host IP"
+                self._errors[CONF_HOST] = "invalid_host_IP"
             else:
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()

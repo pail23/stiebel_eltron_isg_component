@@ -29,7 +29,7 @@ Platform | Description
 4. Download _all_ the files from the `custom_components/stiebel_eltron_isg/` directory (folder) in this repository.
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Blueprint"
+7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
 
 Using your HA configuration directory (folder) as a starting point you should now also have this:
 
@@ -56,18 +56,13 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 ***
 
 [stiebel_eltron_isg]: https://github.com/pail23/stiebel_eltron_isg
-[buymecoffee]: https://www.buymeacoffee.com/ludeeus
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
-[commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/blueprint.svg?style=for-the-badge
+[commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/stiebel_eltron_isg_component
 [commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
-[hacs]: https://github.com/pail23/hacs
+[hacs]: https://github.com/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge
-[discord]: https://discord.gg/Qa5fW2R
-[discord-shield]: https://img.shields.io/discord/330944238910963714.svg?style=for-the-badge
-[exampleimg]: example.png
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen.svg?style=for-the-badge
 [forum]: https://community.home-assistant.io/
-[license-shield]: https://img.shields.io/github/license/pail23/blueprint.svg?style=for-the-badge
+[license-shield]: https://img.shields.io/github/license/pail23/stiebel_eltron_isg_component
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Joakim%20Sørensen%20%40ludeeus-blue.svg?style=for-the-badge
 [releases-shield]: https://img.shields.io/github/release/pail23/blueprint.svg?style=for-the-badge
 [releases]: https://github.com/pail23/stiebel_eltron_isg/releases
