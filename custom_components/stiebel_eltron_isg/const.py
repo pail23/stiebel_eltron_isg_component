@@ -60,7 +60,8 @@ CONSUMED_HEATING_TODAY = "consumed_heating_today"
 CONSUMED_HEATING_TOTAL = "consumed_heating_total"
 CONSUMED_WATER_HEATING_TODAY = "consumed_water_heating_today"
 CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
-
+CONSUMED_POWER = "consumed_power"
+HEATPUMPT_AVERAGE_POWER = 5.0
 
 ENERGY_SENSOR_TYPES = [
     [
@@ -109,6 +110,12 @@ ENERGY_SENSOR_TYPES = [
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
         "kWh",
+        "mdi:lightning-bolt",
+    ],
+    [
+        "Consumed Power",
+        CONSUMED_POWER,
+        "kW",
         "mdi:lightning-bolt",
     ],
 ]

@@ -42,6 +42,8 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    CONSUMED_POWER,
+    HEATPUMPT_AVERAGE_POWER,
     IS_HEATING,
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
@@ -103,7 +105,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_isg_temperature(temp) -> float:
-    return temp * 0.1 if temp != -1 else None
+    return temp * 0.1 if temp != -32768 else None
 
 
 class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
@@ -166,8 +168,14 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             state = decoder.decode_16bit_uint()
-            result[IS_HEATING] = (state & (1 << 4)) != 0
-            result[IS_HEATING_WATER] = (state & (1 << 5)) != 0
+            is_heating = (state & (1 << 4)) != 0
+            result[IS_HEATING] = is_heating
+            is_heating_water = (state & (1 << 5)) != 0
+            result[IS_HEATING_WATER] = is_heating_water
+            result[CONSUMED_POWER] = (
+                HEATPUMPT_AVERAGE_POWER if is_heating_water or is_heating else 0.0
+            )
+
             result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 8)) != 0
 
