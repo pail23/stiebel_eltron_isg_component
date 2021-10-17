@@ -34,6 +34,9 @@ from .const import (
     TARGET_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     TARGET_TEMPERATURE_FEK,
+    ACTUAL_HUMIDITY,
+    DEWPOINT_TEMPERATURE,
+    OUTDOOR_TEMPERATURE,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING_TODAY,
@@ -104,7 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def get_isg_temperature(temp) -> float:
+def get_isg_scaled_value(temp) -> float:
     return temp * 0.1 if temp != -32768 else None
 
 
@@ -188,12 +191,23 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
             )
-            result[ACTUAL_TEMPERATURE] = get_isg_temperature(decoder.decode_16bit_int())
-            result[TARGET_TEMPERATURE] = get_isg_temperature(decoder.decode_16bit_int())
-            result[ACTUAL_TEMPERATURE_FEK] = get_isg_temperature(
+            result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[TARGET_TEMPERATURE_FEK] = get_isg_temperature(
+            result[TARGET_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
+            result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
         return result

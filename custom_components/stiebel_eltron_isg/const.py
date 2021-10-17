@@ -4,7 +4,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
-from homeassistant.const import TEMP_CELSIUS
+from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
 
 # Base component constants
 NAME = "Stiebel Eltron ISG"
@@ -28,6 +28,9 @@ ACTUAL_TEMPERATURE = "actual_temperature"
 TARGET_TEMPERATURE = "target_temperature"
 ACTUAL_TEMPERATURE_FEK = "actual_temperature_fek"
 TARGET_TEMPERATURE_FEK = "target_temperature_fek"
+ACTUAL_HUMIDITY = "actual_humidity"
+DEWPOINT_TEMPERATURE = "dew_point_temperature"
+OUTDOOR_TEMPERATURE = "outdoor_temperature"
 
 
 def create_temperature_entity_description(name, key):
@@ -35,7 +38,17 @@ def create_temperature_entity_description(name, key):
         key,
         name=f"{NAME} {name}",
         native_unit_of_measurement=TEMP_CELSIUS,
-        icon="mdi:thermometer",
+        icon="hass:thermometer",
+        state_class=STATE_CLASS_MEASUREMENT,
+    )
+
+
+def create_humidity_entity_description(name, key):
+    return SensorEntityDescription(
+        key,
+        name=f"{NAME} {name}",
+        native_unit_of_measurement=PERCENTAGE,
+        icon="hass:water-percent",
         state_class=STATE_CLASS_MEASUREMENT,
     )
 
@@ -49,6 +62,11 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature FEK", TARGET_TEMPERATURE_FEK
     ),
+    create_humidity_entity_description("Humidity", ACTUAL_HUMIDITY),
+    create_temperature_entity_description(
+        "Dew Point Temperature", DEWPOINT_TEMPERATURE
+    ),
+    create_temperature_entity_description("Outdoor Temperature", OUTDOOR_TEMPERATURE),
 ]
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
