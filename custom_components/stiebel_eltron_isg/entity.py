@@ -1,5 +1,6 @@
 """StiebelEltronISGEntity class"""
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.helpers.entity import DeviceInfo
 
 from .const import DOMAIN, NAME, VERSION, ATTR_MANUFACTURER
 
@@ -18,12 +19,12 @@ class StiebelEltronISGEntity(CoordinatorEntity):
 
     @property
     def device_info(self):
-        return {
-            "identifiers": {(DOMAIN, self.coordinator.name)},
-            "name": NAME,
-            "model": VERSION,
-            "manufacturer": ATTR_MANUFACTURER,
-        }
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.coordinator.name)},
+            name=NAME,
+            model=VERSION,
+            manufacturer=ATTR_MANUFACTURER,
+        )
 
     @property
     def device_state_attributes(self):
