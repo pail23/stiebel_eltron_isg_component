@@ -26,11 +26,14 @@ class StiebelEltronISGEntity(CoordinatorEntity):
             manufacturer=ATTR_MANUFACTURER,
         )
 
+
+'''
     @property
-    def device_state_attributes(self):
+    def extra_state_attributes(self):
         """Return the state attributes."""
         return {
             #            "attribution": ATTRIBUTION,
             "id": str(self.entity_description.key),
             "integration": DOMAIN,
         }
+'''

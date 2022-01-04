@@ -31,6 +31,11 @@ TARGET_TEMPERATURE_FEK = "target_temperature_fek"
 ACTUAL_HUMIDITY = "actual_humidity"
 DEWPOINT_TEMPERATURE = "dew_point_temperature"
 OUTDOOR_TEMPERATURE = "outdoor_temperature"
+ACTUAL_TEMPERATURE_HK1 = "actual_temperature_hk1"
+TARGET_TEMPERATURE_HK1 = "target_temperature_hk1"
+ACTUAL_TEMPERATURE_WATER = "actual_temperature_water"
+TARGET_TEMPERATURE_WATER = "target_temperature_water"
+SOURCE_TEMPERATURE = "source_temperature"
 
 
 def create_temperature_entity_description(name, key):
@@ -67,6 +72,19 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Dew Point Temperature", DEWPOINT_TEMPERATURE
     ),
     create_temperature_entity_description("Outdoor Temperature", OUTDOOR_TEMPERATURE),
+    create_temperature_entity_description(
+        "Actual Temperature HK 1", ACTUAL_TEMPERATURE_HK1
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 1", TARGET_TEMPERATURE_HK1
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Water", ACTUAL_TEMPERATURE_WATER
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Water", TARGET_TEMPERATURE_WATER
+    ),
+    create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
 ]
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"

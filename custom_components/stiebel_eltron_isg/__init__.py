@@ -37,6 +37,11 @@ from .const import (
     ACTUAL_HUMIDITY,
     DEWPOINT_TEMPERATURE,
     OUTDOOR_TEMPERATURE,
+    ACTUAL_TEMPERATURE_HK1,
+    TARGET_TEMPERATURE_HK1,
+    ACTUAL_TEMPERATURE_WATER,
+    TARGET_TEMPERATURE_WATER,
+    SOURCE_TEMPERATURE,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING_TODAY,
@@ -208,6 +213,23 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 decoder.decode_16bit_int()
             )
             result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(24)
+            result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(24)
+            result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
         return result
