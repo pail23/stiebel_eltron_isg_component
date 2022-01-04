@@ -191,7 +191,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     def read_modbus_system_values(self) -> Dict:
         result = {}
-        inverter_data = self.read_input_registers(unit=1, address=500, count=22)
+        inverter_data = self.read_input_registers(unit=1, address=500, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
@@ -218,10 +218,11 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(24)
+            decoder.skip_bytes(22)
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
