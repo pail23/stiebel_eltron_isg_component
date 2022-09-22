@@ -39,6 +39,8 @@ from .const import (
     OUTDOOR_TEMPERATURE,
     ACTUAL_TEMPERATURE_HK1,
     TARGET_TEMPERATURE_HK1,
+    ACTUAL_TEMPERATURE_HK2,
+    TARGET_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_WATER,
     TARGET_TEMPERATURE_WATER,
     SOURCE_TEMPERATURE,
@@ -208,7 +210,9 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -218,11 +222,19 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
+            hk1_target = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(22)
+            result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(18)
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
