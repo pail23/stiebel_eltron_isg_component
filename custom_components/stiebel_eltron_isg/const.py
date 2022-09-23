@@ -35,6 +35,8 @@ ACTUAL_TEMPERATURE_HK1 = "actual_temperature_hk1"
 TARGET_TEMPERATURE_HK1 = "target_temperature_hk1"
 ACTUAL_TEMPERATURE_HK2 = "actual_temperature_hk2"
 TARGET_TEMPERATURE_HK2 = "target_temperature_hk2"
+ACTUAL_TEMPERATURE_BUFFER = "actual_temperature_buffer"
+TARGET_TEMPERATURE_BUFFER = "target_temperature_buffer"
 ACTUAL_TEMPERATURE_WATER = "actual_temperature_water"
 TARGET_TEMPERATURE_WATER = "target_temperature_water"
 SOURCE_TEMPERATURE = "source_temperature"
@@ -86,6 +88,12 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
     ),
+    create_temperature_entity_description(                                            
+        "Actual Temperature Buffer", ACTUAL_TEMPERATURE_BUFFER                             
+    ),                                                                                
+    create_temperature_entity_description(                                            
+        "Target Temperature Buffer", TARGET_TEMPERATURE_BUFFER                             
+    ), 
     create_temperature_entity_description(
         "Actual Temperature Water", ACTUAL_TEMPERATURE_WATER
     ),
