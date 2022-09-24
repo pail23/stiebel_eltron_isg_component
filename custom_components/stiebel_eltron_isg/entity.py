@@ -21,19 +21,8 @@ class StiebelEltronISGEntity(CoordinatorEntity):
     def device_info(self):
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.name)},
+            configuration_url=f"http://{self.coordinator._host}",
             name=NAME,
             model=VERSION,
             manufacturer=ATTR_MANUFACTURER,
         )
-
-
-'''
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            #            "attribution": ATTRIBUTION,
-            "id": str(self.entity_description.key),
-            "integration": DOMAIN,
-        }
-'''

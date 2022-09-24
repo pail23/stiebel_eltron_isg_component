@@ -128,6 +128,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     ):
         """Initialize the Modbus hub."""
         self._hass = hass
+        self._host = host
         self._client = ModbusTcpClient(host=host, port=port)
         self._lock = threading.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
