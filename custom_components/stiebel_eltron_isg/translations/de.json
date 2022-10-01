@@ -2,7 +2,6 @@
     "config": {
         "step": {
             "user": {
-                "title": "Konfiguriere Deine modbus-Verbindung zum Stiebel Eltron ISG",
                 "description": "If you need help with the configuration have a look here: https://github.com/pail23/stiebel_eltron_isg",
                 "data": {
                     "host": "Die IP-Adresse des Stiebel Eltron ISG",
