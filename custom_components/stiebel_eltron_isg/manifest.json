@@ -2,7 +2,7 @@
   "domain": "stiebel_eltron_isg",
   "name": "Stiebel Eltron ISG",
   "documentation": "https://github.com/pail23/stiebel_eltron_isg",
-  "requirements": ["pymodbus==2.5.3"],
+  "requirements": ["pymodbus==3.0.0"],
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pail23/stiebel_eltron_isg/issues",
   "version": "0.0.1",

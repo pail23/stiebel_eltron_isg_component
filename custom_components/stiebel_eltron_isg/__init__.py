@@ -12,7 +12,7 @@ from typing import Dict
 
 
 import voluptuous as vol
-from pymodbus.client.sync import ModbusTcpClient
+from pymodbus.client import ModbusTcpClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
@@ -41,8 +41,8 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK2,
-    ACTUAL_TEMPERATURE_BUFFER,                                                       
-    TARGET_TEMPERATURE_BUFFER,   
+    ACTUAL_TEMPERATURE_BUFFER,
+    TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
     TARGET_TEMPERATURE_WATER,
     SOURCE_TEMPERATURE,
@@ -152,11 +152,10 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         with self._lock:
             self._client.connect()
 
-    def read_input_registers(self, unit, address, count):
+    def read_input_registers(self, slave, address, count):
         """Read input registers."""
         with self._lock:
-            kwargs = {"unit": unit} if unit else {}
-            return self._client.read_input_registers(address, count, **kwargs)
+            return self._client.read_input_registers(address, count, slave)
 
     async def _async_update_data(self) -> Dict:
         """Time to update."""
@@ -213,9 +212,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
-            )
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
             result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -225,9 +222,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            hk1_target = get_isg_scaled_value(
-                decoder.decode_16bit_int()
-            )
+            hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -239,11 +234,11 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             )
             decoder.skip_bytes(10)
             result[ACTUAL_TEMPERATURE_BUFFER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()                        
-            )  
-            result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(    
-                decoder.decode_16bit_int()                          
-            )  
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             decoder.skip_bytes(4)
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
