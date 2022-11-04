@@ -174,7 +174,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     def read_modbus_system_state(self) -> Dict:
         result = {}
-        inverter_data = self.read_input_registers(unit=1, address=2500, count=1)
+        inverter_data = self.read_input_registers(slave=1, address=2500, count=1)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
@@ -195,7 +195,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     def read_modbus_system_values(self) -> Dict:
         result = {}
-        inverter_data = self.read_input_registers(unit=1, address=500, count=40)
+        inverter_data = self.read_input_registers(slave=1, address=500, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
@@ -254,7 +254,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     def read_modbus_energy(self) -> Dict:
         result = {}
-        inverter_data = self.read_input_registers(unit=1, address=3500, count=22)
+        inverter_data = self.read_input_registers(slave=1, address=3500, count=22)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
