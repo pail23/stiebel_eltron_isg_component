@@ -4,7 +4,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
-from homeassistant.const import TEMP_CELSIUS, PERCENTAGE
+from homeassistant.const import UnitOfTemperature, PERCENTAGE
 
 # Base component constants
 NAME = "Stiebel Eltron ISG"
@@ -46,7 +46,7 @@ def create_temperature_entity_description(name, key):
     return SensorEntityDescription(
         key,
         name=f"{NAME} {name}",
-        native_unit_of_measurement=TEMP_CELSIUS,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="hass:thermometer",
         state_class=STATE_CLASS_MEASUREMENT,
     )
