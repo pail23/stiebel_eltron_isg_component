@@ -20,7 +20,7 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -93,11 +93,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
         hass.data.setdefault(DOMAIN, {})
         _LOGGER.info(STARTUP_MESSAGE)
 
+    name = entry.data.get(CONF_NAME)
     host = entry.data.get(CONF_HOST)
     port = entry.data.get(CONF_PORT)
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
-    coordinator = StiebelEltronModbusDataCoordinator(hass, host, port, scan_interval)
+    coordinator = StiebelEltronModbusDataCoordinator(
+        hass, name, host, port, scan_interval
+    )
     await coordinator.async_refresh()
 
     if not coordinator.last_update_success:
@@ -126,6 +129,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass,
+        name,
         host,
         port,
         scan_interval,
@@ -138,9 +142,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         self._scan_interval = timedelta(seconds=scan_interval)
         self.platforms = []
 
-        super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=self._scan_interval
-        )
+        super().__init__(hass, _LOGGER, name=name, update_interval=self._scan_interval)
 
     def close(self):
         """Disconnect client."""
@@ -151,6 +153,11 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Connect client."""
         with self._lock:
             self._client.connect()
+
+    @property
+    def host(self) -> str:
+        """return the host address of the Stiebel Eltron ISG"""
+        return self._host
 
     def read_input_registers(self, slave, address, count):
         """Read input registers."""

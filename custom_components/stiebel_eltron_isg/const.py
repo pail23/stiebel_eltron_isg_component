@@ -7,7 +7,8 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfTemperature, PERCENTAGE
 
 # Base component constants
-NAME = "Stiebel Eltron ISG"
+DEFAULT_NAME = "Stiebel Eltron ISG"
+NAME = DEFAULT_NAME
 ATTR_MANUFACTURER = "Stiebel Eltron"
 DOMAIN = "stiebel_eltron_isg"
 DOMAIN_DATA = f"{DOMAIN}_data"
@@ -43,9 +44,10 @@ SOURCE_TEMPERATURE = "source_temperature"
 
 
 def create_temperature_entity_description(name, key):
+    """creates an entry description for a temperature sensor."""
     return SensorEntityDescription(
         key,
-        name=f"{NAME} {name}",
+        name=name,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="hass:thermometer",
         state_class=STATE_CLASS_MEASUREMENT,
@@ -53,9 +55,10 @@ def create_temperature_entity_description(name, key):
 
 
 def create_humidity_entity_description(name, key):
+    """creates an entry description for a humidity sensor."""
     return SensorEntityDescription(
         key,
-        name=f"{NAME} {name}",
+        name=name,
         native_unit_of_measurement=PERCENTAGE,
         icon="hass:water-percent",
         state_class=STATE_CLASS_MEASUREMENT,
@@ -88,12 +91,12 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
     ),
-    create_temperature_entity_description(                                            
-        "Actual Temperature Buffer", ACTUAL_TEMPERATURE_BUFFER                             
-    ),                                                                                
-    create_temperature_entity_description(                                            
-        "Target Temperature Buffer", TARGET_TEMPERATURE_BUFFER                             
-    ), 
+    create_temperature_entity_description(
+        "Actual Temperature Buffer", ACTUAL_TEMPERATURE_BUFFER
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Buffer", TARGET_TEMPERATURE_BUFFER
+    ),
     create_temperature_entity_description(
         "Actual Temperature Water", ACTUAL_TEMPERATURE_WATER
     ),
@@ -179,24 +182,28 @@ IS_COOLING = "is_cooling"
 
 BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
-        name=f"{NAME} is heating",
+        name="Is heating",
         key=IS_HEATING,
         icon="mdi:radiator",
+        has_entity_name=True,
     ),
     BinarySensorEntityDescription(
-        name=f"{NAME} is heating boiler",
+        name="Is heating boiler",
         key=IS_HEATING_WATER,
         icon="mdi:water-boiler",
+        has_entity_name=True,
     ),
     BinarySensorEntityDescription(
-        name=f"{NAME} is in summer mode",
+        name="Is in summer mode",
         key=IS_SUMMER_MODE,
         icon="mdi:weather-sunny",
+        has_entity_name=True,
     ),
     BinarySensorEntityDescription(
-        name=f"{NAME} is cooling",
+        name="Is cooling",
         key=IS_COOLING,
         icon="mdi:snowflake",
+        has_entity_name=True,
     ),
 ]
 

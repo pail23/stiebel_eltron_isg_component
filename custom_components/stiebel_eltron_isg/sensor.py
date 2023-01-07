@@ -37,11 +37,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     for meter_sensor_info in ENERGY_SENSOR_TYPES:
         description = SensorEntityDescription(
-            name=f"{NAME} {meter_sensor_info[0]}",
+            name=f"{meter_sensor_info[0]}",
             key=meter_sensor_info[1],
             native_unit_of_measurement=meter_sensor_info[2],
             icon=meter_sensor_info[3],
             state_class=STATE_CLASS_MEASUREMENT,
+            has_entity_name=True,
         )
         if description.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
             description.state_class = STATE_CLASS_TOTAL_INCREASING
@@ -72,7 +73,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
-        return f"{self.coordinator.name}_{self.entity_description.key}"
+        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def state(self):

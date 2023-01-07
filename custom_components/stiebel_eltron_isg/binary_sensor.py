@@ -44,7 +44,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
-        return f"{self.coordinator.name}_{self.entity_description.key}"
+        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def is_on(self):

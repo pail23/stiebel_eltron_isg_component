@@ -5,10 +5,11 @@ from homeassistant import config_entries
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import voluptuous as vol
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
 from .const import (
     DOMAIN,
+    DEFAULT_NAME,
     DEFAULT_HOST_NAME,
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_PORT,
@@ -17,6 +18,7 @@ from homeassistant.core import HomeAssistant, callback
 
 DATA_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
@@ -35,10 +37,18 @@ def host_valid(host):
 
 
 @callback
-def solaredge_modbus_entries(hass: HomeAssistant):
+def stiebeleltron_modbus_entries(hass: HomeAssistant):
     """Return the hosts already configured."""
     return set(
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
+    )
+
+
+@callback
+def stiebeleltron_entries(hass: HomeAssistant):
+    """Return the hosts already configured."""
+    return set(
+        entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
     )
 
 
@@ -54,7 +64,13 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
-        if host in solaredge_modbus_entries(self.hass):
+        if host in stiebeleltron_modbus_entries(self.hass):
+            return True
+        return False
+
+    def _name_in_configuration_exists(self, name) -> bool:
+        """Return True if host exists in configuration."""
+        if name in stiebeleltron_entries(self.hass):
             return True
         return False
 
@@ -68,21 +84,25 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
+            name = user_input[CONF_NAME]
 
             if self._host_in_configuration_exists(host):
                 self._errors[CONF_HOST] = "already_configured"
+            elif self._name_in_configuration_exists(name):
+                self._errors[CONF_NAME] = "already_configured"
             elif not host_valid(user_input[CONF_HOST]):
                 self._errors[CONF_HOST] = "invalid_host_IP"
             else:
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_HOST], data=user_input
+                    title=user_input[CONF_NAME], data=user_input
                 )
             return await self._show_config_form(user_input)
 
         user_input = {}
         # Provide defaults for form
+        user_input[CONF_NAME] = DEFAULT_NAME
         user_input[CONF_HOST] = DEFAULT_HOST_NAME
         user_input[CONF_PORT] = DEFAULT_PORT
         user_input[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
@@ -98,6 +118,7 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
                     vol.Optional(
