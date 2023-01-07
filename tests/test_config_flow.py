@@ -7,11 +7,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import (
-    BINARY_SENSOR,
     DOMAIN,
-    PLATFORMS,
-    SENSOR,
-    #    SWITCH,
 )
 
 from .const import MOCK_CONFIG, MOCK_INVALID_IP_CONFIG
