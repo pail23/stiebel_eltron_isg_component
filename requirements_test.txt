@@ -1,2 +1,2 @@
-pytest-homeassistant-custom-component==0.12.43
-pymodbus
+pytest-homeassistant-custom-component==0.13.4
+pymodbus>=3.1.1

@@ -4,7 +4,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
-from homeassistant.const import UnitOfTemperature, PERCENTAGE
+from homeassistant.const import UnitOfTemperature, PERCENTAGE, UnitOfPressure
 
 # Base component constants
 DEFAULT_NAME = "Stiebel Eltron ISG"
@@ -41,6 +41,8 @@ TARGET_TEMPERATURE_BUFFER = "target_temperature_buffer"
 ACTUAL_TEMPERATURE_WATER = "actual_temperature_water"
 TARGET_TEMPERATURE_WATER = "target_temperature_water"
 SOURCE_TEMPERATURE = "source_temperature"
+HEATER_PRESSURE = "heating_pressure"
+VOLUME_STREAM = "volume_stream"
 
 
 def create_temperature_entity_description(name, key):
@@ -61,6 +63,28 @@ def create_humidity_entity_description(name, key):
         name=name,
         native_unit_of_measurement=PERCENTAGE,
         icon="hass:water-percent",
+        state_class=STATE_CLASS_MEASUREMENT,
+    )
+
+
+def create_pressure_entity_description(name, key):
+    """creates an entry description for a pressure sensor."""
+    return SensorEntityDescription(
+        key,
+        name=name,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        icon="mdi:gauge",
+        state_class=STATE_CLASS_MEASUREMENT,
+    )
+
+
+def create_volume_stream_entity_description(name, key):
+    """creates an entry description for a volume stream sensor."""
+    return SensorEntityDescription(
+        key,
+        name=name,
+        native_unit_of_measurement="l/min",
+        icon="mdi:gauge",
         state_class=STATE_CLASS_MEASUREMENT,
     )
 
@@ -97,6 +121,8 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature Buffer", TARGET_TEMPERATURE_BUFFER
     ),
+    create_pressure_entity_description("Heater pressure", HEATER_PRESSURE),
+    create_volume_stream_entity_description("Volume stream", VOLUME_STREAM),
     create_temperature_entity_description(
         "Actual Temperature Water", ACTUAL_TEMPERATURE_WATER
     ),

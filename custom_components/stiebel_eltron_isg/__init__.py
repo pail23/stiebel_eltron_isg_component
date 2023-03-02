@@ -45,6 +45,8 @@ from .const import (
     TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
     TARGET_TEMPERATURE_WATER,
+    HEATER_PRESSURE,
+    VOLUME_STREAM,
     SOURCE_TEMPERATURE,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
@@ -119,8 +121,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def get_isg_scaled_value(temp) -> float:
-    return temp * 0.1 if temp != -32768 else None
+def get_isg_scaled_value(value) -> float:
+    return value * 0.1 if value != -32768 else None
 
 
 class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
@@ -246,7 +248,12 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(4)
+            result[HEATER_PRESSURE] = (
+                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+            )
+            result[VOLUME_STREAM] = (
+                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+            )
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
