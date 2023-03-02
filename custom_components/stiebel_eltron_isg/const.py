@@ -12,7 +12,7 @@ NAME = DEFAULT_NAME
 ATTR_MANUFACTURER = "Stiebel Eltron"
 DOMAIN = "stiebel_eltron_isg"
 DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "0.1.0"
+VERSION = "0.2.1"
 ISSUE_URL = "https://github.com/pail23/stiebel_eltron_isg/issues"
 DEFAULT_HOST_NAME = ""
 DEFAULT_SCAN_INTERVAL = 30
@@ -121,8 +121,8 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature Buffer", TARGET_TEMPERATURE_BUFFER
     ),
-    create_pressure_entity_description("Heater pressure", HEATER_PRESSURE),
-    create_volume_stream_entity_description("Volume stream", VOLUME_STREAM),
+    create_pressure_entity_description("Heater Pressure", HEATER_PRESSURE),
+    create_volume_stream_entity_description("Volume Stream", VOLUME_STREAM),
     create_temperature_entity_description(
         "Actual Temperature Water", ACTUAL_TEMPERATURE_WATER
     ),
