@@ -28,6 +28,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    VERSION,
     PLATFORMS,
     STARTUP_MESSAGE,
     ACTUAL_TEMPERATURE,
@@ -62,6 +63,10 @@ from .const import (
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
     IS_COOLING,
+    SG_READY_STATE,
+    SG_READY_ACTIVE,
+    SG_READY_INPUT_1,
+    SG_READY_INPUT_2,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -139,6 +144,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Initialize the Modbus hub."""
         self._hass = hass
         self._host = host
+        self._model = VERSION
         self._client = ModbusTcpClient(host=host, port=port)
         self._lock = threading.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
@@ -161,10 +167,25 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """return the host address of the Stiebel Eltron ISG"""
         return self._host
 
+    @property
+    def model(self) -> str:
+        """return the host address of the Stiebel Eltron ISG"""
+        return self._model
+
     def read_input_registers(self, slave, address, count):
         """Read input registers."""
         with self._lock:
             return self._client.read_input_registers(address, count, slave)
+
+    def read_holding_registers(self, slave, address, count):
+        """Read holding registers."""
+        with self._lock:
+            return self._client.read_holding_registers(address, count, slave)
+
+    def write_register(self, address, value, slave):
+        """Write holding register."""
+        with self._lock:
+            return self._client.write_registers(address, value, slave)
 
     async def _async_update_data(self) -> Dict:
         """Time to update."""
@@ -174,14 +195,17 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             raise UpdateFailed() from exception
 
     def read_modbus_data(self) -> Dict:
+        """Read the ISG data through modbus."""
         result = {
             **self.read_modbus_energy(),
             **self.read_modbus_system_state(),
             **self.read_modbus_system_values(),
+            **self.read_modbus_sg_ready(),
         }
         return result
 
     def read_modbus_system_state(self) -> Dict:
+        """Read the system state values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=2500, count=1)
         if not inverter_data.isError():
@@ -203,6 +227,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         return result
 
     def read_modbus_system_values(self) -> Dict:
+        """Read the system related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=500, count=40)
         if not inverter_data.isError():
@@ -267,6 +292,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         return result
 
     def read_modbus_energy(self) -> Dict:
+        """Read the energy consumption related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=3500, count=22)
         if not inverter_data.isError():
@@ -304,6 +330,46 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 consumed_water_total_high * 1000 + consumed_water_total_low
             )
         return result
+
+    def read_modbus_sg_ready(self) -> Dict:
+        """Read the sg ready related values from the ISG."""
+        result = {}
+        inverter_data = self.read_input_registers(slave=1, address=5000, count=2)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[SG_READY_STATE] = decoder.decode_16bit_uint()
+            model = decoder.decode_16bit_uint()
+            if model == 390:
+                self._model = "WPM 3"
+            elif model == 391:
+                self._model = "WPM 3i"
+            elif model == 449:
+                self._model = "WPMsystem"
+            else:
+                self._model = "other model"
+        inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[SG_READY_ACTIVE] = decoder.decode_16bit_uint()
+            result[SG_READY_INPUT_1] = decoder.decode_16bit_uint()
+            result[SG_READY_INPUT_2] = decoder.decode_16bit_uint()
+        return result
+
+    def set_data(self, key, value) -> None:
+        """Write the data to the modbus"""
+        if key == SG_READY_ACTIVE:
+            self.write_register(address=4000, value=value, slave=1)
+        elif key == SG_READY_INPUT_1:
+            self.write_register(address=4001, value=value, slave=1)
+        elif key == SG_READY_INPUT_2:
+            self.write_register(address=4002, value=value, slave=1)
+        else:
+            return
+        self.data[key] = value
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

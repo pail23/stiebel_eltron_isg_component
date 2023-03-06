@@ -4,6 +4,7 @@ from homeassistant.components.sensor import (
     STATE_CLASS_MEASUREMENT,
     SensorEntityDescription,
 )
+from homeassistant.components.switch import SwitchEntityDescription, SwitchDeviceClass
 from homeassistant.const import UnitOfTemperature, PERCENTAGE, UnitOfPressure
 
 # Base component constants
@@ -22,7 +23,7 @@ DEFAULT_PORT = 502
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR]  # [BINARY_SENSOR, SENSOR, SWITCH]
+PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
 
 
 ACTUAL_TEMPERATURE = "actual_temperature"
@@ -43,6 +44,11 @@ TARGET_TEMPERATURE_WATER = "target_temperature_water"
 SOURCE_TEMPERATURE = "source_temperature"
 HEATER_PRESSURE = "heating_pressure"
 VOLUME_STREAM = "volume_stream"
+SG_READY_STATE = "sg_ready_state"
+CONTROLLER_TYPE = "controller_type"
+SG_READY_ACTIVE = "sg_ready_active"
+SG_READY_INPUT_1 = "sg_ready_input_1"
+SG_READY_INPUT_2 = "sg_ready_input_2"
 
 
 def create_temperature_entity_description(name, key):
@@ -130,6 +136,14 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Target Temperature Water", TARGET_TEMPERATURE_WATER
     ),
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
+]
+
+ENERGYMANAGEMENT_SENSOR_TYPES = [
+    SensorEntityDescription(
+        SG_READY_STATE,
+        name="SG Ready State",
+        icon="mdi:solar-power",
+    )
 ]
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
@@ -230,6 +244,27 @@ BINARY_SENSOR_TYPES = [
         key=IS_COOLING,
         icon="mdi:snowflake",
         has_entity_name=True,
+    ),
+]
+
+SWITCH_TYPES = [
+    SwitchEntityDescription(
+        SG_READY_ACTIVE,
+        SwitchDeviceClass.SWITCH,
+        has_entity_name=True,
+        name="SG Ready Active",
+    ),
+    SwitchEntityDescription(
+        SG_READY_INPUT_1,
+        SwitchDeviceClass.SWITCH,
+        has_entity_name=True,
+        name="SG Ready Input 1",
+    ),
+    SwitchEntityDescription(
+        SG_READY_INPUT_2,
+        SwitchDeviceClass.SWITCH,
+        has_entity_name=True,
+        name="SG Ready Input 2",
     ),
 ]
 

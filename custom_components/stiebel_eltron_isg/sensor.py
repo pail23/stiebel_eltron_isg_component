@@ -12,10 +12,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import DEVICE_CLASS_ENERGY, ENERGY_KILO_WATT_HOUR
 
 from .const import (
-    NAME,
     DOMAIN,
     ENERGY_SENSOR_TYPES,
     SYSTEM_VALUES_SENSOR_TYPES,
+    ENERGYMANAGEMENT_SENSOR_TYPES,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -28,6 +28,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     entities = []
     for description in SYSTEM_VALUES_SENSOR_TYPES:
+        sensor = StiebelEltronISGSensor(
+            coordinator,
+            entry,
+            description,
+        )
+        entities.append(sensor)
+
+    for description in ENERGYMANAGEMENT_SENSOR_TYPES:
         sensor = StiebelEltronISGSensor(
             coordinator,
             entry,

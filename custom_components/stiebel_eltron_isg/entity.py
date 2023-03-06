@@ -20,6 +20,6 @@ class StiebelEltronISGEntity(CoordinatorEntity):
             identifiers={(DOMAIN, self.coordinator.name)},
             configuration_url=f"http://{self.coordinator.host}",
             name=self.coordinator.name,
-            model=VERSION,
+            model=self.coordinator.model,
             manufacturer=ATTR_MANUFACTURER,
         )
