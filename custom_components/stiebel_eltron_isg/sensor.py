@@ -84,6 +84,6 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
-    def state(self):
+    def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get(self.entity_description.key)
