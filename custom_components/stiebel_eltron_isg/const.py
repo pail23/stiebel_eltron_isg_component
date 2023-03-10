@@ -23,7 +23,8 @@ DEFAULT_PORT = 502
 BINARY_SENSOR = "binary_sensor"
 SENSOR = "sensor"
 SWITCH = "switch"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH]
+SELECT = "select"
+PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, SELECT]
 
 
 ACTUAL_TEMPERATURE = "actual_temperature"
@@ -49,6 +50,8 @@ CONTROLLER_TYPE = "controller_type"
 SG_READY_ACTIVE = "sg_ready_active"
 SG_READY_INPUT_1 = "sg_ready_input_1"
 SG_READY_INPUT_2 = "sg_ready_input_2"
+
+OPERATION_MODE = "operation_mode"
 
 
 def create_temperature_entity_description(name, key):

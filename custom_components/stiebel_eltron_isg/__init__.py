@@ -67,6 +67,7 @@ from .const import (
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
+    OPERATION_MODE,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -200,6 +201,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             **self.read_modbus_energy(),
             **self.read_modbus_system_state(),
             **self.read_modbus_system_values(),
+            **self.read_modbus_system_paramter(),
             **self.read_modbus_sg_ready(),
         }
         return result
@@ -291,6 +293,17 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             )
         return result
 
+    def read_modbus_system_paramter(self) -> Dict:
+        """Read the system paramters from the ISG."""
+        result = {}
+        inverter_data = self.read_holding_registers(slave=1, address=1500, count=19)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[OPERATION_MODE] = decoder.decode_16bit_uint()
+        return result
+
     def read_modbus_energy(self) -> Dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
@@ -367,6 +380,8 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             self.write_register(address=4001, value=value, slave=1)
         elif key == SG_READY_INPUT_2:
             self.write_register(address=4002, value=value, slave=1)
+        elif key == OPERATION_MODE:
+            self.write_register(address=1500, value=value, slave=1)
         else:
             return
         self.data[key] = value
