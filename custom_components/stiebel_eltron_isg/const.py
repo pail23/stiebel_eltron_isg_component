@@ -5,7 +5,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.components.switch import SwitchEntityDescription, SwitchDeviceClass
-from homeassistant.const import UnitOfTemperature, PERCENTAGE, UnitOfPressure
+from homeassistant.const import UnitOfTemperature, PERCENTAGE, UnitOfPressure, Platform
 
 # Base component constants
 DEFAULT_NAME = "Stiebel Eltron ISG"
@@ -20,12 +20,12 @@ DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_PORT = 502
 
 # Platforms
-BINARY_SENSOR = "binary_sensor"
-SENSOR = "sensor"
-SWITCH = "switch"
-SELECT = "select"
-PLATFORMS = [BINARY_SENSOR, SENSOR, SWITCH, SELECT]
-
+PLATFORMS: list[Platform] = [
+    Platform.SENSOR,
+    Platform.BINARY_SENSOR,
+    Platform.SWITCH,
+    Platform.SELECT,
+]
 
 ACTUAL_TEMPERATURE = "actual_temperature"
 TARGET_TEMPERATURE = "target_temperature"

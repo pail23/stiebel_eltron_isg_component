@@ -17,15 +17,15 @@ jobs:
         shell: "bash"
         run: |
           yq -i -o json '.version="${{ github.event.release.tag_name }}"' \
-            "${{ github.workspace }}/pail23/stiebel_eltron_isg_component/manifest.json"
+            "${{ github.workspace }}/custom_components/stiebel_eltron_isg/manifest.json"
 
       - name: "ZIP the integration directory"
         shell: "bash"
         run: |
-          cd "${{ github.workspace }}/pail23/stiebel_eltron_isg_component"
-          zip stiebel_eltron_isg_component.zip -r ./
+          cd "${{ github.workspace }}/custom_components/stiebel_eltron_isg"
+          zip stiebel_eltron_isg.zip -r ./
 
       - name: "Upload the ZIP file to the release"
         uses: softprops/action-gh-release@v0.1.15
         with:
-          files: ${{ github.workspace }}/pail23/stiebel_eltron_isg_component/stiebel_eltron_isg_component.zip
+          files: ${{ github.workspace }}/custom_components/stiebel_eltron_isg/stiebel_eltron_isg.zip
