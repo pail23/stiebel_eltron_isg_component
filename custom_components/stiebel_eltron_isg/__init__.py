@@ -1,10 +1,8 @@
-"""
-Custom integration to integrate stiebel_eltron_isg with Home Assistant.
+"""Custom integration to integrate stiebel_eltron_isg with Home Assistant.
 
 For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
-import asyncio
 from datetime import timedelta
 import logging
 import threading
@@ -18,11 +16,9 @@ from pymodbus.payload import BinaryPayloadDecoder
 
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Config, HomeAssistant, callback
-from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.core import Config, HomeAssistant
 from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -129,14 +125,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_isg_scaled_value(value) -> float:
-    """Calculates the value out of a modbus register by scaling it."""
+    """Calculate the value out of a modbus register by scaling it."""
     return value * 0.1 if value != -32768 else None
 
 
 def get_controller_model(host, port) -> int:
-    """reads the model of the controller.
+    """Read the model of the controller.
+
     LWA and LWZ controllers have model ids 103 and 104.
-    WPM controllers have 390, 391 or 449."""
+    WPM controllers have 390, 391 or 449.
+    """
     client = ModbusTcpClient(host=host, port=port)
     try:
         client.connect()
@@ -186,12 +184,12 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     @property
     def host(self) -> str:
-        """return the host address of the Stiebel Eltron ISG"""
+        """Return the host address of the Stiebel Eltron ISG."""
         return self._host
 
     @property
     def model(self) -> str:
-        """return the host address of the Stiebel Eltron ISG"""
+        """Return the host address of the Stiebel Eltron ISG."""
         return self._model
 
     def read_input_registers(self, slave, address, count):
@@ -403,7 +401,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         return result
 
     def set_data(self, key, value) -> None:
-        """Write the data to the modbus"""
+        """Write the data to the modbus."""
         if key == SG_READY_ACTIVE:
             self.write_register(address=4000, value=value, slave=1)
         elif key == SG_READY_INPUT_1:
@@ -418,7 +416,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
 
 class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
-    """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models"""
+    """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
 
     def read_modbus_data(self) -> Dict:
         """Read the ISG data through modbus."""
@@ -545,7 +543,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         return result
 
     def set_data(self, key, value) -> None:
-        """Write the data to the modbus"""
+        """Write the data to the modbus."""
         if key == SG_READY_ACTIVE:
             self.write_register(address=4000, value=value, slave=1)
         elif key == SG_READY_INPUT_1:

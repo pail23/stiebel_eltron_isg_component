@@ -11,13 +11,6 @@
 
 _Component to integrate with [stiebel_eltron_isg][stiebel_eltron_isg]._
 
-**This component will set up the following platforms.**
-
-Platform | Description
--- | --
-`Produced Heating Today` | Produced energy for heating today.
-`Produced Heating Total` | Produced energy for heating in the lifetime of the heatpump.
-
 
 ## Installation
 
@@ -29,19 +22,7 @@ Platform | Description
 6. Restart Home Assistant
 7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
 
-Using your HA configuration directory (folder) as a starting point you should now also have this:
 
-```text
-custom_components/stiebel_eltron_isg/translations/en.json
-custom_components/stiebel_eltron_isg/translations/de.json
-custom_components/stiebel_eltron_isg/__init__.py
-custom_components/stiebel_eltron_isg/binary_sensor.py
-custom_components/stiebel_eltron_isg/config_flow.py
-custom_components/stiebel_eltron_isg/const.py
-custom_components/stiebel_eltron_isg/entity.py
-custom_components/stiebel_eltron_isg/manifest.json
-custom_components/stiebel_eltron_isg/sensor.py
-```
 
 ## Configuration is done in the UI
 

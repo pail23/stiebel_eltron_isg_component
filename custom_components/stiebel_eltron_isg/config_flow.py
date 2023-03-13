@@ -2,8 +2,7 @@
 import ipaddress
 import re
 from homeassistant import config_entries
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.core import HomeAssistant, callback
 import voluptuous as vol
 from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 
@@ -14,7 +13,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_PORT,
 )
-from homeassistant.core import HomeAssistant, callback
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -39,17 +37,17 @@ def host_valid(host):
 @callback
 def stiebeleltron_modbus_entries(hass: HomeAssistant):
     """Return the hosts already configured."""
-    return set(
+    return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 @callback
 def stiebeleltron_entries(hass: HomeAssistant):
     """Return the hosts already configured."""
-    return set(
+    return {
         entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
-    )
+    }
 
 
 class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):

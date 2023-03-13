@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def create_temperature_entity_description(name, key):
-    """creates an entry description for a temperature sensor."""
+    """Create an entry description for a temperature sensor."""
     return SensorEntityDescription(
         key,
         name=name,
@@ -65,7 +65,7 @@ def create_temperature_entity_description(name, key):
 
 
 def create_humidity_entity_description(name, key):
-    """creates an entry description for a humidity sensor."""
+    """Create an entry description for a humidity sensor."""
     return SensorEntityDescription(
         key,
         name=name,
@@ -76,7 +76,7 @@ def create_humidity_entity_description(name, key):
 
 
 def create_pressure_entity_description(name, key):
-    """creates an entry description for a pressure sensor."""
+    """Create an entry description for a pressure sensor."""
     return SensorEntityDescription(
         key,
         name=name,
@@ -87,7 +87,7 @@ def create_pressure_entity_description(name, key):
 
 
 def create_volume_stream_entity_description(name, key):
-    """creates an entry description for a volume stream sensor."""
+    """Create an entry description for a volume stream sensor."""
     return SensorEntityDescription(
         key,
         name=name,
@@ -208,7 +208,7 @@ ENERGY_SENSOR_TYPES = [
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup sensor platform."""
+    """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
@@ -266,6 +266,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
+        """Return the unique id of the sensor."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property

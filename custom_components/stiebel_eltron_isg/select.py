@@ -32,7 +32,7 @@ SELECT_TYPES = [
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup select platform."""
+    """Set up the select platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
@@ -45,7 +45,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
 
 def get_key_from_value(d, val):
-    """Returns the value for a given key from a dictionary."""
+    """Return the value for a given key from a dictionary."""
     keys = [k for k, v in d.items() if v == val]
     if keys:
         return keys[0]
@@ -63,6 +63,7 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
+        """Return the unique id of the select entity."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property

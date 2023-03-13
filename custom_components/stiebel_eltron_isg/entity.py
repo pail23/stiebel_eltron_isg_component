@@ -1,4 +1,4 @@
-"""StiebelEltronISGEntity class"""
+"""StiebelEltronISGEntity class."""
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
 
@@ -11,11 +11,13 @@ class StiebelEltronISGEntity(CoordinatorEntity):
     _attr_has_entity_name = True
 
     def __init__(self, coordinator, config_entry):
+        """Initialize the entity base class."""
         super().__init__(coordinator)
         self.config_entry = config_entry
 
     @property
     def device_info(self):
+        """Return the device info of the entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.name)},
             configuration_url=f"http://{self.coordinator.host}",

@@ -39,7 +39,7 @@ BINARY_SENSOR_TYPES = [
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup binary_sensor platform."""
+    """Set up the binary_sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
@@ -69,6 +69,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
+        """Return the unique id of the sensor."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property

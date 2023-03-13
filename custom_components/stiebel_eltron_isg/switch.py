@@ -37,7 +37,7 @@ SWITCH_TYPES = [
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
-    """Setup sensor platform."""
+    """Set up the switch platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
@@ -63,6 +63,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     @property
     def unique_id(self) -> Optional[str]:
+        """Return the unique id of the switch."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
