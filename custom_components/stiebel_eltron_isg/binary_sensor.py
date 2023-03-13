@@ -4,13 +4,38 @@ from typing import Optional
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
+    BinarySensorEntityDescription,
 )
 
 from .entity import StiebelEltronISGEntity
-from .const import (
-    DOMAIN,
-    BINARY_SENSOR_TYPES,
-)
+from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE
+
+BINARY_SENSOR_TYPES = [
+    BinarySensorEntityDescription(
+        name="Is heating",
+        key=IS_HEATING,
+        icon="mdi:radiator",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Is heating boiler",
+        key=IS_HEATING_WATER,
+        icon="mdi:water-boiler",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Is in summer mode",
+        key=IS_SUMMER_MODE,
+        icon="mdi:weather-sunny",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Is cooling",
+        key=IS_COOLING,
+        icon="mdi:snowflake",
+        has_entity_name=True,
+    ),
+]
 
 
 async def async_setup_entry(hass, entry, async_add_devices):

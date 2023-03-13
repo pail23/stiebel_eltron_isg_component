@@ -106,8 +106,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     port = entry.data.get(CONF_PORT)
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
-    coordinator = StiebelEltronModbusDataCoordinator(
-        hass, name, host, port, scan_interval
+    model = get_controller_model(host, port)
+
+    coordinator = (
+        StiebelEltronModbusWPMDataCoordinator(hass, name, host, port, scan_interval)
+        if model >= 390
+        else StiebelEltronModbusLWZDataCoordinator(
+            hass, name, host, port, scan_interval
+        )
     )
     await coordinator.async_config_entry_first_refresh()
 
@@ -123,7 +129,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
 
 
 def get_isg_scaled_value(value) -> float:
+    """Calculates the value out of a modbus register by scaling it."""
     return value * 0.1 if value != -32768 else None
+
+
+def get_controller_model(host, port) -> int:
+    """reads the model of the controller.
+    LWA and LWZ controllers have model ids 103 and 104.
+    WPM controllers have 390, 391 or 449."""
+    client = ModbusTcpClient(host=host, port=port)
+    try:
+        client.connect()
+        inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            model = decoder.decode_16bit_uint()
+            return model
+    finally:
+        client.close()
+    return None
 
 
 class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
@@ -182,6 +208,38 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Write holding register."""
         with self._lock:
             return self._client.write_registers(address, value, slave)
+
+    def read_modbus_sg_ready(self) -> Dict:
+        """Read the sg ready related values from the ISG."""
+        result = {}
+        inverter_data = self.read_input_registers(slave=1, address=5000, count=2)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[SG_READY_STATE] = decoder.decode_16bit_uint()
+            model = decoder.decode_16bit_uint()
+            if model == 390:
+                self._model = "WPM 3"
+            elif model == 391:
+                self._model = "WPM 3i"
+            elif model == 449:
+                self._model = "WPMsystem"
+            else:
+                self._model = "other model"
+        inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[SG_READY_ACTIVE] = decoder.decode_16bit_uint()
+            result[SG_READY_INPUT_1] = decoder.decode_16bit_uint()
+            result[SG_READY_INPUT_2] = decoder.decode_16bit_uint()
+        return result
+
+
+class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
+    """Communicates with WPM Controllers."""
 
     async def _async_update_data(self) -> Dict:
         """Time to update."""
@@ -253,7 +311,8 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
+            # hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
+            decoder.skip_bytes(2)
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -339,32 +398,153 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             )
         return result
 
-    def read_modbus_sg_ready(self) -> Dict:
-        """Read the sg ready related values from the ISG."""
+    def set_data(self, key, value) -> None:
+        """Write the data to the modbus"""
+        if key == SG_READY_ACTIVE:
+            self.write_register(address=4000, value=value, slave=1)
+        elif key == SG_READY_INPUT_1:
+            self.write_register(address=4001, value=value, slave=1)
+        elif key == SG_READY_INPUT_2:
+            self.write_register(address=4002, value=value, slave=1)
+        elif key == OPERATION_MODE:
+            self.write_register(address=1500, value=value, slave=1)
+        else:
+            return
+        self.data[key] = value
+
+
+class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
+    """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models"""
+
+    async def _async_update_data(self) -> Dict:
+        """Time to update."""
+        try:
+            return self.read_modbus_data()
+        except Exception as exception:
+            raise UpdateFailed() from exception
+
+    def read_modbus_data(self) -> Dict:
+        """Read the ISG data through modbus."""
+        result = {
+            **self.read_modbus_energy(),
+            **self.read_modbus_system_state(),
+            **self.read_modbus_system_values(),
+            **self.read_modbus_system_paramter(),
+            **self.read_modbus_sg_ready(),
+        }
+        return result
+
+    def read_modbus_system_state(self) -> Dict:
+        """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=5000, count=2)
+        inverter_data = self.read_input_registers(slave=1, address=2000, count=1)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
             )
-            result[SG_READY_STATE] = decoder.decode_16bit_uint()
-            model = decoder.decode_16bit_uint()
-            if model == 390:
-                self._model = "WPM 3"
-            elif model == 391:
-                self._model = "WPM 3i"
-            elif model == 449:
-                self._model = "WPMsystem"
-            else:
-                self._model = "other model"
-        inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
+            state = decoder.decode_16bit_uint()
+            is_heating = (state & (1 << 3)) != 0
+            result[IS_HEATING] = is_heating
+            is_heating_water = (state & (1 << 5)) != 0
+            result[IS_HEATING_WATER] = is_heating_water
+            result[CONSUMED_POWER] = (
+                HEATPUMPT_AVERAGE_POWER if is_heating_water or is_heating else 0.0
+            )
+
+            #  result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
+            result[IS_COOLING] = (state & (1 << 4)) != 0
+
+        return result
+
+    def read_modbus_system_values(self) -> Dict:
+        """Read the system related values from the ISG."""
+        result = {}
+        inverter_data = self.read_input_registers(slave=1, address=0, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
             )
-            result[SG_READY_ACTIVE] = decoder.decode_16bit_uint()
-            result[SG_READY_INPUT_1] = decoder.decode_16bit_uint()
-            result[SG_READY_INPUT_2] = decoder.decode_16bit_uint()
+            result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(2)  # Humidity HK1
+            result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
+            # result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(4)
+
+            result[HEATER_PRESSURE] = (
+                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+            )
+            result[VOLUME_STREAM] = (
+                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+            )
+            result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # result[SOURCE_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        return result
+
+    def read_modbus_system_paramter(self) -> Dict:
+        """Read the system paramters from the ISG."""
+        result = {}
+        inverter_data = self.read_holding_registers(slave=1, address=1000, count=19)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            result[OPERATION_MODE] = decoder.decode_16bit_uint()
+        return result
+
+    def read_modbus_energy(self) -> Dict:
+        """Read the energy consumption related values from the ISG."""
+        result = {}
+        inverter_data = self.read_input_registers(slave=1, address=3000, count=22)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.Big
+            )
+            produced_heating_today = decoder.decode_16bit_uint()
+            produced_heating_total_low = decoder.decode_16bit_uint()
+            produced_heating_total_high = decoder.decode_16bit_uint()
+            produced_water_today = decoder.decode_16bit_uint()
+            produced_water_total_low = decoder.decode_16bit_uint()
+            produced_water_total_high = decoder.decode_16bit_uint()
+
+            result[PRODUCED_HEATING_TODAY] = produced_heating_today
+            result[PRODUCED_HEATING_TOTAL] = (
+                produced_heating_total_high * 1000 + produced_heating_total_low
+            )
+            result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
+            result[PRODUCED_WATER_HEATING_TOTAL] = (
+                produced_water_total_high * 1000 + produced_water_total_low
+            )
         return result
 
     def set_data(self, key, value) -> None:
@@ -376,7 +556,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         elif key == SG_READY_INPUT_2:
             self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
-            self.write_register(address=1500, value=value, slave=1)
+            self.write_register(address=1000, value=value, slave=1)
         else:
             return
         self.data[key] = value
