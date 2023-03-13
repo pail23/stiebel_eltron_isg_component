@@ -46,7 +46,7 @@ def skip_notifications_fixture():
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusDataCoordinator.read_modbus_data"
+        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data"
     ):
         yield
 
@@ -57,7 +57,18 @@ def bypass_get_data_fixture():
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusDataCoordinator.read_modbus_data",
+        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data",
         side_effect=Exception,
+    ):
+        yield
+
+
+# This fixture, when used, will result in calls to async_get_data to return None. To have the call
+# return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
+@pytest.fixture(name="bypass_get_model")
+def bypass_get_model_fixture():
+    """Skip calls to get data from API."""
+    with patch(
+        "custom_components.stiebel_eltron_isg.get_controller_model", return_value=391
     ):
         yield

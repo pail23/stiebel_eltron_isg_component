@@ -209,6 +209,17 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         with self._lock:
             return self._client.write_registers(address, value, slave)
 
+    async def _async_update_data(self) -> Dict:
+        """Time to update."""
+        try:
+            return self.read_modbus_data()
+        except Exception as exception:
+            raise UpdateFailed() from exception
+
+    def read_modbus_data(self) -> Dict:
+        """Based method for reading all modbus data."""
+        return {}
+
     def read_modbus_sg_ready(self) -> Dict:
         """Read the sg ready related values from the ISG."""
         result = {}
@@ -240,13 +251,6 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
 class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Communicates with WPM Controllers."""
-
-    async def _async_update_data(self) -> Dict:
-        """Time to update."""
-        try:
-            return self.read_modbus_data()
-        except Exception as exception:
-            raise UpdateFailed() from exception
 
     def read_modbus_data(self) -> Dict:
         """Read the ISG data through modbus."""
@@ -415,13 +419,6 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
 class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models"""
-
-    async def _async_update_data(self) -> Dict:
-        """Time to update."""
-        try:
-            return self.read_modbus_data()
-        except Exception as exception:
-            raise UpdateFailed() from exception
 
     def read_modbus_data(self) -> Dict:
         """Read the ISG data through modbus."""
