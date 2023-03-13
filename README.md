@@ -9,8 +9,6 @@
 
 [![Community Forum][forum-shield]][forum]
 
-_Component to integrate with [stiebel_eltron_isg][stiebel_eltron_isg]._
-
 
 ## Installation
 
