@@ -101,7 +101,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     port = entry.data.get(CONF_PORT)
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
-    model = get_controller_model(host, port)
+    try:
+        model = get_controller_model(host, port)
+    except Exception as exception:
+        raise ConfigEntryNotReady(exception) from exception
 
     coordinator = (
         StiebelEltronModbusWPMDataCoordinator(hass, name, host, port, scan_interval)
@@ -211,7 +214,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         try:
             return self.read_modbus_data()
         except Exception as exception:
-            raise UpdateFailed() from exception
+            raise UpdateFailed(exception) from exception
 
     def read_modbus_data(self) -> dict:
         """Based method for reading all modbus data."""
