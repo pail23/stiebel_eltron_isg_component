@@ -80,4 +80,4 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.get(self.entity_description.key) != None
+        return self.coordinator.data.get(self.entity_description.key) is not None

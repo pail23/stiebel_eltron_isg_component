@@ -70,7 +70,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Return the state of the switch."""
         value = self.coordinator.data.get(self.entity_description.key)
-        if value != None:
+        if value is not None:
             return self.coordinator.data.get(self.entity_description.key) != 0
         else:
             return None
@@ -88,4 +88,4 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.coordinator.data.get(self.entity_description.key) != None
+        return self.coordinator.data.get(self.entity_description.key) is not None
