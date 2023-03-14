@@ -69,7 +69,11 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        return self.coordinator.data.get(self.entity_description.key) != 0
+        value = self.coordinator.data.get(self.entity_description.key)
+        if value != None:
+            return self.coordinator.data.get(self.entity_description.key) != 0
+        else:
+            return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -80,3 +84,8 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         """Turn the device off."""
         self.coordinator.set_data(self.entity_description.key, 0)
         await self.async_update()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.data.get(self.entity_description.key) != None

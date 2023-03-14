@@ -13,7 +13,7 @@ from .entity import StiebelEltronISGEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-OPERATION_MODE_OPTIONS = {
+OPERATION_MODE_WPM_OPTIONS = {
     0: "Emergency",
     1: "Ready",
     2: "Program",
@@ -21,6 +21,17 @@ OPERATION_MODE_OPTIONS = {
     4: "Eco",
     5: "Water heating",
 }
+
+OPERATION_MODE_LWZ_OPTIONS = {
+    0: "Emergency",
+    1: "Ready",
+    3: "Comfort",
+    4: "Eco",
+    5: "Water heating",
+    11: "Automatic",
+    14: "Manual",
+}
+
 
 SELECT_TYPES = [
     SelectEntityDescription(
@@ -38,7 +49,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
     entities = []
     for description in SELECT_TYPES:
         select_entity = StiebelEltronISGSelectEntity(
-            coordinator, entry, description, OPERATION_MODE_OPTIONS
+            coordinator, entry, description, OPERATION_MODE_WPM_OPTIONS if coordinator.model[0] == "W" else OPERATION_MODE_LWZ_OPTIONS
         )
         entities.append(select_entity)
     async_add_devices(entities)
@@ -81,3 +92,8 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
         self.coordinator.set_data(self.entity_description.key, key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.data.get(self.entity_description.key) != None

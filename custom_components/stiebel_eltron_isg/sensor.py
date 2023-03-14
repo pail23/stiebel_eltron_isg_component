@@ -273,3 +273,8 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.data.get(self.entity_description.key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.data.get(self.entity_description.key) != None
