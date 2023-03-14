@@ -6,7 +6,6 @@ https://github.com/pail23/stiebel_eltron_isg
 from datetime import timedelta
 import logging
 import threading
-from typing import Dict
 
 
 import voluptuous as vol
@@ -207,18 +206,18 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         with self._lock:
             return self._client.write_registers(address, value, slave)
 
-    async def _async_update_data(self) -> Dict:
+    async def _async_update_data(self) -> dict:
         """Time to update."""
         try:
             return self.read_modbus_data()
         except Exception as exception:
             raise UpdateFailed() from exception
 
-    def read_modbus_data(self) -> Dict:
+    def read_modbus_data(self) -> dict:
         """Based method for reading all modbus data."""
         return {}
 
-    def read_modbus_sg_ready(self) -> Dict:
+    def read_modbus_sg_ready(self) -> dict:
         """Read the sg ready related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=5000, count=2)
@@ -250,7 +249,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Communicates with WPM Controllers."""
 
-    def read_modbus_data(self) -> Dict:
+    def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
         result = {
             **self.read_modbus_energy(),
@@ -261,7 +260,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         }
         return result
 
-    def read_modbus_system_state(self) -> Dict:
+    def read_modbus_system_state(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=2500, count=1)
@@ -283,7 +282,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
         return result
 
-    def read_modbus_system_values(self) -> Dict:
+    def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=500, count=40)
@@ -349,7 +348,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
         return result
 
-    def read_modbus_system_paramter(self) -> Dict:
+    def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
         result = {}
         inverter_data = self.read_holding_registers(slave=1, address=1500, count=19)
@@ -360,7 +359,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
         return result
 
-    def read_modbus_energy(self) -> Dict:
+    def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=3500, count=22)
@@ -418,7 +417,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
 
-    def read_modbus_data(self) -> Dict:
+    def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
         result = {
             **self.read_modbus_energy(),
@@ -429,7 +428,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         }
         return result
 
-    def read_modbus_system_state(self) -> Dict:
+    def read_modbus_system_state(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=2000, count=1)
@@ -451,7 +450,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
         return result
 
-    def read_modbus_system_values(self) -> Dict:
+    def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=0, count=40)
@@ -506,7 +505,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             # result[SOURCE_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
         return result
 
-    def read_modbus_system_paramter(self) -> Dict:
+    def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
         result = {}
         inverter_data = self.read_holding_registers(slave=1, address=1000, count=19)
@@ -517,7 +516,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
         return result
 
-    def read_modbus_energy(self) -> Dict:
+    def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=3000, count=22)
