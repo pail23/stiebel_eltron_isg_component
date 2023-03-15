@@ -17,6 +17,7 @@ DEFAULT_PORT = 502
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
+    Platform.NUMBER,
     Platform.SWITCH,
     Platform.SELECT,
 ]
@@ -65,13 +66,8 @@ IS_HEATING_WATER = "is_heating_water"
 IS_SUMMER_MODE = "is_summer_mode"
 IS_COOLING = "is_cooling"
 
+COMFORT_TEMPERATURE_TARGET = "comfort_temperature_target"
+ECO_TEMPERATURE_TARGET = "eco_temperature_target"
 
-STARTUP_MESSAGE = f"""
--------------------------------------------------------------------
-{NAME}
-Version: {VERSION}
-This is a custom integration!
-If you have any issues with this you need to open an issue here:
-{ISSUE_URL}
--------------------------------------------------------------------
-"""
+
+

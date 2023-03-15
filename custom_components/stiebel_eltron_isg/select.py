@@ -49,7 +49,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
     entities = []
     for description in SELECT_TYPES:
         select_entity = StiebelEltronISGSelectEntity(
-            coordinator, entry, description, OPERATION_MODE_WPM_OPTIONS if coordinator.model[0] == "W" else OPERATION_MODE_LWZ_OPTIONS
+            coordinator,
+            entry,
+            description,
+            OPERATION_MODE_WPM_OPTIONS
+            if coordinator.is_wpm
+            else OPERATION_MODE_LWZ_OPTIONS,
         )
         entities.append(select_entity)
     async_add_devices(entities)

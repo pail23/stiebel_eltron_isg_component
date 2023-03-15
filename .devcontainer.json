@@ -3,7 +3,8 @@
     "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
-        8123
+        8123,
+        5678
     ],
     "customizations": {
         "vscode": {

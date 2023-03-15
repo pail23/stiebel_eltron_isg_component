@@ -25,7 +25,6 @@ from .const import (
     DOMAIN,
     VERSION,
     PLATFORMS,
-    STARTUP_MESSAGE,
     ACTUAL_TEMPERATURE,
     TARGET_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
@@ -63,6 +62,8 @@ from .const import (
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
     OPERATION_MODE,
+    COMFORT_TEMPERATURE_TARGET,
+    ECO_TEMPERATURE_TARGET,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -94,7 +95,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     """Set up this integration using UI."""
     if hass.data.get(DOMAIN) is None:
         hass.data.setdefault(DOMAIN, {})
-        _LOGGER.info(STARTUP_MESSAGE)
 
     name = entry.data.get(CONF_NAME)
     host = entry.data.get(CONF_HOST)
@@ -126,9 +126,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-def get_isg_scaled_value(value) -> float:
+def get_isg_scaled_value(value, factor=10) -> float:
     """Calculate the value out of a modbus register by scaling it."""
-    return value * 0.1 if value != -32768 else None
+    return value / factor if value != -32768 else None
 
 
 def get_controller_model(host, port) -> int:
@@ -166,7 +166,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Initialize the Modbus hub."""
         self._hass = hass
         self._host = host
-        self._model = VERSION
+        self._model_id = 0
         self._client = ModbusTcpClient(host=host, port=port)
         self._lock = threading.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
@@ -191,8 +191,23 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     @property
     def model(self) -> str:
-        """Return the host address of the Stiebel Eltron ISG."""
-        return self._model
+        """Return the controller model of the Stiebel Eltron ISG."""
+        if self._model_id == 103:
+            return "LWA/LWZ"
+        elif self._model_id == 104:
+            return "LWZ"
+        elif self._model_id == 390:
+            return "WPM 3"
+        elif self._model_id == 391:
+            return "WPM 3i"
+        elif self._model_id == 449:
+            return "WPMsystem"
+        else:
+            return f"other model {self._model_id}"
+
+    @property
+    def is_wpm(self) -> bool:
+        return self._model_id >= 390
 
     def read_input_registers(self, slave, address, count):
         """Read input registers."""
@@ -229,15 +244,8 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             result[SG_READY_STATE] = decoder.decode_16bit_uint()
-            model = decoder.decode_16bit_uint()
-            if model == 390:
-                self._model = "WPM 3"
-            elif model == 391:
-                self._model = "WPM 3i"
-            elif model == 449:
-                self._model = "WPMsystem"
-            else:
-                self._model = "other model"
+            self._model_id = decoder.decode_16bit_uint()
+
         inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -333,11 +341,11 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[HEATER_PRESSURE] = (
-                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+            result[HEATER_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
             )
-            result[VOLUME_STREAM] = (
-                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+            result[VOLUME_STREAM] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
             )
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
@@ -360,6 +368,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
+            result[COMFORT_TEMPERATURE_TARGET] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ECO_TEMPERATURE_TARGET] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
         return result
 
     def read_modbus_energy(self) -> dict:
@@ -412,6 +426,10 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
             self.write_register(address=1500, value=value, slave=1)
+        elif key == COMFORT_TEMPERATURE_TARGET:
+            self.write_register(address=1501, value=int(value * 10), slave=1)
+        elif key == ECO_TEMPERATURE_TARGET:
+            self.write_register(address=1502, value=int(value * 10), slave=1)
         else:
             return
         self.data[key] = value
@@ -517,6 +535,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
+            result[COMFORT_TEMPERATURE_TARGET] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ECO_TEMPERATURE_TARGET] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
         return result
 
     def read_modbus_energy(self) -> dict:
@@ -554,6 +578,10 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
             self.write_register(address=1000, value=value, slave=1)
+        elif key == COMFORT_TEMPERATURE_TARGET:
+            self.write_register(address=1001, value=int(value * 10), slave=1)
+        elif key == ECO_TEMPERATURE_TARGET:
+            self.write_register(address=1002, value=int(value * 10), slave=1)
         else:
             return
         self.data[key] = value
