@@ -16,13 +16,14 @@ from .const import (
     ECO_TEMPERATURE_TARGET,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
+    FAN_LEVEL,
 )
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-NUMBER_TYPES = [
+NUMBER_TYPES_ALL = [
     NumberEntityDescription(
         COMFORT_TEMPERATURE_TARGET,
         has_entity_name=True,
@@ -66,14 +67,33 @@ NUMBER_TYPES = [
 ]
 
 
+NUMBER_TYPES_LWZ = [
+    NumberEntityDescription(
+        FAN_LEVEL,
+        has_entity_name=True,
+        name="Fan Level",
+        icon="mdi:fan",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+    ),
+]
+
+
 async def async_setup_entry(hass, entry, async_add_devices):
     """Set up the select platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     entities = []
-    for description in NUMBER_TYPES:
+    for description in NUMBER_TYPES_ALL:
         select_entity = StiebelEltronISGNumberEntity(coordinator, entry, description)
         entities.append(select_entity)
+    if not coordinator.is_wpm:
+        for description in NUMBER_TYPES_LWZ:
+            select_entity = StiebelEltronISGNumberEntity(
+                coordinator, entry, description
+            )
+            entities.append(select_entity)
     async_add_devices(entities)
 
 

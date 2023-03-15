@@ -69,3 +69,6 @@ COMFORT_TEMPERATURE_TARGET = "comfort_temperature_target"
 ECO_TEMPERATURE_TARGET = "eco_temperature_target"
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
+
+
+FAN_LEVEL = "fan_level"

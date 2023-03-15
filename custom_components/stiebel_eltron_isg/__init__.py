@@ -63,6 +63,7 @@ from .const import (
     ECO_TEMPERATURE_TARGET,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
+    FAN_LEVEL,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -553,6 +554,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            decoder.skip_bytes(8)
+            result[FAN_LEVEL] = decoder.decode_16bit_uint()
         return result
 
     def read_modbus_energy(self) -> dict:
@@ -598,6 +601,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=1011, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1012, value=int(value * 10), slave=1)
+        elif key == FAN_LEVEL:
+            self.write_register(address=1017, value=int(value), slave=1)
         else:
             return
         self.data[key] = value
