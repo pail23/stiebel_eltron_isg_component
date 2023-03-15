@@ -46,7 +46,6 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
-    CONSUMED_POWER,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -196,12 +195,6 @@ ENERGY_SENSOR_TYPES = [
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
         "kWh",
-        "mdi:lightning-bolt",
-    ],
-    [
-        "Consumed Power",
-        CONSUMED_POWER,
-        "kW",
         "mdi:lightning-bolt",
     ],
 ]

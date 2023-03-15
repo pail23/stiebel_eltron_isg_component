@@ -23,7 +23,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    VERSION,
     PLATFORMS,
     ACTUAL_TEMPERATURE,
     TARGET_TEMPERATURE,
@@ -51,8 +50,6 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
-    CONSUMED_POWER,
-    HEATPUMPT_AVERAGE_POWER,
     IS_HEATING,
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
@@ -207,6 +204,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     @property
     def is_wpm(self) -> bool:
+        """Check if heat pump controller is a wpm model."""
         return self._model_id >= 390
 
     def read_input_registers(self, slave, address, count):
@@ -284,9 +282,6 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[IS_HEATING] = is_heating
             is_heating_water = (state & (1 << 5)) != 0
             result[IS_HEATING_WATER] = is_heating_water
-            result[CONSUMED_POWER] = (
-                HEATPUMPT_AVERAGE_POWER if is_heating_water or is_heating else 0.0
-            )
 
             result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 8)) != 0
@@ -462,9 +457,6 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[IS_HEATING] = is_heating
             is_heating_water = (state & (1 << 5)) != 0
             result[IS_HEATING_WATER] = is_heating_water
-            result[CONSUMED_POWER] = (
-                HEATPUMPT_AVERAGE_POWER if is_heating_water or is_heating else 0.0
-            )
 
             #  result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 4)) != 0

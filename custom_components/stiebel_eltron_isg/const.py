@@ -58,8 +58,7 @@ CONSUMED_HEATING_TODAY = "consumed_heating_today"
 CONSUMED_HEATING_TOTAL = "consumed_heating_total"
 CONSUMED_WATER_HEATING_TODAY = "consumed_water_heating_today"
 CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
-CONSUMED_POWER = "consumed_power"
-HEATPUMPT_AVERAGE_POWER = 4.5
+
 
 IS_HEATING = "is_heating"
 IS_HEATING_WATER = "is_heating_water"
@@ -68,6 +67,3 @@ IS_COOLING = "is_cooling"
 
 COMFORT_TEMPERATURE_TARGET = "comfort_temperature_target"
 ECO_TEMPERATURE_TARGET = "eco_temperature_target"
-
-
-
