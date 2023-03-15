@@ -10,7 +10,13 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from .const import DOMAIN, COMFORT_TEMPERATURE_TARGET, ECO_TEMPERATURE_TARGET
+from .const import (
+    DOMAIN,
+    COMFORT_TEMPERATURE_TARGET,
+    ECO_TEMPERATURE_TARGET,
+    COMFORT_WATER_TEMPERATURE_TARGET,
+    ECO_WATER_TEMPERATURE_TARGET,
+)
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -35,6 +41,26 @@ NUMBER_TYPES = [
         icon="hass:thermometer",
         native_min_value=5,
         native_max_value=30,
+        native_step=1,
+    ),
+    NumberEntityDescription(
+        COMFORT_WATER_TEMPERATURE_TARGET,
+        has_entity_name=True,
+        name="Comfort Water Temperature Target",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="hass:thermometer",
+        native_min_value=10,
+        native_max_value=60,
+        native_step=1,
+    ),
+    NumberEntityDescription(
+        ECO_WATER_TEMPERATURE_TARGET,
+        has_entity_name=True,
+        name="Eco Water Temperature Target",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="hass:thermometer",
+        native_min_value=10,
+        native_max_value=60,
         native_step=1,
     ),
 ]
