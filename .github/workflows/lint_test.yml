@@ -1,23 +1,37 @@
-name: Pull actions
+name: "Lint and test"
 
 on:
+  push:
+    branches:
+      - "main"
   pull_request:
+    branches:
+      - "main"
 
 jobs:
-  validate:
+  hassfest: # https://developers.home-assistant.io/blog/2020/04/16/hassfest
+    name: "Hassfest Validation"
     runs-on: "ubuntu-latest"
-    name: Validate
     steps:
-      - uses: "actions/checkout@v3.3.0"
+        - name: "Checkout the repository"
+          uses: "actions/checkout@v3.3.0"
 
-      - name: HACS validation
-        uses: "hacs/action@main"
-        with:
-          category: "integration"
-          ignore: brands
+        - name: "Run hassfest validation"
+          uses: "home-assistant/actions/hassfest@master"
 
-      - name: Hassfest validation
-        uses: "home-assistant/actions/hassfest@master"
+  hacs: # https://github.com/hacs/action
+    name: "HACS Validation"
+    runs-on: "ubuntu-latest"
+    steps:
+        - name: "Checkout the repository"
+          uses: "actions/checkout@v3.3.0"
+
+        - name: "Run HACS validation"
+          uses: "hacs/action@main"
+          with:
+            category: "integration"
+            # Remove this 'ignore' key when you have added brand images for your integration to https://github.com/home-assistant/brands
+            ignore: "brands"
 
   ruff:
     name: "Ruff"
@@ -37,7 +51,6 @@ jobs:
 
         - name: "Run"
           run: python3 -m ruff check .
-
   tests:
     runs-on: "ubuntu-latest"
     name: Run tests
