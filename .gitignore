@@ -24,7 +24,6 @@ coverage.xml
 .storage
 automations.yaml
 blueprints
-configuration.yaml
 deps
 home-assistant_v2*
 home-assistant.log*
