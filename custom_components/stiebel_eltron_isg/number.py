@@ -14,6 +14,7 @@ from .const import (
     DOMAIN,
     COMFORT_TEMPERATURE_TARGET,
     ECO_TEMPERATURE_TARGET,
+    HEATING_CURVE_RISE,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_LEVEL,
@@ -66,6 +67,18 @@ NUMBER_TYPES_ALL = [
     ),
 ]
 
+NUMBER_TYPES_WPM = [
+    NumberEntityDescription(
+        HEATING_CURVE_RISE,
+        has_entity_name=True,
+        name="Heating Curve Rise",
+        icon="hass:thermometer",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=0.01,
+    ),
+]
+
 
 NUMBER_TYPES_LWZ = [
     NumberEntityDescription(
@@ -77,6 +90,7 @@ NUMBER_TYPES_LWZ = [
         native_max_value=3,
         native_step=1,
     ),
+    # Add HEATING_CURVE_RISE with max value 5
 ]
 
 
@@ -88,11 +102,15 @@ async def async_setup_entry(hass, entry, async_add_devices):
     for description in NUMBER_TYPES_ALL:
         select_entity = StiebelEltronISGNumberEntity(coordinator, entry, description)
         entities.append(select_entity)
- #   if not coordinator.is_wpm:
+    if coordinator.is_wpm:
+        for description in NUMBER_TYPES_WPM:
+            select_entity = StiebelEltronISGNumberEntity(
+                coordinator, entry, description
+            )
+            entities.append(select_entity)
+    # else:
     for description in NUMBER_TYPES_LWZ:
-        select_entity = StiebelEltronISGNumberEntity(
-            coordinator, entry, description
-        )
+        select_entity = StiebelEltronISGNumberEntity(coordinator, entry, description)
         entities.append(select_entity)
     async_add_devices(entities)
 

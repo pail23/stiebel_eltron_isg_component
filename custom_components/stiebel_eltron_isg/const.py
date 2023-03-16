@@ -67,6 +67,7 @@ IS_COOLING = "is_cooling"
 
 COMFORT_TEMPERATURE_TARGET = "comfort_temperature_target"
 ECO_TEMPERATURE_TARGET = "eco_temperature_target"
+HEATING_CURVE_RISE = "heating_curve_rise"
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
 
