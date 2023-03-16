@@ -203,7 +203,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         elif self._model_id == 449:
             return "WPMsystem"
         else:
-            return f"other model {self._model_id}"
+            return f"other model ({self._model_id})"
 
     @property
     def is_wpm(self) -> bool:
@@ -518,10 +518,10 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder.skip_bytes(4)
 
             result[HEATER_PRESSURE] = (
-                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+                get_isg_scaled_value(decoder.decode_16bit_int(), 100)
             )
             result[VOLUME_STREAM] = (
-                get_isg_scaled_value(decoder.decode_16bit_int()) / 10
+                get_isg_scaled_value(decoder.decode_16bit_int(), 100)
             )
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
@@ -535,7 +535,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
         result = {}
-        inverter_data = self.read_holding_registers(slave=1, address=1000, count=19)
+        inverter_data = self.read_holding_registers(slave=1, address=1000, count=25)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big

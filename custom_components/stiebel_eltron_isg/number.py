@@ -88,12 +88,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
     for description in NUMBER_TYPES_ALL:
         select_entity = StiebelEltronISGNumberEntity(coordinator, entry, description)
         entities.append(select_entity)
-    if not coordinator.is_wpm:
-        for description in NUMBER_TYPES_LWZ:
-            select_entity = StiebelEltronISGNumberEntity(
-                coordinator, entry, description
-            )
-            entities.append(select_entity)
+ #   if not coordinator.is_wpm:
+    for description in NUMBER_TYPES_LWZ:
+        select_entity = StiebelEltronISGNumberEntity(
+            coordinator, entry, description
+        )
+        entities.append(select_entity)
     async_add_devices(entities)
 
 
