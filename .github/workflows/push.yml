@@ -22,16 +22,24 @@ jobs:
       - name: Hassfest validation
         uses: "home-assistant/actions/hassfest@master"
 
-  style:
+  ruff:
+    name: "Ruff"
     runs-on: "ubuntu-latest"
-    name: Check style formatting
     steps:
-      - uses: "actions/checkout@v3.3.0"
-      - uses: "actions/setup-python@v4.5.0"
-        with:
-          python-version: "3.x"
-      - run: python3 -m pip install black
-      - run: black .
+        - name: "Checkout the repository"
+          uses: "actions/checkout@v3.3.0"
+
+        - name: "Set up Python"
+          uses: actions/setup-python@v4.5.0
+          with:
+            python-version: "3.10"
+            cache: "pip"
+
+        - name: "Install requirements"
+          run: python3 -m pip install -r requirements.txt
+
+        - name: "Run"
+          run: python3 -m ruff check .
 
   tests:
     runs-on: "ubuntu-latest"
