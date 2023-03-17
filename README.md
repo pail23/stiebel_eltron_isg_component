@@ -13,6 +13,17 @@
 
 ## Installation
 
+### Using HACS
+
+This is the preferred installation option. If you are using HACS:
+1. Open the _Integration_ Tab in HACS
+2. In the 3-dots-menu, choose to add a custom repository
+3. Add `https://github.com/pail23/stiebel_eltron_isg_component`
+4. Add the _Stiebel Eltron ISG_ Integration in HACS and restart Home Assistant
+5. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
+
+### Manual installation:
+
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
 3. In the `custom_components` directory (folder) create a new folder called `stiebel_eltron_isg`.
@@ -20,6 +31,7 @@
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
 7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
+
 
 
 
