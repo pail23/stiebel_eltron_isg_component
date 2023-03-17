@@ -1,4 +1,4 @@
-# Stiebel Eltron ISG intergation with modus
+# Stiebel Eltron ISG intergation
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
@@ -7,6 +7,7 @@
 [![hacs][hacsbadge]][hacs]
 ![Project Maintenance][maintenance-shield]
 [![BuyMeCoffee][buymecoffeebadge]][buymecoffee]
+
 [![Community Forum][forum-shield]][forum]
 
 
@@ -34,7 +35,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 
 [stiebel_eltron_isg]: https://github.com/pail23/stiebel_eltron_isg
 [buymecoffee]: https://www.buymeacoffee.com/pail23
-[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg?style=for-the-badge
+[buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg
 [commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/stiebel_eltron_isg_component
 [commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
 [hacs]: https://github.com/hacs
