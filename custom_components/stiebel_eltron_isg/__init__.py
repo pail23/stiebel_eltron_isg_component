@@ -59,9 +59,12 @@ from .const import (
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
     OPERATION_MODE,
-    COMFORT_TEMPERATURE_TARGET,
-    ECO_TEMPERATURE_TARGET,
-    HEATING_CURVE_RISE,
+    COMFORT_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK1,
+    HEATING_CURVE_RISE_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK2,
+    HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_LEVEL,
@@ -367,16 +370,25 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
-            result[COMFORT_TEMPERATURE_TARGET] = get_isg_scaled_value(
+            result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[ECO_TEMPERATURE_TARGET] = get_isg_scaled_value(
+            result[ECO_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[HEATING_CURVE_RISE] = get_isg_scaled_value(
+            result[HEATING_CURVE_RISE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int(), 100
             )
-            decoder.skip_bytes(10)
+            result[COMFORT_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ECO_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+            decoder.skip_bytes(4)
             result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -435,12 +447,18 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
             self.write_register(address=1500, value=value, slave=1)
-        elif key == COMFORT_TEMPERATURE_TARGET:
+        elif key == COMFORT_TEMPERATURE_TARGET_HK1:
             self.write_register(address=1501, value=int(value * 10), slave=1)
-        elif key == ECO_TEMPERATURE_TARGET:
+        elif key == ECO_TEMPERATURE_TARGET_HK1:
             self.write_register(address=1502, value=int(value * 10), slave=1)
-        elif key == HEATING_CURVE_RISE:
+        elif key == HEATING_CURVE_RISE_HK1:
             self.write_register(address=1503, value=int(value * 100), slave=1)
+        elif key == COMFORT_TEMPERATURE_TARGET_HK2:
+            self.write_register(address=1504, value=int(value * 10), slave=1)
+        elif key == ECO_TEMPERATURE_TARGET_HK2:
+            self.write_register(address=1505, value=int(value * 10), slave=1)
+        elif key == HEATING_CURVE_RISE_HK2:
+            self.write_register(address=1506, value=int(value * 100), slave=1)
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1509, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
@@ -547,18 +565,28 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
-            result[COMFORT_TEMPERATURE_TARGET] = get_isg_scaled_value(
+            result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[ECO_TEMPERATURE_TARGET] = get_isg_scaled_value(
+            result[ECO_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(8)
-            HEATING_CURVE_RISE
-            result[HEATING_CURVE_RISE] = get_isg_scaled_value(
+            decoder.skip_bytes(2)
+            result[COMFORT_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[ECO_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(2)
+            result[HEATING_CURVE_RISE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int(), 100
             )
-            decoder.skip_bytes(6)
+            decoder.skip_bytes(2)
+            result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+            decoder.skip_bytes(2)
             result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -604,12 +632,20 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
             self.write_register(address=1000, value=value, slave=1)
-        elif key == COMFORT_TEMPERATURE_TARGET:
+        elif key == COMFORT_TEMPERATURE_TARGET_HK1:
             self.write_register(address=1001, value=int(value * 10), slave=1)
-        elif key == ECO_TEMPERATURE_TARGET:
+        elif key == ECO_TEMPERATURE_TARGET_HK1:
             self.write_register(address=1002, value=int(value * 10), slave=1)
-        elif key == HEATING_CURVE_RISE:
+        elif key == HEATING_CURVE_RISE_HK1:
             self.write_register(address=1007, value=int(value * 100), slave=1)
+
+        elif key == COMFORT_TEMPERATURE_TARGET_HK2:
+            self.write_register(address=1004, value=int(value * 10), slave=1)
+        elif key == ECO_TEMPERATURE_TARGET_HK2:
+            self.write_register(address=1005, value=int(value * 10), slave=1)
+        elif key == HEATING_CURVE_RISE_HK2:
+            self.write_register(address=1009, value=int(value * 100), slave=1)
+
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1011, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:

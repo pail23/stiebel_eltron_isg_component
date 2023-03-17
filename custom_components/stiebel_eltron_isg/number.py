@@ -12,9 +12,12 @@ from homeassistant.components.number import (
 )
 from .const import (
     DOMAIN,
-    COMFORT_TEMPERATURE_TARGET,
-    ECO_TEMPERATURE_TARGET,
-    HEATING_CURVE_RISE,
+    COMFORT_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK1,
+    HEATING_CURVE_RISE_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK2,
+    HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_LEVEL,
@@ -26,9 +29,9 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBER_TYPES_ALL = [
     NumberEntityDescription(
-        COMFORT_TEMPERATURE_TARGET,
+        COMFORT_TEMPERATURE_TARGET_HK1,
         has_entity_name=True,
-        name="Comfort Temperature Target",
+        name="Comfort Temperature Target HK1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="hass:thermometer",
         native_min_value=5,
@@ -36,9 +39,29 @@ NUMBER_TYPES_ALL = [
         native_step=1,
     ),
     NumberEntityDescription(
-        ECO_TEMPERATURE_TARGET,
+        ECO_TEMPERATURE_TARGET_HK1,
         has_entity_name=True,
-        name="Eco Temperature Target",
+        name="Eco Temperature Target HK1",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="hass:thermometer",
+        native_min_value=5,
+        native_max_value=30,
+        native_step=1,
+    ),
+    NumberEntityDescription(
+        COMFORT_TEMPERATURE_TARGET_HK2,
+        has_entity_name=True,
+        name="Comfort Temperature Target HK2",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="hass:thermometer",
+        native_min_value=5,
+        native_max_value=30,
+        native_step=1,
+    ),
+    NumberEntityDescription(
+        ECO_TEMPERATURE_TARGET_HK2,
+        has_entity_name=True,
+        name="Eco Temperature Target HK2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="hass:thermometer",
         native_min_value=5,
@@ -69,9 +92,18 @@ NUMBER_TYPES_ALL = [
 
 NUMBER_TYPES_WPM = [
     NumberEntityDescription(
-        HEATING_CURVE_RISE,
+        HEATING_CURVE_RISE_HK1,
         has_entity_name=True,
-        name="Heating Curve Rise",
+        name="Heating Curve Rise HK1",
+        icon="hass:thermometer",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=0.01,
+    ),
+    NumberEntityDescription(
+        HEATING_CURVE_RISE_HK2,
+        has_entity_name=True,
+        name="Heating Curve Rise HK2",
         icon="hass:thermometer",
         native_min_value=0,
         native_max_value=3,
