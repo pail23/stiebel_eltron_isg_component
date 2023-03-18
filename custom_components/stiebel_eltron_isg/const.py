@@ -15,6 +15,7 @@ DEFAULT_PORT = 502
 
 # Platforms
 PLATFORMS: list[Platform] = [
+    Platform.BUTTON,
     Platform.SENSOR,
     Platform.BINARY_SENSOR,
     Platform.NUMBER,
@@ -77,3 +78,5 @@ ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
 
 
 FAN_LEVEL = "fan_level"
+
+RESET_HEATPUMP = "reset_heatpump"

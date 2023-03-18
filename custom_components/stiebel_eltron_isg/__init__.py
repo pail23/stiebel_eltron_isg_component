@@ -261,6 +261,9 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             result[SG_READY_INPUT_2] = decoder.decode_16bit_uint()
         return result
 
+    async def async_reset_heatpump(self) -> None:
+        """Reset the heat pump."""
+
 
 class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Communicates with WPM Controllers."""
@@ -467,6 +470,11 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             return
         self.data[key] = value
 
+    async def async_reset_heatpump(self) -> None:
+        """Reset the heat pump."""
+        _LOGGER.debug("Reset the heat pump")
+        self.write_register(address=1519, value=3, slave=1)
+
 
 class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
@@ -655,6 +663,10 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         else:
             return
         self.data[key] = value
+
+    async def async_reset_heatpump(self) -> None:
+        """Reset the heat pump."""
+        _LOGGER.debug("Reset the heat pump is not implemented of LWZ/LWA")
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

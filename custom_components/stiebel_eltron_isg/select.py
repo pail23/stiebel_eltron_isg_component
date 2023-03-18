@@ -72,7 +72,7 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     """stiebel_eltron_isg select class."""
 
     def __init__(self, coordinator, config_entry, description, options):
-        """Initialize the sensor."""
+        """Initialize the select entity."""
         self.entity_description = description
         self._options = options
         super().__init__(coordinator, config_entry)
