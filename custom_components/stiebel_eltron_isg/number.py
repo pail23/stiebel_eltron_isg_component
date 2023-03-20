@@ -36,7 +36,7 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=5,
         native_max_value=30,
-        native_step=1,
+        native_step=0.1,
     ),
     NumberEntityDescription(
         ECO_TEMPERATURE_TARGET_HK1,
@@ -46,7 +46,7 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=5,
         native_max_value=30,
-        native_step=1,
+        native_step=0.1,
     ),
     NumberEntityDescription(
         COMFORT_TEMPERATURE_TARGET_HK2,
@@ -56,7 +56,7 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=5,
         native_max_value=30,
-        native_step=1,
+        native_step=0.1,
     ),
     NumberEntityDescription(
         ECO_TEMPERATURE_TARGET_HK2,
@@ -66,7 +66,7 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=5,
         native_max_value=30,
-        native_step=1,
+        native_step=0.1,
     ),
     NumberEntityDescription(
         COMFORT_WATER_TEMPERATURE_TARGET,
@@ -76,7 +76,7 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=10,
         native_max_value=60,
-        native_step=1,
+        native_step=0.1,
     ),
     NumberEntityDescription(
         ECO_WATER_TEMPERATURE_TARGET,
@@ -86,7 +86,7 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=10,
         native_max_value=60,
-        native_step=1,
+        native_step=0.1,
     ),
 ]
 
