@@ -46,6 +46,7 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    ACTIVE_ERROR
 )
 from .entity import StiebelEltronISGEntity
 
@@ -60,6 +61,7 @@ def create_temperature_entity_description(name, key):
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="hass:thermometer",
         state_class=STATE_CLASS_MEASUREMENT,
+        has_entity_name=True,
     )
 
 
@@ -71,6 +73,7 @@ def create_humidity_entity_description(name, key):
         native_unit_of_measurement=PERCENTAGE,
         icon="hass:water-percent",
         state_class=STATE_CLASS_MEASUREMENT,
+        has_entity_name=True,
     )
 
 
@@ -82,6 +85,7 @@ def create_pressure_entity_description(name, key):
         native_unit_of_measurement=UnitOfPressure.BAR,
         icon="mdi:gauge",
         state_class=STATE_CLASS_MEASUREMENT,
+        has_entity_name=True,
     )
 
 
@@ -93,6 +97,7 @@ def create_volume_stream_entity_description(name, key):
         native_unit_of_measurement="l/min",
         icon="mdi:gauge",
         state_class=STATE_CLASS_MEASUREMENT,
+        has_entity_name=True,
     )
 
 
@@ -137,6 +142,12 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Target Temperature Water", TARGET_TEMPERATURE_WATER
     ),
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
+    SensorEntityDescription(
+        ACTIVE_ERROR,
+        name = "Active Error",
+        has_entity_name=True,
+        icon="mdi:alert-circle"
+    )
 ]
 
 ENERGYMANAGEMENT_SENSOR_TYPES = [
@@ -144,6 +155,7 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
         SG_READY_STATE,
         name="SG Ready State",
         icon="mdi:solar-power",
+        has_entity_name=True,
     )
 ]
 

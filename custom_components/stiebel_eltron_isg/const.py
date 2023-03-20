@@ -80,3 +80,4 @@ ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
 FAN_LEVEL = "fan_level"
 
 RESET_HEATPUMP = "reset_heatpump"
+ACTIVE_ERROR = "active_error"
