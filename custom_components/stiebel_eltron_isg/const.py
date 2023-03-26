@@ -21,6 +21,7 @@ PLATFORMS: list[Platform] = [
     Platform.NUMBER,
     Platform.SWITCH,
     Platform.SELECT,
+    Platform.CLIMATE,
 ]
 
 ACTUAL_TEMPERATURE = "actual_temperature"
