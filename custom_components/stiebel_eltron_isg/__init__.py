@@ -68,7 +68,8 @@ from .const import (
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_LEVEL,
-    ACTIVE_ERROR
+    ACTIVE_ERROR,
+    ERROR_STATUS
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -297,7 +298,9 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 8)) != 0
 
-            decoder.skip_bytes(10)
+            decoder.skip_bytes(4)
+            result[ERROR_STATUS] = decoder.decode_16bit_uint()
+            decoder.skip_bytes(4)
             error = decoder.decode_16bit_uint()
             if error == 32768:
                 result[ACTIVE_ERROR] = "no error"
@@ -514,7 +517,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
             #  result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 4)) != 0
-
+            result[ERROR_STATUS] = decoder.decode_16bit_uint()
         return result
 
     def read_modbus_system_values(self) -> dict:

@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import (
     DEVICE_CLASS_ENERGY,
     ENERGY_KILO_WATT_HOUR,
@@ -146,6 +147,7 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         ACTIVE_ERROR,
         name = "Active Error",
         has_entity_name=True,
+        entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:alert-circle"
     )
 ]

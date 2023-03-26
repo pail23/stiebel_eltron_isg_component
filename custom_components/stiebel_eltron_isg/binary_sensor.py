@@ -6,9 +6,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.helpers.entity import EntityCategory
 
 from .entity import StiebelEltronISGEntity
-from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE
+from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE, ERROR_STATUS
 
 BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
@@ -33,6 +34,13 @@ BINARY_SENSOR_TYPES = [
         name="Is cooling",
         key=IS_COOLING,
         icon="mdi:snowflake",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Error Status",
+        key=ERROR_STATUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:alert",
         has_entity_name=True,
     ),
 ]
