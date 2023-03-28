@@ -9,7 +9,7 @@ from homeassistant.components.climate import (
     HVACMode,
     ClimateEntityFeature,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import UnitOfTemperature
 
 
 from .const import (
