@@ -8,6 +8,10 @@ from homeassistant.components.climate import (
     ClimateEntityDescription,
     HVACMode,
     ClimateEntityFeature,
+    FAN_OFF,
+    FAN_LOW,
+    FAN_MEDIUM,
+    FAN_HIGH,
 )
 from homeassistant.const import UnitOfTemperature
 
@@ -18,7 +22,8 @@ from .const import (
     ACTUAL_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     COMFORT_TEMPERATURE_TARGET_HK1,
-    OPERATION_MODE
+    OPERATION_MODE,
+    FAN_LEVEL,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -56,6 +61,10 @@ HA_TO_LWZ_HVAC = {
     HVACMode.HEAT: 14,
 }
 
+LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
+HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
+
+
 CLIMATE_TYPES = [
     ClimateEntityDescription(CLIMATE_HK_1, has_entity_name=True, name="Heat Circuit 1")
 ]
@@ -68,10 +77,10 @@ async def async_setup_entry(hass, entry, async_add_devices):
     entities = []
     for description in CLIMATE_TYPES:
         if coordinator.is_wpm:
-            climate_entity = StiebelEltronWPMClimateEntity(
-                coordinator, entry, description
-            ) if coordinator.is_wpm else StiebelEltronLWZClimateEntity(
-                coordinator, entry, description
+            climate_entity = (
+                StiebelEltronWPMClimateEntity(coordinator, entry, description)
+                if coordinator.is_wpm
+                else StiebelEltronLWZClimateEntity(coordinator, entry, description)
             )
         entities.append(climate_entity)
     async_add_devices(entities)
@@ -106,7 +115,11 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         temperature = self.coordinator.data.get(ACTUAL_TEMPERATURE)
-        return temperature if temperature is not None else self.coordinator.data.get(ACTUAL_TEMPERATURE_FEK)
+        return (
+            temperature
+            if temperature is not None
+            else self.coordinator.data.get(ACTUAL_TEMPERATURE_FEK)
+        )
 
     @property
     def target_temperature(self) -> float | None:
@@ -120,12 +133,12 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
+    """stiebel_eltron_isg climate class for wpm."""
 
     def __init__(self, coordinator, config_entry, description):
         """Initialize the climate entity."""
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
         super().__init__(coordinator, config_entry, description)
-
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -139,12 +152,16 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
 
 
 class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
+    """stiebel_eltron_isg climate class for lwz."""
 
     def __init__(self, coordinator, config_entry, description):
         """Initialize the climate entity."""
-        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.MANUAL]
+        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
+        self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
         super().__init__(coordinator, config_entry, description)
-
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
+        )
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -155,3 +172,13 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
         self.coordinator.set_data(OPERATION_MODE, new_mode)
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
+        return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL))
+
+    def set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        new_mode = HA_TO_LWZ_FAN.get(fan_mode)
+        self.coordinator.set_data(FAN_LEVEL, new_mode)
