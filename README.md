@@ -2,6 +2,7 @@
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
+[![Github Downloads](https://img.shields.io/github/downloads/pail23/stiebel_eltron_isg_component/total)](https://github.com/pail23/stiebel_eltron_isg_component) [![Github Downloads](https://img.shields.io/github/downloads/pail23/stiebel_eltron_isg_component/latest/total)](https://github.com/pail23/stiebel_eltron_isg_component)
 [![License][license-shield]](LICENSE)
 
 [![hacs][hacsbadge]][hacs]
@@ -16,9 +17,8 @@
 ### Using HACS
 
 
-
 This is the preferred installation option. If you are using HACS:
-1. Add the component to your home assistant installation [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pail23&repository=stiebel_eltron_isg_component&category=integration)
+1. Add the component to your home assistant installation: [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pail23&repository=stiebel_eltron_isg_component&category=integration)
 2. Add the _Stiebel Eltron ISG_ Integration in HACS and restart Home Assistant
 3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
 
