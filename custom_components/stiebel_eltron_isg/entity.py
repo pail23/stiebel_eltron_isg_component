@@ -25,3 +25,11 @@ class StiebelEltronISGEntity(CoordinatorEntity):
             model=self.coordinator.model,
             manufacturer=ATTR_MANUFACTURER,
         )
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
+        return self.coordinator.data.get(self.entity_description.key) is not None
