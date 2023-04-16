@@ -22,6 +22,7 @@ from .const import (
     ACTUAL_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     COMFORT_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK1,
     OPERATION_MODE,
     FAN_LEVEL,
 )
@@ -30,6 +31,7 @@ from .entity import StiebelEltronISGEntity
 _LOGGER = logging.getLogger(__name__)
 
 CLIMATE_HK_1 = "climate_hk_1"
+ECO_MODE = 4
 
 WPM_TO_HA_HVAC = {
     1: HVACMode.AUTO,
@@ -124,12 +126,18 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.coordinator.data.get(COMFORT_TEMPERATURE_TARGET_HK1)
+        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+            return self.coordinator.data.get(ECO_TEMPERATURE_TARGET_HK1)
+        else:
+            return self.coordinator.data.get(COMFORT_TEMPERATURE_TARGET_HK1)
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
-        self.coordinator.set_data(COMFORT_TEMPERATURE_TARGET_HK1, value)
+        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+            self.coordinator.set_data(ECO_TEMPERATURE_TARGET_HK1, value)
+        else:
+            self.coordinator.set_data(COMFORT_TEMPERATURE_TARGET_HK1, value)
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
