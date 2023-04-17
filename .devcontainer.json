@@ -6,6 +6,12 @@
         8123,
         5678
     ],
+    "portsAttributes": {
+        "8123": {
+            "label": "Home Assistant",
+            "onAutoForward": "notify"
+        }
+    },
     "customizations": {
         "vscode": {
             "extensions": [

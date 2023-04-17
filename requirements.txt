@@ -1,5 +1,6 @@
 colorlog==6.7.0
-homeassistant
+homeassistant==2023.2.0
+pip>=21.0,<23.1
 pymodbus>=3.1.1
 ruff==0.0.261
 pytest-homeassistant-custom-component==0.13.19

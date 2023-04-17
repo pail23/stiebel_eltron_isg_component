@@ -69,7 +69,7 @@ from .const import (
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_LEVEL,
     ACTIVE_ERROR,
-    ERROR_STATUS
+    ERROR_STATUS,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -504,7 +504,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_state(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2000, count=1)
+        inverter_data = self.read_input_registers(slave=1, address=2000, count=5)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
@@ -619,7 +619,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=3000, count=22)
+        inverter_data = self.read_input_registers(slave=1, address=3000, count=32)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
