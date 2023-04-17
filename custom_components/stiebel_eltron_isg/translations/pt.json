@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Caso precise de ajuda na configuração por favor consulte: https://github.com/pail23/stiebel_eltron_isg",
+                "data": {
+                    "host": "O ip do ISG",
+                    "port": "Porta TCP para ligação ao ISG",
+                    "scan_interval": "Espaço entre pesquisas em segundos"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Equipamento já se encontra configurado-",
+            "invalid_host_IP": "IP Invalido"
+        },
+        "abort": {
+            "already_configured": "Equipamento já se encontra configurado-"
+        }
+    }
+}
