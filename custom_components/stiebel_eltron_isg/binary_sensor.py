@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.helpers.entity import EntityCategory
 
 from .entity import StiebelEltronISGEntity
-from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE, ERROR_STATUS
+from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE, PUMP_ON_HK1, PUMP_ON_HK2, COMPRESSOR_ON, ERROR_STATUS
 
 BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
@@ -34,6 +34,24 @@ BINARY_SENSOR_TYPES = [
         name="Is cooling",
         key=IS_COOLING,
         icon="mdi:snowflake",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Pump HK1",
+        key=PUMP_ON_HK1,
+        icon="mdi:pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Pump HK2",
+        key=PUMP_ON_HK2,
+        icon="mdi:pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Compressor",
+        key=COMPRESSOR_ON,
+        icon="mdi:heat-pump",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(

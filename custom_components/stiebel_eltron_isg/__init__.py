@@ -54,6 +54,9 @@ from .const import (
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
     IS_COOLING,
+    PUMP_ON_HK1,
+    PUMP_ON_HK2,
+    COMPRESSOR_ON,
     SG_READY_STATE,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
@@ -290,13 +293,17 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             state = decoder.decode_16bit_uint()
+            result[PUMP_ON_HK1] = (state & (1 << 0)) != 0
+            result[PUMP_ON_HK2] = (state & (1 << 1)) != 0
             is_heating = (state & (1 << 4)) != 0
             result[IS_HEATING] = is_heating
             is_heating_water = (state & (1 << 5)) != 0
             result[IS_HEATING_WATER] = is_heating_water
 
+            result[COMPRESSOR_ON] = (state & (1 << 6)) != 0
             result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 8)) != 0
+
 
             decoder.skip_bytes(4)
             result[ERROR_STATUS] = decoder.decode_16bit_uint()
