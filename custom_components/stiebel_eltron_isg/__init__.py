@@ -560,12 +560,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             decoder.skip_bytes(4)
 
-            result[HEATER_PRESSURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
-            )
-            result[VOLUME_STREAM] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
-            )
+            result[HEATER_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            result[VOLUME_STREAM] = get_isg_scaled_value(decoder.decode_16bit_int())
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
