@@ -31,6 +31,8 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK2,
+    FLOW_TEMPERATURE,
+    RETURN_TEMPERATURE,
     ACTUAL_TEMPERATURE_BUFFER,
     TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
@@ -47,7 +49,7 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
-    ACTIVE_ERROR
+    ACTIVE_ERROR,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -128,6 +130,8 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
     ),
+    create_temperature_entity_description("Flow Temperature", FLOW_TEMPERATURE),
+    create_temperature_entity_description("Return Temperature", RETURN_TEMPERATURE),
     create_temperature_entity_description(
         "Actual Temperature Buffer", ACTUAL_TEMPERATURE_BUFFER
     ),
@@ -145,11 +149,11 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
     SensorEntityDescription(
         ACTIVE_ERROR,
-        name = "Active Error",
+        name="Active Error",
         has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:alert-circle"
-    )
+        icon="mdi:alert-circle",
+    ),
 ]
 
 ENERGYMANAGEMENT_SENSOR_TYPES = [

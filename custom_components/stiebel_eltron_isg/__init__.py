@@ -42,6 +42,8 @@ from .const import (
     HEATER_PRESSURE,
     VOLUME_STREAM,
     SOURCE_TEMPERATURE,
+    FLOW_TEMPERATURE,
+    RETURN_TEMPERATURE,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING_TODAY,
@@ -350,7 +352,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(10)
+            result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            decoder.skip_bytes(4)
+            result[RETURN_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(2)
             result[ACTUAL_TEMPERATURE_BUFFER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -558,7 +565,10 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(4)
+            result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            result[RETURN_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
 
             result[HEATER_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
             result[VOLUME_STREAM] = get_isg_scaled_value(decoder.decode_16bit_int())
@@ -634,6 +644,22 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
             result[PRODUCED_WATER_HEATING_TOTAL] = (
                 produced_water_total_high * 1000 + produced_water_total_low
+            )
+
+            decoder.skip_bytes(30)
+            consumed_heating_today = decoder.decode_16bit_uint()
+            consumed_heating_total_low = decoder.decode_16bit_uint()
+            consumed_heating_total_high = decoder.decode_16bit_uint()
+            consumed_water_today = decoder.decode_16bit_uint()
+            consumed_water_total_low = decoder.decode_16bit_uint()
+            consumed_water_total_high = decoder.decode_16bit_uint()
+            result[CONSUMED_HEATING_TODAY] = consumed_heating_today
+            result[CONSUMED_HEATING_TOTAL] = (
+                consumed_heating_total_high * 1000 + consumed_heating_total_low
+            )
+            result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
+            result[CONSUMED_WATER_HEATING_TOTAL] = (
+                consumed_water_total_high * 1000 + consumed_water_total_low
             )
         return result
 
