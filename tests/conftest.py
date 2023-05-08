@@ -20,6 +20,18 @@ import pytest
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
+class RegisterMock:
+
+    def __init__(
+        self
+    ) -> None:
+        """Initialize the register mock."""
+        self.registers = {1: 1}
+
+    def isError():
+        """return if this an error."""
+        return False
+
 
 # This fixture enables loading custom integrations in all tests.
 # Remove to enable selective use of this fixture
@@ -50,6 +62,17 @@ def bypass_get_data_fixture():
         "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data"
     ):
         yield
+
+# This fixture, when used, will result in calls to async_get_data to return mock data. To have the call
+# return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
+@pytest.fixture(name="mock_get_data")
+def mock_get_data_fixture():
+    """Skip calls to get data from API."""
+    with patch(
+        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data", return_value=RegisterMock()
+    ):
+        yield
+
 
 
 # In this fixture, we are forcing calls to async_get_data to raise an Exception. This is useful

@@ -78,12 +78,11 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     entities = []
     for description in CLIMATE_TYPES:
-        if coordinator.is_wpm:
-            climate_entity = (
-                StiebelEltronWPMClimateEntity(coordinator, entry, description)
-                if coordinator.is_wpm
-                else StiebelEltronLWZClimateEntity(coordinator, entry, description)
-            )
+        climate_entity = (
+            StiebelEltronWPMClimateEntity(coordinator, entry, description)
+            if coordinator.is_wpm
+            else StiebelEltronLWZClimateEntity(coordinator, entry, description)
+        )
         entities.append(climate_entity)
     async_add_devices(entities)
 
