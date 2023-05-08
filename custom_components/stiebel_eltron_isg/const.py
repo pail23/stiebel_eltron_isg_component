@@ -63,6 +63,12 @@ CONSUMED_HEATING_TOTAL = "consumed_heating_total"
 CONSUMED_WATER_HEATING_TODAY = "consumed_water_heating_today"
 CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
 
+COMPRESSOR_STARTS = "compressor_starts"
+COMPRESSOR_HEATING = "compressor_heating"
+COMPRESSOR_HEATING_WATER = "compressor_heating_water"
+ELECTRICAL_BOOSTER_HEATING = "electrical_booster_heating"
+ELECTRICAL_BOOSTER_HEATING_WATER = "electrical_booster_heating_water"
+
 
 IS_HEATING = "is_heating"
 IS_HEATING_WATER = "is_heating_water"

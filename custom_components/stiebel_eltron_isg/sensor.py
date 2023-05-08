@@ -49,6 +49,12 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    COMPRESSOR_STARTS,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    ELECTRICAL_BOOSTER_HEATING,
+    ELECTRICAL_BOOSTER_HEATING_WATER,
+    IS_HEATING,
     ACTIVE_ERROR,
 )
 from .entity import StiebelEltronISGEntity
@@ -218,6 +224,48 @@ ENERGY_SENSOR_TYPES = [
 ]
 
 
+COMPRESSOR_SENSOR_TYPES = [
+    SensorEntityDescription(
+        COMPRESSOR_STARTS,
+        name="Compressor starts",
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    SensorEntityDescription(
+        COMPRESSOR_HEATING,
+        name="Compressor heating",
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+        native_unit_of_measurement="h",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        COMPRESSOR_HEATING_WATER,
+        name="Compressor heating water",
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+        native_unit_of_measurement="h",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        ELECTRICAL_BOOSTER_HEATING,
+        name="Electrical booster heating",
+        icon="mdi:heating-coil",
+        has_entity_name=True,
+        native_unit_of_measurement="h",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        ELECTRICAL_BOOSTER_HEATING_WATER,
+        name="Electrical booster heating water",
+        icon="mdi:heating-coil",
+        has_entity_name=True,
+        native_unit_of_measurement="h",
+        state_class=STATE_CLASS_MEASUREMENT,
+    ),
+]
+
+
 async def async_setup_entry(hass, entry, async_add_devices):
     """Set up the sensor platform."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -258,6 +306,15 @@ async def async_setup_entry(hass, entry, async_add_devices):
             description,
         )
         entities.append(sensor)
+
+    if not coordinator.is_wpm:
+        for description in COMPRESSOR_SENSOR_TYPES:
+            sensor = StiebelEltronISGSensor(
+                coordinator,
+                entry,
+                description,
+            )
+            entities.append(sensor)
 
     async_add_devices(entities)
 

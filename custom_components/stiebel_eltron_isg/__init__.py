@@ -52,6 +52,11 @@ from .const import (
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    COMPRESSOR_STARTS,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    ELECTRICAL_BOOSTER_HEATING,
+    ELECTRICAL_BOOSTER_HEATING_WATER,
     IS_HEATING,
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
@@ -579,6 +584,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 decoder.decode_16bit_int()
             )
             # result[SOURCE_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            decoder.skip_bytes(18)
+            result[COMPRESSOR_STARTS] = decoder.decode_16bit_uint()
         return result
 
     def read_modbus_system_paramter(self) -> dict:
@@ -661,6 +668,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[CONSUMED_WATER_HEATING_TOTAL] = (
                 consumed_water_total_high * 1000 + consumed_water_total_low
             )
+            result[COMPRESSOR_HEATING] = decoder.decode_16bit_uint()
+            decoder.skip_bytes(2)
+            result[COMPRESSOR_HEATING_WATER] = decoder.decode_16bit_uint()
+            result[ELECTRICAL_BOOSTER_HEATING] = decoder.decode_16bit_uint()
+            result[ELECTRICAL_BOOSTER_HEATING_WATER] = decoder.decode_16bit_uint()
+
         return result
 
     def set_data(self, key, value) -> None:
