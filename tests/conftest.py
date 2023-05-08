@@ -21,6 +21,7 @@ import pytest
 pytest_plugins = "pytest_homeassistant_custom_component"
 
 class RegisterMock:
+    """Mock for Modbus registers."""
 
     def __init__(
         self
@@ -29,7 +30,7 @@ class RegisterMock:
         self.registers = {1: 1}
 
     def isError():
-        """return if this an error."""
+        """Check if an error happened."""
         return False
 
 
