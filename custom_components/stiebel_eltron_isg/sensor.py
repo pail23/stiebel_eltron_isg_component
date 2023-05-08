@@ -54,7 +54,6 @@ from .const import (
     COMPRESSOR_HEATING_WATER,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
-    IS_HEATING,
     ACTIVE_ERROR,
 )
 from .entity import StiebelEltronISGEntity
