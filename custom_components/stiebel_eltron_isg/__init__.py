@@ -586,8 +586,9 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 decoder.decode_16bit_int()
             )
             # result[SOURCE_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            decoder.skip_bytes(18)
+            decoder.skip_bytes(26)
             result[COMPRESSOR_STARTS] = decoder.decode_16bit_uint()
+            result["system_values"] = list(inverter_data.registers)
         return result
 
     def read_modbus_system_paramter(self) -> dict:
