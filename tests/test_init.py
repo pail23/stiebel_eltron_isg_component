@@ -1,5 +1,6 @@
 """Test stiebel_eltron_isg setup process."""
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntryState
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -21,7 +22,7 @@ from .const import MOCK_CONFIG
 # Assertions allow you to verify that the return value of whatever is on the left
 # side of the assertion matches with the right side.
 @pytest.mark.asyncio
-async def test_setup_unload_and_reload_entry(hass, bypass_get_data, get_model_wpm):
+async def test_setup_unload_and_reload_entry(hass: HomeAssistant, bypass_get_data, get_model_wpm):
     """Test entry setup and unload."""
     # Create a mock entry so we don't have to go through config flow
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
@@ -50,7 +51,7 @@ async def test_setup_unload_and_reload_entry(hass, bypass_get_data, get_model_wp
 
 
 @pytest.mark.asyncio
-async def test_setup_entry_exception(hass, error_on_get_data):
+async def test_setup_entry_exception(hass: HomeAssistant, error_on_get_data):
     """Test ConfigEntryNotReady when API raises an exception during entry setup."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
 
@@ -62,7 +63,7 @@ async def test_setup_entry_exception(hass, error_on_get_data):
 
 
 @pytest.mark.asyncio
-async def test_data_coordinator_wpm(hass, mock_modbus_wpm):
+async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm):
     """Test creating a data coordinator for wpm models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_wpm")
 
@@ -79,7 +80,7 @@ async def test_data_coordinator_wpm(hass, mock_modbus_wpm):
     assert config_entry.entry_id not in hass.data[DOMAIN]
 
 @pytest.mark.asyncio
-async def test_data_coordinator_lwz(hass, mock_modbus_lwz):
+async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz):
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
 
