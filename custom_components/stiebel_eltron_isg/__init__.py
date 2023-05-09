@@ -77,6 +77,7 @@ from .const import (
     FAN_LEVEL,
     ACTIVE_ERROR,
     ERROR_STATUS,
+    MODEL_ID,
 )
 
 SCAN_INTERVAL = timedelta(seconds=30)
@@ -259,6 +260,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             )
             result[SG_READY_STATE] = decoder.decode_16bit_uint()
             self._model_id = decoder.decode_16bit_uint()
+            result[MODEL_ID] = self._model_id
 
         inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
         if not inverter_data.isError():

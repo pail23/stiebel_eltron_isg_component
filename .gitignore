@@ -31,3 +31,6 @@ tts
 scenes.yaml
 scripts.yaml
 secrets.yaml
+
+config/*
+!config/configuration.yaml

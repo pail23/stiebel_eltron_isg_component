@@ -25,7 +25,7 @@ async def async_get_config_entry_diagnostics(
         "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),
         "options": async_redact_data(config_entry.options, []),
         "data": [
-            async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT)
+            async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT), {"model": coordinator.model}
         ],
     }
 
@@ -44,5 +44,5 @@ async def async_get_device_diagnostics(
             config_entry.data, CONFIG_FIELDS_TO_REDACT
         ),
         "options": async_redact_data(config_entry.options, []),
-        "data": async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT),
+        "data": [async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT), {"model": coordinator.model}],
     }
