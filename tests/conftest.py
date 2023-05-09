@@ -15,23 +15,11 @@
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
-
+from pymodbus.register_read_message import ReadHoldingRegistersResponse, ReadInputRegistersResponse
 import pytest
+from typing import Any
 
 pytest_plugins = "pytest_homeassistant_custom_component"
-
-class RegisterMock:
-    """Mock for Modbus registers."""
-
-    def __init__(
-        self
-    ) -> None:
-        """Initialize the register mock."""
-        self.registers = {1: 1}
-
-    def isError():
-        """Check if an error happened."""
-        return False
 
 
 # This fixture enables loading custom integrations in all tests.
@@ -60,18 +48,57 @@ def skip_notifications_fixture():
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data"
+        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data", return_value={}
     ):
         yield
 
-# This fixture, when used, will result in calls to async_get_data to return mock data. To have the call
+def read_input_register(register, start, count)->ReadInputRegistersResponse:
+    try:
+        return ReadInputRegistersResponse(register[start: start + count])
+    except Exception as e:
+        print(e)
+
+def read_input_registers_wpm(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+    system_info = [2, 390]
+    if address >= 5000:
+        return read_input_register(system_info, address - 5000, count)
+    else:
+        return ReadInputRegistersResponse(list(range(0,count)))
+
+def read_input_registers_lwz(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+    system_info = [2, 103]
+    if address >= 5000:
+        return read_input_register(system_info, address - 5000, count)
+    else:
+        return ReadInputRegistersResponse(list(range(0,count)))
+
+
+def read_holding_registers(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+    return ReadHoldingRegistersResponse(list(range(0,count)))
+
+
+# This fixture, when used, will result in calls to read_input_registers to return mock data. To have the call
 # return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
-@pytest.fixture(name="mock_get_data")
-def mock_get_data_fixture():
+@pytest.fixture(name="mock_modbus_wpm")
+def modbus_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data", return_value=RegisterMock()
-    ):
+        "pymodbus.client.ModbusTcpClient.read_input_registers", side_effect=read_input_registers_wpm
+    ), patch(
+        "pymodbus.client.ModbusTcpClient.read_holding_registers", side_effect=read_holding_registers
+    ), patch("pymodbus.client.ModbusTcpClient.connect"):
+        yield
+
+# This fixture, when used, will result in calls to read_holding_registers to return mock data. To have the call
+# return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
+@pytest.fixture(name="mock_modbus_lwz")
+def modbus_lwz_fixture():
+    """Skip calls to get data from API."""
+    with  patch(
+        "pymodbus.client.ModbusTcpClient.read_input_registers", side_effect=read_input_registers_lwz
+    ), patch(
+        "pymodbus.client.ModbusTcpClient.read_holding_registers", side_effect=read_holding_registers
+    ), patch("pymodbus.client.ModbusTcpClient.connect"):
         yield
 
 
@@ -90,10 +117,20 @@ def error_get_data_fixture():
 
 # This fixture, when used, will result in calls to async_get_data to return None. To have the call
 # return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
-@pytest.fixture(name="bypass_get_model")
-def bypass_get_model_fixture():
+@pytest.fixture(name="get_model_wpm")
+def get_model_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
         "custom_components.stiebel_eltron_isg.get_controller_model", return_value=391
+    ):
+        yield
+
+# This fixture, when used, will result in calls to async_get_data to return None. To have the call
+# return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
+@pytest.fixture(name="get_model_lwz")
+def get_model_lwz_fixture():
+    """Skip calls to get data from API."""
+    with patch(
+        "custom_components.stiebel_eltron_isg.get_controller_model", return_value=103
     ):
         yield
