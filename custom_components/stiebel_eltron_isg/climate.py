@@ -138,6 +138,14 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         else:
             self.coordinator.set_data(COMFORT_TEMPERATURE_TARGET_HK1, value)
 
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added.
+
+        This only applies when fist added to the entity registry.
+        """
+        return True
+
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     """stiebel_eltron_isg climate class for wpm."""
