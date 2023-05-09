@@ -63,6 +63,7 @@ async def test_setup_entry_exception(hass, error_on_get_data):
 
 @pytest.mark.asyncio
 async def test_data_coordinator_wpm(hass, mock_modbus_wpm):
+    """Test creating a data coordinator for wpm models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_wpm")
 
     config_entry.add_to_hass(hass)
@@ -79,6 +80,7 @@ async def test_data_coordinator_wpm(hass, mock_modbus_wpm):
 
 @pytest.mark.asyncio
 async def test_data_coordinator_lwz(hass, mock_modbus_lwz):
+    """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
 
     assert await async_setup_entry(hass, config_entry)

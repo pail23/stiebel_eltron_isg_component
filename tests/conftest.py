@@ -53,12 +53,11 @@ def bypass_get_data_fixture():
         yield
 
 def read_input_register(register, start, count)->ReadInputRegistersResponse:
-    try:
-        return ReadInputRegistersResponse(register[start: start + count])
-    except Exception as e:
-        print(e)
+    """Read a slice from the input register."""
+    return ReadInputRegistersResponse(register[start: start + count])
 
 def read_input_registers_wpm(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+    """Simulate reads on the input registers on wpm models."""
     system_info = [2, 390]
     if address >= 5000:
         return read_input_register(system_info, address - 5000, count)
@@ -66,6 +65,7 @@ def read_input_registers_wpm(address: int, count: int = 1, slave: int = 0, **kwa
         return ReadInputRegistersResponse(list(range(0,count)))
 
 def read_input_registers_lwz(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+    """Simulate reads on the input registers on lwz models ."""
     system_info = [2, 103]
     if address >= 5000:
         return read_input_register(system_info, address - 5000, count)
@@ -74,6 +74,7 @@ def read_input_registers_lwz(address: int, count: int = 1, slave: int = 0, **kwa
 
 
 def read_holding_registers(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+    """Simulate reads on the holding registers on lwz models ."""
     return ReadHoldingRegistersResponse(list(range(0,count)))
 
 
