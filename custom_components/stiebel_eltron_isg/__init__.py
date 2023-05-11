@@ -394,6 +394,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            result["system_values"] = list(inverter_data.registers)
         return result
 
     def read_modbus_system_paramter(self) -> dict:
