@@ -532,11 +532,11 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             state = decoder.decode_16bit_uint()
-            result[COMPRESSOR_ON] = (state & (1 << 2)) != 0
-            result[IS_HEATING] = (state & (1 << 3)) != 0
-            result[IS_COOLING] = (state & (1 << 4)) != 0
-            result[IS_HEATING_WATER] = (state & (1 << 5)) != 0
-            result[PUMP_ON_HK1] = (state & (1 << 11)) != 0
+            result[COMPRESSOR_ON] = (state & (1 << 1)) != 0
+            result[IS_HEATING] = (state & (1 << 2)) != 0
+            result[IS_COOLING] = (state & (1 << 3)) != 0
+            result[IS_HEATING_WATER] = (state & (1 << 4)) != 0
+            result[PUMP_ON_HK1] = (state & (1 << 10)) != 0
             #  result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
 
             result[ERROR_STATUS] = decoder.decode_16bit_uint()
