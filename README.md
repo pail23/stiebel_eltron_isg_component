@@ -1,4 +1,4 @@
-# Stiebel Eltron ISG intergation
+# Stiebel Eltron ISG integration
 
 [![GitHub Release][releases-shield]][releases]
 [![GitHub Activity][commits-shield]][commits]
