@@ -23,6 +23,8 @@ from .const import (
     ACTUAL_TEMPERATURE_FEK,
     COMFORT_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK2,
     OPERATION_MODE,
     FAN_LEVEL,
 )
@@ -31,6 +33,8 @@ from .entity import StiebelEltronISGEntity
 _LOGGER = logging.getLogger(__name__)
 
 CLIMATE_HK_1 = "climate_hk_1"
+CLIMATE_HK_2 = "climate_hk_2"
+
 ECO_MODE = 4
 
 WPM_TO_HA_HVAC = {
@@ -68,8 +72,14 @@ HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 
 
 CLIMATE_TYPES = [
-    ClimateEntityDescription(CLIMATE_HK_1, has_entity_name=True, name="Heat Circuit 1")
+    ClimateEntityDescription(CLIMATE_HK_1, has_entity_name=True, name="Heat Circuit 1"),
+    ClimateEntityDescription(CLIMATE_HK_2, has_entity_name=True, name="Heat Circuit 2")
 ]
+
+TEMPERATURE_KEY_MAP = {
+    CLIMATE_HK_1: [ECO_TEMPERATURE_TARGET_HK1, COMFORT_TEMPERATURE_TARGET_HK1],
+    CLIMATE_HK_2: [ECO_TEMPERATURE_TARGET_HK2, COMFORT_TEMPERATURE_TARGET_HK2],
+}
 
 
 async def async_setup_entry(hass, entry, async_add_devices):
@@ -126,17 +136,17 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            return self.coordinator.data.get(ECO_TEMPERATURE_TARGET_HK1)
+            return self.coordinator.data.get(TEMPERATURE_KEY_MAP[self.entity_description.key][0])
         else:
-            return self.coordinator.data.get(COMFORT_TEMPERATURE_TARGET_HK1)
+            return self.coordinator.data.get(TEMPERATURE_KEY_MAP[self.entity_description.key][1])
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            self.coordinator.set_data(ECO_TEMPERATURE_TARGET_HK1, value)
+            self.coordinator.set_data(TEMPERATURE_KEY_MAP[self.entity_description.key][0], value)
         else:
-            self.coordinator.set_data(COMFORT_TEMPERATURE_TARGET_HK1, value)
+            self.coordinator.set_data(TEMPERATURE_KEY_MAP[self.entity_description.key][1], value)
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -144,7 +154,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
         This only applies when fist added to the entity registry.
         """
-        return True
+        return self.coordinator.data.get(TEMPERATURE_KEY_MAP[self.entity_description.key][0]) is not None
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
