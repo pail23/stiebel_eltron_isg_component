@@ -17,7 +17,6 @@
 from unittest.mock import patch
 from pymodbus.register_read_message import ReadHoldingRegistersResponse, ReadInputRegistersResponse
 import pytest
-import pytest_asyncio
 from typing import Any
 
 pytest_plugins = "pytest_homeassistant_custom_component"
@@ -25,7 +24,7 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 
 # This fixture enables loading custom integrations in all tests.
 # Remove to enable selective use of this fixture
-@pytest_asyncio.fixture(autouse=True)
+@pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable loading custom integrations in all tests."""
     yield
