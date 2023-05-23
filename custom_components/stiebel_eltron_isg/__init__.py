@@ -64,6 +64,7 @@ from .const import (
     PUMP_ON_HK1,
     PUMP_ON_HK2,
     COMPRESSOR_ON,
+    CIRCULATION_PUMP,
     SG_READY_STATE,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
@@ -77,7 +78,12 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
-    FAN_LEVEL,
+    FAN_LEVEL_DAY,
+    FAN_LEVEL_NIGHT,
+    VENTILATION_AIR_ACTUAL_FAN_SPEED,
+    VENTILATION_AIR_TARGET_FLOW_RATE,
+    EXTRACT_AIR_ACTUAL_FAN_SPEED,
+    EXTRACT_AIR_TARGET_FLOW_RATE,
     ACTIVE_ERROR,
     ERROR_STATUS,
     MODEL_ID,
@@ -101,7 +107,6 @@ STIEBEL_ELTRON_ISG_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({cv.slug: STIEBEL_ELTRON_ISG_SCHEMA})}, extra=vol.ALLOW_EXTRA
 )
-
 
 async def async_setup(hass: HomeAssistant, config: Config):
     """Set up this integration using YAML is not supported."""
@@ -296,7 +301,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_state(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2500, count=7)
+        inverter_data = self.read_input_registers(slave=1, address=2500, count=47)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
@@ -322,6 +327,10 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 result[ACTIVE_ERROR] = "no error"
             else:
                 result[ACTIVE_ERROR] = f"error {error}"
+            decoder.skip_bytes(24)
+            circulation_pump = decoder.decode_16bit_uint()
+            if circulation_pump != 32768:
+                result[CIRCULATION_PUMP] = circulation_pump
 
         return result
 
@@ -499,6 +508,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=1509, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1510, value=int(value * 10), slave=1)
+        elif key == CIRCULATION_PUMP:
+            self.write_register(address=47012, value=value, slave = 1)
         else:
             return
         self.data[key] = value
@@ -593,8 +604,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            # result[SOURCE_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            decoder.skip_bytes(26)
+            result[VENTILATION_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
+            result[VENTILATION_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
+            result[EXTRACT_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
+            result[EXTRACT_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
+
+            decoder.skip_bytes(18) #
             result[COMPRESSOR_STARTS] = decoder.decode_16bit_uint()
             result["system_values"] = list(inverter_data.registers)
         return result
@@ -637,7 +652,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 decoder.decode_16bit_int()
             )
             decoder.skip_bytes(8)
-            result[FAN_LEVEL] = decoder.decode_16bit_uint()
+            result[FAN_LEVEL_DAY] = decoder.decode_16bit_uint()
+            result[FAN_LEVEL_NIGHT] = decoder.decode_16bit_uint()
         return result
 
     def read_modbus_energy(self) -> dict:
@@ -715,8 +731,10 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=1011, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1012, value=int(value * 10), slave=1)
-        elif key == FAN_LEVEL:
+        elif key == FAN_LEVEL_DAY:
             self.write_register(address=1017, value=int(value), slave=1)
+        elif key == FAN_LEVEL_NIGHT:
+            self.write_register(address=1018, value=int(value), slave=1)
         else:
             return
         self.data[key] = value

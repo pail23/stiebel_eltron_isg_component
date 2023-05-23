@@ -77,6 +77,7 @@ IS_COOLING = "is_cooling"
 PUMP_ON_HK1 = "pump_on_hk1"
 PUMP_ON_HK2 = "pump_on_hk2"
 COMPRESSOR_ON = "compressor_on"
+CIRCULATION_PUMP = "circulation_pump"
 
 COMFORT_TEMPERATURE_TARGET_HK1 = "comfort_temperature_target_hk1"
 ECO_TEMPERATURE_TARGET_HK1 = "eco_temperature_target_hk1"
@@ -89,7 +90,13 @@ COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
 
 
-FAN_LEVEL = "fan_level"
+FAN_LEVEL_DAY = "fan_level_comfort"
+FAN_LEVEL_NIGHT = "fan_level_eco"
+VENTILATION_AIR_ACTUAL_FAN_SPEED = "ventilation_air_actual_fan_speed"
+VENTILATION_AIR_TARGET_FLOW_RATE = "ventilation_air_target_flow_rate"
+EXTRACT_AIR_ACTUAL_FAN_SPEED = "extract_air_actual"
+EXTRACT_AIR_TARGET_FLOW_RATE = "extract_air_target_flowrate"
+
 
 RESET_HEATPUMP = "reset_heatpump"
 ACTIVE_ERROR = "active_error"

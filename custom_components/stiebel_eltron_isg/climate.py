@@ -26,7 +26,8 @@ from .const import (
     COMFORT_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK2,
     OPERATION_MODE,
-    FAN_LEVEL,
+    FAN_LEVEL_DAY,
+    FAN_LEVEL_NIGHT
 )
 from .entity import StiebelEltronISGEntity
 
@@ -201,9 +202,15 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
-        return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL))
+        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+            return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_NIGHT))
+        else:
+            return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_DAY))
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
-        self.coordinator.set_data(FAN_LEVEL, new_mode)
+        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+            self.coordinator.set_data(FAN_LEVEL_NIGHT, new_mode)
+        else:
+            self.coordinator.set_data(FAN_LEVEL_DAY, new_mode)

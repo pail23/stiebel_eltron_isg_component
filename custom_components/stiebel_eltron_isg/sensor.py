@@ -55,6 +55,10 @@ from .const import (
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     ACTIVE_ERROR,
+    VENTILATION_AIR_ACTUAL_FAN_SPEED,
+    VENTILATION_AIR_TARGET_FLOW_RATE,
+    EXTRACT_AIR_ACTUAL_FAN_SPEED,
+    EXTRACT_AIR_TARGET_FLOW_RATE,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -264,6 +268,33 @@ COMPRESSOR_SENSOR_TYPES = [
     ),
 ]
 
+VENTILATION_SENSOR_TYPES = [
+    SensorEntityDescription(
+        VENTILATION_AIR_ACTUAL_FAN_SPEED,
+        name="Ventilaction air actual fan speed",
+        icon="mdi:fan",
+        has_entity_name=True,
+    ),
+    SensorEntityDescription(
+        VENTILATION_AIR_TARGET_FLOW_RATE,
+        name="Ventilaction air tareget fan speed",
+        icon="mdi:fan",
+        has_entity_name=True,
+    ),
+    SensorEntityDescription(
+        EXTRACT_AIR_ACTUAL_FAN_SPEED,
+        name="Extract air actual fan speed",
+        icon="mdi:fan",
+        has_entity_name=True,
+    ),
+    SensorEntityDescription(
+        EXTRACT_AIR_TARGET_FLOW_RATE,
+        name="Extract air target fan speed",
+        icon="mdi:fan",
+        has_entity_name=True,
+    )
+]
+
 
 async def async_setup_entry(hass, entry, async_add_devices):
     """Set up the sensor platform."""
@@ -308,6 +339,13 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     if not coordinator.is_wpm:
         for description in COMPRESSOR_SENSOR_TYPES:
+            sensor = StiebelEltronISGSensor(
+                coordinator,
+                entry,
+                description,
+            )
+            entities.append(sensor)
+        for description in VENTILATION_SENSOR_TYPES:
             sensor = StiebelEltronISGSensor(
                 coordinator,
                 entry,

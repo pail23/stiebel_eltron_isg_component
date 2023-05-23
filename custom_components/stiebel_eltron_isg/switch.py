@@ -9,7 +9,7 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
 )
 
-from .const import DOMAIN, SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
+from .const import DOMAIN, SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2, CIRCULATION_PUMP
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -32,6 +32,12 @@ SWITCH_TYPES = [
         SwitchDeviceClass.SWITCH,
         has_entity_name=True,
         name="SG Ready Input 2",
+    ),
+    SwitchEntityDescription(
+        CIRCULATION_PUMP,
+        SwitchDeviceClass.SWITCH,
+        has_entity_name=True,
+        name="Circulation Pump",
     ),
 ]
 

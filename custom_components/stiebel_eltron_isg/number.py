@@ -20,7 +20,8 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
-    FAN_LEVEL,
+    FAN_LEVEL_DAY,
+    FAN_LEVEL_NIGHT
 )
 from .entity import StiebelEltronISGEntity
 
@@ -114,9 +115,18 @@ NUMBER_TYPES_WPM = [
 
 NUMBER_TYPES_LWZ = [
     NumberEntityDescription(
-        FAN_LEVEL,
+        FAN_LEVEL_DAY,
         has_entity_name=True,
-        name="Fan Level",
+        name="Fan Level Day",
+        icon="mdi:fan",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+    ),
+    NumberEntityDescription(
+        FAN_LEVEL_NIGHT,
+        has_entity_name=True,
+        name="Fan Level Night",
         icon="mdi:fan",
         native_min_value=0,
         native_max_value=3,
