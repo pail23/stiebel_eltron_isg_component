@@ -610,7 +610,13 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[EXTRACT_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
 
             decoder.skip_bytes(18) #
-            result[COMPRESSOR_STARTS] = decoder.decode_16bit_uint()
+            compressor_starts = decoder.decode_16bit_uint()
+            decoder.skip_bytes(4) #
+            compressor_starts_high = decoder.decode_16bit_uint()
+            if compressor_starts_high == 32768:
+                result[COMPRESSOR_STARTS] = compressor_starts
+            else:
+                result[COMPRESSOR_STARTS] = compressor_starts + compressor_starts_high * 1000
             result["system_values"] = list(inverter_data.registers)
         return result
 
