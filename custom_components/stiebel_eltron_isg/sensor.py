@@ -277,7 +277,7 @@ VENTILATION_SENSOR_TYPES = [
     ),
     SensorEntityDescription(
         VENTILATION_AIR_TARGET_FLOW_RATE,
-        name="Ventilaction air tareget fan speed",
+        name="Ventilaction air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
     ),
