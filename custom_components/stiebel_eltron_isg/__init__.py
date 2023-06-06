@@ -42,6 +42,10 @@ from .const import (
     HEATER_PRESSURE,
     VOLUME_STREAM,
     SOURCE_TEMPERATURE,
+    SOURCE_PRESSURE,
+    HOT_GAS_TEMPERATURE,
+    HIGH_PRESSURE,
+    LOW_PRESSURE,
     FLOW_TEMPERATURE,
     RETURN_TEMPERATURE,
     PRODUCED_HEATING_TODAY,
@@ -346,7 +350,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=500, count=40)
+        inverter_data = self.read_input_registers(slave=1, address=500, count=42)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.Big
@@ -410,6 +414,19 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             decoder.skip_bytes(24)
             result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(2)
+            result[SOURCE_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+            result[HOT_GAS_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[HIGH_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[LOW_PRESSURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
             result["system_values"] = list(inverter_data.registers)

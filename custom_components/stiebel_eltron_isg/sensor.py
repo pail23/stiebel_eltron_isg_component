@@ -37,6 +37,10 @@ from .const import (
     ACTUAL_TEMPERATURE_WATER,
     TARGET_TEMPERATURE_WATER,
     SOURCE_TEMPERATURE,
+    SOURCE_PRESSURE,
+    HOT_GAS_TEMPERATURE,
+    HIGH_PRESSURE,
+    LOW_PRESSURE,
     HEATER_PRESSURE,
     VOLUME_STREAM,
     SG_READY_STATE,
@@ -155,6 +159,10 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Target Temperature Water", TARGET_TEMPERATURE_WATER
     ),
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
+    create_pressure_entity_description("Source Pressure", SOURCE_PRESSURE),
+    create_temperature_entity_description("Hot Gas Temperature", HOT_GAS_TEMPERATURE),
+    create_pressure_entity_description("High Pressure", HIGH_PRESSURE),
+    create_pressure_entity_description("Low Pressure", LOW_PRESSURE),
     SensorEntityDescription(
         ACTIVE_ERROR,
         name="Active Error",
