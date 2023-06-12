@@ -1,0 +1,21 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Si vous avez besoin d'aide au sujet de cette configuration, rendez-vous à cette adresse: https://github.com/pail23/stiebel_eltron_isg",
+                "data": {
+                    "host": "L'adresse IP de votre ISG",
+                    "port": "Le port TCP utilisé pour communiquer avec l'ISG",
+                    "scan_interval": "La fréquence d'interrogation des registres modbus en secondes"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Périphérique déjà configuré",
+            "invalid_host_IP": "IP hôte invalide"
+        },
+        "abort": {
+            "already_configured": "Périphérique déjà configuré"
+        }
+    }
+}
