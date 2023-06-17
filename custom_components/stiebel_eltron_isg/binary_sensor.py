@@ -1,5 +1,4 @@
 """Binary sensor platform for stiebel_eltron_isg."""
-from typing import Optional
 
 
 from homeassistant.components.binary_sensor import (
@@ -94,7 +93,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
         super().__init__(coordinator, config_entry)
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return the unique id of the sensor."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 

@@ -1,6 +1,5 @@
 """Sensor number for stiebel_eltron_isg."""
 import logging
-from typing import Optional
 
 from homeassistant.const import (
     UnitOfTemperature,
@@ -166,7 +165,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         super().__init__(coordinator, config_entry)
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return the unique id of the select entity."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 

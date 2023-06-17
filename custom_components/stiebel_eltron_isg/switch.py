@@ -1,6 +1,6 @@
 """Switch platform for stiebel_eltron_isg."""
 import logging
-from typing import Optional, Any
+from typing import Any
 
 
 from homeassistant.components.switch import (
@@ -68,7 +68,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         super().__init__(coordinator, config_entry)
 
     @property
-    def unique_id(self) -> Optional[str]:
+    def unique_id(self) -> str | None:
         """Return the unique id of the switch."""
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
