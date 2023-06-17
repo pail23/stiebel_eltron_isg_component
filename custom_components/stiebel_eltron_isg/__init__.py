@@ -65,6 +65,16 @@ from .const import (
     PUMP_ON_HK2,
     COMPRESSOR_ON,
     CIRCULATION_PUMP,
+    SWITCHING_PROGRAM_ENABLED,
+    ELECTRIC_REHEATING,
+    SERVICE,
+    POWER_OFF,
+    FILTER,
+    VENTILATION,
+    EVAPORATOR_DEFROST,
+    FILTER_EXTRACT_AIR,
+    FILTER_VENTILATION_AIR,
+    HEAT_UP_PROGRAM,
     SG_READY_STATE,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
@@ -309,14 +319,13 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             state = decoder.decode_16bit_uint()
             result[PUMP_ON_HK1] = (state & (1 << 0)) != 0
             result[PUMP_ON_HK2] = (state & (1 << 1)) != 0
-            is_heating = (state & (1 << 4)) != 0
-            result[IS_HEATING] = is_heating
-            is_heating_water = (state & (1 << 5)) != 0
-            result[IS_HEATING_WATER] = is_heating_water
-
+            result[HEAT_UP_PROGRAM] = (state & (1 << 2)) != 0
+            result[IS_HEATING] = (state & (1 << 4)) != 0
+            result[IS_HEATING_WATER] = (state & (1 << 5)) != 0
             result[COMPRESSOR_ON] = (state & (1 << 6)) != 0
             result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
             result[IS_COOLING] = (state & (1 << 8)) != 0
+            result[EVAPORATOR_DEFROST] = (state & (1 << 9)) != 0
 
 
             decoder.skip_bytes(4)
@@ -543,12 +552,23 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers, byteorder=Endian.Big
             )
             state = decoder.decode_16bit_uint()
+            result[SWITCHING_PROGRAM_ENABLED] = (state & 1) != 0
             result[COMPRESSOR_ON] = (state & (1 << 1)) != 0
             result[IS_HEATING] = (state & (1 << 2)) != 0
             result[IS_COOLING] = (state & (1 << 3)) != 0
             result[IS_HEATING_WATER] = (state & (1 << 4)) != 0
+            result[ELECTRIC_REHEATING] = (state & (1 << 5)) != 0
+            result[SERVICE] = (state & (1 << 6)) != 0
+            result[POWER_OFF] = (state & (1 << 7)) != 0
+            result[FILTER] = (state & (1 << 8)) != 0
+            result[VENTILATION] = (state & (1 << 9)) != 0
+
             result[PUMP_ON_HK1] = (state & (1 << 10)) != 0
-            #  result[IS_SUMMER_MODE] = (state & (1 << 7)) != 0
+
+            result[EVAPORATOR_DEFROST] = (state & (1 << 11)) != 0
+            result[FILTER_EXTRACT_AIR] = (state & (1 << 12)) != 0
+            result[FILTER_VENTILATION_AIR] = (state & (1 << 13)) != 0
+            result[HEAT_UP_PROGRAM] = (state & (1 << 14)) != 0
 
             result[ERROR_STATUS] = decoder.decode_16bit_uint()
         return result

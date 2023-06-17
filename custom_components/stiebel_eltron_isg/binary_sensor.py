@@ -8,7 +8,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.helpers.entity import EntityCategory
 
 from .entity import StiebelEltronISGEntity
-from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE, PUMP_ON_HK1, PUMP_ON_HK2, COMPRESSOR_ON, ERROR_STATUS
+from .const import DOMAIN, IS_HEATING, IS_COOLING, IS_HEATING_WATER, IS_SUMMER_MODE, PUMP_ON_HK1, PUMP_ON_HK2, COMPRESSOR_ON, SWITCHING_PROGRAM_ENABLED, ELECTRIC_REHEATING, SERVICE, POWER_OFF, FILTER, VENTILATION, EVAPORATOR_DEFROST, FILTER_EXTRACT_AIR, FILTER_VENTILATION_AIR, HEAT_UP_PROGRAM, ERROR_STATUS
 
 BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
@@ -50,6 +50,66 @@ BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name="Compressor",
         key=COMPRESSOR_ON,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Switching Program Enabled",
+        key=SWITCHING_PROGRAM_ENABLED,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Electric Heating",
+        key=ELECTRIC_REHEATING,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Service",
+        key=SERVICE,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Power Off",
+        key=POWER_OFF,
+        icon="mdi:power",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Filter",
+        key=FILTER,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Ventilation",
+        key=VENTILATION,
+        icon="mdi:fan",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Evaporator Defrost",
+        key=EVAPORATOR_DEFROST,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Filter Etract Air",
+        key=FILTER_EXTRACT_AIR,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Filter Ventilation Air",
+        key=FILTER_VENTILATION_AIR,
+        icon="mdi:heat-pump",
+        has_entity_name=True,
+    ),
+    BinarySensorEntityDescription(
+        name="Heat-up Program",
+        key=HEAT_UP_PROGRAM,
         icon="mdi:heat-pump",
         has_entity_name=True,
     ),
