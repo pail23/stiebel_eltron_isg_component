@@ -89,6 +89,7 @@ EVAPORATOR_DEFROST = "evaporator_defrost"
 FILTER_EXTRACT_AIR = "filter_extract_air"
 FILTER_VENTILATION_AIR = "filter_ventilation_air"
 HEAT_UP_PROGRAM = "heat_up_program"
+NHZ_STAGES_RUNNING = "nht_stages_running"
 
 COMFORT_TEMPERATURE_TARGET_HK1 = "comfort_temperature_target_hk1"
 ECO_TEMPERATURE_TARGET_HK1 = "eco_temperature_target_hk1"
@@ -99,7 +100,7 @@ HEATING_CURVE_RISE_HK2 = "heating_curve_rise_hk2"
 
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
-
+COOLING_TARGET_ROOM_TEMPERATURE = "cooling_target_room_temperaturee"
 
 FAN_LEVEL_DAY = "fan_level_comfort"
 FAN_LEVEL_NIGHT = "fan_level_eco"

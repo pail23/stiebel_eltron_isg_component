@@ -75,6 +75,7 @@ from .const import (
     FILTER_EXTRACT_AIR,
     FILTER_VENTILATION_AIR,
     HEAT_UP_PROGRAM,
+    NHZ_STAGES_RUNNING,
     SG_READY_STATE,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
@@ -88,6 +89,7 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
+    COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
@@ -320,6 +322,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[PUMP_ON_HK1] = (state & (1 << 0)) != 0
             result[PUMP_ON_HK2] = (state & (1 << 1)) != 0
             result[HEAT_UP_PROGRAM] = (state & (1 << 2)) != 0
+            result[NHZ_STAGES_RUNNING] = (state & (1 << 3)) != 0
             result[IS_HEATING] = (state & (1 << 4)) != 0
             result[IS_HEATING_WATER] = (state & (1 << 5)) != 0
             result[COMPRESSOR_ON] = (state & (1 << 6)) != 0
@@ -449,6 +452,10 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            decoder.skip_bytes(8)
+            result[COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
         return result
 
     def read_modbus_energy(self) -> dict:
@@ -517,6 +524,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=1509, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1510, value=int(value * 10), slave=1)
+        elif key == COOLING_TARGET_ROOM_TEMPERATURE:
+            self.write_register(address=1515, value=int(value * 10), slave=1)
         elif key == CIRCULATION_PUMP:
             self.write_register(address=47012, value=value, slave = 1)
         else:
@@ -571,6 +580,9 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[HEAT_UP_PROGRAM] = (state & (1 << 14)) != 0
 
             result[ERROR_STATUS] = decoder.decode_16bit_uint()
+            decoder.skip_bytes(4)
+            state = decoder.decode_16bit_uint()
+            result[IS_SUMMER_MODE] = (state & 1) != 0
         return result
 
     def read_modbus_system_values(self) -> dict:

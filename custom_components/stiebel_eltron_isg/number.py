@@ -19,6 +19,7 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
+    COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT
 )
@@ -86,6 +87,16 @@ NUMBER_TYPES_ALL = [
         icon="hass:thermometer",
         native_min_value=10,
         native_max_value=60,
+        native_step=0.1,
+    ),
+    NumberEntityDescription(
+        COOLING_TARGET_ROOM_TEMPERATURE,
+        has_entity_name=True,
+        name="Cooling Room Temperature Target",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="hass:thermometer",
+        native_min_value=20,
+        native_max_value=30,
         native_step=0.1,
     ),
 ]
