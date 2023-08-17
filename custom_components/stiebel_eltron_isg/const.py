@@ -104,7 +104,10 @@ HEATING_CURVE_RISE_HK2 = "heating_curve_rise_hk2"
 
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
-COOLING_TARGET_ROOM_TEMPERATURE = "cooling_target_room_temperaturee"
+AREA_COOLING_TARGET_ROOM_TEMPERATURE = "area_cooling_target_room_temperature"
+AREA_COOLING_TARGET_FLOW_TEMPERATURE = "area_cooling_target_flow_temperature"
+FAN_COOLING_TARGET_ROOM_TEMPERATURE = "fan_cooling_target_room_temperature"
+FAN_COOLING_TARGET_FLOW_TEMPERATURE = "fan_cooling_target_flow_temperature"
 
 FAN_LEVEL_DAY = "fan_level_comfort"
 FAN_LEVEL_NIGHT = "fan_level_eco"

@@ -93,7 +93,10 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
-    COOLING_TARGET_ROOM_TEMPERATURE,
+    AREA_COOLING_TARGET_ROOM_TEMPERATURE,
+    AREA_COOLING_TARGET_FLOW_TEMPERATURE,
+    FAN_COOLING_TARGET_ROOM_TEMPERATURE,
+    FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
@@ -469,8 +472,19 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(8)
-            result[COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
+            decoder.skip_bytes(4)
+            result[AREA_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(2)
+            result[AREA_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[FAN_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(2)
+            result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
         return result
@@ -541,8 +555,14 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             self.write_register(address=1509, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
             self.write_register(address=1510, value=int(value * 10), slave=1)
-        elif key == COOLING_TARGET_ROOM_TEMPERATURE:
+        elif key == AREA_COOLING_TARGET_FLOW_TEMPERATURE:
+            self.write_register(address=1513, value=int(value * 10), slave=1)
+        elif key == AREA_COOLING_TARGET_ROOM_TEMPERATURE:
             self.write_register(address=1515, value=int(value * 10), slave=1)
+        elif key == FAN_COOLING_TARGET_FLOW_TEMPERATURE:
+            self.write_register(address=1516, value=int(value * 10), slave=1)
+        elif key == FAN_COOLING_TARGET_ROOM_TEMPERATURE:
+            self.write_register(address=1518, value=int(value * 10), slave=1)
         elif key == CIRCULATION_PUMP:
             self.write_register(address=47012, value=value, slave = 1)
         else:

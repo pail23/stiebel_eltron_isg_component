@@ -96,7 +96,7 @@ BINARY_SENSOR_TYPES = [
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
-        name="Filter Etract Air",
+        name="Filter Extract Air",
         key=FILTER_EXTRACT_AIR,
         icon="mdi:heat-pump",
         has_entity_name=True,
