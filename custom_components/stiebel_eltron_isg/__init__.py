@@ -225,6 +225,19 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         with self._lock:
             self._client.connect()
 
+
+    def shutdown(self):
+        """Shutdown the coordinator and close all connections."""
+        self.close()
+        self._client = None
+
+    @property
+    def is_connected(self) -> bool:
+        """Check modbus client connection status."""
+        if self._client is None:
+            return False
+        return self._client.connected
+
     @property
     def host(self) -> str:
         """Return the host address of the Stiebel Eltron ISG."""
@@ -269,6 +282,8 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Time to update."""
         try:
+            if not self.is_connected:
+                self.connect()
             return self.read_modbus_data()
         except Exception as exception:
             raise UpdateFailed(exception) from exception
@@ -821,6 +836,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle removal of an entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator.shutdown()
     if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         hass.data[DOMAIN].pop(entry.entry_id)
     return unloaded

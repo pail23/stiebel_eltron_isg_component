@@ -1,6 +1,6 @@
 {
     "name": "pail23/stiebel_eltron_isg",
-    "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.10-bullseye",
+    "image": "mcr.microsoft.com/vscode/devcontainers/python:0-3.11-bullseye",
     "postCreateCommand": "scripts/setup",
     "forwardPorts": [
         8123,
