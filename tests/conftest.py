@@ -44,11 +44,22 @@ def skip_notifications_fixture():
 
 # This fixture, when used, will result in calls to async_get_data to return None. To have the call
 # return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
+@pytest.fixture(name="skip_connect")
+def skip_connect_fixture():
+    """Skip calls to get data from API."""
+    with patch(
+        "pymodbus.client.ModbusTcpClient.read_input_registers", return_value={}
+    ):
+        yield
+
+
+# This fixture, when used, will result in calls to async_get_data to return None. To have the call
+# return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
 @pytest.fixture(name="bypass_get_data")
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data", return_value={}
+        "custom_components.stiebel_eltron_isg.StiebelEltronModbusDataCoordinator._async_update_data", return_value={}
     ):
         yield
 
