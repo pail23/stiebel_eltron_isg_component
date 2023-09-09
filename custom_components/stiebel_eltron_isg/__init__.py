@@ -198,7 +198,7 @@ def get_controller_model(host, port) -> int:
         inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             model = decoder.decode_16bit_uint()
             return model
@@ -313,7 +313,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=5000, count=2)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             result[SG_READY_STATE] = decoder.decode_16bit_uint()
             self._model_id = decoder.decode_16bit_uint()
@@ -322,7 +322,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             result[SG_READY_ACTIVE] = decoder.decode_16bit_uint()
             result[SG_READY_INPUT_1] = decoder.decode_16bit_uint()
@@ -353,7 +353,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=2500, count=47)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             state = decoder.decode_16bit_uint()
             result[PUMP_ON_HK1] = (state & (1 << 0)) != 0
@@ -389,7 +389,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=500, count=42)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
@@ -474,7 +474,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_holding_registers(slave=1, address=1500, count=19)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
             result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
@@ -525,7 +525,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=3500, count=22)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             produced_heating_today = decoder.decode_16bit_uint()
             produced_heating_total_low = decoder.decode_16bit_uint()
@@ -625,7 +625,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=2000, count=5)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             state = decoder.decode_16bit_uint()
             result[SWITCHING_PROGRAM_ENABLED] = (state & 1) != 0
@@ -658,7 +658,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=0, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
@@ -725,7 +725,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_holding_registers(slave=1, address=1000, count=25)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
             result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
@@ -767,7 +767,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = self.read_input_registers(slave=1, address=3000, count=32)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.Big
+                inverter_data.registers, byteorder=Endian.BIG
             )
             produced_heating_today = decoder.decode_16bit_uint()
             produced_heating_total_low = decoder.decode_16bit_uint()
