@@ -1,5 +1,4 @@
 """Test stiebel_eltron_isg setup process."""
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.core import HomeAssistant
 from homeassistant.config_entries import ConfigEntryState
 import pytest
