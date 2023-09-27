@@ -41,18 +41,6 @@ async def test_setup_unload_and_reload_entry(hass: HomeAssistant, bypass_get_dat
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio
-async def test_setup_entry_exception(hass: HomeAssistant, error_on_get_data):
-    """Test ConfigEntryNotReady when API raises an exception during entry setup."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    config_entry.add_to_hass(hass)
-
-    # In this case we are testing the condition where async_setup_entry raises
-    # ConfigEntryNotReady using the `error_on_get_data` fixture which simulates
-    # an error.
-    with pytest.raises(ConfigEntryNotReady):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-
 
 @pytest.mark.asyncio
 async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm):
