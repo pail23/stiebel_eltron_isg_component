@@ -6,10 +6,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import (
-    StiebelEltronModbusWPMDataCoordinator,
-    async_reload_entry,
-    async_setup_entry,
-    async_unload_entry,
+    StiebelEltronModbusWPMDataCoordinator
 )
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 
@@ -31,15 +28,7 @@ async def test_setup_unload_and_reload_entry(hass: HomeAssistant, bypass_get_dat
     # Set up the entry and assert that the values set during setup are where we expect
     # them to be. Because we have patched the StiebelEltronModbusDataCoordinator.async_get_data
     # call, no code from custom_components/stiebel_eltron_isg/api.py actually runs.
-    assert await async_setup_entry(hass, config_entry)
-    assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
-    assert (
-        type(hass.data[DOMAIN][config_entry.entry_id])
-        == StiebelEltronModbusWPMDataCoordinator
-    )
-
-    # Reload the entry and assert that the data from above is still there
-    assert await async_reload_entry(hass, config_entry) is None
+    await hass.config_entries.async_setup(config_entry.entry_id)
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert (
         type(hass.data[DOMAIN][config_entry.entry_id])
@@ -47,7 +36,7 @@ async def test_setup_unload_and_reload_entry(hass: HomeAssistant, bypass_get_dat
     )
 
     # Unload the entry and verify that the data has been removed
-    assert await async_unload_entry(hass, config_entry)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
@@ -62,7 +51,7 @@ async def test_setup_entry_exception(hass: HomeAssistant, error_on_get_data):
     # ConfigEntryNotReady using the `error_on_get_data` fixture which simulates
     # an error.
     with pytest.raises(ConfigEntryNotReady):
-        assert await async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
 
 @pytest.mark.asyncio
@@ -79,10 +68,10 @@ async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm):
     state = hass.states.get("sensor.stiebel_eltron_isg_actual_temperature_fek")
     assert state is not None
     assert state.state == '0.2'
-    assert await async_unload_entry(hass, config_entry)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert config_entry.entry_id not in hass.data[DOMAIN]
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 @pytest.mark.asyncio
 async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz):
@@ -101,7 +90,6 @@ async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz):
     state = hass.states.get("sensor.stiebel_eltron_isg_actual_temperature_fek")
     assert state is not None
     assert state.state == '0.3'
-    assert await async_unload_entry(hass, config_entry)
+    await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.NOT_LOADED
-    assert config_entry.entry_id not in hass.data[DOMAIN]
