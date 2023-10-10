@@ -528,6 +528,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            result["system_paramaters"] = list(inverter_data.registers)
         return result
 
     def read_modbus_energy(self) -> dict:
