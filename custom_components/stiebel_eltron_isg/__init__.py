@@ -771,6 +771,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder.skip_bytes(8)
             result[FAN_LEVEL_DAY] = decoder.decode_16bit_uint()
             result[FAN_LEVEL_NIGHT] = decoder.decode_16bit_uint()
+            result["system_paramaters"] = list(inverter_data.registers)
         return result
 
     def read_modbus_energy(self) -> dict:
