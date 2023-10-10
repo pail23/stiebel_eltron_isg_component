@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 
 from .const import (
+    ACTUAL_TEMPERATURE_HK3,
     DOMAIN,
     ACTUAL_TEMPERATURE,
     TARGET_TEMPERATURE,
@@ -31,10 +32,12 @@ from .const import (
     ACTUAL_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK2,
     FLOW_TEMPERATURE,
+    FLOW_TEMPERATURE_NHZ,
     RETURN_TEMPERATURE,
     ACTUAL_TEMPERATURE_BUFFER,
     TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
+    TARGET_TEMPERATURE_HK3,
     TARGET_TEMPERATURE_WATER,
     SOURCE_TEMPERATURE,
     SOURCE_PRESSURE,
@@ -142,7 +145,14 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
     ),
+    create_temperature_entity_description(
+        "Actual Temperature HK 3", ACTUAL_TEMPERATURE_HK3
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 3", TARGET_TEMPERATURE_HK3
+    ),
     create_temperature_entity_description("Flow Temperature", FLOW_TEMPERATURE),
+    create_temperature_entity_description("Flow Temperature NHZ", FLOW_TEMPERATURE_NHZ),
     create_temperature_entity_description("Return Temperature", RETURN_TEMPERATURE),
     create_temperature_entity_description(
         "Actual Temperature Buffer", ACTUAL_TEMPERATURE_BUFFER

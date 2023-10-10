@@ -21,6 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
+    ACTUAL_TEMPERATURE_HK3,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
@@ -38,6 +39,7 @@ from .const import (
     ACTUAL_TEMPERATURE_BUFFER,
     TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
+    TARGET_TEMPERATURE_HK3,
     TARGET_TEMPERATURE_WATER,
     HEATER_PRESSURE,
     VOLUME_STREAM,
@@ -47,6 +49,7 @@ from .const import (
     HIGH_PRESSURE,
     LOW_PRESSURE,
     FLOW_TEMPERATURE,
+    FLOW_TEMPERATURE_NHZ,
     RETURN_TEMPERATURE,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
@@ -386,7 +389,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=500, count=42)
+        inverter_data = self.read_input_registers(slave=1, address=500, count=96) #42
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -425,7 +428,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 decoder.decode_16bit_int()
             )
             result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            decoder.skip_bytes(4)
+            result[FLOW_TEMPERATURE_NHZ] = get_isg_scaled_value(decoder.decode_16bit_int())
+            decoder.skip_bytes(2)
             result[RETURN_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
@@ -463,6 +467,13 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 decoder.decode_16bit_int()
             )
             result[LOW_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(100)
+            result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
             result["system_values"] = list(inverter_data.registers)
