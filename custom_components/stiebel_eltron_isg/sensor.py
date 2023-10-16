@@ -18,7 +18,6 @@ from homeassistant.const import (
 )
 
 from .const import (
-    ACTUAL_TEMPERATURE_HK3,
     DOMAIN,
     ACTUAL_TEMPERATURE,
     TARGET_TEMPERATURE,
@@ -37,7 +36,12 @@ from .const import (
     ACTUAL_TEMPERATURE_BUFFER,
     TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
-    TARGET_TEMPERATURE_HK3,
+    ACTUAL_ROOM_TEMPERATURE_HK1,
+    TARGET_ROOM_TEMPERATURE_HK1,
+    ACTUAL_ROOM_TEMPERATURE_HK2,
+    TARGET_ROOM_TEMPERATURE_HK2,
+    ACTUAL_ROOM_TEMPERATURE_HK3,
+    TARGET_ROOM_TEMPERATURE_HK3,
     TARGET_TEMPERATURE_WATER,
     SOURCE_TEMPERATURE,
     SOURCE_PRESSURE,
@@ -65,6 +69,7 @@ from .const import (
     VENTILATION_AIR_TARGET_FLOW_RATE,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
     EXTRACT_AIR_TARGET_FLOW_RATE,
+    EXTRACT_AIR_HUMIDITY,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -146,10 +151,22 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 3", ACTUAL_TEMPERATURE_HK3
+        "Actual Room Temperature HK 1", ACTUAL_ROOM_TEMPERATURE_HK1
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 3", TARGET_TEMPERATURE_HK3
+        "Target Room Temperature HK 1", TARGET_ROOM_TEMPERATURE_HK1
+    ),
+    create_temperature_entity_description(
+        "Actual Room Temperature HK 2", ACTUAL_ROOM_TEMPERATURE_HK2
+    ),
+    create_temperature_entity_description(
+        "Target Room Temperature HK 2", TARGET_ROOM_TEMPERATURE_HK2
+    ),
+    create_temperature_entity_description(
+        "Actual Room Temperature HK 3", ACTUAL_ROOM_TEMPERATURE_HK3
+    ),
+    create_temperature_entity_description(
+        "Target Room Temperature HK 3", TARGET_ROOM_TEMPERATURE_HK3
     ),
     create_temperature_entity_description("Flow Temperature", FLOW_TEMPERATURE),
     create_temperature_entity_description("Flow Temperature NHZ", FLOW_TEMPERATURE_NHZ),
@@ -309,7 +326,8 @@ VENTILATION_SENSOR_TYPES = [
         name="Extract air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
-    )
+    ),
+    create_humidity_entity_description("Extract air humidity", EXTRACT_AIR_HUMIDITY)
 ]
 
 

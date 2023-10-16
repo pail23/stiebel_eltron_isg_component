@@ -21,7 +21,6 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ACTUAL_TEMPERATURE_HK3,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     PLATFORMS,
@@ -39,7 +38,12 @@ from .const import (
     ACTUAL_TEMPERATURE_BUFFER,
     TARGET_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_WATER,
-    TARGET_TEMPERATURE_HK3,
+    ACTUAL_ROOM_TEMPERATURE_HK1,
+    TARGET_ROOM_TEMPERATURE_HK1,
+    ACTUAL_ROOM_TEMPERATURE_HK2,
+    TARGET_ROOM_TEMPERATURE_HK2,
+    ACTUAL_ROOM_TEMPERATURE_HK3,
+    TARGET_ROOM_TEMPERATURE_HK3,
     TARGET_TEMPERATURE_WATER,
     HEATER_PRESSURE,
     VOLUME_STREAM,
@@ -106,6 +110,7 @@ from .const import (
     VENTILATION_AIR_TARGET_FLOW_RATE,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
     EXTRACT_AIR_TARGET_FLOW_RATE,
+    EXTRACT_AIR_HUMIDITY,
     ACTIVE_ERROR,
     ERROR_STATUS,
     MODEL_ID,
@@ -469,11 +474,26 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[LOW_PRESSURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(100)
-            result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
+            decoder.skip_bytes(84)
+
+            result[ACTUAL_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
+            result[TARGET_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(4)
+            result[ACTUAL_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            decoder.skip_bytes(4)
+            result[ACTUAL_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[TARGET_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
             result["system_values"] = list(inverter_data.registers)
@@ -719,8 +739,9 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[VENTILATION_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
+            result[EXTRACT_AIR_HUMIDITY] = decoder.decode_16bit_uint()
 
-            decoder.skip_bytes(18) #
+            decoder.skip_bytes(16) #
             compressor_starts_high = decoder.decode_16bit_uint()
             decoder.skip_bytes(4) #
             compressor_starts_low = decoder.decode_16bit_uint()
