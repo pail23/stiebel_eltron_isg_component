@@ -13,7 +13,6 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     PRESET_ECO,
     PRESET_COMFORT,
-    PRESET_NONE,
 )
 from homeassistant.const import UnitOfTemperature
 
