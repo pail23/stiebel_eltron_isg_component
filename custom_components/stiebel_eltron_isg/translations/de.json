@@ -17,5 +17,21 @@
         "abort": {
             "already_configured": "Das Gerät ist bereits konfiguriert."
         }
+    },
+    "entity": {
+        "climate": {
+            "climate": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Warmwasserbetrieb",
+                            "emergency": "Notbetrieb",
+                            "program": "Programmbetrieb",
+                            "ready": "Bereitschaftsbetrieb"
+                        }
+                    }
+                }
+            }
+        }
     }
 }

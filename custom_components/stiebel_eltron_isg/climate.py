@@ -11,6 +11,9 @@ from homeassistant.components.climate import (
     FAN_LOW,
     FAN_MEDIUM,
     FAN_HIGH,
+    PRESET_ECO,
+    PRESET_COMFORT,
+    PRESET_NONE,
 )
 from homeassistant.const import UnitOfTemperature
 
@@ -26,7 +29,7 @@ from .const import (
     ECO_TEMPERATURE_TARGET_HK2,
     OPERATION_MODE,
     FAN_LEVEL_DAY,
-    FAN_LEVEL_NIGHT
+    FAN_LEVEL_NIGHT,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -44,6 +47,29 @@ WPM_TO_HA_HVAC = {
     4: HVACMode.AUTO,
     5: HVACMode.OFF,
     0: HVACMode.AUTO,
+}
+
+PRESET_PROGRAM = "program"
+PRESET_WATER_HEATING = "water_heating"
+PRESET_EMERGENCY = "emergency"
+PRESET_READY = "ready"
+
+WPM_TO_HA_PRESET = {
+    1: PRESET_READY,
+    2: PRESET_PROGRAM,
+    3: PRESET_COMFORT,
+    4: PRESET_ECO,
+    5: PRESET_WATER_HEATING,
+    0: PRESET_EMERGENCY,
+}
+
+HA_TO_WPM_PRESET = {
+    PRESET_READY: 1,
+    PRESET_PROGRAM: 2,
+    PRESET_COMFORT: 3,
+    PRESET_ECO: 4,
+    PRESET_WATER_HEATING: 5,
+    PRESET_EMERGENCY: 0,
 }
 
 HA_TO_WPM_HVAC = {
@@ -73,7 +99,7 @@ HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 
 CLIMATE_TYPES = [
     ClimateEntityDescription(CLIMATE_HK_1, has_entity_name=True, name="Heat Circuit 1"),
-    ClimateEntityDescription(CLIMATE_HK_2, has_entity_name=True, name="Heat Circuit 2")
+    ClimateEntityDescription(CLIMATE_HK_2, has_entity_name=True, name="Heat Circuit 2"),
 ]
 
 TEMPERATURE_KEY_MAP = {
@@ -105,10 +131,13 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         self.entity_description = description
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+        self._attr_supported_features = (
+            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
+        )
         self._attr_target_temperature_low = 5
         self._attr_target_temperature_high = 30
         self._attr_target_temperature_step = 0.1
+        self._attr_translation_key = "climate"
 
         super().__init__(coordinator, config_entry)
 
@@ -136,17 +165,25 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            return self.coordinator.data.get(TEMPERATURE_KEY_MAP[self.entity_description.key][0])
+            return self.coordinator.data.get(
+                TEMPERATURE_KEY_MAP[self.entity_description.key][0]
+            )
         else:
-            return self.coordinator.data.get(TEMPERATURE_KEY_MAP[self.entity_description.key][1])
+            return self.coordinator.data.get(
+                TEMPERATURE_KEY_MAP[self.entity_description.key][1]
+            )
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            self.coordinator.set_data(TEMPERATURE_KEY_MAP[self.entity_description.key][0], value)
+            self.coordinator.set_data(
+                TEMPERATURE_KEY_MAP[self.entity_description.key][0], value
+            )
         else:
-            self.coordinator.set_data(TEMPERATURE_KEY_MAP[self.entity_description.key][1], value)
+            self.coordinator.set_data(
+                TEMPERATURE_KEY_MAP[self.entity_description.key][1], value
+            )
 
     @property
     def entity_registry_enabled_default(self) -> bool:
@@ -154,7 +191,12 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
         This only applies when fist added to the entity registry.
         """
-        return self.coordinator.data.get(TEMPERATURE_KEY_MAP[self.entity_description.key][0]) is not None
+        return (
+            self.coordinator.data.get(
+                TEMPERATURE_KEY_MAP[self.entity_description.key][0]
+            )
+            is not None
+        )
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
@@ -163,6 +205,14 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     def __init__(self, coordinator, config_entry, description):
         """Initialize the climate entity."""
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
+        self._attr_preset_modes = [
+            PRESET_READY,
+            PRESET_PROGRAM,
+            PRESET_ECO,
+            PRESET_COMFORT,
+            PRESET_WATER_HEATING,
+            PRESET_EMERGENCY,
+        ]
         super().__init__(coordinator, config_entry, description)
 
     @property
@@ -173,6 +223,16 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
+        self.coordinator.set_data(OPERATION_MODE, new_mode)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return current preset mode."""
+        return WPM_TO_HA_PRESET.get(self.coordinator.data.get(OPERATION_MODE))
+
+    def set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        new_mode = HA_TO_WPM_PRESET.get(preset_mode)
         self.coordinator.set_data(OPERATION_MODE, new_mode)
 
 
