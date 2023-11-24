@@ -27,7 +27,9 @@
                             "water_heating": "Warmwasserbetrieb",
                             "emergency": "Notbetrieb",
                             "program": "Programmbetrieb",
-                            "ready": "Bereitschaftsbetrieb"
+                            "ready": "Bereitschaftsbetrieb",
+                            "auto": "Autobetrieb",
+                            "manual": "Handbetrieb"
                         }
                     }
                 }

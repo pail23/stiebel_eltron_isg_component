@@ -27,7 +27,9 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready"
+                            "ready": "Ready",
+                            "auto": "Auto",
+                            "manual": "Manual"
                         }
                     }
                 }

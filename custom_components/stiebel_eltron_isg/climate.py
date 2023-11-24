@@ -53,6 +53,9 @@ PRESET_PROGRAM = "program"
 PRESET_WATER_HEATING = "water_heating"
 PRESET_EMERGENCY = "emergency"
 PRESET_READY = "ready"
+PRESET_MANUAL = "manual"
+PRESET_AUTO = "auto"
+
 
 WPM_TO_HA_PRESET = {
     1: PRESET_READY,
@@ -91,6 +94,26 @@ HA_TO_LWZ_HVAC = {
     HVACMode.AUTO: 11,
     HVACMode.OFF: 5,
     HVACMode.HEAT: 14,
+}
+
+LWZ_TO_HA_PRESET = {
+    1: PRESET_READY,
+    3: PRESET_COMFORT,
+    4: PRESET_ECO,
+    5: PRESET_WATER_HEATING,
+    11: PRESET_AUTO,
+    14: PRESET_MANUAL,
+    0: PRESET_EMERGENCY,
+}
+
+HA_TO_LWZ_PRESET = {
+    PRESET_READY: 1,
+    PRESET_COMFORT: 3,
+    PRESET_ECO: 4,
+    PRESET_WATER_HEATING: 5,
+    PRESET_AUTO: 11,
+    PRESET_MANUAL: 14,
+    PRESET_EMERGENCY: 0,
 }
 
 LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
@@ -242,6 +265,15 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     def __init__(self, coordinator, config_entry, description):
         """Initialize the climate entity."""
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
+        self._attr_preset_modes = [
+            PRESET_READY,
+            PRESET_AUTO,
+            PRESET_MANUAL,
+            PRESET_ECO,
+            PRESET_COMFORT,
+            PRESET_WATER_HEATING,
+            PRESET_EMERGENCY,
+        ]
         self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
         super().__init__(coordinator, config_entry, description)
         self._attr_supported_features = (
@@ -256,6 +288,16 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
+        self.coordinator.set_data(OPERATION_MODE, new_mode)
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return current preset mode."""
+        return LWZ_TO_HA_PRESET.get(self.coordinator.data.get(OPERATION_MODE))
+
+    def set_preset_mode(self, preset_mode):
+        """Set new target preset mode."""
+        new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
         self.coordinator.set_data(OPERATION_MODE, new_mode)
 
     @property
