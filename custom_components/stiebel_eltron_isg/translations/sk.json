@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Ak potrebujete pomoc s konfiguráciou, pozrite sa sem: https://github.com/pail23/stiebel_eltron_isg",
+                "data": {
+                    "host": "IP adresa vášho ISG",
+                    "port": "TCP port, na ktorom sa má pripojiť k ISG",
+                    "scan_interval": "Frekvencia dotazovania modbusu sa registruje v priebehu niekoľkých sekúnd"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Zariadenie je už nakonfigurované",
+            "invalid_host_IP": "Neplatná IP hostiteľa"
+        },
+        "abort": {
+            "already_configured": "Zariadenie je už nakonfigurované"
+        }
+    },
+    "entity": {
+        "climate": {
+            "climate": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Ohrev vody",
+                            "emergency": "Pohotovosť",
+                            "program": "Program",
+                            "ready": "Pripravený",
+                            "auto": "Auto",
+                            "manual": "Manuál"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
