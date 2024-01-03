@@ -93,6 +93,19 @@ def create_temperature_entity_description(name, key):
     )
 
 
+def create_energy_entity_description(name, key, icon):
+    """Create an entry description for a energy sensor."""
+    return SensorEntityDescription(
+        key,
+        name=name,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        icon=icon,
+        has_entity_name=True,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.ENERGY,
+    )
+
+
 def create_humidity_entity_description(name, key):
     """Create an entry description for a humidity sensor."""
     return SensorEntityDescription(
@@ -227,54 +240,46 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 
 ENERGY_SENSOR_TYPES = [
-    [
+    create_energy_entity_description(
         "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
-        "kWh",
         "mdi:radiator",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
-        "kWh",
         "mdi:radiator",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
-        "kWh",
         "mdi:water-boiler",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
-        "kWh",
         "mdi:water-boiler",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
-        "kWh",
         "mdi:lightning-bolt",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
-        "kWh",
         "mdi:lightning-bolt",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
-        "kWh",
         "mdi:lightning-bolt",
-    ],
-    [
+    ),
+    create_energy_entity_description(
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
-        "kWh",
         "mdi:lightning-bolt",
-    ],
+    ),
 ]
 
 
@@ -369,19 +374,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         )
         entities.append(sensor)
 
-    for meter_sensor_info in ENERGY_SENSOR_TYPES:
-        description = SensorEntityDescription(
-            name=f"{meter_sensor_info[0]}",
-            key=meter_sensor_info[1],
-            native_unit_of_measurement=meter_sensor_info[2],
-            icon=meter_sensor_info[3],
-            state_class=SensorStateClass.MEASUREMENT,
-            has_entity_name=True,
-        )
-        if description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR:
-            description.state_class = SensorStateClass.TOTAL_INCREASING
-            description.device_class = SensorDeviceClass.ENERGY
-
+    for description in ENERGY_SENSOR_TYPES:
         sensor = StiebelEltronISGSensor(
             coordinator,
             entry,
