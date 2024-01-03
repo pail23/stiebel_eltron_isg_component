@@ -3,18 +3,17 @@ import logging
 
 
 from homeassistant.components.sensor import (
-    STATE_CLASS_MEASUREMENT,
-    STATE_CLASS_TOTAL_INCREASING,
     SensorEntity,
     SensorEntityDescription,
+    SensorDeviceClass,
+    SensorStateClass,
 )
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import (
-    DEVICE_CLASS_ENERGY,
-    ENERGY_KILO_WATT_HOUR,
     PERCENTAGE,
     UnitOfTemperature,
     UnitOfPressure,
+    UnitOfEnergy,
 )
 
 from .const import (
@@ -83,7 +82,7 @@ def create_temperature_entity_description(name, key):
         name=name,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="hass:thermometer",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
 
@@ -95,7 +94,7 @@ def create_humidity_entity_description(name, key):
         name=name,
         native_unit_of_measurement=PERCENTAGE,
         icon="hass:water-percent",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
 
@@ -107,7 +106,7 @@ def create_pressure_entity_description(name, key):
         name=name,
         native_unit_of_measurement=UnitOfPressure.BAR,
         icon="mdi:gauge",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
 
@@ -119,7 +118,7 @@ def create_volume_stream_entity_description(name, key):
         name=name,
         native_unit_of_measurement="l/min",
         icon="mdi:gauge",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
 
@@ -274,7 +273,7 @@ COMPRESSOR_SENSOR_TYPES = [
         icon="mdi:heat-pump",
         has_entity_name=True,
         native_unit_of_measurement="h",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         COMPRESSOR_HEATING_WATER,
@@ -282,7 +281,7 @@ COMPRESSOR_SENSOR_TYPES = [
         icon="mdi:heat-pump",
         has_entity_name=True,
         native_unit_of_measurement="h",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         ELECTRICAL_BOOSTER_HEATING,
@@ -290,7 +289,7 @@ COMPRESSOR_SENSOR_TYPES = [
         icon="mdi:heating-coil",
         has_entity_name=True,
         native_unit_of_measurement="h",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         ELECTRICAL_BOOSTER_HEATING_WATER,
@@ -298,7 +297,7 @@ COMPRESSOR_SENSOR_TYPES = [
         icon="mdi:heating-coil",
         has_entity_name=True,
         native_unit_of_measurement="h",
-        state_class=STATE_CLASS_MEASUREMENT,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -327,7 +326,7 @@ VENTILATION_SENSOR_TYPES = [
         icon="mdi:fan",
         has_entity_name=True,
     ),
-    create_humidity_entity_description("Extract air humidity", EXTRACT_AIR_HUMIDITY)
+    create_humidity_entity_description("Extract air humidity", EXTRACT_AIR_HUMIDITY),
 ]
 
 
@@ -358,12 +357,12 @@ async def async_setup_entry(hass, entry, async_add_devices):
             key=meter_sensor_info[1],
             native_unit_of_measurement=meter_sensor_info[2],
             icon=meter_sensor_info[3],
-            state_class=STATE_CLASS_MEASUREMENT,
+            state_class=SensorStateClass.MEASUREMENT,
             has_entity_name=True,
         )
-        if description.native_unit_of_measurement == ENERGY_KILO_WATT_HOUR:
-            description.state_class = STATE_CLASS_TOTAL_INCREASING
-            description.device_class = DEVICE_CLASS_ENERGY
+        if description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR:
+            description.state_class = SensorStateClass.TOTAL_INCREASING
+            description.device_class = SensorDeviceClass.ENERGY
 
         sensor = StiebelEltronISGSensor(
             coordinator,
