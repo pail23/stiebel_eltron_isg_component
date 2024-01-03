@@ -15,7 +15,10 @@
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
-from pymodbus.register_read_message import ReadHoldingRegistersResponse, ReadInputRegistersResponse
+from pymodbus.register_read_message import (
+    ReadHoldingRegistersResponse,
+    ReadInputRegistersResponse,
+)
 import pytest
 from typing import Any
 
@@ -47,9 +50,7 @@ def skip_notifications_fixture():
 @pytest.fixture(name="skip_connect")
 def skip_connect_fixture():
     """Skip calls to get data from API."""
-    with patch(
-        "pymodbus.client.ModbusTcpClient.read_input_registers", return_value={}
-    ):
+    with patch("pymodbus.client.ModbusTcpClient.read_input_registers", return_value={}):
         yield
 
 
@@ -59,34 +60,42 @@ def skip_connect_fixture():
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusDataCoordinator._async_update_data", return_value={}
+        "custom_components.stiebel_eltron_isg.coordinator.StiebelEltronModbusDataCoordinator._async_update_data",
+        return_value={},
     ):
         yield
 
-def read_input_register(register, start, count)->ReadInputRegistersResponse:
-    """Read a slice from the input register."""
-    return ReadInputRegistersResponse(register[start: start + count])
 
-def read_input_registers_wpm(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+def read_input_register(register, start, count) -> ReadInputRegistersResponse:
+    """Read a slice from the input register."""
+    return ReadInputRegistersResponse(register[start : start + count])
+
+
+def read_input_registers_wpm(
+    address: int, count: int = 1, slave: int = 0, **kwargs: Any
+):
     """Simulate reads on the input registers on wpm models."""
     system_info = [2, 390]
     if address >= 5000:
         return read_input_register(system_info, address - 5000, count)
     else:
-        return ReadInputRegistersResponse(list(range(0,count)))
+        return ReadInputRegistersResponse(list(range(0, count)))
 
-def read_input_registers_lwz(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
+
+def read_input_registers_lwz(
+    address: int, count: int = 1, slave: int = 0, **kwargs: Any
+):
     """Simulate reads on the input registers on lwz models ."""
     system_info = [2, 103]
     if address >= 5000:
         return read_input_register(system_info, address - 5000, count)
     else:
-        return ReadInputRegistersResponse(list(range(0,count)))
+        return ReadInputRegistersResponse(list(range(0, count)))
 
 
 def read_holding_registers(address: int, count: int = 1, slave: int = 0, **kwargs: Any):
     """Simulate reads on the holding registers on lwz models ."""
-    return ReadHoldingRegistersResponse(list(range(0,count)))
+    return ReadHoldingRegistersResponse(list(range(0, count)))
 
 
 # This fixture, when used, will result in calls to read_input_registers to return mock data. To have the call
@@ -95,24 +104,28 @@ def read_holding_registers(address: int, count: int = 1, slave: int = 0, **kwarg
 def modbus_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "pymodbus.client.ModbusTcpClient.read_input_registers", side_effect=read_input_registers_wpm
+        "pymodbus.client.ModbusTcpClient.read_input_registers",
+        side_effect=read_input_registers_wpm,
     ), patch(
-        "pymodbus.client.ModbusTcpClient.read_holding_registers", side_effect=read_holding_registers
+        "pymodbus.client.ModbusTcpClient.read_holding_registers",
+        side_effect=read_holding_registers,
     ), patch("pymodbus.client.ModbusTcpClient.connect"):
         yield
+
 
 # This fixture, when used, will result in calls to read_holding_registers to return mock data. To have the call
 # return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
 @pytest.fixture(name="mock_modbus_lwz")
 def modbus_lwz_fixture():
     """Skip calls to get data from API."""
-    with  patch(
-        "pymodbus.client.ModbusTcpClient.read_input_registers", side_effect=read_input_registers_lwz
+    with patch(
+        "pymodbus.client.ModbusTcpClient.read_input_registers",
+        side_effect=read_input_registers_lwz,
     ), patch(
-        "pymodbus.client.ModbusTcpClient.read_holding_registers", side_effect=read_holding_registers
+        "pymodbus.client.ModbusTcpClient.read_holding_registers",
+        side_effect=read_holding_registers,
     ), patch("pymodbus.client.ModbusTcpClient.connect"):
         yield
-
 
 
 # In this fixture, we are forcing calls to async_get_data to raise an Exception. This is useful
@@ -121,7 +134,7 @@ def modbus_lwz_fixture():
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.StiebelEltronModbusWPMDataCoordinator.read_modbus_data",
+        "custom_components.stiebel_eltron_isg.wpm_coordinator.StiebelEltronModbusWPMDataCoordinator.read_modbus_data",
         side_effect=Exception,
     ):
         yield
@@ -133,9 +146,11 @@ def error_get_data_fixture():
 def get_model_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.get_controller_model", return_value=391
+        "custom_components.stiebel_eltron_isg.coordinator.get_controller_model",
+        return_value=391,
     ):
         yield
+
 
 # This fixture, when used, will result in calls to async_get_data to return None. To have the call
 # return a value, we would add the `return_value=<VALUE_TO_RETURN>` parameter to the patch call.
@@ -143,6 +158,7 @@ def get_model_wpm_fixture():
 def get_model_lwz_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.get_controller_model", return_value=103
+        "custom_components.stiebel_eltron_isg.coordinator.get_controller_model",
+        return_value=103,
     ):
         yield

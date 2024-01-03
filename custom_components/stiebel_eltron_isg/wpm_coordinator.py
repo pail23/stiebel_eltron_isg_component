@@ -15,7 +15,13 @@ from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
 from .const import (
+    ACTUAL_HUMIDITY_HK1,
+    ACTUAL_HUMIDITY_HK2,
+    ACTUAL_HUMIDITY_HK3,
     ACTUAL_TEMPERATURE,
+    DEWPOINT_TEMPERATURE_HK1,
+    DEWPOINT_TEMPERATURE_HK2,
+    DEWPOINT_TEMPERATURE_HK3,
     TARGET_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     TARGET_TEMPERATURE_FEK,
@@ -140,7 +146,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=500, count=96)  # 42
+        inverter_data = self.read_input_registers(slave=1, address=500, count=96)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -226,20 +232,37 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(4)
+            result[ACTUAL_HUMIDITY_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             result[ACTUAL_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
             result[TARGET_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(4)
+            result[ACTUAL_HUMIDITY_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             result[ACTUAL_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
             result[TARGET_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            result[ACTUAL_HUMIDITY_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[DEWPOINT_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+
             result["system_values"] = list(inverter_data.registers)
         return result
 

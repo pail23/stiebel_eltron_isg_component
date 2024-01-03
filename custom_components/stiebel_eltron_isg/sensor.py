@@ -17,6 +17,12 @@ from homeassistant.const import (
 )
 
 from .const import (
+    ACTUAL_HUMIDITY_HK1,
+    ACTUAL_HUMIDITY_HK2,
+    ACTUAL_HUMIDITY_HK3,
+    DEWPOINT_TEMPERATURE_HK1,
+    DEWPOINT_TEMPERATURE_HK2,
+    DEWPOINT_TEMPERATURE_HK3,
     DOMAIN,
     ACTUAL_TEMPERATURE,
     TARGET_TEMPERATURE,
@@ -133,8 +139,20 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Target Temperature FEK", TARGET_TEMPERATURE_FEK
     ),
     create_humidity_entity_description("Humidity", ACTUAL_HUMIDITY),
+    create_humidity_entity_description("Humidity HK 1", ACTUAL_HUMIDITY_HK1),
+    create_humidity_entity_description("Humidity HK 2", ACTUAL_HUMIDITY_HK2),
+    create_humidity_entity_description("Humidity HK 3", ACTUAL_HUMIDITY_HK3),
     create_temperature_entity_description(
         "Dew Point Temperature", DEWPOINT_TEMPERATURE
+    ),
+    create_temperature_entity_description(
+        "Dew Point Temperature HK 1", DEWPOINT_TEMPERATURE_HK1
+    ),
+    create_temperature_entity_description(
+        "Dew Point Temperature HK 2", DEWPOINT_TEMPERATURE_HK2
+    ),
+    create_temperature_entity_description(
+        "Dew Point Temperature HK 3", DEWPOINT_TEMPERATURE_HK3
     ),
     create_temperature_entity_description("Outdoor Temperature", OUTDOOR_TEMPERATURE),
     create_temperature_entity_description(
