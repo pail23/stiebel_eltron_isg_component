@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 
 from .const import DOMAIN, RESET_HEATPUMP
 from .entity import StiebelEltronISGEntity
-from . import StiebelEltronModbusDataCoordinator
+from .coordinator import StiebelEltronModbusDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -31,27 +31,6 @@ def get_isg_scaled_value(value, factor=10) -> float:
     return value / factor if value != -32768 else None
 
 
-def get_controller_model(host, port) -> int:
-    """Read the model of the controller.
-
-    LWA and LWZ controllers have model ids 103 and 104.
-    WPM controllers have 390, 391 or 449.
-    """
-    client = ModbusTcpClient(host=host, port=port)
-    try:
-        client.connect()
-        inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
-        if not inverter_data.isError():
-            decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
-            )
-            model = decoder.decode_16bit_uint()
-            return model
-    finally:
-        client.close()
-    return None
-
-
 class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     """Thread safe wrapper class for pymodbus."""
 

@@ -146,7 +146,7 @@ def error_get_data_fixture():
 def get_model_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.coordinator.get_controller_model",
+        "custom_components.stiebel_eltron_isg.get_controller_model",
         return_value=391,
     ):
         yield
@@ -158,7 +158,7 @@ def get_model_wpm_fixture():
 def get_model_lwz_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.coordinator.get_controller_model",
+        "custom_components.stiebel_eltron_isg.get_controller_model",
         return_value=103,
     ):
         yield

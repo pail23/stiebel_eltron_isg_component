@@ -4,10 +4,10 @@ from homeassistant.config_entries import ConfigEntryState
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
 )
-from custom_components.stiebel_eltron_isg.const import DOMAIN
 
 from .const import MOCK_CONFIG
 
@@ -30,10 +30,12 @@ async def test_setup_unload_and_reload_entry(
     # them to be. Because we have patched the StiebelEltronModbusDataCoordinator.async_get_data
     # call, no code from custom_components/stiebel_eltron_isg/api.py actually runs.
     await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
     assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
-    assert (
-        type(hass.data[DOMAIN][config_entry.entry_id])
-        == StiebelEltronModbusWPMDataCoordinator
+    assert isinstance(
+        hass.data[DOMAIN][config_entry.entry_id], StiebelEltronModbusWPMDataCoordinator
     )
 
     # Unload the entry and verify that the data has been removed
@@ -58,7 +60,6 @@ async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm):
     assert state.state == "0.2"
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 

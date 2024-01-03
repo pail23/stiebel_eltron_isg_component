@@ -9,12 +9,15 @@ import logging
 
 import voluptuous as vol
 
+from pymodbus.client import ModbusTcpClient
+from pymodbus.constants import Endian
+from pymodbus.payload import BinaryPayloadDecoder
+
 import homeassistant.helpers.config_validation as cv
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
-from custom_components.stiebel_eltron_isg.coordinator import get_controller_model
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
 )
@@ -47,6 +50,27 @@ STIEBEL_ELTRON_ISG_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: vol.Schema({cv.slug: STIEBEL_ELTRON_ISG_SCHEMA})}, extra=vol.ALLOW_EXTRA
 )
+
+
+def get_controller_model(host, port) -> int:
+    """Read the model of the controller.
+
+    LWA and LWZ controllers have model ids 103 and 104.
+    WPM controllers have 390, 391 or 449.
+    """
+    client = ModbusTcpClient(host=host, port=port)
+    try:
+        client.connect()
+        inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.BIG
+            )
+            model = decoder.decode_16bit_uint()
+            return model
+    finally:
+        client.close()
+    return None
 
 
 async def async_setup(hass: HomeAssistant, config: Config):
