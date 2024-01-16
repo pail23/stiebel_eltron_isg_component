@@ -52,6 +52,12 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+class StiebelEltronModbusException(Exception):
+    """Exception during modbus communication."""
+
+    pass
+
+
 def get_controller_model(host, port) -> int:
     """Read the model of the controller.
 
@@ -62,16 +68,16 @@ def get_controller_model(host, port) -> int:
     try:
         client.connect()
         inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
-        client.close()
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
             model = decoder.decode_16bit_uint()
             return model
-    except Exception as ex:
+        else:
+            raise StiebelEltronModbusException("Data error on the modbus")
+    finally:
         client.close()
-        raise ex
 
 
 async def async_setup(hass: HomeAssistant, config: Config):
