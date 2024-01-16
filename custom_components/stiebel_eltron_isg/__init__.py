@@ -62,15 +62,16 @@ def get_controller_model(host, port) -> int:
     try:
         client.connect()
         inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
+        client.close()
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
             model = decoder.decode_16bit_uint()
             return model
-    finally:
+    except Exception as ex:
         client.close()
-    return None
+        raise ex
 
 
 async def async_setup(hass: HomeAssistant, config: Config):
