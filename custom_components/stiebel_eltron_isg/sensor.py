@@ -105,6 +105,18 @@ def create_energy_entity_description(name, key, icon):
         device_class=SensorDeviceClass.ENERGY,
     )
 
+	def create_daily_energy_entity_description(name, key, icon):
+    """Create an entry description for a energy sensor."""
+    return SensorEntityDescription(
+        key,
+        name=name,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        icon=icon,
+        has_entity_name=True,
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+    )
+
 
 def create_humidity_entity_description(name, key):
     """Create an entry description for a humidity sensor."""
@@ -240,7 +252,7 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 
 ENERGY_SENSOR_TYPES = [
-    create_energy_entity_description(
+    create_daily_energy_entity_description(
         "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
         "mdi:radiator",
@@ -250,7 +262,7 @@ ENERGY_SENSOR_TYPES = [
         PRODUCED_HEATING_TOTAL,
         "mdi:radiator",
     ),
-    create_energy_entity_description(
+    create_daily_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
         "mdi:water-boiler",
@@ -260,7 +272,7 @@ ENERGY_SENSOR_TYPES = [
         PRODUCED_WATER_HEATING_TOTAL,
         "mdi:water-boiler",
     ),
-    create_energy_entity_description(
+    create_daily_energy_entity_description(
         "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
         "mdi:lightning-bolt",
@@ -270,7 +282,7 @@ ENERGY_SENSOR_TYPES = [
         CONSUMED_HEATING_TOTAL,
         "mdi:lightning-bolt",
     ),
-    create_energy_entity_description(
+    create_daily_energy_entity_description(
         "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
         "mdi:lightning-bolt",
