@@ -1,0 +1,39 @@
+{
+    "config": {
+        "step": {
+            "user": {
+                "description": "Se hai bisogno di aiuto con la configurazione, dai un'occhiata qui: https://github.com/pail23/stiebel_eltron_isg",
+                "data": {
+                    "host": "L'indirizzo IP del tuo ISG",
+                    "port": "La porta TCP a cui connettersi all'ISG",
+                    "scan_interval": "La frequenza di scansione dei registri Modbus in secondi"
+                }
+            }
+        },
+        "error": {
+            "already_configured": "Il dispositivo è già configurato",
+            "invalid_host_IP": "Indirizzo IP host non valido"
+        },
+        "abort": {
+            "already_configured": "Il dispositivo è già configurato"
+        }
+    },
+    "entity": {
+        "climate": {
+            "climate": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Riscaldamento dell'acqua",
+                            "emergency": "Emergenza",
+                            "program": "Programma",
+                            "ready": "Pronto",
+                            "auto": "Automatico",
+                            "manual": "Manuale"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
