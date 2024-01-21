@@ -34,3 +34,4 @@ secrets.yaml
 
 config/*
 !config/configuration.yaml
+/.vs
