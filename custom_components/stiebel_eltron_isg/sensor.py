@@ -105,7 +105,8 @@ def create_energy_entity_description(name, key, icon):
         device_class=SensorDeviceClass.ENERGY,
     )
 
-	def create_daily_energy_entity_description(name, key, icon):
+
+def create_daily_energy_entity_description(name, key, icon):
     """Create an entry description for a energy sensor."""
     return SensorEntityDescription(
         key,
