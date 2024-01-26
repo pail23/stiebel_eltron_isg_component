@@ -14,7 +14,7 @@ BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name="Is heating",
         key=IS_HEATING,
-        icon="mdi:radiator",
+        icon="mdi:heat-wave",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
@@ -56,31 +56,31 @@ BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name="Switching Program Enabled",
         key=SWITCHING_PROGRAM_ENABLED,
-        icon="mdi:heat-pump",
+        icon="mdi:clock-outline",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Electric Heating",
         key=ELECTRIC_REHEATING,
-        icon="mdi:heat-pump",
+        icon="mdi:fence-electric",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Service",
         key=SERVICE,
-        icon="mdi:heat-pump",
+        icon="mdi:account-wrench",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Power Off",
         key=POWER_OFF,
-        icon="mdi:power",
+        icon="mdi:power-off",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Filter",
         key=FILTER,
-        icon="mdi:heat-pump",
+        icon="mdi:air-filter",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
@@ -92,31 +92,31 @@ BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name="Evaporator Defrost",
         key=EVAPORATOR_DEFROST,
-        icon="mdi:heat-pump",
+        icon="mdi:snowflake-melt",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Filter Extract Air",
         key=FILTER_EXTRACT_AIR,
-        icon="mdi:heat-pump",
+        icon="mdi:air-filter",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Filter Ventilation Air",
         key=FILTER_VENTILATION_AIR,
-        icon="mdi:heat-pump",
+        icon="mdi:air-filter",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="Heat-up Program",
         key=HEAT_UP_PROGRAM,
-        icon="mdi:heat-pump",
+        icon="mdi:clock-outline",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
         name="NHZ Stages Running",
         key=NHZ_STAGES_RUNNING,
-        icon="mdi:heat-pump",
+        icon="mdi:fence-electric",
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(

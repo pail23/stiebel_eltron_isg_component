@@ -87,7 +87,7 @@ def create_temperature_entity_description(name, key):
         key,
         name=name,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="hass:thermometer",
+        icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
@@ -99,7 +99,7 @@ def create_energy_entity_description(name, key, icon):
         key,
         name=name,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon=icon,
+        icon="mdi:meter-electric",
         has_entity_name=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
@@ -112,7 +112,7 @@ def create_daily_energy_entity_description(name, key, icon):
         key,
         name=name,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon=icon,
+        icon="mdi:meter-electric",
         has_entity_name=True,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
@@ -125,7 +125,7 @@ def create_humidity_entity_description(name, key):
         key,
         name=name,
         native_unit_of_measurement=PERCENTAGE,
-        icon="hass:water-percent",
+        icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
         has_entity_name=True,
     )
@@ -256,12 +256,12 @@ ENERGY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
-        "mdi:radiator",
+        "mdi:gas-burner",
     ),
     create_energy_entity_description(
         "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
-        "mdi:radiator",
+        "mdi:gas-burner",
     ),
     create_daily_energy_entity_description(
         "Produced Water Heating Today",
@@ -300,13 +300,13 @@ COMPRESSOR_SENSOR_TYPES = [
     SensorEntityDescription(
         COMPRESSOR_STARTS,
         name="Compressor starts",
-        icon="mdi:heat-pump",
+        icon="mdi:restart",
         has_entity_name=True,
     ),
     SensorEntityDescription(
         COMPRESSOR_HEATING,
         name="Compressor heating",
-        icon="mdi:heat-pump",
+        icon="mdi:hours-24",
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
@@ -314,7 +314,7 @@ COMPRESSOR_SENSOR_TYPES = [
     SensorEntityDescription(
         COMPRESSOR_HEATING_WATER,
         name="Compressor heating water",
-        icon="mdi:heat-pump",
+        icon="mdi:hours-24",
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
@@ -322,7 +322,7 @@ COMPRESSOR_SENSOR_TYPES = [
     SensorEntityDescription(
         ELECTRICAL_BOOSTER_HEATING,
         name="Electrical booster heating",
-        icon="mdi:heating-coil",
+        icon="mdi:hours-24",
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
@@ -330,7 +330,7 @@ COMPRESSOR_SENSOR_TYPES = [
     SensorEntityDescription(
         ELECTRICAL_BOOSTER_HEATING_WATER,
         name="Electrical booster heating water",
-        icon="mdi:heating-coil",
+        icon="mdi:hours-24",
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
@@ -340,13 +340,13 @@ COMPRESSOR_SENSOR_TYPES = [
 VENTILATION_SENSOR_TYPES = [
     SensorEntityDescription(
         VENTILATION_AIR_ACTUAL_FAN_SPEED,
-        name="Ventilaction air actual fan speed",
+        name="Ventilation air actual fan speed",
         icon="mdi:fan",
         has_entity_name=True,
     ),
     SensorEntityDescription(
         VENTILATION_AIR_TARGET_FLOW_RATE,
-        name="Ventilaction air target fan speed",
+        name="Ventilation air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
     ),
