@@ -143,56 +143,77 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
+            #1 actual room temperature for HC1
             result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #2 actual room setpoint for HC1
             result[TARGET_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            decoder.skip_bytes(2)  # Humidity HK1
+            #3 actual room humidity for HC1
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            #4 actual room temperature for HC2 - Should not refer to FEK
             result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #5 actual room setpoint for HC2 - Should not refer to FEK
             result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
-            # result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            #6 actual room humidity for HC2 - There should be a second humidity variable for HC2
+            #remnants # result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
+            #remnants # result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            decoder.skip_bytes(2)
+            #7 outside temperature
             result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #8
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #9
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #10
             result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #11
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #12
             result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            #13
             result[RETURN_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-
+            #14
             result[HEATER_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+            #15
             result[VOLUME_STREAM] = get_isg_scaled_value(decoder.decode_16bit_int())
+            #16
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #17
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+            #18-19-20-21-22
             result[VENTILATION_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
             result[VENTILATION_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_HUMIDITY] = decoder.decode_16bit_uint()
-
+            #skip 23-30
             decoder.skip_bytes(16)  #
+            #31
             compressor_starts_high = decoder.decode_16bit_uint()
             decoder.skip_bytes(4)  #
             compressor_starts_low = decoder.decode_16bit_uint()

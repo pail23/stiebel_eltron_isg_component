@@ -151,114 +151,176 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
+        #501
             result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #502
             result[TARGET_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #503
             result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #504
             result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #505
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #506
             result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #507
             result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #508
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #509
             # hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
             decoder.skip_bytes(2)
+        #510
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #511
             result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #512
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #513
+            if self._model_id == 391: #WPM3i
+                result[FLOW_TEMPERATURE] = get_isg_scaled_value(
+                    decoder.decode_16bit_int()
+                )
+            else:
+                decoder.skip_bytes(2)
+        #514
             result[FLOW_TEMPERATURE_NHZ] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #515
             decoder.skip_bytes(2)
+        #516
             result[RETURN_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #517
             decoder.skip_bytes(2)
+        #518
             result[ACTUAL_TEMPERATURE_BUFFER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #519
             result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #520
             result[HEATER_PRESSURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(), 100
             )
+        #521
             result[VOLUME_STREAM] = get_isg_scaled_value(
                 decoder.decode_16bit_int(), 100
             )
+        #522 domestic hot water
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #523 domestic hot water
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #524-535
             decoder.skip_bytes(24)
+        #536
             result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #537
             decoder.skip_bytes(2)
+        #538
             result[SOURCE_PRESSURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(), 100
             )
+        #539
             result[HOT_GAS_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            result[HIGH_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[LOW_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            decoder.skip_bytes(84)
-
+        #540
+            result[HIGH_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #541
+            result[LOW_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #542
+            decoder.skip_bytes(2)
+        #543
+            if self._model_id != 391: #WPM3i
+                result[FLOW_TEMPERATURE] = get_isg_scaled_value(
+                    decoder.decode_16bit_int()
+                )
+            else:
+                decoder.skip_bytes(2)
+        #544-583
+            decoder.skip_bytes(80)
+        #584
             result[ACTUAL_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #585
             result[TARGET_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #586
             result[ACTUAL_HUMIDITY_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #587
             result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #588
             result[ACTUAL_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #589
             result[TARGET_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #590
             result[ACTUAL_HUMIDITY_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #591
             result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #592
             result[ACTUAL_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #593
             result[TARGET_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #594
             result[ACTUAL_HUMIDITY_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+        #595
             result[DEWPOINT_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
