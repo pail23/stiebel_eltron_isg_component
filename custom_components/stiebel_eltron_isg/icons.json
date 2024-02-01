@@ -1,0 +1,18 @@
+{
+    "entity": {
+        "climate": {
+            "climate": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "mdi:water-thermometer",
+                            "emergency": "mdi:alert",
+                            "ready": "mdi:snowflake-thermometer",
+                            "program": "mdi:clock-outline"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
