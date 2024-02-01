@@ -4,6 +4,7 @@
             "climate": {
                 "state_attributes": {
                     "preset_mode": {
+                        "default": "mdi:clock-outline",
                         "state": {
                             "water_heating": "mdi:water-thermometer",
                             "emergency": "mdi:alert",
