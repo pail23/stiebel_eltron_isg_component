@@ -199,9 +199,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 decoder.decode_16bit_int()
             )
         #513
-            #result[FLOW_TEMPERATURE] = get_isg_scaled_value(
-            #    decoder.decode_16bit_int()
-            #)
+            if self._model_id == 391: #WPM3i
+                result[FLOW_TEMPERATURE] = get_isg_scaled_value(
+                    decoder.decode_16bit_int()
+                )
+            else:
+                decoder.skip_bytes(2)
         #514
             result[FLOW_TEMPERATURE_NHZ] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
@@ -265,9 +268,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         #542
             decoder.skip_bytes(2)
         #543
-            result[FLOW_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
-            )
+            if self._model_id != 391: #WPM3i
+                result[FLOW_TEMPERATURE] = get_isg_scaled_value(
+                    decoder.decode_16bit_int()
+                )
+            else:
+                decoder.skip_bytes(2)
         #544-583
             decoder.skip_bytes(80)
         #584
