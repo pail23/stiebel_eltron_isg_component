@@ -14,6 +14,8 @@ from homeassistant.const import (
     UnitOfTemperature,
     UnitOfPressure,
     UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfVolumeFlowRate,
 )
 
 from .const import (
@@ -343,7 +345,8 @@ VENTILATION_SENSOR_TYPES = [
         name="Ventilation air actual fan speed",
         icon="mdi:fan",
         has_entity_name=True,
-        native_unit_of_measurement="Hz",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -351,7 +354,7 @@ VENTILATION_SENSOR_TYPES = [
         name="Ventilation air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
-        native_unit_of_measurement="m3/h",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -359,7 +362,8 @@ VENTILATION_SENSOR_TYPES = [
         name="Extract air actual fan speed",
         icon="mdi:fan",
         has_entity_name=True,
-        native_unit_of_measurement="Hz",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
@@ -367,7 +371,7 @@ VENTILATION_SENSOR_TYPES = [
         name="Extract air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
-        native_unit_of_measurement="m3/h",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     create_humidity_entity_description("Extract air humidity", EXTRACT_AIR_HUMIDITY),
