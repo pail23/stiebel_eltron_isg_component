@@ -15,8 +15,8 @@ from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
 from .const import (
-    ACTUAL_TEMPERATURE_FE7,
-    TARGET_TEMPERATURE_FE7,
+     ACTUAL_TEMPERATURE,
+    TARGET_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     TARGET_TEMPERATURE_FEK,
     ACTUAL_HUMIDITY,
@@ -165,78 +165,219 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
-            result[ACTUAL_TEMPERATURE_FE7] = get_isg_scaled_value(decoder.decode_16bit_int())#501..
-            result[TARGET_TEMPERATURE_FE7] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value( decoder.decode_16bit_int())
+        #501
+            result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #502
+            result[TARGET_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #503
+            result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #504
+            result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #505
+            result[ACTUAL_HUMIDITY] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #506
+            result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #507
+            result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #508
+            result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #509
             # hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
             decoder.skip_bytes(2)
-
-            result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(decoder.decode_16bit_int())#510..
-            result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[FLOW_TEMPERATURE_NHZ] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #510
+            result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #511
+            result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #512
+            result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #513
+            result[FLOW_TEMPERATURE] = get_isg_scaled_value(
+                    decoder.decode_16bit_int()
+                )
+        #514
+            result[FLOW_TEMPERATURE_NHZ] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #515
             decoder.skip_bytes(2)
-            result[RETURN_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #516
+            result[RETURN_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #517
             decoder.skip_bytes(2)
-            result[ACTUAL_TEMPERATURE_BUFFER] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(decoder.decode_16bit_int())
-
-            result[HEATER_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)#520..
-            result[VOLUME_STREAM] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
-            result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(decoder.decode_16bit_int())
-            decoder.skip_bytes(14)
-
-            decoder.skip_bytes(10)#530..
-            result[SOURCE_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #518
+            result[ACTUAL_TEMPERATURE_BUFFER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #519
+            result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #520
+            result[HEATER_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #521
+            result[VOLUME_STREAM] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #522 domestic hot water
+            result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #523 domestic hot water
+            result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #524-535
+            decoder.skip_bytes(24)
+        #536
+            result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #537
             decoder.skip_bytes(2)
-            result[SOURCE_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
-            result[HOT_GAS_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-
-            result[HIGH_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())#540..
-            result[LOW_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[RETURN_TEMPERATURE_WP1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[FLOW_TEMPERATURE_WP1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[HOT_GAS_TEMPERATURE_WP1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[LOW_PRESSURE_WP1] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
+        #538
+            result[SOURCE_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #539
+            result[HOT_GAS_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #540
+            result[HIGH_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #541
+            result[LOW_PRESSURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #542
+            result[RETURN_TEMPERATURE_WP1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #543
+            result[FLOW_TEMPERATURE_WP1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #544
+            result[HOT_GAS_TEMPERATURE_WP1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #545
+            result[LOW_PRESSURE_WP1] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #546
             decoder.skip_bytes(2)
-            result[HIGH_PRESSURE_WP1] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
-            result[VOLUME_STREAM_WP1] = get_isg_scaled_value(decoder.decode_16bit_int(), 10)
-            result[RETURN_TEMPERATURE_WP2] = get_isg_scaled_value(decoder.decode_16bit_int())
-
-            result[FLOW_TEMPERATURE_WP2] = get_isg_scaled_value(decoder.decode_16bit_int())#550..
-            result[HOT_GAS_TEMPERATURE_WP2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[LOW_PRESSURE_WP2] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
+        #547
+            result[HIGH_PRESSURE_WP1] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #548
+            result[VOLUME_STREAM_WP1] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 10
+            )
+        #549
+            result[RETURN_TEMPERATURE_WP2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #550
+            result[FLOW_TEMPERATURE_WP2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #551
+            result[HOT_GAS_TEMPERATURE_WP2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #552
+            result[LOW_PRESSURE_WP2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #553
             decoder.skip_bytes(2)
-            result[HIGH_PRESSURE_WP2] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
-            result[VOLUME_STREAM_WP2] = get_isg_scaled_value(decoder.decode_16bit_int(), 10)
-            decoder.skip_bytes(8)
-
-            decoder.skip_bytes(20)#560..
-
-            decoder.skip_bytes(20)#570..
-
-            decoder.skip_bytes(8)#580..
-            result[ACTUAL_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_HUMIDITY_HK1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-
-            result[ACTUAL_HUMIDITY_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())#590..
-            result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[TARGET_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ACTUAL_HUMIDITY_HK3] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[DEWPOINT_TEMPERATURE_HK3] = get_isg_scaled_value(decoder.decode_16bit_int())
-
+        #554
+            result[HIGH_PRESSURE_WP2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #555
+            result[VOLUME_STREAM_WP2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 10
+            )        
+        #546-583
+            decoder.skip_bytes(56)
+        #584
+            result[ACTUAL_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #585
+            result[TARGET_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #586
+            result[ACTUAL_HUMIDITY_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #587
+            result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #588
+            result[ACTUAL_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #589
+            result[TARGET_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #590
+            result[ACTUAL_HUMIDITY_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #591
+            result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #592
+            result[ACTUAL_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #593
+            result[TARGET_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #594
+            result[ACTUAL_HUMIDITY_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #595
+            result[DEWPOINT_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             result["system_values"] = list(inverter_data.registers)
         return result
 
@@ -248,26 +389,72 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
-            result[OPERATION_MODE] = decoder.decode_16bit_uint()#1501
-            result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ECO_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value( decoder.decode_16bit_int())
-            result[HEATING_CURVE_RISE_HK1] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
-            result[COMFORT_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[ECO_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
+        #1501
+            result[OPERATION_MODE] = decoder.decode_16bit_uint()
+        #1502
+            result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1503
+            result[ECO_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1504
+            result[HEATING_CURVE_RISE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #1505
+            result[COMFORT_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1506
+            result[ECO_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1507
+            result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(), 100
+            )
+        #1508
             decoder.skip_bytes(2)
-            result[DUALMODE_TEMPERATURE_HZG] = get_isg_scaled_value(decoder.decode_16bit_int(),10)
-
-            result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(decoder.decode_16bit_int())#1510
-            result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #1509
+            result[DUALMODE_TEMPERATURE_HZG] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),10
+            )
+        #1510
+            result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1511
+            result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1512
             decoder.skip_bytes(2)
-            result[DUALMODE_TEMPERATURE_WW] = get_isg_scaled_value(decoder.decode_16bit_int(),10)
-            result[AREA_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #1513
+            result[DUALMODE_TEMPERATURE_WW] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),10
+                )
+        #1514
+            result[AREA_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1515
             decoder.skip_bytes(2)
-            result[AREA_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
-            result[FAN_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #1516
+            result[AREA_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1517
+            result[FAN_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+        #1518
             decoder.skip_bytes(2)
-            result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+        #1519
+            result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
             result["system_paramaters"] = list(inverter_data.registers)
         return result
 
