@@ -24,8 +24,8 @@ PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
 ]
 
-ACTUAL_TEMPERATURE_FE7 = "actual_temperature_fe7"
-TARGET_TEMPERATURE_FE7 = "target_temperature_fe7"
+ACTUAL_TEMPERATURE = "actual_temperature"
+TARGET_TEMPERATURE = "target_temperature"
 ACTUAL_TEMPERATURE_FEK = "actual_temperature_fek"
 TARGET_TEMPERATURE_FEK = "target_temperature_fek"
 ACTUAL_HUMIDITY = "actual_humidity"
