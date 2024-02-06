@@ -20,7 +20,7 @@ from homeassistant.const import UnitOfTemperature
 from .const import (
     DOMAIN,
     ACTUAL_HUMIDITY,
-    ACTUAL_TEMPERATURE,
+    ACTUAL_TEMPERATURE_FE7,
     ACTUAL_TEMPERATURE_FEK,
     COMFORT_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK1,
@@ -176,7 +176,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        temperature = self.coordinator.data.get(ACTUAL_TEMPERATURE)
+        temperature = self.coordinator.data.get(ACTUAL_TEMPERATURE_FE7)
         return (
             temperature
             if temperature is not None
