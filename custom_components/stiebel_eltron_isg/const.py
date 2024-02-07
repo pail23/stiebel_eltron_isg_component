@@ -68,6 +68,20 @@ HOT_GAS_TEMPERATURE = "hot_gas_temperature"
 HIGH_PRESSURE = "high_pressure"
 LOW_PRESSURE = "low_pressure"
 
+RETURN_TEMPERATURE_WP1 = "return_temperature_wp1"
+FLOW_TEMPERATURE_WP1 = "flow_temperature_wp1"
+HOT_GAS_TEMPERATURE_WP1 = "hot_gas_temperature_wp1"
+LOW_PRESSURE_WP1 = "low_pressure_wp1"
+HIGH_PRESSURE_WP1 = "high_pressure_wp1"
+VOLUME_STREAM_WP1 = "volume_stream_wp1"
+RETURN_TEMPERATURE_WP2 = "return_temperature_wp2"
+FLOW_TEMPERATURE_WP2 = "flow_temperature_wp2"
+HOT_GAS_TEMPERATURE_WP2 = "hot_gas_temperature_wp2"
+LOW_PRESSURE_WP2 = "low_pressure_wp2"
+HIGH_PRESSURE_WP2 = "high_pressure_wp2"
+VOLUME_STREAM_WP2 = "volume_stream_wp2"
+
+
 OPERATION_MODE = "operation_mode"
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
@@ -114,9 +128,12 @@ HEATING_CURVE_RISE_HK1 = "heating_curve_rise_hk1"
 COMFORT_TEMPERATURE_TARGET_HK2 = "comfort_temperature_target_hk2"
 ECO_TEMPERATURE_TARGET_HK2 = "eco_temperature_target_hk2"
 HEATING_CURVE_RISE_HK2 = "heating_curve_rise_hk2"
+DUALMODE_TEMPERATURE_HZG = "dualmode_temperature_hzg"
 
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
+DUALMODE_TEMPERATURE_WW = "dualmode_temperature_ww"
+
 AREA_COOLING_TARGET_ROOM_TEMPERATURE = "area_cooling_target_room_temperature"
 AREA_COOLING_TARGET_FLOW_TEMPERATURE = "area_cooling_target_flow_temperature"
 FAN_COOLING_TARGET_ROOM_TEMPERATURE = "fan_cooling_target_room_temperature"
