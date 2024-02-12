@@ -103,6 +103,7 @@ def create_temperature_entity_description(name, key):
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
         has_entity_name=True,
     )
 
