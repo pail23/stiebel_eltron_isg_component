@@ -148,14 +148,19 @@ async def async_setup_entry(hass, entry, async_add_devices):
 class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     """stiebel_eltron_isg climate class."""
 
+    _enable_turn_on_off_backwards_compatibility = False
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_supported_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+    )
+
     def __init__(self, coordinator, config_entry, description):
         """Initialize the climate entity."""
         self.entity_description = description
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.PRESET_MODE
-        )
         self._attr_target_temperature_low = 5
         self._attr_target_temperature_high = 30
         self._attr_target_temperature_step = 0.1
