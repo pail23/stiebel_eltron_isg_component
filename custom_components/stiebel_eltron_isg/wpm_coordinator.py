@@ -26,6 +26,8 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK2,
+    ACTUAL_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE_HK3,
     FLOW_TEMPERATURE,
     FLOW_TEMPERATURE_NHZ,
     RETURN_TEMPERATURE,
@@ -103,6 +105,10 @@ from .const import (
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     ACTIVE_ERROR,
     ERROR_STATUS,
+    ACTUAL_TEMPERATURE_COOLING_FANCOIL,
+    TARGET_TEMPERATURE_COOLING_FANCOIL,
+    ACTUAL_TEMPERATURE_COOLING_SURFACE,
+    TARGET_TEMPERATURE_COOLING_SURFACE,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -160,7 +166,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=500, count=96)
+        inverter_data = self.read_input_registers(slave=1, address=500, count=111)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -248,8 +254,24 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            # 524-535
-            decoder.skip_bytes(24)
+            # 524 Cooling Fancoil
+            result[ACTUAL_TEMPERATURE_COOLING_FANCOIL] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # 525 Cooling Fancoil
+            result[TARGET_TEMPERATURE_COOLING_FANCOIL] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # 526 Cooling Surface
+            result[ACTUAL_TEMPERATURE_COOLING_SURFACE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # 527 Cooling Surface
+            result[TARGET_TEMPERATURE_COOLING_SURFACE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # 528-535
+            decoder.skip_bytes(16)
             # 536
             result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
@@ -368,6 +390,18 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             # 595
             result[DEWPOINT_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # 596-599 TEMPERATURE_HK4
+            # 600-603 TEMPERATURE_HK5
+            # 604-608 COOLING CIRCUIT TEMPERATURE_HK1 to HK5
+            decoder.skip_bytes(26)
+            # 609
+            result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # 610
+            result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
             result["system_values"] = list(inverter_data.registers)

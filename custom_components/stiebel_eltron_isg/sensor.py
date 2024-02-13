@@ -37,6 +37,8 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK2,
+    ACTUAL_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE_HK3,
     FLOW_TEMPERATURE,
     FLOW_TEMPERATURE_NHZ,
     RETURN_TEMPERATURE,
@@ -89,6 +91,10 @@ from .const import (
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
     EXTRACT_AIR_TARGET_FLOW_RATE,
     EXTRACT_AIR_HUMIDITY,
+    ACTUAL_TEMPERATURE_COOLING_FANCOIL,
+    TARGET_TEMPERATURE_COOLING_FANCOIL,
+    ACTUAL_TEMPERATURE_COOLING_SURFACE,
+    TARGET_TEMPERATURE_COOLING_SURFACE,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -207,6 +213,24 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     ),
     create_temperature_entity_description(
         "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature HK 3", ACTUAL_TEMPERATURE_HK3
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 3", TARGET_TEMPERATURE_HK3
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Cooling Fancoil", ACTUAL_TEMPERATURE_COOLING_FANCOIL
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Cooling Fancoil", TARGET_TEMPERATURE_COOLING_FANCOIL
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Cooling Surface", ACTUAL_TEMPERATURE_COOLING_SURFACE
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Cooling Surface", TARGET_TEMPERATURE_COOLING_SURFACE
     ),
     create_temperature_entity_description(
         "Actual Room Temperature HK 1", ACTUAL_ROOM_TEMPERATURE_HK1
