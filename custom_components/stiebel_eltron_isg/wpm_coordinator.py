@@ -396,11 +396,11 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 600-603 TEMPERATURE_HK5
             # 604-608 COOLING CIRCUIT TEMPERATURE_HK1 to HK5
             decoder.skip_bytes(26)
-            # 609 
+            # 609
             result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            # 610 
+            # 610
             result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
