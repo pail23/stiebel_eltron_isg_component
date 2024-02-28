@@ -526,6 +526,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     def set_data(self, key, value) -> None:
         """Write the data to the modbus."""
+        _LOGGER.debug(f"set modbus register for {key} to {value}")
         if key == SG_READY_ACTIVE:
             self.write_register(address=4000, value=value, slave=1)
         elif key == SG_READY_INPUT_1:
