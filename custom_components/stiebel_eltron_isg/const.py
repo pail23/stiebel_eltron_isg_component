@@ -128,6 +128,7 @@ BUFFER_3_CHARGING_PUMP = "buffer_3_charging_pump"
 BUFFER_4_CHARGING_PUMP = "buffer_4_charging_pump"
 BUFFER_5_CHARGING_PUMP = "buffer_5_charging_pump"
 BUFFER_6_CHARGING_PUMP = "buffer_6_charging_pump"
+DHW_CHARGING_PUMP = "dhw_charging_pump"
 SOURCE_PUMP = "source_pump"
 
 DIFF_CONTROLLER_1_PUMP = "diff_controller_1_pump"
