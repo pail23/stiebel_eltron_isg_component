@@ -169,7 +169,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_system_state1(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2500, count=22)
+        inverter_data = self.read_input_registers(slave=1, address=2500, count=23)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -258,20 +258,20 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             mixer_open_htc_circuit_3 = decoder.decode_16bit_uint()
             if mixer_open_htc_circuit_3 != 32768:
                 result[MIXER_OPEN_HTG_CIRCUIT_3] = mixer_open_htc_circuit_3
+            #2524
+            mixer_close_htc_circuit_3 = decoder.decode_16bit_uint()
+            if mixer_close_htc_circuit_3 != 32768:
+                result[MIXER_CLOSE_HTG_CIRCUIT_3] = mixer_close_htc_circuit_3
         return result
 
     def read_modbus_system_state2(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2523, count=24)
+        inverter_data = self.read_input_registers(slave=1, address=2524, count=23)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
-            #2524
-            mixer_close_htc_circuit_3 = decoder.decode_16bit_uint()
-            if mixer_close_htc_circuit_3 != 32768:
-                result[MIXER_CLOSE_HTG_CIRCUIT_3] = mixer_close_htc_circuit_3
             #2525
             emergency_heating_1 = decoder.decode_16bit_uint()
             if emergency_heating_1 != 32768:
