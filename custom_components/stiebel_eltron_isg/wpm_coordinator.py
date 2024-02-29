@@ -158,17 +158,18 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         """Read the ISG data through modbus."""
         result = {
             **self.read_modbus_energy(),
-            **self.read_modbus_system_state(),
+            **self.read_modbus_system_state1(),
+            **self.read_modbus_system_state2(),
             **self.read_modbus_system_values(),
             **self.read_modbus_system_paramter(),
             **self.read_modbus_sg_ready(),
         }
         return result
 
-    def read_modbus_system_state(self) -> dict:
+    def read_modbus_system_state1(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2500, count=47)
+        inverter_data = self.read_input_registers(slave=1, address=2500, count=22)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -257,6 +258,16 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             mixer_open_htc_circuit_3 = decoder.decode_16bit_uint()
             if mixer_open_htc_circuit_3 != 32768:
                 result[MIXER_OPEN_HTG_CIRCUIT_3] = mixer_open_htc_circuit_3
+        return result
+
+    def read_modbus_system_state2(self) -> dict:
+        """Read the system state values from the ISG."""
+        result = {}
+        inverter_data = self.read_input_registers(slave=1, address=2523, count=24)
+        if not inverter_data.isError():
+            decoder = BinaryPayloadDecoder.fromRegisters(
+                inverter_data.registers, byteorder=Endian.BIG
+            )
             #2524
             mixer_close_htc_circuit_3 = decoder.decode_16bit_uint()
             if mixer_close_htc_circuit_3 != 32768:
