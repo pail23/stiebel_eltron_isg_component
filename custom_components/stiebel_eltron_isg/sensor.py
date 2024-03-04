@@ -135,7 +135,7 @@ def create_daily_energy_entity_description(name, key, icon):
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         icon="mdi:meter-electric",
         has_entity_name=True,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
     )
 

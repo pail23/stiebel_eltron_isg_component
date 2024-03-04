@@ -35,3 +35,8 @@ secrets.yaml
 config/*
 !config/configuration.yaml
 /.vs
+/env
+/TestResults
+/testEnvironments.json
+/.gitignore
+/.gitignore
