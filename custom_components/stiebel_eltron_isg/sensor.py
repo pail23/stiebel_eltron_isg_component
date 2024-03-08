@@ -22,11 +22,15 @@ from .const import (
     ACTUAL_HUMIDITY_HK1,
     ACTUAL_HUMIDITY_HK2,
     ACTUAL_HUMIDITY_HK3,
+    CONSUMED_HEATING,
+    CONSUMED_WATER_HEATING,
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
     DEWPOINT_TEMPERATURE_HK3,
     DOMAIN,
     ACTUAL_TEMPERATURE,
+    PRODUCED_HEATING,
+    PRODUCED_WATER_HEATING,
     TARGET_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     TARGET_TEMPERATURE_FEK,
@@ -114,7 +118,7 @@ def create_temperature_entity_description(name, key):
     )
 
 
-def create_energy_entity_description(name, key, icon):
+def create_energy_entity_description(name, key, visible_default=True):
     """Create an entry description for a energy sensor."""
     return SensorEntityDescription(
         key,
@@ -124,10 +128,11 @@ def create_energy_entity_description(name, key, icon):
         has_entity_name=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
+        entity_registry_visible_default=visible_default,
     )
 
 
-def create_daily_energy_entity_description(name, key, icon):
+def create_daily_energy_entity_description(name, key, visible_default=True):
     """Create an entry description for a energy sensor."""
     return SensorEntityDescription(
         key,
@@ -137,6 +142,7 @@ def create_daily_energy_entity_description(name, key, icon):
         has_entity_name=True,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
+        entity_registry_visible_default=visible_default,
     )
 
 
@@ -272,15 +278,23 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description("Hot Gas Temperature", HOT_GAS_TEMPERATURE),
     create_pressure_entity_description("High Pressure", HIGH_PRESSURE),
     create_pressure_entity_description("Low Pressure", LOW_PRESSURE),
-    create_temperature_entity_description("Return Temperature WP1", RETURN_TEMPERATURE_WP1),
+    create_temperature_entity_description(
+        "Return Temperature WP1", RETURN_TEMPERATURE_WP1
+    ),
     create_temperature_entity_description("Flow Temperature WP1", FLOW_TEMPERATURE_WP1),
-    create_temperature_entity_description("Hot Gas Temperature WP1", HOT_GAS_TEMPERATURE_WP1),
+    create_temperature_entity_description(
+        "Hot Gas Temperature WP1", HOT_GAS_TEMPERATURE_WP1
+    ),
     create_pressure_entity_description("Low Pressure WP1", LOW_PRESSURE_WP1),
     create_pressure_entity_description("High Pressure WP1", HIGH_PRESSURE_WP1),
     create_volume_stream_entity_description("Volume Stream WP1", VOLUME_STREAM_WP1),
-    create_temperature_entity_description("Return Temperature WP2", RETURN_TEMPERATURE_WP2),
+    create_temperature_entity_description(
+        "Return Temperature WP2", RETURN_TEMPERATURE_WP2
+    ),
     create_temperature_entity_description("Flow Temperature WP2", FLOW_TEMPERATURE_WP2),
-    create_temperature_entity_description("Hot Gas Temperature WP2", HOT_GAS_TEMPERATURE_WP2),
+    create_temperature_entity_description(
+        "Hot Gas Temperature WP2", HOT_GAS_TEMPERATURE_WP2
+    ),
     create_pressure_entity_description("Low Pressure WP2", LOW_PRESSURE_WP2),
     create_pressure_entity_description("High Pressure WP2", HIGH_PRESSURE_WP2),
     create_volume_stream_entity_description("Volume Stream WP2", VOLUME_STREAM_WP2),
@@ -305,44 +319,49 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 ENERGY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
-        "Produced Heating Today",
-        PRODUCED_HEATING_TODAY,
-        "mdi:gas-burner",
+        "Produced Heating Today", PRODUCED_HEATING_TODAY, False
     ),
     create_energy_entity_description(
-        "Produced Heating Total",
-        PRODUCED_HEATING_TOTAL,
-        "mdi:gas-burner",
+        "Produced Heating Total", PRODUCED_HEATING_TOTAL, False
+    ),
+    create_energy_entity_description(
+        "Produced Heating",
+        PRODUCED_HEATING,
     ),
     create_daily_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
-        "mdi:water-boiler",
+        False,
     ),
     create_energy_entity_description(
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
-        "mdi:water-boiler",
+        False,
     ),
+    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
     create_daily_energy_entity_description(
-        "Consumed Heating Today",
-        CONSUMED_HEATING_TODAY,
-        "mdi:lightning-bolt",
+        "Consumed Heating Today", CONSUMED_HEATING_TODAY, False
     ),
     create_energy_entity_description(
-        "Consumed Heating Total",
-        CONSUMED_HEATING_TOTAL,
-        "mdi:lightning-bolt",
+        "Consumed Heating Total", CONSUMED_HEATING_TOTAL, False
+    ),
+    create_energy_entity_description(
+        "Consumed Heating",
+        CONSUMED_HEATING,
     ),
     create_daily_energy_entity_description(
         "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
-        "mdi:lightning-bolt",
+        False,
     ),
     create_energy_entity_description(
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
-        "mdi:lightning-bolt",
+        False,
+    ),
+    create_energy_entity_description(
+        "Consumed Water Heating",
+        CONSUMED_WATER_HEATING,
     ),
 ]
 

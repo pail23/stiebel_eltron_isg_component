@@ -93,13 +93,17 @@ OPERATION_MODE = "operation_mode"
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
 PRODUCED_HEATING_TOTAL = "produced_heating_total"
+PRODUCED_HEATING = "produced_heating"
 PRODUCED_WATER_HEATING_TODAY = "produced_water_heating_today"
 PRODUCED_WATER_HEATING_TOTAL = "produced_water_heating_total"
+PRODUCED_WATER_HEATING = "produced_water_heating"
 
 CONSUMED_HEATING_TODAY = "consumed_heating_today"
 CONSUMED_HEATING_TOTAL = "consumed_heating_total"
+CONSUMED_HEATING = "consumed_heating"
 CONSUMED_WATER_HEATING_TODAY = "consumed_water_heating_today"
 CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
+CONSUMED_WATER_HEATING = "consumed_water_heating"
 
 COMPRESSOR_STARTS = "compressor_starts"
 COMPRESSOR_HEATING = "compressor_heating"
