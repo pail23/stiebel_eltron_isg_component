@@ -3,6 +3,7 @@
 For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
+
 import logging
 
 from custom_components.stiebel_eltron_isg.coordinator import (
@@ -113,6 +114,43 @@ from .const import (
     TARGET_TEMPERATURE_COOLING_FANCOIL,
     ACTUAL_TEMPERATURE_COOLING_SURFACE,
     TARGET_TEMPERATURE_COOLING_SURFACE,
+    HEATING_CIRCUIT_1_PUMP,
+    HEATING_CIRCUIT_2_PUMP,
+    HEATING_CIRCUIT_3_PUMP,
+    HEATING_CIRCUIT_4_PUMP,
+    HEATING_CIRCUIT_5_PUMP,
+    BUFFER_1_CHARGING_PUMP,
+    BUFFER_2_CHARGING_PUMP,
+    BUFFER_3_CHARGING_PUMP,
+    BUFFER_4_CHARGING_PUMP,
+    BUFFER_5_CHARGING_PUMP,
+    BUFFER_6_CHARGING_PUMP,
+    DHW_CHARGING_PUMP,
+    SOURCE_PUMP,
+    DIFF_CONTROLLER_1_PUMP,
+    DIFF_CONTROLLER_2_PUMP,
+    POOL_PRIMARY_PUMP,
+    POOL_SECONDARY_PUMP,
+    HEAT_PUMP_1_ON,
+    HEAT_PUMP_2_ON,
+    HEAT_PUMP_3_ON,
+    HEAT_PUMP_4_ON,
+    HEAT_PUMP_5_ON,
+    HEAT_PUMP_6_ON,
+    SECOND_GENERATOR_DHW,
+    SECOND_GENERATOR_HEATING,
+    COOLING_MODE,
+    MIXER_OPEN_HTG_CIRCUIT_2,
+    MIXER_OPEN_HTG_CIRCUIT_3,
+    MIXER_OPEN_HTG_CIRCUIT_4,
+    MIXER_OPEN_HTG_CIRCUIT_5,
+    MIXER_CLOSE_HTG_CIRCUIT_2,
+    MIXER_CLOSE_HTG_CIRCUIT_3,
+    MIXER_CLOSE_HTG_CIRCUIT_4,
+    MIXER_CLOSE_HTG_CIRCUIT_5,
+    EMERGENCY_HEATING_1,
+    EMERGENCY_HEATING_2,
+    EMERGENCY_HEATING_1_2,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -132,7 +170,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         }
         return result
 
-    def read_modbus_system_state(self) -> dict:
+    def read_modbus_system_state(self) -> dict:  # noqa: C901
         """Read the system state values from the ISG."""
         result = {}
         inverter_data = self.read_input_registers(slave=1, address=2500, count=47)
@@ -155,15 +193,169 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder.skip_bytes(4)
             result[ERROR_STATUS] = decoder.decode_16bit_uint()
             decoder.skip_bytes(4)
+            # 2507
             error = decoder.decode_16bit_uint()
             if error == 32768:
                 result[ACTIVE_ERROR] = "no error"
             else:
                 result[ACTIVE_ERROR] = f"error {error}"
-            decoder.skip_bytes(24)
+            # 2508
+            decoder.skip_bytes(2)
+            # 2509
+            heating_circuit_1_pump = decoder.decode_16bit_uint()
+            if heating_circuit_1_pump != 32768:
+                result[HEATING_CIRCUIT_1_PUMP] = heating_circuit_1_pump
+            # 2510
+            heating_circuit_2_pump = decoder.decode_16bit_uint()
+            if heating_circuit_2_pump != 32768:
+                result[HEATING_CIRCUIT_2_PUMP] = heating_circuit_2_pump
+            # 2511
+            heating_circuit_3_pump = decoder.decode_16bit_uint()
+            if heating_circuit_3_pump != 32768:
+                result[HEATING_CIRCUIT_3_PUMP] = heating_circuit_3_pump
+            # 2512
+            buffer_1_charging_pump = decoder.decode_16bit_uint()
+            if buffer_1_charging_pump != 32768:
+                result[BUFFER_1_CHARGING_PUMP] = buffer_1_charging_pump
+            # 2513
+            buffer_2_charging_pump = decoder.decode_16bit_uint()
+            if buffer_2_charging_pump != 32768:
+                result[BUFFER_2_CHARGING_PUMP] = buffer_2_charging_pump
+            # 2514
+            dhw_charging_pump = decoder.decode_16bit_uint()
+            if dhw_charging_pump != 32768:
+                result[DHW_CHARGING_PUMP] = dhw_charging_pump
+            # 2515
+            source_pump = decoder.decode_16bit_uint()
+            if source_pump != 32768:
+                result[SOURCE_PUMP] = source_pump
+            # 2516
+            decoder.skip_bytes(2)
+            # 2517
             circulation_pump = decoder.decode_16bit_uint()
             if circulation_pump != 32768:
                 result[CIRCULATION_PUMP] = circulation_pump
+            # 2518
+            second_generator_dhw = decoder.decode_16bit_uint()
+            if second_generator_dhw != 32768:
+                result[SECOND_GENERATOR_DHW] = second_generator_dhw
+            # 2519
+            second_generator_heating = decoder.decode_16bit_uint()
+            if second_generator_heating != 32768:
+                result[SECOND_GENERATOR_HEATING] = second_generator_heating
+            # 2520
+            cooling_mode = decoder.decode_16bit_uint()
+            if cooling_mode != 32768:
+                result[COOLING_MODE] = cooling_mode
+            # 2521
+            mixer_open_htc_circuit_2 = decoder.decode_16bit_uint()
+            if mixer_open_htc_circuit_2 != 32768:
+                result[MIXER_OPEN_HTG_CIRCUIT_2] = mixer_open_htc_circuit_2
+            # 2522
+            mixer_close_htc_circuit_2 = decoder.decode_16bit_uint()
+            if mixer_close_htc_circuit_2 != 32768:
+                result[MIXER_CLOSE_HTG_CIRCUIT_2] = mixer_close_htc_circuit_2
+            # 2523
+            mixer_open_htc_circuit_3 = decoder.decode_16bit_uint()
+            if mixer_open_htc_circuit_3 != 32768:
+                result[MIXER_OPEN_HTG_CIRCUIT_3] = mixer_open_htc_circuit_3
+            # 2524
+            mixer_close_htc_circuit_3 = decoder.decode_16bit_uint()
+            if mixer_close_htc_circuit_3 != 32768:
+                result[MIXER_CLOSE_HTG_CIRCUIT_3] = mixer_close_htc_circuit_3
+
+            # 2525
+            emergency_heating_1 = decoder.decode_16bit_uint()
+            if emergency_heating_1 != 32768:
+                result[EMERGENCY_HEATING_1] = emergency_heating_1
+            # 2526
+            emergency_heating_2 = decoder.decode_16bit_uint()
+            if emergency_heating_2 != 32768:
+                result[EMERGENCY_HEATING_2] = emergency_heating_2
+            # 2527
+            emergency_heating_1_2 = decoder.decode_16bit_uint()
+            if emergency_heating_1_2 != 32768:
+                result[EMERGENCY_HEATING_1_2] = emergency_heating_1_2
+            # 2528
+            heating_circuit_4_pump = decoder.decode_16bit_uint()
+            if heating_circuit_4_pump != 32768:
+                result[HEATING_CIRCUIT_4_PUMP] = heating_circuit_4_pump
+            # 2529
+            heating_circuit_5_pump = decoder.decode_16bit_uint()
+            if heating_circuit_5_pump != 32768:
+                result[HEATING_CIRCUIT_5_PUMP] = heating_circuit_5_pump
+            # 2530
+            buffer_3_charging_pump = decoder.decode_16bit_uint()
+            if buffer_3_charging_pump != 32768:
+                result[BUFFER_3_CHARGING_PUMP] = buffer_3_charging_pump
+            # 2531
+            buffer_4_charging_pump = decoder.decode_16bit_uint()
+            if buffer_4_charging_pump != 32768:
+                result[BUFFER_4_CHARGING_PUMP] = buffer_4_charging_pump
+            # 2532
+            buffer_5_charging_pump = decoder.decode_16bit_uint()
+            if buffer_5_charging_pump != 32768:
+                result[BUFFER_5_CHARGING_PUMP] = buffer_5_charging_pump
+            # 2533
+            buffer_6_charging_pump = decoder.decode_16bit_uint()
+            if buffer_6_charging_pump != 32768:
+                result[BUFFER_6_CHARGING_PUMP] = buffer_6_charging_pump
+            # 2534
+            diff_controller_1_pump = decoder.decode_16bit_uint()
+            if diff_controller_1_pump != 32768:
+                result[DIFF_CONTROLLER_1_PUMP] = diff_controller_1_pump
+            # 2535
+            diff_controller_2_pump = decoder.decode_16bit_uint()
+            if diff_controller_2_pump != 32768:
+                result[DIFF_CONTROLLER_2_PUMP] = diff_controller_2_pump
+            # 2536
+            pool_primary_pump = decoder.decode_16bit_uint()
+            if pool_primary_pump != 32768:
+                result[POOL_PRIMARY_PUMP] = pool_primary_pump
+            # 2537
+            pool_secondary_pump = decoder.decode_16bit_uint()
+            if pool_secondary_pump != 32768:
+                result[POOL_SECONDARY_PUMP] = pool_secondary_pump
+            # 2538
+            mixer_open_htc_circuit_4 = decoder.decode_16bit_uint()
+            if mixer_open_htc_circuit_4 != 32768:
+                result[MIXER_OPEN_HTG_CIRCUIT_4] = mixer_open_htc_circuit_4
+            # 2539
+            mixer_close_htc_circuit_4 = decoder.decode_16bit_uint()
+            if mixer_close_htc_circuit_4 != 32768:
+                result[MIXER_CLOSE_HTG_CIRCUIT_4] = mixer_close_htc_circuit_4
+            # 2540
+            mixer_open_htc_circuit_5 = decoder.decode_16bit_uint()
+            if mixer_open_htc_circuit_5 != 32768:
+                result[MIXER_OPEN_HTG_CIRCUIT_5] = mixer_open_htc_circuit_5
+            # 2541
+            mixer_close_htc_circuit_5 = decoder.decode_16bit_uint()
+            if mixer_close_htc_circuit_5 != 32768:
+                result[MIXER_CLOSE_HTG_CIRCUIT_5] = mixer_close_htc_circuit_5
+            # 2542
+            heat_pump_1_on = decoder.decode_16bit_uint()
+            if heat_pump_1_on != 32768:
+                result[HEAT_PUMP_1_ON] = heat_pump_1_on
+            # 2543
+            heat_pump_2_on = decoder.decode_16bit_uint()
+            if heat_pump_2_on != 32768:
+                result[HEAT_PUMP_2_ON] = heat_pump_2_on
+            # 2544
+            heat_pump_3_on = decoder.decode_16bit_uint()
+            if heat_pump_3_on != 32768:
+                result[HEAT_PUMP_3_ON] = heat_pump_3_on
+            # 2545
+            heat_pump_4_on = decoder.decode_16bit_uint()
+            if heat_pump_4_on != 32768:
+                result[HEAT_PUMP_4_ON] = heat_pump_4_on
+            # 2546
+            heat_pump_5_on = decoder.decode_16bit_uint()
+            if heat_pump_5_on != 32768:
+                result[HEAT_PUMP_5_ON] = heat_pump_5_on
+            # 2547
+            heat_pump_6_on = decoder.decode_16bit_uint()
+            if heat_pump_6_on != 32768:
+                result[HEAT_PUMP_6_ON] = heat_pump_6_on
 
         return result
 
