@@ -8,6 +8,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
+import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.const import (
     PERCENTAGE,
@@ -319,10 +320,12 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 ENERGY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
-        "Produced Heating Today", PRODUCED_HEATING_TODAY, False
+        "Produced Heating Today", 
+        PRODUCED_HEATING_TODAY,
     ),
     create_energy_entity_description(
-        "Produced Heating Total", PRODUCED_HEATING_TOTAL, False
+        "Produced Heating Total", 
+        PRODUCED_HEATING_TOTAL,
     ),
     create_energy_entity_description(
         "Produced Heating",
@@ -331,19 +334,22 @@ ENERGY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
-        False,
     ),
     create_energy_entity_description(
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
-        False,
-    ),
-    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
-    create_daily_energy_entity_description(
-        "Consumed Heating Today", CONSUMED_HEATING_TODAY, False
     ),
     create_energy_entity_description(
-        "Consumed Heating Total", CONSUMED_HEATING_TOTAL, False
+        "Produced Water Heating", 
+        PRODUCED_WATER_HEATING
+    ),
+    create_daily_energy_entity_description(
+        "Consumed Heating Today", 
+        CONSUMED_HEATING_TODAY,
+    ),
+    create_energy_entity_description(
+        "Consumed Heating Total", 
+        CONSUMED_HEATING_TOTAL,
     ),
     create_energy_entity_description(
         "Consumed Heating",
@@ -352,12 +358,10 @@ ENERGY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
-        False,
     ),
     create_energy_entity_description(
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
-        False,
     ),
     create_energy_entity_description(
         "Consumed Water Heating",
@@ -468,7 +472,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
         entities.append(sensor)
 
     for description in ENERGY_SENSOR_TYPES:
-        sensor = StiebelEltronISGSensor(
+        sensor = StiebelEltronISGEnergySensor(
             coordinator,
             entry,
             description,
@@ -492,7 +496,6 @@ async def async_setup_entry(hass, entry, async_add_devices):
             entities.append(sensor)
 
     async_add_devices(entities)
-
 
 class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     """stiebel_eltron_isg Sensor class."""
@@ -521,3 +524,42 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.data.get(self.entity_description.key) is not None
+
+class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
+    """stiebel_eltron_isg Energy Sensor class."""
+
+    def __init__(
+        self,
+        coordinator,
+        config_entry,
+        description,
+    ):
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(coordinator, config_entry)
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id of the sensor."""
+        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        return self.coordinator.data.get(self.entity_description.key)
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.coordinator.data.get(self.entity_description.key) is not None
+    
+    @property
+    def last_reset(self):
+        """Set Last Reset to now, if value is 0"""
+        value = self.coordinator.data.get(self.entity_description.key)
+        if value is not None and value == 0:
+            return dt_util.utcnow()
+        else:
+            return None
+        
+
