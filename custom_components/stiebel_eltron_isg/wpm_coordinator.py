@@ -690,10 +690,10 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
-            produced_heating_today = decoder.decode_16bit_uint()
+            produced_heating_today = self.assign_if_increased(decoder.decode_16bit_uint(), PRODUCED_HEATING_TODAY)
             produced_heating_total_low = decoder.decode_16bit_uint()
             produced_heating_total_high = decoder.decode_16bit_uint()
-            produced_water_today = decoder.decode_16bit_uint()
+            produced_water_today = self.assign_if_increased(decoder.decode_16bit_uint(), PRODUCED_WATER_HEATING_TODAY)
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
             decoder.skip_bytes(8)  # Skip NHZ
