@@ -154,3 +154,16 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
+        pass
+
+    def assign_if_increased(self, value: float | int, key: str) -> float:
+        """Assign the value as new value or keep the old value from the internal cache in case the old value is larger than value."""
+        if value == 0:
+            return 0
+        if self.data and self.data.get(key) is not None:
+            old_value = float(self.data.get(key))
+            _LOGGER.debug(f"old value for {key} is {old_value} new value is {value}")
+            if old_value > value:
+                _LOGGER.info(f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}")
+                return old_value
+        return value
