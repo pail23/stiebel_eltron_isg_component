@@ -320,11 +320,11 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 ENERGY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
-        "Produced Heating Today", 
+        "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
     ),
     create_energy_entity_description(
-        "Produced Heating Total", 
+        "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
     ),
     create_energy_entity_description(
@@ -340,15 +340,15 @@ ENERGY_SENSOR_TYPES = [
         PRODUCED_WATER_HEATING_TOTAL,
     ),
     create_energy_entity_description(
-        "Produced Water Heating", 
+        "Produced Water Heating",
         PRODUCED_WATER_HEATING
     ),
     create_daily_energy_entity_description(
-        "Consumed Heating Today", 
+        "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
     ),
     create_energy_entity_description(
-        "Consumed Heating Total", 
+        "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
     ),
     create_energy_entity_description(
@@ -552,14 +552,14 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.data.get(self.entity_description.key) is not None
-    
+
     @property
     def last_reset(self):
-        """Set Last Reset to now, if value is 0"""
+        """Set Last Reset to now, if value is 0."""
         value = self.coordinator.data.get(self.entity_description.key)
         if value is not None and value == 0:
             return dt_util.utcnow()
         else:
             return None
-        
+
 
