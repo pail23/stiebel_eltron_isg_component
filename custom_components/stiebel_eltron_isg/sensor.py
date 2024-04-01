@@ -355,7 +355,7 @@ ENERGY_SENSOR_TYPES = [
 
 ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
-        "Produced Heating Today", 
+        "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
     ),
     create_daily_energy_entity_description(
@@ -363,7 +363,7 @@ ENERGY_DAILY_SENSOR_TYPES = [
         PRODUCED_WATER_HEATING_TODAY,
     ),
     create_daily_energy_entity_description(
-        "Consumed Heating Today", 
+        "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
     ),
     create_daily_energy_entity_description(
