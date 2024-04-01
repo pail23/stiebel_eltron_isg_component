@@ -319,10 +319,6 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 
 ENERGY_SENSOR_TYPES = [
-    create_daily_energy_entity_description(
-        "Produced Heating Today",
-        PRODUCED_HEATING_TODAY,
-    ),
     create_energy_entity_description(
         "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
@@ -330,10 +326,6 @@ ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Produced Heating",
         PRODUCED_HEATING,
-    ),
-    create_daily_energy_entity_description(
-        "Produced Water Heating Today",
-        PRODUCED_WATER_HEATING_TODAY,
     ),
     create_energy_entity_description(
         "Produced Water Heating Total",
@@ -343,10 +335,6 @@ ENERGY_SENSOR_TYPES = [
         "Produced Water Heating",
         PRODUCED_WATER_HEATING
     ),
-    create_daily_energy_entity_description(
-        "Consumed Heating Today",
-        CONSUMED_HEATING_TODAY,
-    ),
     create_energy_entity_description(
         "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
@@ -355,10 +343,6 @@ ENERGY_SENSOR_TYPES = [
         "Consumed Heating",
         CONSUMED_HEATING,
     ),
-    create_daily_energy_entity_description(
-        "Consumed Water Heating Today",
-        CONSUMED_WATER_HEATING_TODAY,
-    ),
     create_energy_entity_description(
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
@@ -366,6 +350,25 @@ ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Consumed Water Heating",
         CONSUMED_WATER_HEATING,
+    ),
+]
+
+ENERGY_DAILY_SENSOR_TYPES = [
+    create_daily_energy_entity_description(
+        "Produced Heating Today", 
+        PRODUCED_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Water Heating Today",
+        PRODUCED_WATER_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Consumed Heating Today", 
+        CONSUMED_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Consumed Water Heating Today",
+        CONSUMED_WATER_HEATING_TODAY,
     ),
 ]
 
@@ -472,6 +475,14 @@ async def async_setup_entry(hass, entry, async_add_devices):
         entities.append(sensor)
 
     for description in ENERGY_SENSOR_TYPES:
+        sensor = StiebelEltronISGSensor(
+            coordinator,
+            entry,
+            description,
+        )
+        entities.append(sensor)
+
+    for description in ENERGY_DAILY_SENSOR_TYPES:
         sensor = StiebelEltronISGEnergySensor(
             coordinator,
             entry,
