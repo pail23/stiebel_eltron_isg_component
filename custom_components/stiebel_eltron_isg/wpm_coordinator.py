@@ -680,8 +680,6 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result["system_paramaters"] = list(inverter_data.registers)
         return result
 
-
-
     def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
@@ -710,7 +708,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 produced_heating_total_high * 1000 + produced_heating_total_low
             )
             result[PRODUCED_HEATING] = self.assign_if_increased(
-                result[PRODUCED_HEATING_TOTAL] + result[PRODUCED_HEATING_TODAY], PRODUCED_HEATING
+                result[PRODUCED_HEATING_TOTAL] + result[PRODUCED_HEATING_TODAY],
+                PRODUCED_HEATING,
             )
 
             result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
@@ -719,7 +718,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             result[PRODUCED_WATER_HEATING] = self.assign_if_increased(
                 result[PRODUCED_WATER_HEATING_TOTAL]
-                + result[PRODUCED_WATER_HEATING_TODAY], PRODUCED_WATER_HEATING
+                + result[PRODUCED_WATER_HEATING_TODAY],
+                PRODUCED_WATER_HEATING,
             )
 
             result[CONSUMED_HEATING_TODAY] = consumed_heating_today
@@ -727,15 +727,19 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                 consumed_heating_total_high * 1000 + consumed_heating_total_low
             )
             result[CONSUMED_HEATING] = self.assign_if_increased(
-                result[CONSUMED_HEATING_TOTAL] + result[CONSUMED_HEATING_TODAY], CONSUMED_HEATING
+                result[CONSUMED_HEATING_TOTAL] + result[CONSUMED_HEATING_TODAY],
+                CONSUMED_HEATING,
             )
 
             result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
-            result[CONSUMED_WATER_HEATING_TOTAL] = consumed_water_total_high * 1000 + consumed_water_total_low, CONSUMED_WATER_HEATING_TOTAL
+            result[CONSUMED_WATER_HEATING_TOTAL] = (
+                consumed_water_total_high * 1000 + consumed_water_total_low
+            )
 
             result[CONSUMED_WATER_HEATING] = self.assign_if_increased(
                 result[CONSUMED_WATER_HEATING_TOTAL]
-                + result[CONSUMED_WATER_HEATING_TODAY], CONSUMED_WATER_HEATING
+                + result[CONSUMED_WATER_HEATING_TODAY],
+                CONSUMED_WATER_HEATING,
             )
         return result
 
