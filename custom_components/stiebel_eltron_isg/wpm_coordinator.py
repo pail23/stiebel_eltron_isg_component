@@ -690,18 +690,18 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
-            produced_heating_today = self.assign_if_increased(decoder.decode_16bit_uint(), PRODUCED_HEATING_TODAY)
+            produced_heating_today = decoder.decode_16bit_uint()
             produced_heating_total_low = decoder.decode_16bit_uint()
             produced_heating_total_high = decoder.decode_16bit_uint()
-            produced_water_today = self.assign_if_increased(decoder.decode_16bit_uint(), PRODUCED_WATER_HEATING_TODAY)
+            produced_water_today = decoder.decode_16bit_uint()
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
             decoder.skip_bytes(8)  # Skip NHZ
-            consumed_heating_today = self.assign_if_increased(decoder.decode_16bit_uint(), CONSUMED_HEATING_TODAY)
+            consumed_heating_today = decoder.decode_16bit_uint()
 
             consumed_heating_total_low = decoder.decode_16bit_uint()
             consumed_heating_total_high = decoder.decode_16bit_uint()
-            consumed_water_today = self.assign_if_increased(decoder.decode_16bit_uint(), CONSUMED_WATER_HEATING_TODAY)
+            consumed_water_today = decoder.decode_16bit_uint()
             consumed_water_total_low = decoder.decode_16bit_uint()
             consumed_water_total_high = decoder.decode_16bit_uint()
 
@@ -731,9 +731,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
 
             result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
-            result[CONSUMED_WATER_HEATING_TOTAL] = self.assign_if_increased(
-                consumed_water_total_high * 1000 + consumed_water_total_low, CONSUMED_WATER_HEATING_TOTAL
-            )
+            result[CONSUMED_WATER_HEATING_TOTAL] = consumed_water_total_high * 1000 + consumed_water_total_low, CONSUMED_WATER_HEATING_TOTAL
+
             result[CONSUMED_WATER_HEATING] = self.assign_if_increased(
                 result[CONSUMED_WATER_HEATING_TOTAL]
                 + result[CONSUMED_WATER_HEATING_TODAY], CONSUMED_WATER_HEATING
