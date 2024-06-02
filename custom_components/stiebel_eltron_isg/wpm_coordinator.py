@@ -19,6 +19,10 @@ from .const import (
     ACTUAL_TEMPERATURE,
     CONSUMED_HEATING,
     CONSUMED_WATER_HEATING,
+    PREVIOUS_CONSUMED_HEATING_TOTAL,
+    PREVIOUS_CONSUMED_WATER_HEATING_TOTAL,
+    PREVIOUS_PRODUCED_HEATING_TOTAL,
+    PREVIOUS_PRODUCED_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
     PRODUCED_WATER_HEATING,
     TARGET_TEMPERATURE,
@@ -691,56 +695,109 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             produced_heating_today = decoder.decode_16bit_uint()
             produced_heating_total_low = decoder.decode_16bit_uint()
             produced_heating_total_high = decoder.decode_16bit_uint()
+            produced_heating_total = (
+                produced_heating_total_high * 1000 + produced_heating_total_low
+            )
+
             produced_water_today = decoder.decode_16bit_uint()
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
-            decoder.skip_bytes(8)  # Skip NHZ
-            consumed_heating_today = decoder.decode_16bit_uint()
+            produced_water_total = (
+                produced_water_total_high * 1000 + produced_water_total_low
+            )
 
+            decoder.skip_bytes(8)  # Skip NHZ
+
+            consumed_heating_today = decoder.decode_16bit_uint()
             consumed_heating_total_low = decoder.decode_16bit_uint()
             consumed_heating_total_high = decoder.decode_16bit_uint()
+            consumed_heating_total = (
+                consumed_heating_total_high * 1000 + consumed_heating_total_low
+            )
+
             consumed_water_today = decoder.decode_16bit_uint()
             consumed_water_total_low = decoder.decode_16bit_uint()
             consumed_water_total_high = decoder.decode_16bit_uint()
-
-            result[PRODUCED_HEATING_TODAY] = produced_heating_today
-            result[PRODUCED_HEATING_TOTAL] = (
-                produced_heating_total_high * 1000 + produced_heating_total_low
-            )
-            result[PRODUCED_HEATING] = self.assign_if_increased(
-                result[PRODUCED_HEATING_TOTAL] + result[PRODUCED_HEATING_TODAY],
-                PRODUCED_HEATING,
-            )
-
-            result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
-            result[PRODUCED_WATER_HEATING_TOTAL] = (
-                produced_water_total_high * 1000 + produced_water_total_low
-            )
-            result[PRODUCED_WATER_HEATING] = self.assign_if_increased(
-                result[PRODUCED_WATER_HEATING_TOTAL]
-                + result[PRODUCED_WATER_HEATING_TODAY],
-                PRODUCED_WATER_HEATING,
-            )
-
-            result[CONSUMED_HEATING_TODAY] = consumed_heating_today
-            result[CONSUMED_HEATING_TOTAL] = (
-                consumed_heating_total_high * 1000 + consumed_heating_total_low
-            )
-            result[CONSUMED_HEATING] = self.assign_if_increased(
-                result[CONSUMED_HEATING_TOTAL] + result[CONSUMED_HEATING_TODAY],
-                CONSUMED_HEATING,
-            )
-
-            result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
-            result[CONSUMED_WATER_HEATING_TOTAL] = (
+            consumed_water_total = (
                 consumed_water_total_high * 1000 + consumed_water_total_low
             )
 
-            result[CONSUMED_WATER_HEATING] = self.assign_if_increased(
-                result[CONSUMED_WATER_HEATING_TOTAL]
-                + result[CONSUMED_WATER_HEATING_TODAY],
-                CONSUMED_WATER_HEATING,
-            )
+            result[PRODUCED_HEATING_TODAY] = produced_heating_today
+            result[PRODUCED_HEATING_TOTAL] = produced_heating_total
+            # The following line should check if produced_heating_total before produced_heating_today resets to zero. This would cause a spike in the signal. The spike is removed by the following lines.
+            if PREVIOUS_PRODUCED_HEATING_TOTAL in result:
+                if (
+                    produced_heating_total
+                    == self.data.get(PREVIOUS_PRODUCED_HEATING_TOTAL)
+                    or produced_heating_today < 2
+                ):
+                    result[PRODUCED_HEATING] = self.assign_if_increased(
+                        produced_heating_total + produced_heating_today,
+                        PRODUCED_HEATING,
+                    )
+            else:
+                result[PREVIOUS_PRODUCED_HEATING_TOTAL] = produced_heating_total
+                result[PRODUCED_HEATING] = (
+                    produced_heating_total + produced_heating_today
+                )
+
+            result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
+            result[PRODUCED_WATER_HEATING_TOTAL] = produced_water_total
+            # The following line should check if produced_water_total before produced_water_today resets to zero. This would cause a spike in the signal. The spike is removed by the following lines.
+            if PREVIOUS_PRODUCED_WATER_HEATING_TOTAL in result:
+                if (
+                    produced_water_total
+                    == self.data.get(PREVIOUS_PRODUCED_WATER_HEATING_TOTAL)
+                    or produced_water_today < 2
+                ):
+                    result[PRODUCED_WATER_HEATING] = self.assign_if_increased(
+                        produced_water_total + produced_water_today,
+                        PRODUCED_WATER_HEATING,
+                    )
+            else:
+                result[PREVIOUS_PRODUCED_WATER_HEATING_TOTAL] = produced_water_total
+                result[PRODUCED_WATER_HEATING] = (
+                    produced_water_total + produced_water_today
+                )
+
+            result[CONSUMED_HEATING_TODAY] = consumed_heating_today
+            result[CONSUMED_HEATING_TOTAL] = consumed_heating_total
+            # The following line should check if consumed_heating_total before consumed_heating_today resets to zero. This would cause a spike in the signal. The spike is removed by the following lines.
+            if PREVIOUS_CONSUMED_HEATING_TOTAL in result:
+                if (
+                    consumed_heating_total
+                    == self.data.get(PREVIOUS_CONSUMED_HEATING_TOTAL)
+                    or consumed_heating_today < 2
+                ):
+                    result[CONSUMED_HEATING] = self.assign_if_increased(
+                        consumed_heating_total + consumed_heating_today,
+                        CONSUMED_HEATING,
+                    )
+            else:
+                result[PREVIOUS_CONSUMED_HEATING_TOTAL] = consumed_heating_total
+                result[CONSUMED_HEATING] = (
+                    consumed_heating_total + consumed_heating_today
+                )
+
+            result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
+            result[CONSUMED_WATER_HEATING_TOTAL] = consumed_water_total
+            # The following line should check if consumed_water_total before consumed_water_today resets to zero. This would cause a spike in the signal. The spike is removed by the following lines.
+            if PREVIOUS_CONSUMED_WATER_HEATING_TOTAL in result:
+                if (
+                    consumed_water_total
+                    == self.data.get(PREVIOUS_CONSUMED_WATER_HEATING_TOTAL)
+                    or consumed_water_today < 2
+                ):
+                    result[CONSUMED_WATER_HEATING] = self.assign_if_increased(
+                        consumed_water_total + consumed_water_today,
+                        CONSUMED_WATER_HEATING,
+                    )
+            else:
+                result[PREVIOUS_CONSUMED_WATER_HEATING_TOTAL] = consumed_water_total
+                result[CONSUMED_WATER_HEATING] = (
+                    consumed_water_total + consumed_water_today
+                )
+
         return result
 
     def set_data(self, key, value) -> None:
