@@ -24,12 +24,12 @@
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
-                            "water_heating": "Water heating operation",
-                            "emergency": "Emergency operation",
-                            "program": "Program operation",
-                            "ready": "Standby operation",
-                            "auto": "Automatic operation",
-                            "manual": "Manual operation"
+                            "water_heating": "Water heating",
+                            "emergency": "Emergency",
+                            "program": "Program",
+                            "ready": "Standby",
+                            "auto": "Automatic",
+                            "manual": "Manual"
                         }
                     }
                 }
