@@ -17,5 +17,23 @@
         "abort": {
             "already_configured": "Périphérique déjà configuré"
         }
+    },
+    "entity": {
+        "climate": {
+            "climate": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Chauffage de l'eau",
+                            "emergency": "Urgence",
+                            "program": "Programme",
+                            "ready": "Prêt",
+                            "auto": "Automatique",
+                            "manual": "Manuel"
+                        }
+                    }
+                }
+            }
+        }
     }
 }
