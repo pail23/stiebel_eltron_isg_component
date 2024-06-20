@@ -101,21 +101,21 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
 
-    def read_modbus_data(self) -> dict:
+    async def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
         result = {
-            **self.read_modbus_energy(),
-            **self.read_modbus_system_state(),
-            **self.read_modbus_system_values(),
-            **self.read_modbus_system_paramter(),
-            **self.read_modbus_sg_ready(),
+            **await self.read_modbus_energy(),
+            **await self.read_modbus_system_state(),
+            **await self.read_modbus_system_values(),
+            **await self.read_modbus_system_paramter(),
+            **await self.read_modbus_sg_ready(),
         }
         return result
 
-    def read_modbus_system_state(self) -> dict:
+    async def read_modbus_system_state(self) -> dict:
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2000, count=5)
+        inverter_data = await self.read_input_registers(slave=1, address=2000, count=5)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -145,10 +145,10 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[IS_SUMMER_MODE] = (state & 1) != 0
         return result
 
-    def read_modbus_system_values(self) -> dict:
+    async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=0, count=40)
+        inverter_data = await self.read_input_registers(slave=1, address=0, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -239,10 +239,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result["system_values"] = list(inverter_data.registers)
         return result
 
-    def read_modbus_system_paramter(self) -> dict:
+    async def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
         result = {}
-        inverter_data = self.read_holding_registers(slave=1, address=1000, count=25)
+        inverter_data = await self.read_holding_registers(
+            slave=1, address=1000, count=25
+        )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -282,18 +284,22 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result["system_paramaters"] = list(inverter_data.registers)
         return result
 
-    def read_modbus_energy(self) -> dict:
+    async def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=3000, count=32)
+        inverter_data = await self.read_input_registers(slave=1, address=3000, count=32)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
             )
-            produced_heating_today = self.assign_if_increased(decoder.decode_16bit_uint(), PRODUCED_HEATING_TODAY)
+            produced_heating_today = self.assign_if_increased(
+                decoder.decode_16bit_uint(), PRODUCED_HEATING_TODAY
+            )
             produced_heating_total_low = decoder.decode_16bit_uint()
             produced_heating_total_high = decoder.decode_16bit_uint()
-            produced_water_today = self.assign_if_increased(decoder.decode_16bit_uint(), PRODUCED_WATER_HEATING_TODAY)
+            produced_water_today = self.assign_if_increased(
+                decoder.decode_16bit_uint(), PRODUCED_WATER_HEATING_TODAY
+            )
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
 
@@ -302,7 +308,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 produced_heating_total_high * 1000 + produced_heating_total_low
             )
             result[PRODUCED_HEATING] = self.assign_if_increased(
-                result[PRODUCED_HEATING_TOTAL] + result[PRODUCED_HEATING_TODAY], PRODUCED_HEATING
+                result[PRODUCED_HEATING_TOTAL] + result[PRODUCED_HEATING_TODAY],
+                PRODUCED_HEATING,
             )
 
             result[PRODUCED_WATER_HEATING_TODAY] = produced_water_today
@@ -311,14 +318,19 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             result[PRODUCED_WATER_HEATING] = self.assign_if_increased(
                 result[PRODUCED_WATER_HEATING_TOTAL]
-                + result[PRODUCED_WATER_HEATING_TODAY], PRODUCED_WATER_HEATING
+                + result[PRODUCED_WATER_HEATING_TODAY],
+                PRODUCED_WATER_HEATING,
             )
 
             decoder.skip_bytes(30)
-            consumed_heating_today = self.assign_if_increased(decoder.decode_16bit_uint(), CONSUMED_HEATING_TODAY)
+            consumed_heating_today = self.assign_if_increased(
+                decoder.decode_16bit_uint(), CONSUMED_HEATING_TODAY
+            )
             consumed_heating_total_low = decoder.decode_16bit_uint()
             consumed_heating_total_high = decoder.decode_16bit_uint()
-            consumed_water_today = self.assign_if_increased(decoder.decode_16bit_uint(), CONSUMED_WATER_HEATING_TODAY)
+            consumed_water_today = self.assign_if_increased(
+                decoder.decode_16bit_uint(), CONSUMED_WATER_HEATING_TODAY
+            )
             consumed_water_total_low = decoder.decode_16bit_uint()
             consumed_water_total_high = decoder.decode_16bit_uint()
             result[CONSUMED_HEATING_TODAY] = consumed_heating_today
@@ -326,7 +338,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 consumed_heating_total_high * 1000 + consumed_heating_total_low
             )
             result[CONSUMED_HEATING] = self.assign_if_increased(
-                result[CONSUMED_HEATING_TOTAL] + result[CONSUMED_HEATING_TODAY], CONSUMED_HEATING
+                result[CONSUMED_HEATING_TOTAL] + result[CONSUMED_HEATING_TODAY],
+                CONSUMED_HEATING,
             )
 
             result[CONSUMED_WATER_HEATING_TODAY] = consumed_water_today
@@ -335,7 +348,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             result[CONSUMED_WATER_HEATING] = self.assign_if_increased(
                 result[CONSUMED_WATER_HEATING_TOTAL]
-                + result[CONSUMED_WATER_HEATING_TODAY], CONSUMED_WATER_HEATING
+                + result[CONSUMED_WATER_HEATING_TODAY],
+                CONSUMED_WATER_HEATING,
             )
 
             result[COMPRESSOR_HEATING] = decoder.decode_16bit_uint()
@@ -346,39 +360,39 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
         return result
 
-    def set_data(self, key, value) -> None:
+    async def set_data(self, key, value) -> None:
         """Write the data to the modbus."""
         _LOGGER.debug(f"set modbus register for {key} to {value}")
         if key == SG_READY_ACTIVE:
-            self.write_register(address=4000, value=value, slave=1)
+            await self.write_register(address=4000, value=value, slave=1)
         elif key == SG_READY_INPUT_1:
-            self.write_register(address=4001, value=value, slave=1)
+            await self.write_register(address=4001, value=value, slave=1)
         elif key == SG_READY_INPUT_2:
-            self.write_register(address=4002, value=value, slave=1)
+            await self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
-            self.write_register(address=1000, value=value, slave=1)
+            await self.write_register(address=1000, value=value, slave=1)
         elif key == COMFORT_TEMPERATURE_TARGET_HK1:
-            self.write_register(address=1001, value=int(value * 10), slave=1)
+            await self.write_register(address=1001, value=int(value * 10), slave=1)
         elif key == ECO_TEMPERATURE_TARGET_HK1:
-            self.write_register(address=1002, value=int(value * 10), slave=1)
+            await self.write_register(address=1002, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK1:
-            self.write_register(address=1007, value=int(value * 100), slave=1)
+            await self.write_register(address=1007, value=int(value * 100), slave=1)
 
         elif key == COMFORT_TEMPERATURE_TARGET_HK2:
-            self.write_register(address=1004, value=int(value * 10), slave=1)
+            await self.write_register(address=1004, value=int(value * 10), slave=1)
         elif key == ECO_TEMPERATURE_TARGET_HK2:
-            self.write_register(address=1005, value=int(value * 10), slave=1)
+            await self.write_register(address=1005, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK2:
-            self.write_register(address=1009, value=int(value * 100), slave=1)
+            await self.write_register(address=1009, value=int(value * 100), slave=1)
 
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:
-            self.write_register(address=1011, value=int(value * 10), slave=1)
+            await self.write_register(address=1011, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
-            self.write_register(address=1012, value=int(value * 10), slave=1)
+            await self.write_register(address=1012, value=int(value * 10), slave=1)
         elif key == FAN_LEVEL_DAY:
-            self.write_register(address=1017, value=int(value), slave=1)
+            await self.write_register(address=1017, value=int(value), slave=1)
         elif key == FAN_LEVEL_NIGHT:
-            self.write_register(address=1018, value=int(value), slave=1)
+            await self.write_register(address=1018, value=int(value), slave=1)
         else:
             return
         self.data[key] = value

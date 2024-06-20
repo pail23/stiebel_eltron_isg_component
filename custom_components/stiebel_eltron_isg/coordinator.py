@@ -10,7 +10,7 @@ import threading
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 
-from pymodbus.client import ModbusTcpClient
+from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
@@ -46,7 +46,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         self._hass = hass
         self._host = host
         self._model_id = 0
-        self._client = ModbusTcpClient(host=host, port=port)
+        self._client = AsyncModbusTcpClient(host=host, port=port)
         self._lock = threading.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
         self.platforms = []
@@ -58,10 +58,10 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         with self._lock:
             self._client.close()
 
-    def connect(self):
+    async def connect(self):
         """Connect client."""
         with self._lock:
-            self._client.connect()
+            await self._client.connect()
 
     def shutdown(self):
         """Shutdown the coordinator and close all connections."""
@@ -102,38 +102,38 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Check if heat pump controller is a wpm model."""
         return self._model_id >= 390
 
-    def read_input_registers(self, slave, address, count):
+    async def read_input_registers(self, slave, address, count):
         """Read input registers."""
         with self._lock:
-            return self._client.read_input_registers(address, count, slave)
+            return await self._client.read_input_registers(address, count, slave)
 
-    def read_holding_registers(self, slave, address, count):
+    async def read_holding_registers(self, slave, address, count):
         """Read holding registers."""
         with self._lock:
-            return self._client.read_holding_registers(address, count, slave)
+            return await self._client.read_holding_registers(address, count, slave)
 
-    def write_register(self, address, value, slave):
+    async def write_register(self, address, value, slave):
         """Write holding register."""
         with self._lock:
-            return self._client.write_registers(address, value, slave)
+            return await self._client.write_registers(address, value, slave)
 
     async def _async_update_data(self) -> dict:
         """Time to update."""
         try:
             if not self.is_connected:
-                self.connect()
-            return self.read_modbus_data()
+                await self.connect()
+            return await self.read_modbus_data()
         except Exception as exception:
             raise UpdateFailed(exception) from exception
 
-    def read_modbus_data(self) -> dict:
+    async def read_modbus_data(self) -> dict:
         """Based method for reading all modbus data."""
         return {}
 
-    def read_modbus_sg_ready(self) -> dict:
+    async def read_modbus_sg_ready(self) -> dict:
         """Read the sg ready related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=5000, count=2)
+        inverter_data = await self.read_input_registers(slave=1, address=5000, count=2)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -142,7 +142,9 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             self._model_id = decoder.decode_16bit_uint()
             result[MODEL_ID] = self._model_id
 
-        inverter_data = self.read_holding_registers(slave=1, address=4000, count=3)
+        inverter_data = await self.read_holding_registers(
+            slave=1, address=4000, count=3
+        )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -164,6 +166,8 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             old_value = float(self.data.get(key))
             _LOGGER.debug(f"old value for {key} is {old_value} new value is {value}")
             if old_value > value:
-                _LOGGER.info(f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}")
+                _LOGGER.info(
+                    f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}"
+                )
                 return old_value
         return value

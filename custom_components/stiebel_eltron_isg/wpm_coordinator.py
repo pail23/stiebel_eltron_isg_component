@@ -163,21 +163,21 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Communicates with WPM Controllers."""
 
-    def read_modbus_data(self) -> dict:
+    async def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
         result = {
-            **self.read_modbus_energy(),
-            **self.read_modbus_system_state(),
-            **self.read_modbus_system_values(),
-            **self.read_modbus_system_paramter(),
-            **self.read_modbus_sg_ready(),
+            **await self.read_modbus_energy(),
+            **await self.read_modbus_system_state(),
+            **await self.read_modbus_system_values(),
+            **await self.read_modbus_system_paramter(),
+            **await self.read_modbus_sg_ready(),
         }
         return result
 
-    def read_modbus_system_state(self) -> dict:  # noqa: C901
+    async def read_modbus_system_state(self) -> dict:  # noqa: C901
         """Read the system state values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=2500, count=47)
+        inverter_data = await self.read_input_registers(slave=1, address=2500, count=47)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -363,10 +363,10 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
         return result
 
-    def read_modbus_system_values(self) -> dict:
+    async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=500, count=111)
+        inverter_data = await self.read_input_registers(slave=1, address=500, count=111)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -607,10 +607,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result["system_values"] = list(inverter_data.registers)
         return result
 
-    def read_modbus_system_paramter(self) -> dict:
+    async def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
         result = {}
-        inverter_data = self.read_holding_registers(slave=1, address=1500, count=19)
+        inverter_data = await self.read_holding_registers(
+            slave=1, address=1500, count=19
+        )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -684,10 +686,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result["system_paramaters"] = list(inverter_data.registers)
         return result
 
-    def read_modbus_energy(self) -> dict:
+    async def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=3500, count=180)
+        inverter_data = await self.read_input_registers(
+            slave=1, address=3500, count=22
+        )  # count=180
         _LOGGER.debug(f"Energy Data: {inverter_data.registers}")
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -804,47 +808,47 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # _LOGGER.debug(f"current power consumption {result[CURRENT_POWER_CONSUMPTION]}")
         return result
 
-    def set_data(self, key, value) -> None:
+    async def set_data(self, key, value) -> None:
         """Write the data to the modbus."""
         _LOGGER.debug(f"set modbus register for {key} to {value}")
         if key == SG_READY_ACTIVE:
-            self.write_register(address=4000, value=value, slave=1)
+            await self.write_register(address=4000, value=value, slave=1)
         elif key == SG_READY_INPUT_1:
-            self.write_register(address=4001, value=value, slave=1)
+            await self.write_register(address=4001, value=value, slave=1)
         elif key == SG_READY_INPUT_2:
-            self.write_register(address=4002, value=value, slave=1)
+            await self.write_register(address=4002, value=value, slave=1)
         elif key == OPERATION_MODE:
-            self.write_register(address=1500, value=value, slave=1)
+            await self.write_register(address=1500, value=value, slave=1)
         elif key == COMFORT_TEMPERATURE_TARGET_HK1:
-            self.write_register(address=1501, value=int(value * 10), slave=1)
+            await self.write_register(address=1501, value=int(value * 10), slave=1)
         elif key == ECO_TEMPERATURE_TARGET_HK1:
-            self.write_register(address=1502, value=int(value * 10), slave=1)
+            await self.write_register(address=1502, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK1:
-            self.write_register(address=1503, value=int(value * 100), slave=1)
+            await self.write_register(address=1503, value=int(value * 100), slave=1)
         elif key == COMFORT_TEMPERATURE_TARGET_HK2:
-            self.write_register(address=1504, value=int(value * 10), slave=1)
+            await self.write_register(address=1504, value=int(value * 10), slave=1)
         elif key == ECO_TEMPERATURE_TARGET_HK2:
-            self.write_register(address=1505, value=int(value * 10), slave=1)
+            await self.write_register(address=1505, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK2:
-            self.write_register(address=1506, value=int(value * 100), slave=1)
+            await self.write_register(address=1506, value=int(value * 100), slave=1)
         elif key == DUALMODE_TEMPERATURE_HZG:
-            self.write_register(address=1508, value=int(value * 10), slave=1)
+            await self.write_register(address=1508, value=int(value * 10), slave=1)
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:
-            self.write_register(address=1509, value=int(value * 10), slave=1)
+            await self.write_register(address=1509, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
-            self.write_register(address=1510, value=int(value * 10), slave=1)
+            await self.write_register(address=1510, value=int(value * 10), slave=1)
         elif key == DUALMODE_TEMPERATURE_WW:
-            self.write_register(address=1512, value=int(value * 10), slave=1)
+            await self.write_register(address=1512, value=int(value * 10), slave=1)
         elif key == AREA_COOLING_TARGET_FLOW_TEMPERATURE:
-            self.write_register(address=1513, value=int(value * 10), slave=1)
+            await self.write_register(address=1513, value=int(value * 10), slave=1)
         elif key == AREA_COOLING_TARGET_ROOM_TEMPERATURE:
-            self.write_register(address=1515, value=int(value * 10), slave=1)
+            await self.write_register(address=1515, value=int(value * 10), slave=1)
         elif key == FAN_COOLING_TARGET_FLOW_TEMPERATURE:
-            self.write_register(address=1516, value=int(value * 10), slave=1)
+            await self.write_register(address=1516, value=int(value * 10), slave=1)
         elif key == FAN_COOLING_TARGET_ROOM_TEMPERATURE:
-            self.write_register(address=1518, value=int(value * 10), slave=1)
+            await self.write_register(address=1518, value=int(value * 10), slave=1)
         elif key == CIRCULATION_PUMP:
-            self.write_register(address=47012, value=value, slave=1)
+            await self.write_register(address=47012, value=value, slave=1)
         else:
             return
         self.data[key] = value
@@ -852,4 +856,4 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
-        self.write_register(address=1519, value=3, slave=1)
+        await self.write_register(address=1519, value=3, slave=1)
