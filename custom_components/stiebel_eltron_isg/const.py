@@ -112,6 +112,8 @@ CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
 PREVIOUS_CONSUMED_WATER_HEATING_TOTAL = "previous_consumed_water_heating_total"
 CONSUMED_WATER_HEATING = "consumed_water_heating"
 
+CURRENT_POWER_CONSUMPTION = "current_power_consumption"
+
 COMPRESSOR_STARTS = "compressor_starts"
 COMPRESSOR_HEATING = "compressor_heating"
 COMPRESSOR_HEATING_WATER = "compressor_heating_water"

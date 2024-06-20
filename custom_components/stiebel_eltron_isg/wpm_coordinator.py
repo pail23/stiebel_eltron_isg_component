@@ -687,7 +687,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
-        inverter_data = self.read_input_registers(slave=1, address=3500, count=22)
+        inverter_data = self.read_input_registers(slave=1, address=3500, count=180)
+        _LOGGER.debug(f"Energy Data: {inverter_data.registers}")
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -798,6 +799,9 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
                     consumed_water_total + consumed_water_today
                 )
 
+            # decoder.skip_bytes(280)
+            # result[CURRENT_POWER_CONSUMPTION] = decoder.decode_16bit_uint()
+            # _LOGGER.debug(f"current power consumption {result[CURRENT_POWER_CONSUMPTION]}")
         return result
 
     def set_data(self, key, value) -> None:
