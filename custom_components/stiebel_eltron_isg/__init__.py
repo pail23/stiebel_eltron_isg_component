@@ -3,13 +3,14 @@
 For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
+
 from datetime import timedelta
 import logging
 
 
 import voluptuous as vol
 
-from pymodbus.client import ModbusTcpClient
+from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
@@ -58,16 +59,18 @@ class StiebelEltronModbusException(Exception):
     pass
 
 
-def get_controller_model(host, port) -> int:
+async def get_controller_model(host, port) -> int:
     """Read the model of the controller.
 
     LWA and LWZ controllers have model ids 103 and 104.
     WPM controllers have 390, 391 or 449.
     """
-    client = ModbusTcpClient(host=host, port=port)
+    client = AsyncModbusTcpClient(host=host, port=port)
     try:
-        client.connect()
-        inverter_data = client.read_input_registers(address=5001, count=1, slave=1)
+        await client.connect()
+        inverter_data = await client.read_input_registers(
+            address=5001, count=1, slave=1
+        )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers, byteorder=Endian.BIG
@@ -96,7 +99,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     scan_interval = entry.data[CONF_SCAN_INTERVAL]
 
     try:
-        model = get_controller_model(host, port)
+        model = await get_controller_model(host, port)
     except Exception as exception:
         raise ConfigEntryNotReady(exception) from exception
 
