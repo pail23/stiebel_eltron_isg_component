@@ -34,9 +34,8 @@ async def test_setup_unload_and_reload_entry(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    assert DOMAIN in hass.data and config_entry.entry_id in hass.data[DOMAIN]
     assert isinstance(
-        hass.data[DOMAIN][config_entry.entry_id], StiebelEltronModbusWPMDataCoordinator
+        config_entry.runtime_data.coordinator, StiebelEltronModbusWPMDataCoordinator
     )
 
     # Unload the entry and verify that the data has been removed

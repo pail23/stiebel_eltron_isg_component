@@ -16,6 +16,12 @@ from homeassistant.components.climate import (
     PRESET_COMFORT,
 )
 from homeassistant.const import UnitOfTemperature
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronISGIntegrationConfigEntry,
+)
 
 
 from .const import (
@@ -131,9 +137,13 @@ TEMPERATURE_KEY_MAP = {
 }
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+):
     """Set up the select platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     entities = []
     for description in CLIMATE_TYPES:

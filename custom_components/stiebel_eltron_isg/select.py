@@ -7,6 +7,12 @@ from homeassistant.components.select import (
     SelectEntity,
     SelectEntityDescription,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronISGIntegrationConfigEntry,
+)
 from .const import DOMAIN, OPERATION_MODE
 from .entity import StiebelEltronISGEntity
 
@@ -42,9 +48,13 @@ SELECT_TYPES = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the select platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     entities = []
     for description in SELECT_TYPES:

@@ -10,6 +10,9 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from .data import StiebelEltronISGIntegrationConfigEntry
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     DOMAIN,
     COMFORT_TEMPERATURE_TARGET_HK1,
@@ -202,9 +205,13 @@ NUMBER_TYPES_LWZ = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+):
     """Set up the select platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     entities = []
     for description in NUMBER_TYPES_ALL:

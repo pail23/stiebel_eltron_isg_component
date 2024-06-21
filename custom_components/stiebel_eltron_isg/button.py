@@ -16,6 +16,12 @@ from .const import DOMAIN, RESET_HEATPUMP
 from .entity import StiebelEltronISGEntity
 from .coordinator import StiebelEltronModbusDataCoordinator
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .data import StiebelEltronISGIntegrationConfigEntry
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -43,9 +49,13 @@ BUTTONS = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+):
     """Set up the select platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     if coordinator.is_wpm:
         async_add_devices(

@@ -10,6 +10,14 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
 )
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronISGIntegrationConfigEntry,
+)
+
+
 from .const import (
     DOMAIN,
     SG_READY_ACTIVE,
@@ -49,9 +57,13 @@ SWITCH_TYPES = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the switch platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     entities = []
 

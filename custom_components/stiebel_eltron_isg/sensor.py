@@ -11,6 +11,8 @@ from homeassistant.components.sensor import (
 )
 import homeassistant.util.dt as dt_util
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfTemperature,
@@ -18,6 +20,10 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfVolumeFlowRate,
+)
+
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronISGIntegrationConfigEntry,
 )
 
 from .const import (
@@ -451,9 +457,13 @@ VENTILATION_SENSOR_TYPES = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+) -> None:
     """Set up the sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     entities = []
     for description in SYSTEM_VALUES_SENSOR_TYPES:

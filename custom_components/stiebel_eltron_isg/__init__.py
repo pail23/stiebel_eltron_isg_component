@@ -15,10 +15,15 @@ from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
 import homeassistant.helpers.config_validation as cv
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Config, HomeAssistant
 from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.loader import async_get_loaded_integration
+
+from custom_components.stiebel_eltron_isg.data import (
+    StiebEltronISGIntegrationData,
+    StiebelEltronISGIntegrationConfigEntry,
+)
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
 )
@@ -88,10 +93,10 @@ async def async_setup(hass: HomeAssistant, config: Config):
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
+async def async_setup_entry(
+    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+):
     """Set up this integration using UI."""
-    if hass.data.get(DOMAIN) is None:
-        hass.data.setdefault(DOMAIN, {})
 
     name = entry.data.get(CONF_NAME)
     host = entry.data.get(CONF_HOST)
@@ -110,6 +115,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
             hass, name, host, port, scan_interval
         )
     )
+
+    entry.runtime_data = StiebEltronISGIntegrationData(
+        coordinator=coordinator,
+        integration=async_get_loaded_integration(hass, entry.domain),
+    )
     await coordinator.async_config_entry_first_refresh()
 
     if not coordinator.last_update_success:
@@ -123,16 +133,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry):
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+) -> bool:
     """Handle removal of an entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
     coordinator.shutdown()
-    if unloaded := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unloaded
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_reload_entry(
+    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+) -> None:
     """Reload config entry."""
     await async_unload_entry(hass, entry)
     await async_setup_entry(hass, entry)

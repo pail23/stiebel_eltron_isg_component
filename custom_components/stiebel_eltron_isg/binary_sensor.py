@@ -67,6 +67,11 @@ from .const import (
     EMERGENCY_HEATING_1_2,
 )
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+from .data import StiebelEltronISGIntegrationConfigEntry
+
 BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name="Is heating",
@@ -408,9 +413,13 @@ BINARY_SENSOR_TYPES = [
 ]
 
 
-async def async_setup_entry(hass, entry, async_add_devices):
+async def async_setup_entry(
+    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    entry: StiebelEltronISGIntegrationConfigEntry,
+    async_add_devices: AddEntitiesCallback,
+):
     """Set up the binary_sensor platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data.coordinator
 
     entities = []
     for description in BINARY_SENSOR_TYPES:
