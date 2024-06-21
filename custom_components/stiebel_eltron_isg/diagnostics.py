@@ -1,4 +1,5 @@
 """Diagnostics support for Stiebel Eltron ISG."""
+
 from __future__ import annotations
 
 from typing import Any
@@ -14,6 +15,7 @@ from .const import DOMAIN
 CONFIG_FIELDS_TO_REDACT = []
 DATA_FIELDS_TO_REDACT = []
 
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry
 ) -> dict[str, Any]:
@@ -24,7 +26,8 @@ async def async_get_config_entry_diagnostics(
         "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),
         "options": async_redact_data(config_entry.options, []),
         "data": [
-            async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT), {"model": coordinator.model}
+            async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT),
+            {"model": coordinator.model},
         ],
     }
 
@@ -37,11 +40,11 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-
     return {
-        "config_entry": async_redact_data(
-            config_entry.data, CONFIG_FIELDS_TO_REDACT
-        ),
+        "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),
         "options": async_redact_data(config_entry.options, []),
-        "data": [async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT), {"model": coordinator.model}],
+        "data": [
+            async_redact_data(coordinator.data, DATA_FIELDS_TO_REDACT),
+            {"model": coordinator.model},
+        ],
     }

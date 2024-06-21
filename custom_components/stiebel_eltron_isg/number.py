@@ -1,4 +1,5 @@
 """Sensor number for stiebel_eltron_isg."""
+
 import logging
 
 from homeassistant.const import (
@@ -26,7 +27,7 @@ from .const import (
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_LEVEL_DAY,
-    FAN_LEVEL_NIGHT
+    FAN_LEVEL_NIGHT,
 )
 from .entity import StiebelEltronISGEntity
 

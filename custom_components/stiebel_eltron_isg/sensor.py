@@ -1,4 +1,5 @@
 """Sensor platform for stiebel_eltron_isg."""
+
 import logging
 
 
@@ -331,10 +332,7 @@ ENERGY_SENSOR_TYPES = [
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
     ),
-    create_energy_entity_description(
-        "Produced Water Heating",
-        PRODUCED_WATER_HEATING
-    ),
+    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
     create_energy_entity_description(
         "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
@@ -508,6 +506,7 @@ async def async_setup_entry(hass, entry, async_add_devices):
 
     async_add_devices(entities)
 
+
 class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     """stiebel_eltron_isg Sensor class."""
 
@@ -535,6 +534,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.data.get(self.entity_description.key) is not None
+
 
 class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
     """stiebel_eltron_isg Energy Sensor class."""
@@ -572,5 +572,3 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
             return dt_util.utcnow()
         else:
             return None
-
-

@@ -1,4 +1,5 @@
 """Adds config flow for Stiebel Eltron ISG."""
+
 import ipaddress
 import re
 from homeassistant import config_entries

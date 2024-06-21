@@ -1,4 +1,5 @@
 """Switch platform for stiebel_eltron_isg."""
+
 import logging
 from typing import Any
 
@@ -9,7 +10,13 @@ from homeassistant.components.switch import (
     SwitchDeviceClass,
 )
 
-from .const import DOMAIN, SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2, CIRCULATION_PUMP
+from .const import (
+    DOMAIN,
+    SG_READY_ACTIVE,
+    SG_READY_INPUT_1,
+    SG_READY_INPUT_2,
+    CIRCULATION_PUMP,
+)
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)

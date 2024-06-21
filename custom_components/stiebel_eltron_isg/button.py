@@ -1,4 +1,5 @@
 """Button platform for stiebel_eltron_isg."""
+
 import logging
 
 from collections.abc import Callable, Coroutine

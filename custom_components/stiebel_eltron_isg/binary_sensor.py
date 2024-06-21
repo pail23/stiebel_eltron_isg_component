@@ -1,6 +1,5 @@
 """Binary sensor platform for stiebel_eltron_isg."""
 
-
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,

@@ -1,4 +1,5 @@
 """Select platform for stiebel_eltron_isg."""
+
 import logging
 
 
