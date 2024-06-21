@@ -17,6 +17,8 @@ venv
 .vscode
 coverage.xml
 .ruff_cache
+.mypy_cache
+.pytest_cache
 
 # Home Assistant configuration
 
