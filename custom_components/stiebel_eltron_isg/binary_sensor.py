@@ -4,73 +4,71 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .entity import StiebelEltronISGEntity
 from .const import (
-    DOMAIN,
-    IS_HEATING,
-    IS_COOLING,
-    IS_HEATING_WATER,
-    IS_SUMMER_MODE,
-    PUMP_ON_HK1,
-    PUMP_ON_HK2,
-    COMPRESSOR_ON,
-    SWITCHING_PROGRAM_ENABLED,
-    ELECTRIC_REHEATING,
-    SERVICE,
-    POWER_OFF,
-    FILTER,
-    VENTILATION,
-    EVAPORATOR_DEFROST,
-    FILTER_EXTRACT_AIR,
-    FILTER_VENTILATION_AIR,
-    HEAT_UP_PROGRAM,
-    NHZ_STAGES_RUNNING,
-    ERROR_STATUS,
-    HEATING_CIRCUIT_1_PUMP,
-    HEATING_CIRCUIT_2_PUMP,
-    HEATING_CIRCUIT_3_PUMP,
-    HEATING_CIRCUIT_4_PUMP,
-    HEATING_CIRCUIT_5_PUMP,
     BUFFER_1_CHARGING_PUMP,
     BUFFER_2_CHARGING_PUMP,
     BUFFER_3_CHARGING_PUMP,
     BUFFER_4_CHARGING_PUMP,
     BUFFER_5_CHARGING_PUMP,
     BUFFER_6_CHARGING_PUMP,
+    COMPRESSOR_ON,
+    COOLING_MODE,
     DHW_CHARGING_PUMP,
-    SOURCE_PUMP,
     DIFF_CONTROLLER_1_PUMP,
     DIFF_CONTROLLER_2_PUMP,
-    POOL_PRIMARY_PUMP,
-    POOL_SECONDARY_PUMP,
+    DOMAIN,
+    ELECTRIC_REHEATING,
+    EMERGENCY_HEATING_1,
+    EMERGENCY_HEATING_1_2,
+    EMERGENCY_HEATING_2,
+    ERROR_STATUS,
+    EVAPORATOR_DEFROST,
+    FILTER,
+    FILTER_EXTRACT_AIR,
+    FILTER_VENTILATION_AIR,
     HEAT_PUMP_1_ON,
     HEAT_PUMP_2_ON,
     HEAT_PUMP_3_ON,
     HEAT_PUMP_4_ON,
     HEAT_PUMP_5_ON,
     HEAT_PUMP_6_ON,
-    SECOND_GENERATOR_DHW,
-    SECOND_GENERATOR_HEATING,
-    COOLING_MODE,
-    MIXER_OPEN_HTG_CIRCUIT_2,
-    MIXER_OPEN_HTG_CIRCUIT_3,
-    MIXER_OPEN_HTG_CIRCUIT_4,
-    MIXER_OPEN_HTG_CIRCUIT_5,
+    HEAT_UP_PROGRAM,
+    HEATING_CIRCUIT_1_PUMP,
+    HEATING_CIRCUIT_2_PUMP,
+    HEATING_CIRCUIT_3_PUMP,
+    HEATING_CIRCUIT_4_PUMP,
+    HEATING_CIRCUIT_5_PUMP,
+    IS_COOLING,
+    IS_HEATING,
+    IS_HEATING_WATER,
+    IS_SUMMER_MODE,
     MIXER_CLOSE_HTG_CIRCUIT_2,
     MIXER_CLOSE_HTG_CIRCUIT_3,
     MIXER_CLOSE_HTG_CIRCUIT_4,
     MIXER_CLOSE_HTG_CIRCUIT_5,
-    EMERGENCY_HEATING_1,
-    EMERGENCY_HEATING_2,
-    EMERGENCY_HEATING_1_2,
+    MIXER_OPEN_HTG_CIRCUIT_2,
+    MIXER_OPEN_HTG_CIRCUIT_3,
+    MIXER_OPEN_HTG_CIRCUIT_4,
+    MIXER_OPEN_HTG_CIRCUIT_5,
+    NHZ_STAGES_RUNNING,
+    POOL_PRIMARY_PUMP,
+    POOL_SECONDARY_PUMP,
+    POWER_OFF,
+    PUMP_ON_HK1,
+    PUMP_ON_HK2,
+    SECOND_GENERATOR_DHW,
+    SECOND_GENERATOR_HEATING,
+    SERVICE,
+    SOURCE_PUMP,
+    SWITCHING_PROGRAM_ENABLED,
+    VENTILATION,
 )
-
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from .data import StiebelEltronISGIntegrationConfigEntry
+from .entity import StiebelEltronISGEntity
 
 BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
@@ -414,7 +412,7 @@ BINARY_SENSOR_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):

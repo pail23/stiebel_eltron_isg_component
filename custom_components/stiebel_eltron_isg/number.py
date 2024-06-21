@@ -2,36 +2,36 @@
 
 import logging
 
-from homeassistant.const import (
-    UnitOfTemperature,
-)
-
 from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from .data import StiebelEltronISGIntegrationConfigEntry
+from homeassistant.const import (
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
 from .const import (
-    DOMAIN,
-    COMFORT_TEMPERATURE_TARGET_HK1,
-    ECO_TEMPERATURE_TARGET_HK1,
-    HEATING_CURVE_RISE_HK1,
-    COMFORT_TEMPERATURE_TARGET_HK2,
-    ECO_TEMPERATURE_TARGET_HK2,
-    HEATING_CURVE_RISE_HK2,
-    DUALMODE_TEMPERATURE_HZG,
-    COMFORT_WATER_TEMPERATURE_TARGET,
-    ECO_WATER_TEMPERATURE_TARGET,
-    DUALMODE_TEMPERATURE_WW,
-    AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     AREA_COOLING_TARGET_FLOW_TEMPERATURE,
-    FAN_COOLING_TARGET_ROOM_TEMPERATURE,
+    AREA_COOLING_TARGET_ROOM_TEMPERATURE,
+    COMFORT_TEMPERATURE_TARGET_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_WATER_TEMPERATURE_TARGET,
+    DOMAIN,
+    DUALMODE_TEMPERATURE_HZG,
+    DUALMODE_TEMPERATURE_WW,
+    ECO_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK2,
+    ECO_WATER_TEMPERATURE_TARGET,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
+    FAN_COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
+    HEATING_CURVE_RISE_HK1,
+    HEATING_CURVE_RISE_HK2,
 )
+from .data import StiebelEltronISGIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -206,7 +206,7 @@ NUMBER_TYPES_LWZ = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):
@@ -220,7 +220,9 @@ async def async_setup_entry(
     if coordinator.is_wpm:
         for description in NUMBER_TYPES_WPM:
             select_entity = StiebelEltronISGNumberEntity(
-                coordinator, entry, description
+                coordinator,
+                entry,
+                description,
             )
             entities.append(select_entity)
     # else:

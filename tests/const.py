@@ -1,6 +1,6 @@
 """Constants for stiebel_eltron_isg tests."""
 
-from homeassistant.const import CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL, CONF_NAME
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 
 # Mock config data to be used across multiple tests
 MOCK_CONFIG = {

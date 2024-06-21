@@ -1,8 +1,8 @@
 """Test stiebel_eltron_isg setup process."""
 
-from homeassistant.core import HomeAssistant
-from homeassistant.config_entries import ConfigEntryState
 import pytest
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
@@ -18,9 +18,11 @@ from .const import MOCK_CONFIG
 # Home Assistant using the pytest_homeassistant_custom_component plugin.
 # Assertions allow you to verify that the return value of whatever is on the left
 # side of the assertion matches with the right side.
-@pytest.mark.asyncio
+@pytest.mark.asyncio()
 async def test_setup_unload_and_reload_entry(
-    hass: HomeAssistant, bypass_get_data, get_model_wpm
+    hass: HomeAssistant,
+    bypass_get_data,
+    get_model_wpm,
 ):
     """Test entry setup and unload."""
     # Create a mock entry so we don't have to go through config flow
@@ -35,7 +37,8 @@ async def test_setup_unload_and_reload_entry(
     assert config_entry.state is ConfigEntryState.LOADED
 
     assert isinstance(
-        config_entry.runtime_data.coordinator, StiebelEltronModbusWPMDataCoordinator
+        config_entry.runtime_data.coordinator,
+        StiebelEltronModbusWPMDataCoordinator,
     )
 
     # Unload the entry and verify that the data has been removed
@@ -44,8 +47,8 @@ async def test_setup_unload_and_reload_entry(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio
-async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm):
+@pytest.mark.asyncio()
+async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     """Test creating a data coordinator for wpm models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_wpm")
     config_entry.add_to_hass(hass)
@@ -63,8 +66,8 @@ async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm):
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio
-async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz):
+@pytest.mark.asyncio()
+async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
     config_entry.add_to_hass(hass)

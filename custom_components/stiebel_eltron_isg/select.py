@@ -2,7 +2,6 @@
 
 import logging
 
-
 from homeassistant.components.select import (
     SelectEntity,
     SelectEntityDescription,
@@ -13,6 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
 )
+
 from .const import DOMAIN, OPERATION_MODE
 from .entity import StiebelEltronISGEntity
 
@@ -44,12 +44,12 @@ SELECT_TYPES = [
         OPERATION_MODE,
         has_entity_name=True,
         name="Operation Mode",
-    )
+    ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:

@@ -6,155 +6,154 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
+from pymodbus.constants import Endian
+from pymodbus.payload import BinaryPayloadDecoder
+
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
     get_isg_scaled_value,
 )
 
-
-from pymodbus.constants import Endian
-from pymodbus.payload import BinaryPayloadDecoder
-
 from .const import (
-    ACTUAL_TEMPERATURE,
-    CONSUMED_HEATING,
-    CONSUMED_WATER_HEATING,
-    PREVIOUS_CONSUMED_HEATING_TOTAL,
-    PREVIOUS_CONSUMED_WATER_HEATING_TOTAL,
-    PREVIOUS_PRODUCED_HEATING_TOTAL,
-    PREVIOUS_PRODUCED_WATER_HEATING_TOTAL,
-    PRODUCED_HEATING,
-    PRODUCED_WATER_HEATING,
-    TARGET_TEMPERATURE,
-    ACTUAL_TEMPERATURE_FEK,
-    TARGET_TEMPERATURE_FEK,
-    ACTUAL_HUMIDITY,
-    DEWPOINT_TEMPERATURE,
-    OUTDOOR_TEMPERATURE,
-    ACTUAL_TEMPERATURE_HK1,
-    TARGET_TEMPERATURE_HK1,
-    ACTUAL_TEMPERATURE_HK2,
-    TARGET_TEMPERATURE_HK2,
-    ACTUAL_TEMPERATURE_HK3,
-    TARGET_TEMPERATURE_HK3,
-    FLOW_TEMPERATURE,
-    FLOW_TEMPERATURE_NHZ,
-    RETURN_TEMPERATURE,
-    ACTUAL_TEMPERATURE_BUFFER,
-    TARGET_TEMPERATURE_BUFFER,
-    HEATER_PRESSURE,
-    VOLUME_STREAM,
-    ACTUAL_TEMPERATURE_WATER,
-    TARGET_TEMPERATURE_WATER,
-    SOURCE_TEMPERATURE,
-    SOURCE_PRESSURE,
-    HOT_GAS_TEMPERATURE,
-    HIGH_PRESSURE,
-    LOW_PRESSURE,
-    RETURN_TEMPERATURE_WP1,
-    FLOW_TEMPERATURE_WP1,
-    HOT_GAS_TEMPERATURE_WP1,
-    LOW_PRESSURE_WP1,
-    HIGH_PRESSURE_WP1,
-    VOLUME_STREAM_WP1,
-    RETURN_TEMPERATURE_WP2,
-    FLOW_TEMPERATURE_WP2,
-    HOT_GAS_TEMPERATURE_WP2,
-    LOW_PRESSURE_WP2,
-    HIGH_PRESSURE_WP2,
-    VOLUME_STREAM_WP2,
-    ACTUAL_ROOM_TEMPERATURE_HK1,
-    TARGET_ROOM_TEMPERATURE_HK1,
-    ACTUAL_HUMIDITY_HK1,
-    DEWPOINT_TEMPERATURE_HK1,
-    ACTUAL_ROOM_TEMPERATURE_HK2,
-    TARGET_ROOM_TEMPERATURE_HK2,
-    ACTUAL_HUMIDITY_HK2,
-    DEWPOINT_TEMPERATURE_HK2,
-    ACTUAL_ROOM_TEMPERATURE_HK3,
-    TARGET_ROOM_TEMPERATURE_HK3,
-    ACTUAL_HUMIDITY_HK3,
-    DEWPOINT_TEMPERATURE_HK3,
-    PRODUCED_HEATING_TODAY,
-    PRODUCED_HEATING_TOTAL,
-    PRODUCED_WATER_HEATING_TODAY,
-    PRODUCED_WATER_HEATING_TOTAL,
-    CONSUMED_HEATING_TODAY,
-    CONSUMED_HEATING_TOTAL,
-    CONSUMED_WATER_HEATING_TODAY,
-    CONSUMED_WATER_HEATING_TOTAL,
-    IS_HEATING,
-    IS_HEATING_WATER,
-    IS_SUMMER_MODE,
-    IS_COOLING,
-    PUMP_ON_HK1,
-    PUMP_ON_HK2,
-    COMPRESSOR_ON,
-    CIRCULATION_PUMP,
-    EVAPORATOR_DEFROST,
-    HEAT_UP_PROGRAM,
-    NHZ_STAGES_RUNNING,
-    SG_READY_ACTIVE,
-    SG_READY_INPUT_1,
-    SG_READY_INPUT_2,
-    OPERATION_MODE,
-    COMFORT_TEMPERATURE_TARGET_HK1,
-    ECO_TEMPERATURE_TARGET_HK1,
-    HEATING_CURVE_RISE_HK1,
-    COMFORT_TEMPERATURE_TARGET_HK2,
-    ECO_TEMPERATURE_TARGET_HK2,
-    HEATING_CURVE_RISE_HK2,
-    DUALMODE_TEMPERATURE_HZG,
-    COMFORT_WATER_TEMPERATURE_TARGET,
-    ECO_WATER_TEMPERATURE_TARGET,
-    DUALMODE_TEMPERATURE_WW,
-    AREA_COOLING_TARGET_ROOM_TEMPERATURE,
-    AREA_COOLING_TARGET_FLOW_TEMPERATURE,
-    FAN_COOLING_TARGET_ROOM_TEMPERATURE,
-    FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     ACTIVE_ERROR,
-    ERROR_STATUS,
+    ACTUAL_HUMIDITY,
+    ACTUAL_HUMIDITY_HK1,
+    ACTUAL_HUMIDITY_HK2,
+    ACTUAL_HUMIDITY_HK3,
+    ACTUAL_ROOM_TEMPERATURE_HK1,
+    ACTUAL_ROOM_TEMPERATURE_HK2,
+    ACTUAL_ROOM_TEMPERATURE_HK3,
+    ACTUAL_TEMPERATURE,
+    ACTUAL_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_COOLING_FANCOIL,
-    TARGET_TEMPERATURE_COOLING_FANCOIL,
     ACTUAL_TEMPERATURE_COOLING_SURFACE,
-    TARGET_TEMPERATURE_COOLING_SURFACE,
-    HEATING_CIRCUIT_1_PUMP,
-    HEATING_CIRCUIT_2_PUMP,
-    HEATING_CIRCUIT_3_PUMP,
-    HEATING_CIRCUIT_4_PUMP,
-    HEATING_CIRCUIT_5_PUMP,
+    ACTUAL_TEMPERATURE_FEK,
+    ACTUAL_TEMPERATURE_HK1,
+    ACTUAL_TEMPERATURE_HK2,
+    ACTUAL_TEMPERATURE_HK3,
+    ACTUAL_TEMPERATURE_WATER,
+    AREA_COOLING_TARGET_FLOW_TEMPERATURE,
+    AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     BUFFER_1_CHARGING_PUMP,
     BUFFER_2_CHARGING_PUMP,
     BUFFER_3_CHARGING_PUMP,
     BUFFER_4_CHARGING_PUMP,
     BUFFER_5_CHARGING_PUMP,
     BUFFER_6_CHARGING_PUMP,
+    CIRCULATION_PUMP,
+    COMFORT_TEMPERATURE_TARGET_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_WATER_TEMPERATURE_TARGET,
+    COMPRESSOR_ON,
+    CONSUMED_HEATING,
+    CONSUMED_HEATING_TODAY,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_TODAY,
+    CONSUMED_WATER_HEATING_TOTAL,
+    COOLING_MODE,
+    DEWPOINT_TEMPERATURE,
+    DEWPOINT_TEMPERATURE_HK1,
+    DEWPOINT_TEMPERATURE_HK2,
+    DEWPOINT_TEMPERATURE_HK3,
     DHW_CHARGING_PUMP,
-    SOURCE_PUMP,
     DIFF_CONTROLLER_1_PUMP,
     DIFF_CONTROLLER_2_PUMP,
-    POOL_PRIMARY_PUMP,
-    POOL_SECONDARY_PUMP,
+    DUALMODE_TEMPERATURE_HZG,
+    DUALMODE_TEMPERATURE_WW,
+    ECO_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK2,
+    ECO_WATER_TEMPERATURE_TARGET,
+    EMERGENCY_HEATING_1,
+    EMERGENCY_HEATING_1_2,
+    EMERGENCY_HEATING_2,
+    ERROR_STATUS,
+    EVAPORATOR_DEFROST,
+    FAN_COOLING_TARGET_FLOW_TEMPERATURE,
+    FAN_COOLING_TARGET_ROOM_TEMPERATURE,
+    FLOW_TEMPERATURE,
+    FLOW_TEMPERATURE_NHZ,
+    FLOW_TEMPERATURE_WP1,
+    FLOW_TEMPERATURE_WP2,
     HEAT_PUMP_1_ON,
     HEAT_PUMP_2_ON,
     HEAT_PUMP_3_ON,
     HEAT_PUMP_4_ON,
     HEAT_PUMP_5_ON,
     HEAT_PUMP_6_ON,
-    SECOND_GENERATOR_DHW,
-    SECOND_GENERATOR_HEATING,
-    COOLING_MODE,
-    MIXER_OPEN_HTG_CIRCUIT_2,
-    MIXER_OPEN_HTG_CIRCUIT_3,
-    MIXER_OPEN_HTG_CIRCUIT_4,
-    MIXER_OPEN_HTG_CIRCUIT_5,
+    HEAT_UP_PROGRAM,
+    HEATER_PRESSURE,
+    HEATING_CIRCUIT_1_PUMP,
+    HEATING_CIRCUIT_2_PUMP,
+    HEATING_CIRCUIT_3_PUMP,
+    HEATING_CIRCUIT_4_PUMP,
+    HEATING_CIRCUIT_5_PUMP,
+    HEATING_CURVE_RISE_HK1,
+    HEATING_CURVE_RISE_HK2,
+    HIGH_PRESSURE,
+    HIGH_PRESSURE_WP1,
+    HIGH_PRESSURE_WP2,
+    HOT_GAS_TEMPERATURE,
+    HOT_GAS_TEMPERATURE_WP1,
+    HOT_GAS_TEMPERATURE_WP2,
+    IS_COOLING,
+    IS_HEATING,
+    IS_HEATING_WATER,
+    IS_SUMMER_MODE,
+    LOW_PRESSURE,
+    LOW_PRESSURE_WP1,
+    LOW_PRESSURE_WP2,
     MIXER_CLOSE_HTG_CIRCUIT_2,
     MIXER_CLOSE_HTG_CIRCUIT_3,
     MIXER_CLOSE_HTG_CIRCUIT_4,
     MIXER_CLOSE_HTG_CIRCUIT_5,
-    EMERGENCY_HEATING_1,
-    EMERGENCY_HEATING_2,
-    EMERGENCY_HEATING_1_2,
+    MIXER_OPEN_HTG_CIRCUIT_2,
+    MIXER_OPEN_HTG_CIRCUIT_3,
+    MIXER_OPEN_HTG_CIRCUIT_4,
+    MIXER_OPEN_HTG_CIRCUIT_5,
+    NHZ_STAGES_RUNNING,
+    OPERATION_MODE,
+    OUTDOOR_TEMPERATURE,
+    POOL_PRIMARY_PUMP,
+    POOL_SECONDARY_PUMP,
+    PREVIOUS_CONSUMED_HEATING_TOTAL,
+    PREVIOUS_CONSUMED_WATER_HEATING_TOTAL,
+    PREVIOUS_PRODUCED_HEATING_TOTAL,
+    PREVIOUS_PRODUCED_WATER_HEATING_TOTAL,
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TODAY,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TODAY,
+    PRODUCED_WATER_HEATING_TOTAL,
+    PUMP_ON_HK1,
+    PUMP_ON_HK2,
+    RETURN_TEMPERATURE,
+    RETURN_TEMPERATURE_WP1,
+    RETURN_TEMPERATURE_WP2,
+    SECOND_GENERATOR_DHW,
+    SECOND_GENERATOR_HEATING,
+    SG_READY_ACTIVE,
+    SG_READY_INPUT_1,
+    SG_READY_INPUT_2,
+    SOURCE_PRESSURE,
+    SOURCE_PUMP,
+    SOURCE_TEMPERATURE,
+    TARGET_ROOM_TEMPERATURE_HK1,
+    TARGET_ROOM_TEMPERATURE_HK2,
+    TARGET_ROOM_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE,
+    TARGET_TEMPERATURE_BUFFER,
+    TARGET_TEMPERATURE_COOLING_FANCOIL,
+    TARGET_TEMPERATURE_COOLING_SURFACE,
+    TARGET_TEMPERATURE_FEK,
+    TARGET_TEMPERATURE_HK1,
+    TARGET_TEMPERATURE_HK2,
+    TARGET_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE_WATER,
+    VOLUME_STREAM,
+    VOLUME_STREAM_WP1,
+    VOLUME_STREAM_WP2,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -165,14 +164,13 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     async def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
-        result = {
+        return {
             **await self.read_modbus_energy(),
             **await self.read_modbus_system_state(),
             **await self.read_modbus_system_values(),
             **await self.read_modbus_system_paramter(),
             **await self.read_modbus_sg_ready(),
         }
-        return result
 
     async def read_modbus_system_state(self) -> dict:  # noqa: C901
         """Read the system state values from the ISG."""
@@ -180,7 +178,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_input_registers(slave=1, address=2500, count=47)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             state = decoder.decode_16bit_uint()
             result[PUMP_ON_HK1] = (state & (1 << 0)) != 0
@@ -369,122 +368,126 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_input_registers(slave=1, address=500, count=111)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             # 501
             result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 502
             result[TARGET_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 503
             result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 504
             result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 505
             result[ACTUAL_HUMIDITY] = get_isg_scaled_value(decoder.decode_16bit_int())
             # 506
             result[DEWPOINT_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 507
             result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 508
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 509
             # hk1_target = get_isg_scaled_value(decoder.decode_16bit_int())
             decoder.skip_bytes(2)
             # 510
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 511
             result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 512
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 513
             result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
             # 514
             result[FLOW_TEMPERATURE_NHZ] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 515
             decoder.skip_bytes(2)
             # 516
             result[RETURN_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 517
             decoder.skip_bytes(2)
             # 518
             result[ACTUAL_TEMPERATURE_BUFFER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 519
             result[TARGET_TEMPERATURE_BUFFER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 520
             result[HEATER_PRESSURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 521
             result[VOLUME_STREAM] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 522 domestic hot water
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 523 domestic hot water
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 524 Cooling Fancoil
             result[ACTUAL_TEMPERATURE_COOLING_FANCOIL] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 525 Cooling Fancoil
             result[TARGET_TEMPERATURE_COOLING_FANCOIL] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 526 Cooling Surface
             result[ACTUAL_TEMPERATURE_COOLING_SURFACE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 527 Cooling Surface
             result[TARGET_TEMPERATURE_COOLING_SURFACE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 528-535
             decoder.skip_bytes(16)
             # 536
             result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 537
             decoder.skip_bytes(2)
             # 538
             result[SOURCE_PRESSURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 539
             result[HOT_GAS_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 540
             result[HIGH_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
@@ -492,105 +495,111 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[LOW_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
             # 542
             result[RETURN_TEMPERATURE_WP1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 543
             result[FLOW_TEMPERATURE_WP1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 544
             result[HOT_GAS_TEMPERATURE_WP1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 545
             result[LOW_PRESSURE_WP1] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 546
             decoder.skip_bytes(2)
             # 547
             result[HIGH_PRESSURE_WP1] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 548
             result[VOLUME_STREAM_WP1] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 10
+                decoder.decode_16bit_int(),
+                10,
             )
             # 549
             result[RETURN_TEMPERATURE_WP2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 550
             result[FLOW_TEMPERATURE_WP2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 551
             result[HOT_GAS_TEMPERATURE_WP2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 552
             result[LOW_PRESSURE_WP2] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 553
             decoder.skip_bytes(2)
             # 554
             result[HIGH_PRESSURE_WP2] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 555
             result[VOLUME_STREAM_WP2] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 10
+                decoder.decode_16bit_int(),
+                10,
             )
             # 546-583
             decoder.skip_bytes(56)
             # 584
             result[ACTUAL_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 585
             result[TARGET_ROOM_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 586
             result[ACTUAL_HUMIDITY_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 587
             result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 588
             result[ACTUAL_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 589
             result[TARGET_ROOM_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 590
             result[ACTUAL_HUMIDITY_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 591
             result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 592
             result[ACTUAL_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 593
             result[TARGET_ROOM_TEMPERATURE_HK3] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 594
             result[ACTUAL_HUMIDITY_HK3] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 595
             result[DEWPOINT_TEMPERATURE_HK3] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 596-599 TEMPERATURE_HK4
             # 600-603 TEMPERATURE_HK5
@@ -598,11 +607,11 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder.skip_bytes(26)
             # 609
             result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 610
             result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result["system_values"] = list(inverter_data.registers)
         return result
@@ -611,77 +620,84 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         """Read the system paramters from the ISG."""
         result = {}
         inverter_data = await self.read_holding_registers(
-            slave=1, address=1500, count=19
+            slave=1,
+            address=1500,
+            count=19,
         )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             # 1501
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
             # 1502
             result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1503
             result[ECO_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1504
             result[HEATING_CURVE_RISE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 1505
             result[COMFORT_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1506
             result[ECO_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1507
             result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             # 1508
             decoder.skip_bytes(2)
             # 1509
             result[DUALMODE_TEMPERATURE_HZG] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 10
+                decoder.decode_16bit_int(),
+                10,
             )
             # 1510
             result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1511
             result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1512
             decoder.skip_bytes(2)
             # 1513
             result[DUALMODE_TEMPERATURE_WW] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 10
+                decoder.decode_16bit_int(),
+                10,
             )
             # 1514
             result[AREA_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1515
             decoder.skip_bytes(2)
             # 1516
             result[AREA_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1517
             result[FAN_COOLING_TARGET_FLOW_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 1518
             decoder.skip_bytes(2)
             # 1519
             result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result["system_paramaters"] = list(inverter_data.registers)
         return result
@@ -690,12 +706,15 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         """Read the energy consumption related values from the ISG."""
         result = {}
         inverter_data = await self.read_input_registers(
-            slave=1, address=3500, count=22
+            slave=1,
+            address=3500,
+            count=22,
         )  # count=180
         _LOGGER.debug(f"Energy Data: {inverter_data.registers}")
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             produced_heating_today = decoder.decode_16bit_uint()
             produced_heating_total_low = decoder.decode_16bit_uint()

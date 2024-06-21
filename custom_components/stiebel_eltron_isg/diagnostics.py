@@ -12,18 +12,18 @@ from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
 )
 
-
 CONFIG_FIELDS_TO_REDACT = []
 DATA_FIELDS_TO_REDACT = []
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+    hass: HomeAssistant,
+    entry: StiebelEltronISGIntegrationConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data.coordinator
 
-    diagnostics_data = {
+    return {
         "config_entry": async_redact_data(entry.data, CONFIG_FIELDS_TO_REDACT),
         "options": async_redact_data(entry.options, []),
         "data": [
@@ -31,8 +31,6 @@ async def async_get_config_entry_diagnostics(
             {"model": coordinator.model},
         ],
     }
-
-    return diagnostics_data
 
 
 async def async_get_device_diagnostics(

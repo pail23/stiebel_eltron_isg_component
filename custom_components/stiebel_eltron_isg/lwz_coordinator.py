@@ -6,94 +6,91 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
+from pymodbus.constants import Endian
+from pymodbus.payload import BinaryPayloadDecoder
+
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
     get_isg_scaled_value,
 )
 
-
-from pymodbus.constants import Endian
-from pymodbus.payload import BinaryPayloadDecoder
-
-
 from .const import (
+    ACTUAL_HUMIDITY,
     ACTUAL_HUMIDITY_HK1,
     ACTUAL_HUMIDITY_HK2,
     ACTUAL_ROOM_TEMPERATURE_HK1,
     ACTUAL_ROOM_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE,
-    CONSUMED_HEATING,
-    CONSUMED_WATER_HEATING,
-    PRODUCED_HEATING,
-    PRODUCED_WATER_HEATING,
-    TARGET_ROOM_TEMPERATURE_HK1,
-    TARGET_ROOM_TEMPERATURE_HK2,
-    TARGET_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
-    TARGET_TEMPERATURE_FEK,
-    ACTUAL_HUMIDITY,
-    OUTDOOR_TEMPERATURE,
     ACTUAL_TEMPERATURE_HK1,
-    TARGET_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
-    TARGET_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_WATER,
-    TARGET_TEMPERATURE_WATER,
-    HEATER_PRESSURE,
-    VOLUME_STREAM,
-    FLOW_TEMPERATURE,
-    RETURN_TEMPERATURE,
-    PRODUCED_HEATING_TODAY,
-    PRODUCED_HEATING_TOTAL,
-    PRODUCED_WATER_HEATING_TODAY,
-    PRODUCED_WATER_HEATING_TOTAL,
-    CONSUMED_HEATING_TODAY,
-    CONSUMED_HEATING_TOTAL,
-    CONSUMED_WATER_HEATING_TODAY,
-    CONSUMED_WATER_HEATING_TOTAL,
-    COMPRESSOR_STARTS,
+    COMFORT_TEMPERATURE_TARGET_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_WATER_TEMPERATURE_TARGET,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_ON,
+    COMPRESSOR_STARTS,
+    CONSUMED_HEATING,
+    CONSUMED_HEATING_TODAY,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_TODAY,
+    CONSUMED_WATER_HEATING_TOTAL,
+    ECO_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK2,
+    ECO_WATER_TEMPERATURE_TARGET,
+    ELECTRIC_REHEATING,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
+    ERROR_STATUS,
+    EVAPORATOR_DEFROST,
+    EXTRACT_AIR_ACTUAL_FAN_SPEED,
+    EXTRACT_AIR_HUMIDITY,
+    EXTRACT_AIR_TARGET_FLOW_RATE,
+    FAN_LEVEL_DAY,
+    FAN_LEVEL_NIGHT,
+    FILTER,
+    FILTER_EXTRACT_AIR,
+    FILTER_VENTILATION_AIR,
+    FLOW_TEMPERATURE,
+    HEAT_UP_PROGRAM,
+    HEATER_PRESSURE,
+    HEATING_CURVE_RISE_HK1,
+    HEATING_CURVE_RISE_HK2,
+    IS_COOLING,
     IS_HEATING,
     IS_HEATING_WATER,
     IS_SUMMER_MODE,
-    IS_COOLING,
-    PUMP_ON_HK1,
-    COMPRESSOR_ON,
-    SWITCHING_PROGRAM_ENABLED,
-    ELECTRIC_REHEATING,
-    SERVICE,
+    OPERATION_MODE,
+    OUTDOOR_TEMPERATURE,
     POWER_OFF,
-    FILTER,
-    VENTILATION,
-    EVAPORATOR_DEFROST,
-    FILTER_EXTRACT_AIR,
-    FILTER_VENTILATION_AIR,
-    HEAT_UP_PROGRAM,
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TODAY,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TODAY,
+    PRODUCED_WATER_HEATING_TOTAL,
+    PUMP_ON_HK1,
+    RETURN_TEMPERATURE,
+    SERVICE,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
-    OPERATION_MODE,
-    COMFORT_TEMPERATURE_TARGET_HK1,
-    ECO_TEMPERATURE_TARGET_HK1,
-    HEATING_CURVE_RISE_HK1,
-    COMFORT_TEMPERATURE_TARGET_HK2,
-    ECO_TEMPERATURE_TARGET_HK2,
-    HEATING_CURVE_RISE_HK2,
-    COMFORT_WATER_TEMPERATURE_TARGET,
-    ECO_WATER_TEMPERATURE_TARGET,
-    FAN_LEVEL_DAY,
-    FAN_LEVEL_NIGHT,
+    SWITCHING_PROGRAM_ENABLED,
+    TARGET_ROOM_TEMPERATURE_HK1,
+    TARGET_ROOM_TEMPERATURE_HK2,
+    TARGET_TEMPERATURE,
+    TARGET_TEMPERATURE_FEK,
+    TARGET_TEMPERATURE_HK1,
+    TARGET_TEMPERATURE_HK2,
+    TARGET_TEMPERATURE_WATER,
+    VENTILATION,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
-    EXTRACT_AIR_ACTUAL_FAN_SPEED,
-    EXTRACT_AIR_TARGET_FLOW_RATE,
-    EXTRACT_AIR_HUMIDITY,
-    ERROR_STATUS,
+    VOLUME_STREAM,
 )
-
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -103,14 +100,13 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     async def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
-        result = {
+        return {
             **await self.read_modbus_energy(),
             **await self.read_modbus_system_state(),
             **await self.read_modbus_system_values(),
             **await self.read_modbus_system_paramter(),
             **await self.read_modbus_sg_ready(),
         }
-        return result
 
     async def read_modbus_system_state(self) -> dict:
         """Read the system state values from the ISG."""
@@ -118,7 +114,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_input_registers(slave=1, address=2000, count=5)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             state = decoder.decode_16bit_uint()
             result[SWITCHING_PROGRAM_ENABLED] = (state & 1) != 0
@@ -151,16 +148,17 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_input_registers(slave=1, address=0, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             # 1 actual room temperature for HC1
             result[ACTUAL_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[ACTUAL_ROOM_TEMPERATURE_HK1] = result[ACTUAL_TEMPERATURE]
             # 2 actual room setpoint for HC1
             result[TARGET_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[TARGET_ROOM_TEMPERATURE_HK1] = result[TARGET_TEMPERATURE]
             # 3 actual room humidity for HC1
@@ -168,43 +166,43 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[ACTUAL_HUMIDITY_HK1] = result[ACTUAL_HUMIDITY]
             # 4 actual room temperature for HC2 - Should not refer to FEK
             result[ACTUAL_TEMPERATURE_FEK] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[ACTUAL_ROOM_TEMPERATURE_HK2] = result[ACTUAL_TEMPERATURE_FEK]
             # 5 actual room setpoint for HC2 - Should not refer to FEK
             result[TARGET_TEMPERATURE_FEK] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[TARGET_ROOM_TEMPERATURE_HK2] = result[TARGET_TEMPERATURE_FEK]
             # 6 actual room humidity for HC2
             result[ACTUAL_HUMIDITY_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 7 outside temperature
             result[OUTDOOR_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 8
             result[ACTUAL_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 9
             result[TARGET_TEMPERATURE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 10
             result[ACTUAL_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 11
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 12
             result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
             # 13
             result[RETURN_TEMPERATURE] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 14
             result[HEATER_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
@@ -212,11 +210,11 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[VOLUME_STREAM] = get_isg_scaled_value(decoder.decode_16bit_int())
             # 16
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 17
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             # 18-19-20-21-22
             result[VENTILATION_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
@@ -243,40 +241,45 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         """Read the system paramters from the ISG."""
         result = {}
         inverter_data = await self.read_holding_registers(
-            slave=1, address=1000, count=25
+            slave=1,
+            address=1000,
+            count=25,
         )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             result[OPERATION_MODE] = decoder.decode_16bit_uint()
             result[COMFORT_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[ECO_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             decoder.skip_bytes(2)
             result[COMFORT_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[ECO_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             decoder.skip_bytes(2)
             result[HEATING_CURVE_RISE_HK1] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             decoder.skip_bytes(2)
             result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(
-                decoder.decode_16bit_int(), 100
+                decoder.decode_16bit_int(),
+                100,
             )
             decoder.skip_bytes(2)
             result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             result[ECO_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
-                decoder.decode_16bit_int()
+                decoder.decode_16bit_int(),
             )
             decoder.skip_bytes(8)
             result[FAN_LEVEL_DAY] = decoder.decode_16bit_uint()
@@ -290,15 +293,18 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_input_registers(slave=1, address=3000, count=32)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             produced_heating_today = self.assign_if_increased(
-                decoder.decode_16bit_uint(), PRODUCED_HEATING_TODAY
+                decoder.decode_16bit_uint(),
+                PRODUCED_HEATING_TODAY,
             )
             produced_heating_total_low = decoder.decode_16bit_uint()
             produced_heating_total_high = decoder.decode_16bit_uint()
             produced_water_today = self.assign_if_increased(
-                decoder.decode_16bit_uint(), PRODUCED_WATER_HEATING_TODAY
+                decoder.decode_16bit_uint(),
+                PRODUCED_WATER_HEATING_TODAY,
             )
             produced_water_total_low = decoder.decode_16bit_uint()
             produced_water_total_high = decoder.decode_16bit_uint()
@@ -324,12 +330,14 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
             decoder.skip_bytes(30)
             consumed_heating_today = self.assign_if_increased(
-                decoder.decode_16bit_uint(), CONSUMED_HEATING_TODAY
+                decoder.decode_16bit_uint(),
+                CONSUMED_HEATING_TODAY,
             )
             consumed_heating_total_low = decoder.decode_16bit_uint()
             consumed_heating_total_high = decoder.decode_16bit_uint()
             consumed_water_today = self.assign_if_increased(
-                decoder.decode_16bit_uint(), CONSUMED_WATER_HEATING_TODAY
+                decoder.decode_16bit_uint(),
+                CONSUMED_WATER_HEATING_TODAY,
             )
             consumed_water_total_low = decoder.decode_16bit_uint()
             consumed_water_total_high = decoder.decode_16bit_uint()

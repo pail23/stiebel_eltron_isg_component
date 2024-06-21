@@ -1,112 +1,112 @@
 """Sensor platform for stiebel_eltron_isg."""
 
+import datetime
 import logging
 
-
+import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import (
+    SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorDeviceClass,
     SensorStateClass,
 )
-import homeassistant.util.dt as dt_util
-from homeassistant.helpers.entity import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.const import (
     PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfPressure,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPressure,
+    UnitOfTemperature,
     UnitOfVolumeFlowRate,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
 )
 
 from .const import (
+    ACTIVE_ERROR,
+    ACTUAL_HUMIDITY,
     ACTUAL_HUMIDITY_HK1,
     ACTUAL_HUMIDITY_HK2,
     ACTUAL_HUMIDITY_HK3,
+    ACTUAL_ROOM_TEMPERATURE_HK1,
+    ACTUAL_ROOM_TEMPERATURE_HK2,
+    ACTUAL_ROOM_TEMPERATURE_HK3,
+    ACTUAL_TEMPERATURE,
+    ACTUAL_TEMPERATURE_BUFFER,
+    ACTUAL_TEMPERATURE_COOLING_FANCOIL,
+    ACTUAL_TEMPERATURE_COOLING_SURFACE,
+    ACTUAL_TEMPERATURE_FEK,
+    ACTUAL_TEMPERATURE_HK1,
+    ACTUAL_TEMPERATURE_HK2,
+    ACTUAL_TEMPERATURE_HK3,
+    ACTUAL_TEMPERATURE_WATER,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_STARTS,
     CONSUMED_HEATING,
+    CONSUMED_HEATING_TODAY,
+    CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_TODAY,
+    CONSUMED_WATER_HEATING_TOTAL,
+    DEWPOINT_TEMPERATURE,
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
     DEWPOINT_TEMPERATURE_HK3,
     DOMAIN,
-    ACTUAL_TEMPERATURE,
-    PRODUCED_HEATING,
-    PRODUCED_WATER_HEATING,
-    TARGET_TEMPERATURE,
-    ACTUAL_TEMPERATURE_FEK,
-    TARGET_TEMPERATURE_FEK,
-    ACTUAL_HUMIDITY,
-    DEWPOINT_TEMPERATURE,
-    OUTDOOR_TEMPERATURE,
-    ACTUAL_TEMPERATURE_HK1,
-    TARGET_TEMPERATURE_HK1,
-    ACTUAL_TEMPERATURE_HK2,
-    TARGET_TEMPERATURE_HK2,
-    ACTUAL_TEMPERATURE_HK3,
-    TARGET_TEMPERATURE_HK3,
-    FLOW_TEMPERATURE,
-    FLOW_TEMPERATURE_NHZ,
-    RETURN_TEMPERATURE,
-    ACTUAL_TEMPERATURE_BUFFER,
-    TARGET_TEMPERATURE_BUFFER,
-    ACTUAL_TEMPERATURE_WATER,
-    ACTUAL_ROOM_TEMPERATURE_HK1,
-    TARGET_ROOM_TEMPERATURE_HK1,
-    ACTUAL_ROOM_TEMPERATURE_HK2,
-    TARGET_ROOM_TEMPERATURE_HK2,
-    ACTUAL_ROOM_TEMPERATURE_HK3,
-    TARGET_ROOM_TEMPERATURE_HK3,
-    TARGET_TEMPERATURE_WATER,
-    SOURCE_TEMPERATURE,
-    SOURCE_PRESSURE,
-    HOT_GAS_TEMPERATURE,
-    HIGH_PRESSURE,
-    LOW_PRESSURE,
-    RETURN_TEMPERATURE_WP1,
-    FLOW_TEMPERATURE_WP1,
-    HOT_GAS_TEMPERATURE_WP1,
-    LOW_PRESSURE_WP1,
-    HIGH_PRESSURE_WP1,
-    VOLUME_STREAM_WP1,
-    RETURN_TEMPERATURE_WP2,
-    FLOW_TEMPERATURE_WP2,
-    HOT_GAS_TEMPERATURE_WP2,
-    LOW_PRESSURE_WP2,
-    HIGH_PRESSURE_WP2,
-    VOLUME_STREAM_WP2,
-    HEATER_PRESSURE,
-    VOLUME_STREAM,
-    SG_READY_STATE,
-    PRODUCED_HEATING_TODAY,
-    PRODUCED_HEATING_TOTAL,
-    PRODUCED_WATER_HEATING_TODAY,
-    PRODUCED_WATER_HEATING_TOTAL,
-    CONSUMED_HEATING_TODAY,
-    CONSUMED_HEATING_TOTAL,
-    CONSUMED_WATER_HEATING_TODAY,
-    CONSUMED_WATER_HEATING_TOTAL,
-    COMPRESSOR_STARTS,
-    COMPRESSOR_HEATING,
-    COMPRESSOR_HEATING_WATER,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
-    ACTIVE_ERROR,
+    EXTRACT_AIR_ACTUAL_FAN_SPEED,
+    EXTRACT_AIR_HUMIDITY,
+    EXTRACT_AIR_TARGET_FLOW_RATE,
+    FLOW_TEMPERATURE,
+    FLOW_TEMPERATURE_NHZ,
+    FLOW_TEMPERATURE_WP1,
+    FLOW_TEMPERATURE_WP2,
+    HEATER_PRESSURE,
+    HIGH_PRESSURE,
+    HIGH_PRESSURE_WP1,
+    HIGH_PRESSURE_WP2,
+    HOT_GAS_TEMPERATURE,
+    HOT_GAS_TEMPERATURE_WP1,
+    HOT_GAS_TEMPERATURE_WP2,
+    LOW_PRESSURE,
+    LOW_PRESSURE_WP1,
+    LOW_PRESSURE_WP2,
+    OUTDOOR_TEMPERATURE,
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TODAY,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TODAY,
+    PRODUCED_WATER_HEATING_TOTAL,
+    RETURN_TEMPERATURE,
+    RETURN_TEMPERATURE_WP1,
+    RETURN_TEMPERATURE_WP2,
+    SG_READY_STATE,
+    SOURCE_PRESSURE,
+    SOURCE_TEMPERATURE,
+    TARGET_ROOM_TEMPERATURE_HK1,
+    TARGET_ROOM_TEMPERATURE_HK2,
+    TARGET_ROOM_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE,
+    TARGET_TEMPERATURE_BUFFER,
+    TARGET_TEMPERATURE_COOLING_FANCOIL,
+    TARGET_TEMPERATURE_COOLING_SURFACE,
+    TARGET_TEMPERATURE_FEK,
+    TARGET_TEMPERATURE_HK1,
+    TARGET_TEMPERATURE_HK2,
+    TARGET_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE_WATER,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
-    EXTRACT_AIR_ACTUAL_FAN_SPEED,
-    EXTRACT_AIR_TARGET_FLOW_RATE,
-    EXTRACT_AIR_HUMIDITY,
-    ACTUAL_TEMPERATURE_COOLING_FANCOIL,
-    TARGET_TEMPERATURE_COOLING_FANCOIL,
-    ACTUAL_TEMPERATURE_COOLING_SURFACE,
-    TARGET_TEMPERATURE_COOLING_SURFACE,
+    VOLUME_STREAM,
+    VOLUME_STREAM_WP1,
+    VOLUME_STREAM_WP2,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -194,92 +194,118 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description("Actual Temperature", ACTUAL_TEMPERATURE),
     create_temperature_entity_description("Target Temperature", TARGET_TEMPERATURE),
     create_temperature_entity_description(
-        "Actual Temperature FEK", ACTUAL_TEMPERATURE_FEK
+        "Actual Temperature FEK",
+        ACTUAL_TEMPERATURE_FEK,
     ),
     create_temperature_entity_description(
-        "Target Temperature FEK", TARGET_TEMPERATURE_FEK
+        "Target Temperature FEK",
+        TARGET_TEMPERATURE_FEK,
     ),
     create_humidity_entity_description("Humidity", ACTUAL_HUMIDITY),
     create_humidity_entity_description("Humidity HK 1", ACTUAL_HUMIDITY_HK1),
     create_humidity_entity_description("Humidity HK 2", ACTUAL_HUMIDITY_HK2),
     create_humidity_entity_description("Humidity HK 3", ACTUAL_HUMIDITY_HK3),
     create_temperature_entity_description(
-        "Dew Point Temperature", DEWPOINT_TEMPERATURE
+        "Dew Point Temperature",
+        DEWPOINT_TEMPERATURE,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 1", DEWPOINT_TEMPERATURE_HK1
+        "Dew Point Temperature HK 1",
+        DEWPOINT_TEMPERATURE_HK1,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 2", DEWPOINT_TEMPERATURE_HK2
+        "Dew Point Temperature HK 2",
+        DEWPOINT_TEMPERATURE_HK2,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 3", DEWPOINT_TEMPERATURE_HK3
+        "Dew Point Temperature HK 3",
+        DEWPOINT_TEMPERATURE_HK3,
     ),
     create_temperature_entity_description("Outdoor Temperature", OUTDOOR_TEMPERATURE),
     create_temperature_entity_description(
-        "Actual Temperature HK 1", ACTUAL_TEMPERATURE_HK1
+        "Actual Temperature HK 1",
+        ACTUAL_TEMPERATURE_HK1,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 1", TARGET_TEMPERATURE_HK1
+        "Target Temperature HK 1",
+        TARGET_TEMPERATURE_HK1,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 2", ACTUAL_TEMPERATURE_HK2
+        "Actual Temperature HK 2",
+        ACTUAL_TEMPERATURE_HK2,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 2", TARGET_TEMPERATURE_HK2
+        "Target Temperature HK 2",
+        TARGET_TEMPERATURE_HK2,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 3", ACTUAL_TEMPERATURE_HK3
+        "Actual Temperature HK 3",
+        ACTUAL_TEMPERATURE_HK3,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 3", TARGET_TEMPERATURE_HK3
+        "Target Temperature HK 3",
+        TARGET_TEMPERATURE_HK3,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Cooling Fancoil", ACTUAL_TEMPERATURE_COOLING_FANCOIL
+        "Actual Temperature Cooling Fancoil",
+        ACTUAL_TEMPERATURE_COOLING_FANCOIL,
     ),
     create_temperature_entity_description(
-        "Target Temperature Cooling Fancoil", TARGET_TEMPERATURE_COOLING_FANCOIL
+        "Target Temperature Cooling Fancoil",
+        TARGET_TEMPERATURE_COOLING_FANCOIL,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Cooling Surface", ACTUAL_TEMPERATURE_COOLING_SURFACE
+        "Actual Temperature Cooling Surface",
+        ACTUAL_TEMPERATURE_COOLING_SURFACE,
     ),
     create_temperature_entity_description(
-        "Target Temperature Cooling Surface", TARGET_TEMPERATURE_COOLING_SURFACE
+        "Target Temperature Cooling Surface",
+        TARGET_TEMPERATURE_COOLING_SURFACE,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 1", ACTUAL_ROOM_TEMPERATURE_HK1
+        "Actual Room Temperature HK 1",
+        ACTUAL_ROOM_TEMPERATURE_HK1,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 1", TARGET_ROOM_TEMPERATURE_HK1
+        "Target Room Temperature HK 1",
+        TARGET_ROOM_TEMPERATURE_HK1,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 2", ACTUAL_ROOM_TEMPERATURE_HK2
+        "Actual Room Temperature HK 2",
+        ACTUAL_ROOM_TEMPERATURE_HK2,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 2", TARGET_ROOM_TEMPERATURE_HK2
+        "Target Room Temperature HK 2",
+        TARGET_ROOM_TEMPERATURE_HK2,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 3", ACTUAL_ROOM_TEMPERATURE_HK3
+        "Actual Room Temperature HK 3",
+        ACTUAL_ROOM_TEMPERATURE_HK3,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 3", TARGET_ROOM_TEMPERATURE_HK3
+        "Target Room Temperature HK 3",
+        TARGET_ROOM_TEMPERATURE_HK3,
     ),
     create_temperature_entity_description("Flow Temperature", FLOW_TEMPERATURE),
     create_temperature_entity_description("Flow Temperature NHZ", FLOW_TEMPERATURE_NHZ),
     create_temperature_entity_description("Return Temperature", RETURN_TEMPERATURE),
     create_temperature_entity_description(
-        "Actual Temperature Buffer", ACTUAL_TEMPERATURE_BUFFER
+        "Actual Temperature Buffer",
+        ACTUAL_TEMPERATURE_BUFFER,
     ),
     create_temperature_entity_description(
-        "Target Temperature Buffer", TARGET_TEMPERATURE_BUFFER
+        "Target Temperature Buffer",
+        TARGET_TEMPERATURE_BUFFER,
     ),
     create_pressure_entity_description("Heater Pressure", HEATER_PRESSURE),
     create_volume_stream_entity_description("Volume Stream", VOLUME_STREAM),
     create_temperature_entity_description(
-        "Actual Temperature Water", ACTUAL_TEMPERATURE_WATER
+        "Actual Temperature Water",
+        ACTUAL_TEMPERATURE_WATER,
     ),
     create_temperature_entity_description(
-        "Target Temperature Water", TARGET_TEMPERATURE_WATER
+        "Target Temperature Water",
+        TARGET_TEMPERATURE_WATER,
     ),
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
     create_pressure_entity_description("Source Pressure", SOURCE_PRESSURE),
@@ -287,21 +313,25 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_pressure_entity_description("High Pressure", HIGH_PRESSURE),
     create_pressure_entity_description("Low Pressure", LOW_PRESSURE),
     create_temperature_entity_description(
-        "Return Temperature WP1", RETURN_TEMPERATURE_WP1
+        "Return Temperature WP1",
+        RETURN_TEMPERATURE_WP1,
     ),
     create_temperature_entity_description("Flow Temperature WP1", FLOW_TEMPERATURE_WP1),
     create_temperature_entity_description(
-        "Hot Gas Temperature WP1", HOT_GAS_TEMPERATURE_WP1
+        "Hot Gas Temperature WP1",
+        HOT_GAS_TEMPERATURE_WP1,
     ),
     create_pressure_entity_description("Low Pressure WP1", LOW_PRESSURE_WP1),
     create_pressure_entity_description("High Pressure WP1", HIGH_PRESSURE_WP1),
     create_volume_stream_entity_description("Volume Stream WP1", VOLUME_STREAM_WP1),
     create_temperature_entity_description(
-        "Return Temperature WP2", RETURN_TEMPERATURE_WP2
+        "Return Temperature WP2",
+        RETURN_TEMPERATURE_WP2,
     ),
     create_temperature_entity_description("Flow Temperature WP2", FLOW_TEMPERATURE_WP2),
     create_temperature_entity_description(
-        "Hot Gas Temperature WP2", HOT_GAS_TEMPERATURE_WP2
+        "Hot Gas Temperature WP2",
+        HOT_GAS_TEMPERATURE_WP2,
     ),
     create_pressure_entity_description("Low Pressure WP2", LOW_PRESSURE_WP2),
     create_pressure_entity_description("High Pressure WP2", HIGH_PRESSURE_WP2),
@@ -321,7 +351,7 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
         name="SG Ready State",
         icon="mdi:solar-power",
         has_entity_name=True,
-    )
+    ),
 ]
 
 
@@ -458,7 +488,7 @@ VENTILATION_SENSOR_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
@@ -575,10 +605,9 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
         return self.coordinator.data.get(self.entity_description.key) is not None
 
     @property
-    def last_reset(self):
+    def last_reset(self) -> datetime.datetime | None:
         """Set Last Reset to now, if value is 0."""
         value = self.coordinator.data.get(self.entity_description.key)
         if value is not None and value == 0:
             return dt_util.utcnow()
-        else:
-            return None
+        return None

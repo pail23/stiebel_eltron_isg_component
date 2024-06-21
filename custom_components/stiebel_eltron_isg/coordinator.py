@@ -4,12 +4,11 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-from datetime import timedelta
 import logging
 import threading
+from datetime import timedelta
+
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-
-
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
@@ -21,7 +20,6 @@ from custom_components.stiebel_eltron_isg.const import (
     SG_READY_INPUT_2,
     SG_READY_STATE,
 )
-
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -86,16 +84,15 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Return the controller model of the Stiebel Eltron ISG."""
         if self._model_id == 103:
             return "LWA/LWZ"
-        elif self._model_id == 104:
+        if self._model_id == 104:
             return "LWZ"
-        elif self._model_id == 390:
+        if self._model_id == 390:
             return "WPM 3"
-        elif self._model_id == 391:
+        if self._model_id == 391:
             return "WPM 3i"
-        elif self._model_id == 449:
+        if self._model_id == 449:
             return "WPMsystem"
-        else:
-            return f"other model ({self._model_id})"
+        return f"other model ({self._model_id})"
 
     @property
     def is_wpm(self) -> bool:
@@ -136,18 +133,22 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         inverter_data = await self.read_input_registers(slave=1, address=5000, count=2)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             result[SG_READY_STATE] = decoder.decode_16bit_uint()
             self._model_id = decoder.decode_16bit_uint()
             result[MODEL_ID] = self._model_id
 
         inverter_data = await self.read_holding_registers(
-            slave=1, address=4000, count=3
+            slave=1,
+            address=4000,
+            count=3,
         )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
             result[SG_READY_ACTIVE] = decoder.decode_16bit_uint()
             result[SG_READY_INPUT_1] = decoder.decode_16bit_uint()
@@ -156,7 +157,6 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
-        pass
 
     def assign_if_increased(self, value: float | int, key: str) -> float:
         """Assign the value as new value or keep the old value from the internal cache in case the old value is larger than value."""
@@ -167,7 +167,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             _LOGGER.debug(f"old value for {key} is {old_value} new value is {value}")
             if old_value > value:
                 _LOGGER.info(
-                    f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}"
+                    f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}",
                 )
                 return old_value
         return value

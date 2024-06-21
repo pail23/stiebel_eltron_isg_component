@@ -1,26 +1,21 @@
 """Button platform for stiebel_eltron_isg."""
 
 import logging
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-
 
 from homeassistant.components.button import (
     ButtonEntity,
     ButtonEntityDescription,
 )
-from homeassistant.helpers.entity import EntityCategory
-
-from .const import DOMAIN, RESET_HEATPUMP
-from .entity import StiebelEltronISGEntity
-from .coordinator import StiebelEltronModbusDataCoordinator
-
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .const import DOMAIN, RESET_HEATPUMP
+from .coordinator import StiebelEltronModbusDataCoordinator
 from .data import StiebelEltronISGIntegrationConfigEntry
-
+from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,7 +29,8 @@ class StiebelEltronISGButtonDescriptionMixin:
 
 @dataclass
 class StiebelEltronISGButtonDescription(
-    ButtonEntityDescription, StiebelEltronISGButtonDescriptionMixin
+    ButtonEntityDescription,
+    StiebelEltronISGButtonDescriptionMixin,
 ):
     """Stiebel Eltron ISG button description."""
 
@@ -45,12 +41,12 @@ BUTTONS = [
         name="Reset Heatpump",
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.async_reset_heatpump(),
-    )
+    ),
 ]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):

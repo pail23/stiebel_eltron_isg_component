@@ -4,30 +4,26 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-from datetime import timedelta
 import logging
+from datetime import timedelta
 
-
+import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.core import Config, HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.loader import async_get_loaded_integration
 from pymodbus.client import AsyncModbusTcpClient
 from pymodbus.constants import Endian
 from pymodbus.payload import BinaryPayloadDecoder
 
-import homeassistant.helpers.config_validation as cv
-from homeassistant.core import Config, HomeAssistant
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
-from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.loader import async_get_loaded_integration
-
 from custom_components.stiebel_eltron_isg.data import (
-    StiebEltronISGIntegrationData,
     StiebelEltronISGIntegrationConfigEntry,
+    StiebEltronISGIntegrationData,
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
 )
-
 from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
 )
@@ -48,20 +44,24 @@ STIEBEL_ELTRON_ISG_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT): cv.string,
         vol.Optional(
-            CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL
+            CONF_SCAN_INTERVAL,
+            default=DEFAULT_SCAN_INTERVAL,
         ): cv.positive_int,
-    }
+    },
 )
 
 CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({cv.slug: STIEBEL_ELTRON_ISG_SCHEMA})}, extra=vol.ALLOW_EXTRA
+    {DOMAIN: vol.Schema({cv.slug: STIEBEL_ELTRON_ISG_SCHEMA})},
+    extra=vol.ALLOW_EXTRA,
 )
 
 
-class StiebelEltronModbusException(Exception):
+class StiebelEltronModbusError(Exception):
     """Exception during modbus communication."""
 
-    pass
+    def __init(self) -> None:
+        """Initialize the error."""
+        super().__init__("Data error on the modbus")
 
 
 async def get_controller_model(host, port) -> int:
@@ -74,16 +74,17 @@ async def get_controller_model(host, port) -> int:
     try:
         await client.connect()
         inverter_data = await client.read_input_registers(
-            address=5001, count=1, slave=1
+            address=5001,
+            count=1,
+            slave=1,
         )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers, byteorder=Endian.BIG
+                inverter_data.registers,
+                byteorder=Endian.BIG,
             )
-            model = decoder.decode_16bit_uint()
-            return model
-        else:
-            raise StiebelEltronModbusException("Data error on the modbus")
+            return decoder.decode_16bit_uint()
+        raise StiebelEltronModbusError
     finally:
         client.close()
 
@@ -94,7 +95,8 @@ async def async_setup(hass: HomeAssistant, config: Config):
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+    hass: HomeAssistant,
+    entry: StiebelEltronISGIntegrationConfigEntry,
 ):
     """Set up this integration using UI."""
 
@@ -112,7 +114,11 @@ async def async_setup_entry(
         StiebelEltronModbusWPMDataCoordinator(hass, name, host, port, scan_interval)
         if model >= 390
         else StiebelEltronModbusLWZDataCoordinator(
-            hass, name, host, port, scan_interval
+            hass,
+            name,
+            host,
+            port,
+            scan_interval,
         )
     )
 
@@ -132,7 +138,8 @@ async def async_setup_entry(
 
 
 async def async_unload_entry(
-    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+    hass: HomeAssistant,
+    entry: StiebelEltronISGIntegrationConfigEntry,
 ) -> bool:
     """Handle removal of an entry."""
     coordinator = entry.runtime_data.coordinator
@@ -141,7 +148,8 @@ async def async_unload_entry(
 
 
 async def async_reload_entry(
-    hass: HomeAssistant, entry: StiebelEltronISGIntegrationConfigEntry
+    hass: HomeAssistant,
+    entry: StiebelEltronISGIntegrationConfigEntry,
 ) -> None:
     """Reload config entry."""
     await async_unload_entry(hass, entry)

@@ -2,18 +2,17 @@
 
 import logging
 
-
 from homeassistant.components.climate import (
-    ClimateEntity,
-    ClimateEntityDescription,
-    HVACMode,
-    ClimateEntityFeature,
-    FAN_OFF,
+    FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
-    FAN_HIGH,
-    PRESET_ECO,
+    FAN_OFF,
     PRESET_COMFORT,
+    PRESET_ECO,
+    ClimateEntity,
+    ClimateEntityDescription,
+    ClimateEntityFeature,
+    HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
@@ -23,19 +22,18 @@ from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
 )
 
-
 from .const import (
-    DOMAIN,
     ACTUAL_HUMIDITY,
     ACTUAL_TEMPERATURE,
     ACTUAL_TEMPERATURE_FEK,
     COMFORT_TEMPERATURE_TARGET_HK1,
-    ECO_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
+    DOMAIN,
+    ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
-    OPERATION_MODE,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
+    OPERATION_MODE,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -138,7 +136,7 @@ TEMPERATURE_KEY_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):
@@ -204,23 +202,24 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         """Return the temperature we try to reach."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
             return self.coordinator.data.get(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][0]
+                TEMPERATURE_KEY_MAP[self.entity_description.key][0],
             )
-        else:
-            return self.coordinator.data.get(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][1]
-            )
+        return self.coordinator.data.get(
+            TEMPERATURE_KEY_MAP[self.entity_description.key][1],
+        )
 
     def set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
             self.coordinator.set_data(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][0], value
+                TEMPERATURE_KEY_MAP[self.entity_description.key][0],
+                value,
             )
         else:
             self.coordinator.set_data(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][1], value
+                TEMPERATURE_KEY_MAP[self.entity_description.key][1],
+                value,
             )
 
     @property
@@ -231,7 +230,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         """
         return (
             self.coordinator.data.get(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][0]
+                TEMPERATURE_KEY_MAP[self.entity_description.key][0],
             )
             is not None
         )
@@ -320,8 +319,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
             return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_NIGHT))
-        else:
-            return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_DAY))
+        return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_DAY))
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""

@@ -1,9 +1,9 @@
 """StiebelEltronISGEntity class."""
 
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ATTR_MANUFACTURER
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 
 class StiebelEltronISGEntity(CoordinatorEntity):

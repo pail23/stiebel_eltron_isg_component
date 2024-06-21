@@ -2,17 +2,18 @@
 
 import ipaddress
 import re
-from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+
 import voluptuous as vol
-from homeassistant.const import CONF_NAME, CONF_HOST, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant import config_entries
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.core import HomeAssistant, callback
 
 from .const import (
-    DOMAIN,
-    DEFAULT_NAME,
     DEFAULT_HOST_NAME,
-    DEFAULT_SCAN_INTERVAL,
+    DEFAULT_NAME,
     DEFAULT_PORT,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
 
 DATA_SCHEMA = vol.Schema(
@@ -21,14 +22,14 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
-    }
+    },
 )
 
 
 def host_valid(host):
     """Return True if hostname or IP address is valid."""
     try:
-        if ipaddress.ip_address(host).version == (4 or 6):
+        if ipaddress.ip_address(host) in (4, 6):
             return True
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
@@ -95,7 +96,8 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_HOST])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=user_input[CONF_NAME], data=user_input
+                    title=user_input[CONF_NAME],
+                    data=user_input,
                 )
             return await self._show_config_form(user_input)
 
@@ -121,9 +123,10 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
                     vol.Optional(
-                        CONF_SCAN_INTERVAL, default=user_input[CONF_SCAN_INTERVAL]
+                        CONF_SCAN_INTERVAL,
+                        default=user_input[CONF_SCAN_INTERVAL],
                     ): int,
-                }
+                },
             ),
             errors=self._errors,
         )

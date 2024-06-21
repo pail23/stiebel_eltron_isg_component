@@ -3,27 +3,27 @@
 import logging
 from typing import Any
 
-
 from homeassistant.components.switch import (
+    SwitchDeviceClass,
     SwitchEntity,
     SwitchEntityDescription,
-    SwitchDeviceClass,
 )
-
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
 )
 
-
 from .const import (
+    CIRCULATION_PUMP,
     DOMAIN,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
-    CIRCULATION_PUMP,
 )
 from .entity import StiebelEltronISGEntity
 
@@ -58,7 +58,7 @@ SWITCH_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # noqa: ARG001 Unused function argument: `hass`
+    hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
@@ -81,7 +81,9 @@ async def async_setup_entry(
 class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     """stiebel_eltron_isg Sensor class."""
 
-    def __init__(self, coordinator, config_entry, description):
+    def __init__(
+        self, coordinator: StiebelEltronModbusDataCoordinator, config_entry, description
+    ):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
@@ -97,8 +99,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         value = self.coordinator.data.get(self.entity_description.key)
         if value is not None:
             return self.coordinator.data.get(self.entity_description.key) != 0
-        else:
-            return None
+        return None
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

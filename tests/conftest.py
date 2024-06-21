@@ -15,13 +15,14 @@
 #
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
+from typing import Any
 from unittest.mock import patch
+
+import pytest
 from pymodbus.register_read_message import (
     ReadHoldingRegistersResponse,
     ReadInputRegistersResponse,
 )
-import pytest
-from typing import Any
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -31,7 +32,7 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable loading custom integrations in all tests."""
-    yield
+    return
 
 
 # This fixture is used to prevent HomeAssistant from attempting to create and dismiss persistent
@@ -53,7 +54,8 @@ def skip_notifications_fixture():
 def skip_connect_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "pymodbus.client.AsyncModbusTcpClient.read_input_registers", return_value={}
+        "pymodbus.client.AsyncModbusTcpClient.read_input_registers",
+        return_value={},
     ):
         yield
 
@@ -76,32 +78,39 @@ def read_input_register(register, start, count) -> ReadInputRegistersResponse:
 
 
 async def read_input_registers_wpm(
-    address: int, count: int = 1, slave: int = 0, **kwargs: Any
+    address: int,
+    count: int = 1,
+    slave: int = 0,
+    **kwargs: Any,
 ):
     """Simulate reads on the input registers on wpm models."""
     system_info = [2, 390]
     if address >= 5000:
         return read_input_register(system_info, address - 5000, count)
-    else:
-        return ReadInputRegistersResponse(list(range(0, count)))
+    return ReadInputRegistersResponse(list(range(count)))
 
 
 async def read_input_registers_lwz(
-    address: int, count: int = 1, slave: int = 0, **kwargs: Any
+    address: int,
+    count: int = 1,
+    slave: int = 0,
+    **kwargs: Any,
 ):
     """Simulate reads on the input registers on lwz models ."""
     system_info = [2, 103]
     if address >= 5000:
         return read_input_register(system_info, address - 5000, count)
-    else:
-        return ReadInputRegistersResponse(list(range(0, count)))
+    return ReadInputRegistersResponse(list(range(count)))
 
 
 async def read_holding_registers(
-    address: int, count: int = 1, slave: int = 0, **kwargs: Any
+    address: int,
+    count: int = 1,
+    slave: int = 0,
+    **kwargs: Any,
 ):
     """Simulate reads on the holding registers on lwz models ."""
-    return ReadHoldingRegistersResponse(list(range(0, count)))
+    return ReadHoldingRegistersResponse(list(range(count)))
 
 
 # This fixture, when used, will result in calls to read_input_registers to return mock data. To have the call
