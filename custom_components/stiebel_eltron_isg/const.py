@@ -193,6 +193,11 @@ ECO_TEMPERATURE_TARGET_HK2 = "eco_temperature_target_hk2"
 HEATING_CURVE_RISE_HK2 = "heating_curve_rise_hk2"
 DUALMODE_TEMPERATURE_HZG = "dualmode_temperature_hzg"
 
+COMFORT_COOLING_TEMPERATURE_TARGET_HK1 = "comfort_cooling_temperature_target_hk1"
+ECO_COOLING_TEMPERATURE_TARGET_HK1 = "eco_cooling_temperature_target_hk1"
+COMFORT_COOLING_TEMPERATURE_TARGET_HK2 = "comfort_cooling_temperature_target_hk2"
+ECO_COOLING_TEMPERATURE_TARGET_HK2 = "eco_cooling_temperature_target_hk2"
+
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
 DUALMODE_TEMPERATURE_WW = "dualmode_temperature_ww"
