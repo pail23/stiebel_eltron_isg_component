@@ -106,7 +106,7 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
-        self.coordinator.set_data(self.entity_description.key, key)
+        await self.coordinator.set_data(self.entity_description.key, key)
 
     @property
     def available(self) -> bool:
