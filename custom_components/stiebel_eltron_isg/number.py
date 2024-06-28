@@ -247,7 +247,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        self.coordinator.set_data(self.entity_description.key, value)
+        await self.coordinator.set_data(self.entity_description.key, value)
 
     @property
     def native_value(self):
