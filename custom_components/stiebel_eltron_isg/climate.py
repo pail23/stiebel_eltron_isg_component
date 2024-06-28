@@ -208,7 +208,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
             TEMPERATURE_KEY_MAP[self.entity_description.key][1],
         )
 
-    def set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
@@ -257,7 +257,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         return WPM_TO_HA_HVAC.get(self.coordinator.data.get(OPERATION_MODE))
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
         await self.coordinator.set_data(OPERATION_MODE, new_mode)
@@ -267,7 +267,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Return current preset mode."""
         return WPM_TO_HA_PRESET.get(self.coordinator.data.get(OPERATION_MODE))
 
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
         await self.coordinator.set_data(OPERATION_MODE, new_mode)
@@ -299,7 +299,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Return current operation ie. heat, cool, idle."""
         return LWZ_TO_HA_HVAC.get(self.coordinator.data.get(OPERATION_MODE))
 
-    def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
         await self.coordinator.set_data(OPERATION_MODE, new_mode)
@@ -309,7 +309,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Return current preset mode."""
         return LWZ_TO_HA_PRESET.get(self.coordinator.data.get(OPERATION_MODE))
 
-    def set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
         await self.coordinator.set_data(OPERATION_MODE, new_mode)
@@ -321,7 +321,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
             return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_NIGHT))
         return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_DAY))
 
-    def set_fan_mode(self, fan_mode: str) -> None:
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
