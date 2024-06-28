@@ -103,12 +103,12 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        self.coordinator.set_data(self.entity_description.key, 1)
+        await self.coordinator.set_data(self.entity_description.key, 1)
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.coordinator.set_data(self.entity_description.key, 0)
+        await self.coordinator.set_data(self.entity_description.key, 0)
         await self.async_update()
 
     @property
