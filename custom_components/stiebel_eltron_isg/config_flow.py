@@ -64,15 +64,11 @@ class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
 
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
-        if host in stiebeleltron_modbus_entries(self.hass):
-            return True
-        return False
+        return host in stiebeleltron_modbus_entries(self.hass)
 
     def _name_in_configuration_exists(self, name) -> bool:
         """Return True if host exists in configuration."""
-        if name in stiebeleltron_entries(self.hass):
-            return True
-        return False
+        return name in stiebeleltron_entries(self.hass)
 
     async def async_step_user(self, user_input=None):
         """Handle a flow initialized by the user."""
