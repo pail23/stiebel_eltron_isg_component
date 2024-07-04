@@ -40,6 +40,8 @@ from .const import (
     CONSUMED_WATER_HEATING,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    DEWPOINT_TEMPERATURE_HK1,
+    DEWPOINT_TEMPERATURE_HK2,
     ECO_COOLING_TEMPERATURE_TARGET_HK1,
     ECO_COOLING_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK1,
@@ -226,11 +228,20 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[EXTRACT_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_HUMIDITY] = decoder.decode_16bit_uint()
-            # skip 23-30
-            decoder.skip_bytes(16)  #
+            # skip 23-24
+            decoder.skip_bytes(4)
+            # 25-26
+            result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # skip 27-30
+            decoder.skip_bytes(8)
             # 31
             compressor_starts_high = decoder.decode_16bit_uint()
-            decoder.skip_bytes(4)  #
+            decoder.skip_bytes(4)
             compressor_starts_low = decoder.decode_16bit_uint()
             if compressor_starts_high == 32768:
                 result[COMPRESSOR_STARTS] = compressor_starts_high
