@@ -25,6 +25,8 @@ from .const import (
     ACTUAL_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_WATER,
+    COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
+    COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
     COMFORT_WATER_TEMPERATURE_TARGET,
@@ -40,6 +42,8 @@ from .const import (
     CONSUMED_WATER_HEATING_TOTAL,
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
+    ECO_COOLING_TEMPERATURE_TARGET_HK1,
+    ECO_COOLING_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
     ECO_WATER_TEMPERATURE_TARGET,
@@ -295,6 +299,20 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             decoder.skip_bytes(8)
             result[FAN_LEVEL_DAY] = decoder.decode_16bit_uint()
             result[FAN_LEVEL_NIGHT] = decoder.decode_16bit_uint()
+            decoder.skip_bytes(4)
+            result[COMFORT_COOLING_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            result[ECO_COOLING_TEMPERATURE_TARGET_HK1] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            result[COMFORT_COOLING_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            result[ECO_COOLING_TEMPERATURE_TARGET_HK2] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+
             result["system_paramaters"] = list(inverter_data.registers)
         return result
 
@@ -412,6 +430,14 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             await self.write_register(address=1017, value=int(value), slave=1)
         elif key == FAN_LEVEL_NIGHT:
             await self.write_register(address=1018, value=int(value), slave=1)
+        elif key == COMFORT_COOLING_TEMPERATURE_TARGET_HK1:
+            await self.write_register(address=1021, value=int(value * 10), slave=1)
+        elif key == ECO_COOLING_TEMPERATURE_TARGET_HK1:
+            await self.write_register(address=1022, value=int(value * 10), slave=1)
+        elif key == COMFORT_COOLING_TEMPERATURE_TARGET_HK2:
+            await self.write_register(address=1023, value=int(value * 10), slave=1)
+        elif key == ECO_COOLING_TEMPERATURE_TARGET_HK2:
+            await self.write_register(address=1024, value=int(value * 10), slave=1)
         else:
             return
         self.data[key] = value
