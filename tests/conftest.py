@@ -19,7 +19,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from pymodbus.register_read_message import (
+from pymodbus.pdu.register_read_message import (
     ReadHoldingRegistersResponse,
     ReadInputRegistersResponse,
 )
