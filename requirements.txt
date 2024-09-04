@@ -2,4 +2,4 @@ colorlog==6.8.2
 pip>=21.0,<24.3
 pymodbus>=3.7.0
 ruff==0.6.3
-pytest-homeassistant-custom-component==0.13.155
+pytest-homeassistant-custom-component==0.13.160
