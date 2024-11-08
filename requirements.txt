@@ -1,4 +1,4 @@
-colorlog==6.8.2
+colorlog==6.9.0
 pip>=21.0,<24.4
 pymodbus>=3.7.0
 ruff==0.7.1
