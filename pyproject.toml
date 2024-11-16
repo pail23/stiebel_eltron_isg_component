@@ -27,3 +27,60 @@ testpaths = [
     "tests"
 ]
 addopts = "--disable-socket --allow-unix-socket"
+
+
+[tool.ruff]
+
+target-version = "py312"
+
+[tool.ruff.lint]
+extend-select = [
+    "ASYNC",   # async
+    "B",       # Bug Bear
+    "C",       # complexity
+    "D",       # docstrings
+    "E",       # pycodestyle
+    "F",       # pyflakes/autoflake
+    "FLY",
+    "I",       # isort
+    "N",       # pep8-naming
+    "RUF",     # ruff rules
+    "ICN",     # import concentions
+    "PGH",     # Use specific rule codes when using noqa
+    "PL",
+    "PLC",     # Useless import alias.
+    "PLE",     # pylint error
+    "RET",
+    "SIM",     # simplify
+    "T20",     # flake8-print
+    "TRY",     # tryceratops
+    "UP",      # pyupgrade
+    "W",       # pycodestyle
+    "YTT",
+]
+
+ignore = [
+    "D202", # No blank lines allowed after function docstring
+    "D203", # 1 blank line required before class docstring
+    "D213", # Multi-line docstring summary should start at the second line
+    "D404", # First word of the docstring should not be This
+    "D406", # Section name should end with a newline
+    "D407", # Section name underlining
+    "D411", # Missing blank line before section
+    "E501", # line too long
+    "E731", # do not assign a lambda expression, use a def
+    "PLR2004",
+    "PLR0912",
+    "PLR0913",
+    "PLR0915",
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+
+[tool.ruff.lint.pyupgrade]
+keep-runtime-typing = true
+
+
+[tool.ruff.lint.mccabe]
+max-complexity = 25
