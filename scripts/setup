@@ -4,4 +4,6 @@ set -e
 
 cd "$(dirname "$0")/.."
 
-python3 -m pip install --requirement requirements.txt
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+uv sync

@@ -1,0 +1,29 @@
+[project]
+name = "stiebel-eltron-isg-component"
+version = "2024.11.0"
+description = "Home assistant component for the Stiebel Eltron ISG"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "colorlog>=6.9.0",
+    "homeassistant>=2024.11.0",
+    "pymodbus>=3.7.0",
+    "pytest-homeassistant-custom-component>=0.13.182",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.3",
+    "ruff>=0.7.4",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+pythonpath = [
+  ".",
+]
+testpaths = [
+    "tests"
+]
+addopts = "--disable-socket --allow-unix-socket"

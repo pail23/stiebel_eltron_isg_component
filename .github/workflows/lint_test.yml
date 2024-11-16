@@ -40,32 +40,43 @@ jobs:
         - name: "Checkout the repository"
           uses: "actions/checkout@v4.2.2"
 
-        - name: "Set up Python"
-          uses: actions/setup-python@v5.3.0
-          with:
-            python-version: "3.12"
-            cache: "pip"
+        - name: Install uv
+          uses: astral-sh/setup-uv@3b9817b1bf26186f03ab8277bab9b827ea5cc254 # v3
 
-        - name: "Install requirements"
-          run: python3 -m pip install -r requirements.txt
+        - name: Set up Python
+          run: uv python install 3.12
 
-        - name: "Run"
-          run: python3 -m ruff check .
+        - name: Install the project
+          run: uv sync --all-extras --dev
+
+        - name: "Run ruff"
+          run: uv run ruff check .
+
+        - name: "Format with ruff"
+          run: uv run ruff format . --check
   tests:
     runs-on: "ubuntu-latest"
     name: Run tests
     steps:
       - name: Check out code from GitHub
         uses: "actions/checkout@v4.2.2"
-      - name: Setup Python
-        uses: "actions/setup-python@v5.3.0"
-        with:
-          python-version: "3.12"
-      - name: Install requirements
-        run: python3 -m pip install -r requirements.txt
+      - name: Install uv
+        uses: astral-sh/setup-uv@3b9817b1bf26186f03ab8277bab9b827ea5cc254 # v3
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install the project
+        run: uv sync --all-extras --dev
+
+      - name: "Run ruff"
+        run: uv run ruff check .
+
+      - name: "Format with ruff"
+        run: uv run ruff format . --check
       - name: Run tests
         run: |
-          pytest \
+          uv run pytest \
             -qq \
             --timeout=9 \
             --durations=10 \

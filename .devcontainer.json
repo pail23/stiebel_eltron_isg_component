@@ -1,7 +1,7 @@
 {
     "name": "pail23/stiebel_eltron_isg",
     "image": "mcr.microsoft.com/vscode/devcontainers/python:3.12",
-    "postCreateCommand": "scripts/setup",
+    "postCreateCommand": "curl -LsSf https://astral.sh/uv/install.sh | sh && scripts/setup",
     "forwardPorts": [
         8123,
         5678
@@ -39,5 +39,8 @@
         }
     },
     "remoteUser": "vscode",
-    "features": {}
+    "features": {},
+    "remoteEnv": {
+        "PATH": "${containerEnv:PATH}:/home/vscode/.local/bin"
+    }
 }
