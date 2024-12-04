@@ -101,10 +101,11 @@ async def async_setup_entry(
 ):
     """Set up this integration using UI."""
 
-    name = entry.data.get(CONF_NAME)
-    host = entry.data.get(CONF_HOST)
-    port = entry.data.get(CONF_PORT)
-    scan_interval = entry.data[CONF_SCAN_INTERVAL]
+    name = str(entry.data.get(CONF_NAME))
+    host = str(entry.data.get(CONF_HOST))
+    port_data = entry.data.get(CONF_PORT)
+    port = int(port_data) if port_data is not None else 502
+    scan_interval = int(entry.data[CONF_SCAN_INTERVAL])
 
     try:
         model = await get_controller_model(host, port)
@@ -144,7 +145,7 @@ async def async_unload_entry(
 ) -> bool:
     """Handle removal of an entry."""
     coordinator = entry.runtime_data.coordinator
-    await coordinator.shutdown()
+    await coordinator.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

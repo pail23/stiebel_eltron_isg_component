@@ -4,8 +4,8 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-import logging
 import asyncio
+import logging
 from datetime import timedelta
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -24,7 +24,7 @@ from custom_components.stiebel_eltron_isg.const import (
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-def get_isg_scaled_value(value, factor=10) -> float:
+def get_isg_scaled_value(value: float, factor: float = 10) -> float | None:
     """Calculate the value out of a modbus register by scaling it."""
     return value / factor if value != -32768 else None
 
@@ -35,15 +35,15 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass,
-        name,
-        host,
-        port,
+        name: str,
+        host: str,
+        port: int,
         scan_interval,
     ):
         """Initialize the Modbus hub."""
         self._hass = hass
         self._host = host
-        self._model_id = 0
+        self._model_id: int = 0
         self._client: AsyncModbusTcpClient = AsyncModbusTcpClient(host=host, port=port)
         self._lock = asyncio.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
@@ -53,19 +53,15 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     async def close(self) -> None:
         """Disconnect client."""
+        _LOGGER.debug("Closing connection to %s", self._host)
         async with self._lock:
             self._client.close()
 
     async def connect(self) -> None:
         """Connect client."""
+        _LOGGER.debug("Connecting to %s", self._host)
         async with self._lock:
             await self._client.connect()
-
-    async def shutdown(self) -> None:
-        """Shutdown the coordinator and close all connections."""
-        if self.is_connected:
-            await self.close()
-        self._client = None
 
     @property
     def is_connected(self) -> bool:
@@ -101,16 +97,23 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     async def read_input_registers(self, slave, address, count):
         """Read input registers."""
+        _LOGGER.debug(
+            f"Reading {count} input registers from {address} with slave {slave}"
+        )
         async with self._lock:
             return await self._client.read_input_registers(address, count, slave)
 
     async def read_holding_registers(self, slave, address, count):
         """Read holding registers."""
+        _LOGGER.debug(
+            f"Reading {count} holding registers from {address} with slave {slave}"
+        )
         async with self._lock:
             return await self._client.read_holding_registers(address, count, slave)
 
     async def write_register(self, address, value, slave):
         """Write holding register."""
+        _LOGGER.debug(f"Writing {value} to register {address} with slave {slave}")
         async with self._lock:
             return await self._client.write_registers(address, value, slave)
 
@@ -162,12 +165,16 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Assign the value as new value or keep the old value from the internal cache in case the old value is larger than value."""
         if value == 0:
             return 0
-        if self.data and self.data.get(key) is not None:
-            old_value = float(self.data.get(key))
-            _LOGGER.debug(f"old value for {key} is {old_value} new value is {value}")
-            if old_value > value:
-                _LOGGER.info(
-                    f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}",
+        if self.data:
+            data = self.data.get(key)
+            if data is not None:
+                old_value = float(data)
+                _LOGGER.debug(
+                    f"old value for {key} is {old_value} new value is {value}"
                 )
-                return old_value
+                if old_value > value:
+                    _LOGGER.info(
+                        f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}",
+                    )
+                    return old_value
         return value
