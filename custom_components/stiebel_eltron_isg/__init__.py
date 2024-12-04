@@ -144,7 +144,7 @@ async def async_unload_entry(
 ) -> bool:
     """Handle removal of an entry."""
     coordinator = entry.runtime_data.coordinator
-    coordinator.shutdown()
+    await coordinator.shutdown()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

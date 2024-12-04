@@ -5,7 +5,7 @@ https://github.com/pail23/stiebel_eltron_isg
 """
 
 import logging
-import threading
+import asyncio
 from datetime import timedelta
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -44,27 +44,27 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         self._hass = hass
         self._host = host
         self._model_id = 0
-        self._client = AsyncModbusTcpClient(host=host, port=port)
-        self._lock = threading.Lock()
+        self._client: AsyncModbusTcpClient = AsyncModbusTcpClient(host=host, port=port)
+        self._lock = asyncio.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
         self.platforms = []
 
         super().__init__(hass, _LOGGER, name=name, update_interval=self._scan_interval)
 
-    def close(self):
+    async def close(self) -> None:
         """Disconnect client."""
-        with self._lock:
+        async with self._lock:
             self._client.close()
 
-    async def connect(self):
+    async def connect(self) -> None:
         """Connect client."""
-        with self._lock:
+        async with self._lock:
             await self._client.connect()
 
-    def shutdown(self):
+    async def shutdown(self) -> None:
         """Shutdown the coordinator and close all connections."""
         if self.is_connected:
-            self.close()
+            await self.close()
         self._client = None
 
     @property
@@ -101,17 +101,17 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     async def read_input_registers(self, slave, address, count):
         """Read input registers."""
-        with self._lock:
+        async with self._lock:
             return await self._client.read_input_registers(address, count, slave)
 
     async def read_holding_registers(self, slave, address, count):
         """Read holding registers."""
-        with self._lock:
+        async with self._lock:
             return await self._client.read_holding_registers(address, count, slave)
 
     async def write_register(self, address, value, slave):
         """Write holding register."""
-        with self._lock:
+        async with self._lock:
             return await self._client.write_registers(address, value, slave)
 
     async def _async_update_data(self) -> dict:
