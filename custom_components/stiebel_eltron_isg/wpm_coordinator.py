@@ -43,6 +43,7 @@ from .const import (
     CIRCULATION_PUMP,
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_WATER_TEMPERATURE_TARGET,
     COMPRESSOR_ON,
     CONSUMED_HEATING,
@@ -63,6 +64,7 @@ from .const import (
     DUALMODE_TEMPERATURE_WW,
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK3,
     ECO_WATER_TEMPERATURE_TARGET,
     EMERGENCY_HEATING_1,
     EMERGENCY_HEATING_1_2,
@@ -90,6 +92,7 @@ from .const import (
     HEATING_CIRCUIT_5_PUMP,
     HEATING_CURVE_RISE_HK1,
     HEATING_CURVE_RISE_HK2,
+    HEATING_CURVE_RISE_HK3,
     HIGH_PRESSURE,
     HIGH_PRESSURE_WP1,
     HIGH_PRESSURE_WP2,
@@ -365,7 +368,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result = {}
-        inverter_data = await self.read_input_registers(slave=1, address=500, count=111)
+        inverter_data = await self.read_input_registers(slave=1, address=500, count=112)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers,
@@ -604,12 +607,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 596-599 TEMPERATURE_HK4
             # 600-603 TEMPERATURE_HK5
             # 604-608 COOLING CIRCUIT TEMPERATURE_HK1 to HK5
-            decoder.skip_bytes(26)
-            # 609
+            decoder.skip_bytes(28)
+            # 610
             result[ACTUAL_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
-            # 610
+            # 611
             result[TARGET_TEMPERATURE_HK3] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
@@ -622,7 +625,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         inverter_data = await self.read_holding_registers(
             slave=1,
             address=1500,
-            count=19,
+            count=54,
         )
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -698,6 +701,20 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 1519
             result[FAN_COOLING_TARGET_ROOM_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
+            )
+            decoder.skip_bytes(62)
+            # 1550
+            result[COMFORT_TEMPERATURE_TARGET_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 1551
+            result[ECO_TEMPERATURE_TARGET_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 1552
+            result[HEATING_CURVE_RISE_HK3] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+                100,
             )
             result["system_paramaters"] = list(inverter_data.registers)
         return result
@@ -850,6 +867,12 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             await self.write_register(address=1505, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK2:
             await self.write_register(address=1506, value=int(value * 100), slave=1)
+        elif key == COMFORT_TEMPERATURE_TARGET_HK3:
+            await self.write_register(address=1550, value=int(value * 10), slave=1)
+        elif key == ECO_TEMPERATURE_TARGET_HK3:
+            await self.write_register(address=1551, value=int(value * 10), slave=1)  
+        elif key == HEATING_CURVE_RISE_HK3:
+            await self.write_register(address=1552, value=int(value * 100), slave=1)    
         elif key == DUALMODE_TEMPERATURE_HZG:
             await self.write_register(address=1508, value=int(value * 10), slave=1)
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:

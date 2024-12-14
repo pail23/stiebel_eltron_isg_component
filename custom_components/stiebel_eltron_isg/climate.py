@@ -28,9 +28,11 @@ from .const import (
     ACTUAL_TEMPERATURE_FEK,
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
+    COMFORT_TEMPERATURE_TARGET_HK3,
     DOMAIN,
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK3,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
     OPERATION_MODE,
@@ -41,6 +43,7 @@ _LOGGER = logging.getLogger(__name__)
 
 CLIMATE_HK_1 = "climate_hk_1"
 CLIMATE_HK_2 = "climate_hk_2"
+CLIMATE_HK_3 = "climate_hk_3"
 
 ECO_MODE = 4
 
@@ -124,14 +127,18 @@ LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
 HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 
 
+
+
 CLIMATE_TYPES = [
     ClimateEntityDescription(CLIMATE_HK_1, has_entity_name=True, name="Heat Circuit 1"),
     ClimateEntityDescription(CLIMATE_HK_2, has_entity_name=True, name="Heat Circuit 2"),
+    ClimateEntityDescription(CLIMATE_HK_3, has_entity_name=True, name="Heat Circuit 3"),
 ]
 
 TEMPERATURE_KEY_MAP = {
     CLIMATE_HK_1: [ECO_TEMPERATURE_TARGET_HK1, COMFORT_TEMPERATURE_TARGET_HK1],
     CLIMATE_HK_2: [ECO_TEMPERATURE_TARGET_HK2, COMFORT_TEMPERATURE_TARGET_HK2],
+    CLIMATE_HK_3: [ECO_TEMPERATURE_TARGET_HK3, COMFORT_TEMPERATURE_TARGET_HK3],
 }
 
 
