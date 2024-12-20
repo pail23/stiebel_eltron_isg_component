@@ -106,6 +106,7 @@ from .const import (
     TARGET_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK3,
     TARGET_TEMPERATURE_WATER,
+    SOLAR_COLLECTOR_TEMPERATURE,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
     VOLUME_STREAM,
@@ -310,6 +311,10 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature Water",
         TARGET_TEMPERATURE_WATER,
+    ),
+    create_temperature_entity_description(
+        "Solar Collector Temperature",
+        SOLAR_COLLECTOR_TEMPERATURE,
     ),
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
     create_pressure_entity_description("Source Pressure", SOURCE_PRESSURE),
