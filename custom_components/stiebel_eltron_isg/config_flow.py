@@ -6,7 +6,7 @@ import ipaddress
 import re
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow, CONN_CLASS_LOCAL_POLL
+from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 

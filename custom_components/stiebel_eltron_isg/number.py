@@ -87,7 +87,7 @@ NUMBER_TYPES_ALL = [
         native_max_value=30,
         native_step=0.1,
     ),
-     NumberEntityDescription(
+    NumberEntityDescription(
         COMFORT_TEMPERATURE_TARGET_HK3,
         has_entity_name=True,
         name="Comfort Temperature Target HK3",
