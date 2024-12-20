@@ -84,6 +84,10 @@ from .const import (
     PRODUCED_WATER_HEATING,
     PRODUCED_WATER_HEATING_TODAY,
     PRODUCED_WATER_HEATING_TOTAL,
+    PRODUCED_SOLAR_HEATING_TODAY,
+    PRODUCED_SOLAR_HEATING_TOTAL,
+    PRODUCED_SOLAR_WATER_HEATING_TODAY,
+    PRODUCED_SOLAR_WATER_HEATING_TOTAL,
     RETURN_TEMPERATURE,
     RETURN_TEMPERATURE_WP1,
     RETURN_TEMPERATURE_WP2,
@@ -368,7 +372,17 @@ ENERGY_SENSOR_TYPES = [
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
     ),
-    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
+    create_energy_entity_description(
+        "Produced Water Heating", 
+        PRODUCED_WATER_HEATING),
+    create_energy_entity_description(
+        "Produced Solar Heating Total",
+        PRODUCED_SOLAR_HEATING_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Solar Water Heating Total",
+        PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    ),
     create_energy_entity_description(
         "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
@@ -395,6 +409,14 @@ ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Solar Heating Today",
+        PRODUCED_SOLAR_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Solar Water Heating Today",
+        PRODUCED_SOLAR_WATER_HEATING_TODAY,
     ),
     create_daily_energy_entity_description(
         "Consumed Heating Today",
