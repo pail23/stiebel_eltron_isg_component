@@ -367,7 +367,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
-        result = {}
+        result: dict = {}
         inverter_data = await self.read_input_registers(slave=1, address=500, count=112)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -870,9 +870,9 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         elif key == COMFORT_TEMPERATURE_TARGET_HK3:
             await self.write_register(address=1550, value=int(value * 10), slave=1)
         elif key == ECO_TEMPERATURE_TARGET_HK3:
-            await self.write_register(address=1551, value=int(value * 10), slave=1)  
+            await self.write_register(address=1551, value=int(value * 10), slave=1)
         elif key == HEATING_CURVE_RISE_HK3:
-            await self.write_register(address=1552, value=int(value * 100), slave=1)    
+            await self.write_register(address=1552, value=int(value * 100), slave=1)
         elif key == DUALMODE_TEMPERATURE_HZG:
             await self.write_register(address=1508, value=int(value * 10), slave=1)
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:

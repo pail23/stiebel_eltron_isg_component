@@ -84,3 +84,6 @@ keep-runtime-typing = true
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
+
+[tool.mypy]
+ignore_missing_imports = true

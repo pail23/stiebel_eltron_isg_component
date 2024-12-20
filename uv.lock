@@ -1838,7 +1838,7 @@ dev = [
 requires-dist = [
     { name = "colorlog", specifier = ">=6.9.0" },
     { name = "homeassistant", specifier = ">=2024.11.0" },
-    { name = "pymodbus", specifier = ">=3.7.0" },
+    { name = "pymodbus", specifier = ">=3.6.9" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.182" },
 ]
 

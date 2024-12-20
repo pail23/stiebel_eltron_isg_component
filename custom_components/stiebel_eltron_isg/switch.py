@@ -99,7 +99,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         value = self.coordinator.data.get(self.entity_description.key)
         if value is not None:
             return self.coordinator.data.get(self.entity_description.key) != 0
-        return None
+        return False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""

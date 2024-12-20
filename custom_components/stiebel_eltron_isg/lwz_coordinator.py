@@ -157,7 +157,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
-        result = {}
+        result: dict = {}
         inverter_data = await self.read_input_registers(slave=1, address=0, count=40)
         if not inverter_data.isError():
             decoder = BinaryPayloadDecoder.fromRegisters(
@@ -261,7 +261,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     async def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
-        result = {}
+        result: dict = {}
         inverter_data = await self.read_holding_registers(
             slave=1,
             address=1000,

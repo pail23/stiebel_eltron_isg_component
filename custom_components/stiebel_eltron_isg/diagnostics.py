@@ -12,8 +12,8 @@ from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
 )
 
-CONFIG_FIELDS_TO_REDACT = []
-DATA_FIELDS_TO_REDACT = []
+CONFIG_FIELDS_TO_REDACT: list = []
+DATA_FIELDS_TO_REDACT: list = []
 
 
 async def async_get_config_entry_diagnostics(

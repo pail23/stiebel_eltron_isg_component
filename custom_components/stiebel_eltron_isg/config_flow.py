@@ -1,10 +1,12 @@
 """Adds config flow for Stiebel Eltron ISG."""
 
+from __future__ import annotations
+
 import ipaddress
 import re
 
 import voluptuous as vol
-from homeassistant import config_entries
+from homeassistant.config_entries import ConfigFlow, CONN_CLASS_LOCAL_POLL
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 
@@ -52,11 +54,11 @@ def stiebeleltron_entries(hass: HomeAssistant):
     }
 
 
-class StiebelEltronISGFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
+class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Stiebel Eltron ISG."""
 
     VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_POLL
+    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""

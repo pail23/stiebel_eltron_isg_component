@@ -47,7 +47,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         self._client: AsyncModbusTcpClient = AsyncModbusTcpClient(host=host, port=port)
         self._lock = asyncio.Lock()
         self._scan_interval = timedelta(seconds=scan_interval)
-        self.platforms = []
+        self.platforms: list = []
 
         super().__init__(hass, _LOGGER, name=name, update_interval=self._scan_interval)
 
