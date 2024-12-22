@@ -53,8 +53,10 @@ from .const import (
     ERROR_STATUS,
     EVAPORATOR_DEFROST,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
+    EXTRACT_AIR_DEW_POINT,
     EXTRACT_AIR_HUMIDITY,
     EXTRACT_AIR_TARGET_FLOW_RATE,
+    EXTRACT_AIR_TEMPERATURE,
     FAN_LEVEL_DAY,
     FAN_LEVEL_NIGHT,
     FILTER,
@@ -222,14 +224,18 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
-            # 18-19-20-21-22
+            # 18-19-20-21-22-23-24
             result[VENTILATION_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
             result[VENTILATION_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_ACTUAL_FAN_SPEED] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_TARGET_FLOW_RATE] = decoder.decode_16bit_uint()
             result[EXTRACT_AIR_HUMIDITY] = decoder.decode_16bit_uint()
-            # skip 23-24
-            decoder.skip_bytes(4)
+            result[EXTRACT_AIR_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_uint()
+            )
+            result[EXTRACT_AIR_DEW_POINT] = get_isg_scaled_value(
+                decoder.decode_16bit_uint()
+            )
             # 25-26
             result[DEWPOINT_TEMPERATURE_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
