@@ -61,8 +61,10 @@ from .const import (
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
+    EXTRACT_AIR_DEW_POINT,
     EXTRACT_AIR_HUMIDITY,
     EXTRACT_AIR_TARGET_FLOW_RATE,
+    EXTRACT_AIR_TEMPERATURE,
     FLOW_TEMPERATURE,
     FLOW_TEMPERATURE_NHZ,
     FLOW_TEMPERATURE_WP1,
@@ -483,7 +485,13 @@ VENTILATION_SENSOR_TYPES = [
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    create_temperature_entity_description(
+        "Extract air dew point", EXTRACT_AIR_DEW_POINT
+    ),
     create_humidity_entity_description("Extract air humidity", EXTRACT_AIR_HUMIDITY),
+    create_temperature_entity_description(
+        "Extract air temperature", EXTRACT_AIR_TEMPERATURE
+    ),
 ]
 
 

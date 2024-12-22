@@ -218,6 +218,8 @@ VENTILATION_AIR_ACTUAL_FAN_SPEED = "ventilation_air_actual_fan_speed"
 VENTILATION_AIR_TARGET_FLOW_RATE = "ventilation_air_target_flow_rate"
 EXTRACT_AIR_ACTUAL_FAN_SPEED = "extract_air_actual"
 EXTRACT_AIR_TARGET_FLOW_RATE = "extract_air_target_flowrate"
+EXTRACT_AIR_DEW_POINT = "extract_air_dew_point"
+EXTRACT_AIR_TEMPERATURE = "extract_air_temperature"
 EXTRACT_AIR_HUMIDITY = "extract_air_humidity"
 
 RESET_HEATPUMP = "reset_heatpump"
