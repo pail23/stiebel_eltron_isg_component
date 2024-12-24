@@ -82,6 +82,10 @@ from .const import (
     PRODUCED_WATER_HEATING,
     PRODUCED_WATER_HEATING_TODAY,
     PRODUCED_WATER_HEATING_TOTAL,
+    PRODUCED_SOLAR_HEATING_TODAY,
+    PRODUCED_SOLAR_HEATING_TOTAL,
+    PRODUCED_SOLAR_WATER_HEATING_TODAY,
+    PRODUCED_SOLAR_WATER_HEATING_TOTAL,
     PUMP_ON_HK1,
     RETURN_TEMPERATURE,
     SERVICE,
@@ -96,6 +100,7 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     TARGET_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_WATER,
+    SOLAR_COLLECTOR_TEMPERATURE,
     VENTILATION,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
@@ -245,8 +250,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            # skip 27-30
-            decoder.skip_bytes(8)
+            # 27
+            result[SOLAR_COLLECTOR_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int()
+            )
+            # skip 28-30
+            decoder.skip_bytes(6)
             # 31
             compressor_starts_high = decoder.decode_16bit_uint()
             decoder.skip_bytes(4)
@@ -339,17 +348,23 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers,
                 byteorder=Endian.BIG,
             )
+            # 3001
             produced_heating_today = self.assign_if_increased(
                 decoder.decode_16bit_uint(),
                 PRODUCED_HEATING_TODAY,
             )
+            # 3002
             produced_heating_total_low = decoder.decode_16bit_uint()
+            # 3003
             produced_heating_total_high = decoder.decode_16bit_uint()
+            # 3004
             produced_water_today = self.assign_if_increased(
                 decoder.decode_16bit_uint(),
                 PRODUCED_WATER_HEATING_TODAY,
             )
+            # 3005
             produced_water_total_low = decoder.decode_16bit_uint()
+            # 3006
             produced_water_total_high = decoder.decode_16bit_uint()
 
             result[PRODUCED_HEATING_TODAY] = produced_heating_today
@@ -370,8 +385,43 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 + result[PRODUCED_WATER_HEATING_TODAY],
                 PRODUCED_WATER_HEATING,
             )
+            # 3007 - 3010
+            decoder.skip_bytes(8)
+            # 3011 - 3013
+            decoder.skip_bytes(6)
+            # 3014
+            produced_solar_heating_today = self.assign_if_increased(
+                decoder.decode_16bit_uint(),
+                PRODUCED_SOLAR_HEATING_TODAY,
+            )
+            result[PRODUCED_SOLAR_HEATING_TODAY] = produced_solar_heating_today
 
-            decoder.skip_bytes(30)
+            # 3015
+            produced_solar_heating_total_low = decoder.decode_16bit_uint()
+            # 3016
+            produced_solar_heating_total_high = decoder.decode_16bit_uint()
+            result[PRODUCED_SOLAR_HEATING_TOTAL] = (
+                produced_solar_heating_total_high * 1000 + produced_solar_heating_total_low
+            )
+            
+            # 3017
+            produced_solar_water_heating_today = self.assign_if_increased(
+                decoder.decode_16bit_uint(),
+                PRODUCED_SOLAR_WATER_HEATING_TODAY,
+            )
+            result[PRODUCED_SOLAR_WATER_HEATING_TODAY] = produced_solar_water_heating_today
+
+            # 3018
+            produced_solar_water_heating_total_low = decoder.decode_16bit_uint()
+            # 3019
+            produced_solar_water_heating_total_high = decoder.decode_16bit_uint()
+            result[PRODUCED_SOLAR_WATER_HEATING_TOTAL] = (
+                produced_solar_water_heating_total_high * 1000 + produced_solar_water_heating_total_low
+            )
+
+            # 3020 - 3021
+            decoder.skip_bytes(4)
+            # 3022
             consumed_heating_today = self.assign_if_increased(
                 decoder.decode_16bit_uint(),
                 CONSUMED_HEATING_TODAY,

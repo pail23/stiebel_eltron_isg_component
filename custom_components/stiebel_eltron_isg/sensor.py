@@ -86,6 +86,10 @@ from .const import (
     PRODUCED_WATER_HEATING,
     PRODUCED_WATER_HEATING_TODAY,
     PRODUCED_WATER_HEATING_TOTAL,
+    PRODUCED_SOLAR_HEATING_TODAY,
+    PRODUCED_SOLAR_HEATING_TOTAL,
+    PRODUCED_SOLAR_WATER_HEATING_TODAY,
+    PRODUCED_SOLAR_WATER_HEATING_TOTAL,
     RETURN_TEMPERATURE,
     RETURN_TEMPERATURE_WP1,
     RETURN_TEMPERATURE_WP2,
@@ -104,6 +108,7 @@ from .const import (
     TARGET_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK3,
     TARGET_TEMPERATURE_WATER,
+    SOLAR_COLLECTOR_TEMPERATURE,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
     VOLUME_STREAM,
@@ -309,6 +314,10 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Target Temperature Water",
         TARGET_TEMPERATURE_WATER,
     ),
+    create_temperature_entity_description(
+        "Solar Collector Temperature",
+        SOLAR_COLLECTOR_TEMPERATURE,
+    ),
     create_temperature_entity_description("Source Temperature", SOURCE_TEMPERATURE),
     create_pressure_entity_description("Source Pressure", SOURCE_PRESSURE),
     create_temperature_entity_description("Hot Gas Temperature", HOT_GAS_TEMPERATURE),
@@ -370,7 +379,17 @@ ENERGY_SENSOR_TYPES = [
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
     ),
-    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
+    create_energy_entity_description(
+        "Produced Water Heating", 
+        PRODUCED_WATER_HEATING),
+    create_energy_entity_description(
+        "Produced Solar Heating Total",
+        PRODUCED_SOLAR_HEATING_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Solar Water Heating Total",
+        PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    ),
     create_energy_entity_description(
         "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
@@ -397,6 +416,14 @@ ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Solar Heating Today",
+        PRODUCED_SOLAR_HEATING_TODAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Solar Water Heating Today",
+        PRODUCED_SOLAR_WATER_HEATING_TODAY,
     ),
     create_daily_energy_entity_description(
         "Consumed Heating Today",
