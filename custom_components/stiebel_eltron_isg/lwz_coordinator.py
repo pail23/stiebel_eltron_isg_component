@@ -79,19 +79,20 @@ from .const import (
     PRODUCED_HEATING,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
-    PRODUCED_WATER_HEATING,
-    PRODUCED_WATER_HEATING_TODAY,
-    PRODUCED_WATER_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING_TODAY,
     PRODUCED_SOLAR_HEATING_TOTAL,
     PRODUCED_SOLAR_WATER_HEATING_TODAY,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TODAY,
+    PRODUCED_WATER_HEATING_TOTAL,
     PUMP_ON_HK1,
     RETURN_TEMPERATURE,
     SERVICE,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
+    SOLAR_COLLECTOR_TEMPERATURE,
     SWITCHING_PROGRAM_ENABLED,
     TARGET_ROOM_TEMPERATURE_HK1,
     TARGET_ROOM_TEMPERATURE_HK2,
@@ -100,7 +101,6 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     TARGET_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_WATER,
-    SOLAR_COLLECTOR_TEMPERATURE,
     VENTILATION,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
@@ -385,10 +385,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 + result[PRODUCED_WATER_HEATING_TODAY],
                 PRODUCED_WATER_HEATING,
             )
-            # 3007 - 3010
-            decoder.skip_bytes(8)
-            # 3011 - 3013
-            decoder.skip_bytes(6)
+            # 3007 - 3013
+            decoder.skip_bytes(14)
             # 3014
             produced_solar_heating_today = self.assign_if_increased(
                 decoder.decode_16bit_uint(),
@@ -401,22 +399,26 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 3016
             produced_solar_heating_total_high = decoder.decode_16bit_uint()
             result[PRODUCED_SOLAR_HEATING_TOTAL] = (
-                produced_solar_heating_total_high * 1000 + produced_solar_heating_total_low
+                produced_solar_heating_total_high * 1000
+                + produced_solar_heating_total_low
             )
-            
+
             # 3017
             produced_solar_water_heating_today = self.assign_if_increased(
                 decoder.decode_16bit_uint(),
                 PRODUCED_SOLAR_WATER_HEATING_TODAY,
             )
-            result[PRODUCED_SOLAR_WATER_HEATING_TODAY] = produced_solar_water_heating_today
+            result[PRODUCED_SOLAR_WATER_HEATING_TODAY] = (
+                produced_solar_water_heating_today
+            )
 
             # 3018
             produced_solar_water_heating_total_low = decoder.decode_16bit_uint()
             # 3019
             produced_solar_water_heating_total_high = decoder.decode_16bit_uint()
             result[PRODUCED_SOLAR_WATER_HEATING_TOTAL] = (
-                produced_solar_water_heating_total_high * 1000 + produced_solar_water_heating_total_low
+                produced_solar_water_heating_total_high * 1000
+                + produced_solar_water_heating_total_low
             )
 
             # 3020 - 3021
