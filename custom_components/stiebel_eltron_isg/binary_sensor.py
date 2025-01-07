@@ -412,7 +412,7 @@ BINARY_SENSOR_TYPES = [
     BinarySensorEntityDescription(
         name="EVU",
         key=EVU,
-        icon="mdi:mdi:power-off",
+        icon="mdi:power-off",
         has_entity_name=True,
     ),
 ]
