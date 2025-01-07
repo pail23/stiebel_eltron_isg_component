@@ -157,6 +157,7 @@ from .const import (
     VOLUME_STREAM,
     VOLUME_STREAM_WP1,
     VOLUME_STREAM_WP2,
+    EVU,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
