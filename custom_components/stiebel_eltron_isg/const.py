@@ -103,10 +103,16 @@ PRODUCED_WATER_HEATING_TOTAL = "produced_water_heating_total"
 PREVIOUS_PRODUCED_WATER_HEATING_TOTAL = "previous_produced_water_heating_total"
 PRODUCED_WATER_HEATING = "produced_water_heating"
 
+PRODUCED_RECOVERY_TODAY = "produced_recovery_today"
+PRODUCED_RECOVERY_TOTAL = "produced_recovery_total"
+PRODUCED_RECOVERY = "produced_recovery"
+
 PRODUCED_SOLAR_HEATING_TODAY = "produced_solar_heating_today"
 PRODUCED_SOLAR_HEATING_TOTAL = "produced_solar_heating_total"
+PRODUCED_SOLAR_HEATING = "produced_solar_heating"
 PRODUCED_SOLAR_WATER_HEATING_TODAY = "produced_solar_water_heating_today"
 PRODUCED_SOLAR_WATER_HEATING_TOTAL = "produced_solar_water_heating_total"
+PRODUCED_SOLAR_WATER_HEATING = "produced_solar_water_heating"
 
 CONSUMED_HEATING_TODAY = "consumed_heating_today"
 CONSUMED_HEATING_TOTAL = "consumed_heating_total"
