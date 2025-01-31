@@ -71,7 +71,6 @@ from .const import (
     EMERGENCY_HEATING_2,
     ERROR_STATUS,
     EVAPORATOR_DEFROST,
-    EVU,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
     FLOW_TEMPERATURE,
@@ -120,6 +119,7 @@ from .const import (
     OUTDOOR_TEMPERATURE,
     POOL_PRIMARY_PUMP,
     POOL_SECONDARY_PUMP,
+    POWER_OFF,
     PREVIOUS_CONSUMED_HEATING_TOTAL,
     PREVIOUS_CONSUMED_WATER_HEATING_TOTAL,
     PREVIOUS_PRODUCED_HEATING_TOTAL,
@@ -199,7 +199,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
             # 2502
             state = decoder.decode_16bit_uint()
-            result[EVU] = (state & (1 << 0)) != 0
+            result[POWER_OFF] = (state & (1 << 0)) != 0
 
             # 2503
             decoder.skip_bytes(2)

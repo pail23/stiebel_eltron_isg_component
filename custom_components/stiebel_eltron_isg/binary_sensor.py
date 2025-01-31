@@ -27,7 +27,6 @@ from .const import (
     EMERGENCY_HEATING_2,
     ERROR_STATUS,
     EVAPORATOR_DEFROST,
-    EVU,
     FILTER,
     FILTER_EXTRACT_AIR,
     FILTER_VENTILATION_AIR,
@@ -133,7 +132,7 @@ BINARY_SENSOR_TYPES = [
         has_entity_name=True,
     ),
     BinarySensorEntityDescription(
-        name="Power Off",
+        name="Power Off (EVU)",
         key=POWER_OFF,
         icon="mdi:power-off",
         has_entity_name=True,
@@ -407,12 +406,6 @@ BINARY_SENSOR_TYPES = [
         name="Emergency heating 1 & 2",
         key=EMERGENCY_HEATING_1_2,
         icon="mdi:fence-electric",
-        has_entity_name=True,
-    ),
-    BinarySensorEntityDescription(
-        name="EVU",
-        key=EVU,
-        icon="mdi:power-off",
         has_entity_name=True,
     ),
 ]
