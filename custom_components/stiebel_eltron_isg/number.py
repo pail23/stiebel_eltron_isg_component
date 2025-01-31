@@ -354,6 +354,7 @@ async def async_setup_entry(
     for description in NUMBER_TYPES_ALL:
         select_entity = StiebelEltronISGNumberEntity(coordinator, entry, description)
         entities.append(select_entity)
+
     if coordinator.is_wpm:
         for description in NUMBER_TYPES_WPM:
             select_entity = StiebelEltronISGNumberEntity(
@@ -362,10 +363,12 @@ async def async_setup_entry(
                 description,
             )
             entities.append(select_entity)
-    # else:
-    for description in NUMBER_TYPES_LWZ:
-        select_entity = StiebelEltronISGNumberEntity(coordinator, entry, description)
-        entities.append(select_entity)
+    else:
+        for description in NUMBER_TYPES_LWZ:
+            select_entity = StiebelEltronISGNumberEntity(
+                coordinator, entry, description
+            )
+            entities.append(select_entity)
     async_add_devices(entities)
 
 

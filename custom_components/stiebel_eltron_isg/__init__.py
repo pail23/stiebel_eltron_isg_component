@@ -15,8 +15,6 @@ from homeassistant.core_config import Config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.loader import async_get_loaded_integration
 from pymodbus.client import AsyncModbusTcpClient
-from pymodbus.constants import Endian
-from pymodbus.payload import BinaryPayloadDecoder
 
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronISGIntegrationConfigEntry,
@@ -80,11 +78,12 @@ async def get_controller_model(host, port) -> int:
             slave=1,
         )
         if not inverter_data.isError():
-            decoder = BinaryPayloadDecoder.fromRegisters(
-                inverter_data.registers,
-                byteorder=Endian.BIG,
+            value = client.convert_from_registers(
+                inverter_data.registers, client.DATATYPE.UINT16, "big"
             )
-            return decoder.decode_16bit_uint()
+            if isinstance(value, int):
+                return value
+
         raise StiebelEltronModbusError
     finally:
         client.close()
