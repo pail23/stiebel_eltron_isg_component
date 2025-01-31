@@ -12,6 +12,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
+
 from .const import (
     AREA_COOLING_TARGET_FLOW_TEMPERATURE,
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
@@ -375,7 +379,12 @@ async def async_setup_entry(
 class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
     """stiebel_eltron_isg select class."""
 
-    def __init__(self, coordinator, config_entry, description):
+    def __init__(
+        self,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronISGIntegrationConfigEntry,
+        description: NumberEntityDescription,
+    ):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
