@@ -76,7 +76,7 @@ jobs:
         run: uv run --prerelease=allow ruff format . --check
       - name: Run tests
         run: |
-          uv run pytest \
+          uv run --prerelease=allow  pytest \
             -qq \
             --timeout=9 \
             --durations=10 \
