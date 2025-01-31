@@ -3,8 +3,9 @@
 from unittest.mock import patch
 
 import pytest
-from homeassistant import config_entries, data_entry_flow
+from homeassistant import config_entries
 from homeassistant.const import CONF_HOST
+from homeassistant.data_entry_flow import FlowResultType
 
 from custom_components.stiebel_eltron_isg.const import (
     DOMAIN,
@@ -45,7 +46,7 @@ async def test_successful_config_flow(hass, bypass_get_data):
     )
 
     # Check that the config flow shows the user form as the first step
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     # If a user were to enter `test_username` for username and `test_password`
@@ -57,7 +58,7 @@ async def test_successful_config_flow(hass, bypass_get_data):
 
     # Check that the config flow is complete and a new entry is created with
     # the input data
-    assert result["type"] == data_entry_flow.RESULT_TYPE_CREATE_ENTRY
+    assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == "Stiebel Eltron ISG"
     assert result["data"] == MOCK_CONFIG
     assert result["result"]
@@ -75,7 +76,7 @@ async def test_failed_config_flow(hass, error_on_get_data):
         context={"source": config_entries.SOURCE_USER},
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
@@ -83,5 +84,5 @@ async def test_failed_config_flow(hass, error_on_get_data):
         user_input=MOCK_INVALID_IP_CONFIG,
     )
 
-    assert result["type"] == data_entry_flow.RESULT_TYPE_FORM
+    assert result["type"] == FlowResultType.FORM
     assert result["errors"] == {CONF_HOST: "invalid_host_IP"}

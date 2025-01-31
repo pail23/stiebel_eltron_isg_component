@@ -19,7 +19,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
-from pymodbus.pdu.register_read_message import (
+from pymodbus.pdu.register_message import (
     ReadHoldingRegistersResponse,
     ReadInputRegistersResponse,
 )
@@ -72,45 +72,46 @@ def bypass_get_data_fixture():
         yield
 
 
-def read_input_register(register, start, count) -> ReadInputRegistersResponse:
+def read_input_register(
+    address: int, register, start, count
+) -> ReadInputRegistersResponse:
     """Read a slice from the input register."""
-    return ReadInputRegistersResponse(register[start : start + count])
+    return ReadInputRegistersResponse(
+        address=address, count=count, registers=register[start : start + count]
+    )
 
 
 async def read_input_registers_wpm(
-    address: int,
-    count: int = 1,
-    slave: int = 0,
-    **kwargs: Any,
+    address: int, *, count: int = 1, slave: int = 0, no_response_expected: bool = False
 ):
     """Simulate reads on the input registers on wpm models."""
     system_info = [2, 390]
     if address >= 5000:
-        return read_input_register(system_info, address - 5000, count)
-    return ReadInputRegistersResponse(list(range(count)))
+        return read_input_register(address, system_info, address - 5000, count)
+    return ReadInputRegistersResponse(
+        address=address, count=count, registers=list(range(count))
+    )
 
 
 async def read_input_registers_lwz(
-    address: int,
-    count: int = 1,
-    slave: int = 0,
-    **kwargs: Any,
+    address: int, *, count: int = 1, slave: int = 0, no_response_expected: bool = False
 ):
     """Simulate reads on the input registers on lwz models ."""
     system_info = [2, 103]
     if address >= 5000:
-        return read_input_register(system_info, address - 5000, count)
-    return ReadInputRegistersResponse(list(range(count)))
+        return read_input_register(address, system_info, address - 5000, count)
+    return ReadInputRegistersResponse(
+        address=address, count=count, registers=list(range(count))
+    )
 
 
 async def read_holding_registers(
-    address: int,
-    count: int = 1,
-    slave: int = 0,
-    **kwargs: Any,
+    address: int, *, count: int = 1, slave: int = 0, no_response_expected: bool = False
 ):
     """Simulate reads on the holding registers on lwz models ."""
-    return ReadHoldingRegistersResponse(list(range(count)))
+    return ReadHoldingRegistersResponse(
+        address=address, count=count, registers=list(range(count))
+    )
 
 
 # This fixture, when used, will result in calls to read_input_registers to return mock data. To have the call

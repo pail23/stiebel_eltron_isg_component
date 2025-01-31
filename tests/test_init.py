@@ -50,7 +50,7 @@ async def test_setup_unload_and_reload_entry(
 @pytest.mark.asyncio()
 async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     """Test creating a data coordinator for wpm models."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_wpm")
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
     config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(config_entry.entry_id)
