@@ -27,6 +27,7 @@ from .const import (
     EMERGENCY_HEATING_2,
     ERROR_STATUS,
     EVAPORATOR_DEFROST,
+    EVU,
     FILTER,
     FILTER_EXTRACT_AIR,
     FILTER_VENTILATION_AIR,
@@ -66,7 +67,6 @@ from .const import (
     SOURCE_PUMP,
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
-    EVU,
 )
 from .data import StiebelEltronISGIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity

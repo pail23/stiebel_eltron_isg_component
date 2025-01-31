@@ -101,7 +101,9 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             f"Reading {count} input registers from {address} with slave {slave}"
         )
         async with self._lock:
-            return await self._client.read_input_registers(address, count, slave)
+            return await self._client.read_input_registers(
+                address, count=count, slave=slave
+            )
 
     async def read_holding_registers(self, slave, address, count):
         """Read holding registers."""
@@ -109,13 +111,18 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             f"Reading {count} holding registers from {address} with slave {slave}"
         )
         async with self._lock:
-            return await self._client.read_holding_registers(address, count, slave)
+            return await self._client.read_holding_registers(
+                address, count=count, slave=slave
+            )
 
     async def write_register(self, address, value, slave):
         """Write holding register."""
         _LOGGER.debug(f"Writing {value} to register {address} with slave {slave}")
         async with self._lock:
-            return await self._client.write_registers(address, value, slave)
+            registers = self._client.convert_to_registers(
+                value, self._client.DATATYPE.INT16
+            )
+            return await self._client.write_registers(address, registers, slave=slave)
 
     async def _async_update_data(self) -> dict:
         """Time to update."""

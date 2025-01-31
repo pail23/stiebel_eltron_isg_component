@@ -1,14 +1,13 @@
 [project]
 name = "stiebel-eltron-isg-component"
-version = "2024.11.0"
+version = "2025.1.0"
 description = "Home assistant component for the Stiebel Eltron ISG"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.13"
 dependencies = [
     "colorlog>=6.9.0",
-    "homeassistant>=2024.11.0",
-    "pymodbus>=3.6.9",
-    "pytest-homeassistant-custom-component>=0.13.182",
+    "pymodbus>=3.8.3",
+    "pytest-homeassistant-custom-component>=0.13.205",
 ]
 
 [dependency-groups]

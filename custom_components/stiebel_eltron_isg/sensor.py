@@ -384,10 +384,7 @@ ENERGY_SENSOR_TYPES = [
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
     ),
-    create_energy_entity_description(
-        "Produced Water Heating",
-        PRODUCED_WATER_HEATING
-    ),
+    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
     create_energy_entity_description(
         "Produced Recovery",
         PRODUCED_RECOVERY,

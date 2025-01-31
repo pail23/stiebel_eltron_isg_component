@@ -405,8 +405,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
             result[PRODUCED_RECOVERY_TODAY] = produced_recovery_today
             result[PRODUCED_RECOVERY_TOTAL] = (
-                produced_recovery_total_high * 1000
-                + produced_recovery_total_low
+                produced_recovery_total_high * 1000 + produced_recovery_total_low
             )
             result[PRODUCED_RECOVERY] = self.assign_if_increased(
                 result[PRODUCED_RECOVERY_TOTAL] + result[PRODUCED_RECOVERY_TODAY],
@@ -425,10 +424,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             # 3016
             produced_solar_heating_total_high = decoder.decode_16bit_uint()
             result[PRODUCED_SOLAR_HEATING_TOTAL] = (
-                produced_solar_heating_total_high * 1000 + produced_solar_heating_total_low
+                produced_solar_heating_total_high * 1000
+                + produced_solar_heating_total_low
             )
             result[PRODUCED_SOLAR_HEATING] = self.assign_if_increased(
-                result[PRODUCED_SOLAR_HEATING_TOTAL] + result[PRODUCED_SOLAR_HEATING_TODAY],
+                result[PRODUCED_SOLAR_HEATING_TOTAL]
+                + result[PRODUCED_SOLAR_HEATING_TODAY],
                 PRODUCED_SOLAR_HEATING,
             )
 
@@ -451,7 +452,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
 
             result[PRODUCED_SOLAR_WATER_HEATING] = self.assign_if_increased(
-                result[PRODUCED_SOLAR_WATER_HEATING_TOTAL] + result[PRODUCED_SOLAR_WATER_HEATING_TODAY],
+                result[PRODUCED_SOLAR_WATER_HEATING_TOTAL]
+                + result[PRODUCED_SOLAR_WATER_HEATING_TODAY],
                 PRODUCED_SOLAR_WATER_HEATING,
             )
             # 3020 - 3021
