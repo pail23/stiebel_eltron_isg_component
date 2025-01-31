@@ -50,10 +50,10 @@ jobs:
           run: uv sync --all-extras --dev --prerelease=allow
 
         - name: "Run ruff"
-          run: uv run ruff check .
+          run: uv run --prerelease=allow ruff check .
 
         - name: "Format with ruff"
-          run: uv run ruff format . --check
+          run: uv run --prerelease=allow ruff format . --check
   tests:
     runs-on: "ubuntu-latest"
     name: Run tests
@@ -70,10 +70,10 @@ jobs:
         run: uv sync --all-extras --dev --prerelease=allow
 
       - name: "Run ruff"
-        run: uv run ruff check .
+        run: uv run --prerelease=allow ruff check .
 
       - name: "Format with ruff"
-        run: uv run ruff format . --check
+        run: uv run --prerelease=allow ruff format . --check
       - name: Run tests
         run: |
           uv run pytest \
