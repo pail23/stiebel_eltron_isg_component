@@ -79,7 +79,7 @@ async def get_controller_model(host, port) -> int:
         )
         if not inverter_data.isError():
             value = client.convert_from_registers(
-                inverter_data.registers, client.DATATYPE.UINT16, "big"
+                inverter_data.registers, client.DATATYPE.UINT16
             )
             if isinstance(value, int):
                 return value
