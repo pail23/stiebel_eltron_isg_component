@@ -50,7 +50,7 @@ _LOGGER = logging.getLogger(__name__)
 
 NUMBER_TYPES_ALL = [
     NumberEntityDescription(
-        COMFORT_TEMPERATURE_TARGET_HK1,
+        key=COMFORT_TEMPERATURE_TARGET_HK1,
         has_entity_name=True,
         name="Comfort Temperature Target HK1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -60,7 +60,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_TEMPERATURE_TARGET_HK1,
+        key=ECO_TEMPERATURE_TARGET_HK1,
         has_entity_name=True,
         name="Eco Temperature Target HK1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -70,7 +70,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        COMFORT_TEMPERATURE_TARGET_HK2,
+        key=COMFORT_TEMPERATURE_TARGET_HK2,
         has_entity_name=True,
         name="Comfort Temperature Target HK2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -80,7 +80,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_TEMPERATURE_TARGET_HK2,
+        key=ECO_TEMPERATURE_TARGET_HK2,
         has_entity_name=True,
         name="Eco Temperature Target HK2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -90,7 +90,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        COMFORT_TEMPERATURE_TARGET_HK3,
+        key=COMFORT_TEMPERATURE_TARGET_HK3,
         has_entity_name=True,
         name="Comfort Temperature Target HK3",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -100,7 +100,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_TEMPERATURE_TARGET_HK3,
+        key=ECO_TEMPERATURE_TARGET_HK3,
         has_entity_name=True,
         name="Eco Temperature Target HK3",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -110,7 +110,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        DUALMODE_TEMPERATURE_HZG,
+        key=DUALMODE_TEMPERATURE_HZG,
         has_entity_name=True,
         name="Dual Mode Temperature HZG",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -120,7 +120,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        COMFORT_WATER_TEMPERATURE_TARGET,
+        key=COMFORT_WATER_TEMPERATURE_TARGET,
         has_entity_name=True,
         name="Comfort Water Temperature Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -130,7 +130,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_WATER_TEMPERATURE_TARGET,
+        key=ECO_WATER_TEMPERATURE_TARGET,
         has_entity_name=True,
         name="Eco Water Temperature Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -140,7 +140,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        DUALMODE_TEMPERATURE_WW,
+        key=DUALMODE_TEMPERATURE_WW,
         has_entity_name=True,
         name="Dual Mode Temperature WW",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -150,7 +150,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        AREA_COOLING_TARGET_ROOM_TEMPERATURE,
+        key=AREA_COOLING_TARGET_ROOM_TEMPERATURE,
         has_entity_name=True,
         name="Area Cooling Room Temperature Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -160,7 +160,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        AREA_COOLING_TARGET_FLOW_TEMPERATURE,
+        key=AREA_COOLING_TARGET_FLOW_TEMPERATURE,
         has_entity_name=True,
         name="Area Cooling Flow Temperature Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -170,7 +170,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        FAN_COOLING_TARGET_ROOM_TEMPERATURE,
+        key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
         has_entity_name=True,
         name="Fan Cooling Room Temperature Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -180,7 +180,7 @@ NUMBER_TYPES_ALL = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        FAN_COOLING_TARGET_FLOW_TEMPERATURE,
+        key=FAN_COOLING_TARGET_FLOW_TEMPERATURE,
         has_entity_name=True,
         name="Fan Cooling Flow Temperature Target",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -193,7 +193,7 @@ NUMBER_TYPES_ALL = [
 
 NUMBER_TYPES_WPM = [
     NumberEntityDescription(
-        HEATING_CURVE_RISE_HK1,
+        key=HEATING_CURVE_RISE_HK1,
         has_entity_name=True,
         name="Heating Curve Rise HK1",
         icon="mdi:thermometer-chevron-up",
@@ -202,7 +202,7 @@ NUMBER_TYPES_WPM = [
         native_step=0.01,
     ),
     NumberEntityDescription(
-        HEATING_CURVE_RISE_HK2,
+        key=HEATING_CURVE_RISE_HK2,
         has_entity_name=True,
         name="Heating Curve Rise HK2",
         icon="mdi:thermometer-chevron-up",
@@ -211,7 +211,7 @@ NUMBER_TYPES_WPM = [
         native_step=0.01,
     ),
     NumberEntityDescription(
-        HEATING_CURVE_RISE_HK3,
+        key=HEATING_CURVE_RISE_HK3,
         has_entity_name=True,
         name="Heating Curve Rise HK3",
         icon="mdi:thermometer-chevron-up",
@@ -224,7 +224,7 @@ NUMBER_TYPES_WPM = [
 
 NUMBER_TYPES_LWZ = [
     NumberEntityDescription(
-        FAN_LEVEL_DAY,
+        key=FAN_LEVEL_DAY,
         has_entity_name=True,
         name="Fan Level Day",
         icon="mdi:fan",
@@ -233,7 +233,7 @@ NUMBER_TYPES_LWZ = [
         native_step=1,
     ),
     NumberEntityDescription(
-        FAN_LEVEL_NIGHT,
+        key=FAN_LEVEL_NIGHT,
         has_entity_name=True,
         name="Fan Level Night",
         icon="mdi:fan",
@@ -242,7 +242,7 @@ NUMBER_TYPES_LWZ = [
         native_step=1,
     ),
     NumberEntityDescription(
-        COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
+        key=COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
         has_entity_name=True,
         name="Comfort Cooling Temperature Target HK1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -252,7 +252,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_COOLING_TEMPERATURE_TARGET_HK1,
+        key=ECO_COOLING_TEMPERATURE_TARGET_HK1,
         has_entity_name=True,
         name="Eco Cooling Temperature Target HK1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -262,7 +262,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
+        key=COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
         has_entity_name=True,
         name="Comfort Cooling Temperature Target HK2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -272,7 +272,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_COOLING_TEMPERATURE_TARGET_HK2,
+        key=ECO_COOLING_TEMPERATURE_TARGET_HK2,
         has_entity_name=True,
         name="Eco Cooling Temperature Target HK2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -282,7 +282,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        COMFORT_COOLING_TEMPERATURE_TARGET_HK3,
+        key=COMFORT_COOLING_TEMPERATURE_TARGET_HK3,
         has_entity_name=True,
         name="Comfort Cooling Temperature Target HK3",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -292,7 +292,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        ECO_COOLING_TEMPERATURE_TARGET_HK3,
+        key=ECO_COOLING_TEMPERATURE_TARGET_HK3,
         has_entity_name=True,
         name="Eco Cooling Temperature Target HK3",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -302,7 +302,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
     ),
     NumberEntityDescription(
-        HEATING_CURVE_RISE_HK1,
+        key=HEATING_CURVE_RISE_HK1,
         has_entity_name=True,
         name="Heating Curve Rise HK1",
         icon="mdi:chart-bell-curve-cumulative",
@@ -311,7 +311,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.01,
     ),
     NumberEntityDescription(
-        HEATING_CURVE_RISE_HK2,
+        key=HEATING_CURVE_RISE_HK2,
         has_entity_name=True,
         name="Heating Curve Rise HK2",
         icon="mdi:chart-bell-curve-cumulative",
@@ -320,7 +320,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.01,
     ),
     NumberEntityDescription(
-        HEATING_CURVE_LOW_END_HK1,
+        key=HEATING_CURVE_LOW_END_HK1,
         has_entity_name=True,
         name="Heating Curve Low End HK1",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -330,7 +330,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.5,
     ),
     NumberEntityDescription(
-        HEATING_CURVE_LOW_END_HK2,
+        key=HEATING_CURVE_LOW_END_HK2,
         has_entity_name=True,
         name="Heating Curve Low End HK2",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -343,7 +343,7 @@ NUMBER_TYPES_LWZ = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # Unused function argument: `hass`
+    _hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):

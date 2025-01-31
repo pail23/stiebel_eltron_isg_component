@@ -12,6 +12,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPressure,
@@ -19,7 +20,6 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.data import (
@@ -128,7 +128,7 @@ _LOGGER = logging.getLogger(__name__)
 def create_temperature_entity_description(name, key):
     """Create an entry description for a temperature sensor."""
     return SensorEntityDescription(
-        key,
+        key=key,
         name=name,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
@@ -141,7 +141,7 @@ def create_temperature_entity_description(name, key):
 def create_energy_entity_description(name, key, visible_default=True):
     """Create an entry description for a energy sensor."""
     return SensorEntityDescription(
-        key,
+        key=key,
         name=name,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         icon="mdi:meter-electric",
@@ -155,7 +155,7 @@ def create_energy_entity_description(name, key, visible_default=True):
 def create_daily_energy_entity_description(name, key, visible_default=True):
     """Create an entry description for a energy sensor."""
     return SensorEntityDescription(
-        key,
+        key=key,
         name=name,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         icon="mdi:meter-electric",
@@ -169,7 +169,7 @@ def create_daily_energy_entity_description(name, key, visible_default=True):
 def create_humidity_entity_description(name, key):
     """Create an entry description for a humidity sensor."""
     return SensorEntityDescription(
-        key,
+        key=key,
         name=name,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
@@ -181,7 +181,7 @@ def create_humidity_entity_description(name, key):
 def create_pressure_entity_description(name, key):
     """Create an entry description for a pressure sensor."""
     return SensorEntityDescription(
-        key,
+        key=key,
         name=name,
         native_unit_of_measurement=UnitOfPressure.BAR,
         icon="mdi:gauge",
@@ -193,7 +193,7 @@ def create_pressure_entity_description(name, key):
 def create_volume_stream_entity_description(name, key):
     """Create an entry description for a volume stream sensor."""
     return SensorEntityDescription(
-        key,
+        key=key,
         name=name,
         native_unit_of_measurement="l/min",
         icon="mdi:gauge",
@@ -353,7 +353,7 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_pressure_entity_description("High Pressure WP2", HIGH_PRESSURE_WP2),
     create_volume_stream_entity_description("Volume Stream WP2", VOLUME_STREAM_WP2),
     SensorEntityDescription(
-        ACTIVE_ERROR,
+        key=ACTIVE_ERROR,
         name="Active Error",
         has_entity_name=True,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -363,7 +363,7 @@ SYSTEM_VALUES_SENSOR_TYPES = [
 
 ENERGYMANAGEMENT_SENSOR_TYPES = [
     SensorEntityDescription(
-        SG_READY_STATE,
+        key=SG_READY_STATE,
         name="SG Ready State",
         icon="mdi:solar-power",
         has_entity_name=True,
@@ -461,13 +461,13 @@ ENERGY_DAILY_SENSOR_TYPES = [
 
 COMPRESSOR_SENSOR_TYPES = [
     SensorEntityDescription(
-        COMPRESSOR_STARTS,
+        key=COMPRESSOR_STARTS,
         name="Compressor starts",
         icon="mdi:restart",
         has_entity_name=True,
     ),
     SensorEntityDescription(
-        COMPRESSOR_HEATING,
+        key=COMPRESSOR_HEATING,
         name="Compressor heating",
         icon="mdi:hours-24",
         has_entity_name=True,
@@ -475,7 +475,7 @@ COMPRESSOR_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        COMPRESSOR_HEATING_WATER,
+        key=COMPRESSOR_HEATING_WATER,
         name="Compressor heating water",
         icon="mdi:hours-24",
         has_entity_name=True,
@@ -483,7 +483,7 @@ COMPRESSOR_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        ELECTRICAL_BOOSTER_HEATING,
+        key=ELECTRICAL_BOOSTER_HEATING,
         name="Electrical booster heating",
         icon="mdi:hours-24",
         has_entity_name=True,
@@ -491,7 +491,7 @@ COMPRESSOR_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        ELECTRICAL_BOOSTER_HEATING_WATER,
+        key=ELECTRICAL_BOOSTER_HEATING_WATER,
         name="Electrical booster heating water",
         icon="mdi:hours-24",
         has_entity_name=True,
@@ -502,7 +502,7 @@ COMPRESSOR_SENSOR_TYPES = [
 
 VENTILATION_SENSOR_TYPES = [
     SensorEntityDescription(
-        VENTILATION_AIR_ACTUAL_FAN_SPEED,
+        key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
         name="Ventilation air actual fan speed",
         icon="mdi:fan",
         has_entity_name=True,
@@ -511,7 +511,7 @@ VENTILATION_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        VENTILATION_AIR_TARGET_FLOW_RATE,
+        key=VENTILATION_AIR_TARGET_FLOW_RATE,
         name="Ventilation air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
@@ -519,7 +519,7 @@ VENTILATION_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        EXTRACT_AIR_ACTUAL_FAN_SPEED,
+        key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
         name="Extract air actual fan speed",
         icon="mdi:fan",
         has_entity_name=True,
@@ -528,7 +528,7 @@ VENTILATION_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
-        EXTRACT_AIR_TARGET_FLOW_RATE,
+        key=EXTRACT_AIR_TARGET_FLOW_RATE,
         name="Extract air target fan speed",
         icon="mdi:fan",
         has_entity_name=True,
@@ -546,7 +546,7 @@ VENTILATION_SENSOR_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # Unused function argument: `hass`
+    _hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronISGIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
