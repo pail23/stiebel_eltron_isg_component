@@ -100,6 +100,8 @@ from .const import (
     RETURN_TEMPERATURE_WP2,
     SG_READY_STATE,
     SOLAR_COLLECTOR_TEMPERATURE,
+    SOLAR_CYLINDER_TEMPERATURE,
+    SOLAR_RUNTIME,
     SOURCE_PRESSURE,
     SOURCE_TEMPERATURE,
     TARGET_ROOM_TEMPERATURE_HK1,
@@ -273,6 +275,20 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Target Temperature Cooling Surface",
         TARGET_TEMPERATURE_COOLING_SURFACE,
+    ),
+    create_temperature_entity_description(
+        "Solar Collector Temperature", SOLAR_COLLECTOR_TEMPERATURE
+    ),
+    create_temperature_entity_description(
+        "Solar Cylinder Temperature", SOLAR_CYLINDER_TEMPERATURE
+    ),
+    SensorEntityDescription(
+        key=SOLAR_RUNTIME,
+        name="Solar Runtime",
+        has_entity_name=True,
+        icon="mdi:hours-24",
+        native_unit_of_measurement="h",
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     create_temperature_entity_description(
         "Actual Room Temperature HK 1",

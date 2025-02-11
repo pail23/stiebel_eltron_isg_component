@@ -71,6 +71,9 @@ ACTUAL_TEMPERATURE_COOLING_FANCOIL = "actual_temperature_cooling_fancoil"
 TARGET_TEMPERATURE_COOLING_FANCOIL = "target_temperature_cooling_fancoil"
 ACTUAL_TEMPERATURE_COOLING_SURFACE = "actual_temperature_cooling_surface"
 TARGET_TEMPERATURE_COOLING_SURFACE = "target_temperature_cooling_surface"
+SOLAR_COLLECTOR_TEMPERATURE = "solar_collector_temperature"
+SOLAR_CYLINDER_TEMPERATURE = "solar_cylinder_temperature"
+SOLAR_RUNTIME = "solar_runtime"
 
 
 HOT_GAS_TEMPERATURE = "hot_gas_temperature"

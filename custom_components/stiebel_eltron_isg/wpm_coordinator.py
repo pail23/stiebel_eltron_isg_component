@@ -140,6 +140,9 @@ from .const import (
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
+    SOLAR_COLLECTOR_TEMPERATURE,
+    SOLAR_CYLINDER_TEMPERATURE,
+    SOLAR_RUNTIME,
     SOURCE_PRESSURE,
     SOURCE_PUMP,
     SOURCE_TEMPERATURE,
@@ -483,8 +486,21 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_COOLING_SURFACE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
-            # 528-535
-            decoder.skip_bytes(16)
+            # 528 collector temperature
+            result[SOLAR_COLLECTOR_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 529 cylinder temperature
+            result[SOLAR_CYLINDER_TEMPERATURE] = get_isg_scaled_value(
+                decoder.decode_16bit_int(),
+            )
+            # 530 solar runtime
+            runtime = decoder.decode_16bit_uint()
+            result[SOLAR_RUNTIME] = runtime if runtime != 32768 else None
+
+            # 531-535
+            decoder.skip_bytes(10)
+
             # 536
             result[SOURCE_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
