@@ -1,4 +1,4 @@
-"""Custom integration to integrate stiebel_eltron_isg with Home Assistant.
+"""Custom integration to integrate stiebel_eltron_isg with Home Assistant and fix the modbus connection issue.
 
 For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
@@ -37,7 +37,6 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-
 STIEBEL_ELTRON_ISG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
@@ -58,9 +57,9 @@ CONFIG_SCHEMA = vol.Schema(
 class StiebelEltronModbusError(Exception):
     """Exception during modbus communication."""
 
-    def __init(self) -> None:
+    def __init__(self, message="Data error on the modbus") -> None:
         """Initialize the error."""
-        super().__init__("Data error on the modbus")
+        super().__init__(message)
 
 
 async def get_controller_model(host, port) -> int:
@@ -69,9 +68,12 @@ async def get_controller_model(host, port) -> int:
     LWA and LWZ controllers have model ids 103 and 104.
     WPM controllers have 390, 391 or 449.
     """
-    client = AsyncModbusTcpClient(host=host, port=port)
+    # Instantiate the client with an explicit timeout
+    client = AsyncModbusTcpClient(host=host, port=port, timeout=3)
     try:
-        await client.connect()
+        connection = await client.connect()
+        if not connection:
+            raise StiebelEltronModbusError("Failed to connect to controller")
         inverter_data = await client.read_input_registers(
             address=5001,
             count=1,
@@ -84,7 +86,7 @@ async def get_controller_model(host, port) -> int:
             if isinstance(value, int):
                 return value
 
-        raise StiebelEltronModbusError
+        raise StiebelEltronModbusError("Invalid response from controller")
     finally:
         client.close()
 
