@@ -528,7 +528,7 @@ VENTILATION_SENSOR_TYPES = [
     ),
     SensorEntityDescription(
         key=VENTILATION_AIR_TARGET_FLOW_RATE,
-        name="Ventilation air target fan speed",
+        name="Ventilation air target flow rate",
         icon="mdi:fan",
         has_entity_name=True,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
@@ -545,7 +545,7 @@ VENTILATION_SENSOR_TYPES = [
     ),
     SensorEntityDescription(
         key=EXTRACT_AIR_TARGET_FLOW_RATE,
-        name="Extract air target fan speed",
+        name="Extract air target flow rate",
         icon="mdi:fan",
         has_entity_name=True,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
