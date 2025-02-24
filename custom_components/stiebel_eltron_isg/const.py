@@ -105,7 +105,10 @@ PRODUCED_WATER_HEATING_TODAY = "produced_water_heating_today"
 PRODUCED_WATER_HEATING_TOTAL = "produced_water_heating_total"
 PREVIOUS_PRODUCED_WATER_HEATING_TOTAL = "previous_produced_water_heating_total"
 PRODUCED_WATER_HEATING = "produced_water_heating"
-
+PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL = "produced_electrical_booster_heating_total"
+PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL = (
+    "produced_electrical_booster_water_heating_total"
+)
 PRODUCED_RECOVERY_TODAY = "produced_recovery_today"
 PRODUCED_RECOVERY_TOTAL = "produced_recovery_total"
 PRODUCED_RECOVERY = "produced_recovery"

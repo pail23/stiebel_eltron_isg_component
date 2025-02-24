@@ -76,6 +76,8 @@ from .const import (
     OPERATION_MODE,
     OUTDOOR_TEMPERATURE,
     POWER_OFF,
+    PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
+    PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
@@ -390,8 +392,29 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 + result[PRODUCED_WATER_HEATING_TODAY],
                 PRODUCED_WATER_HEATING,
             )
-            # 3007 - 3010
-            decoder.skip_bytes(8)
+
+            # 3007
+            produced_electrical_booster_heating_total_low = decoder.decode_16bit_uint()
+            # 3008
+            produced_electrical_booster_heating_total_high = decoder.decode_16bit_uint()
+            result[PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL] = (
+                produced_electrical_booster_heating_total_high * 1000
+                + produced_electrical_booster_heating_total_low
+            )
+
+            # 3009
+            produced_electrical_booster_water_heating_total_low = (
+                decoder.decode_16bit_uint()
+            )
+            # 3010
+            produced_electrical_booster_water_heating_total_high = (
+                decoder.decode_16bit_uint()
+            )
+            result[PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL] = (
+                produced_electrical_booster_water_heating_total_high * 1000
+                + produced_electrical_booster_water_heating_total_low
+            )
+
             # 3011
             produced_recovery_today = self.assign_if_increased(
                 decoder.decode_16bit_uint(),
