@@ -80,6 +80,8 @@ from .const import (
     LOW_PRESSURE_WP1,
     LOW_PRESSURE_WP2,
     OUTDOOR_TEMPERATURE,
+    PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
+    PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
@@ -399,6 +401,14 @@ ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Electrical Booster Heating Total",
+        PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Electrical Booster Water Heating Total",
+        PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     ),
     create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
     create_energy_entity_description(
