@@ -310,7 +310,6 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             result[HEATING_CURVE_LOW_END_HK1] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
-                100,
             )
             result[HEATING_CURVE_RISE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
@@ -318,7 +317,6 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             )
             result[HEATING_CURVE_LOW_END_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
-                100,
             )
             result[COMFORT_WATER_TEMPERATURE_TARGET] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
@@ -539,7 +537,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         elif key == HEATING_CURVE_RISE_HK1:
             await self.write_register(address=1007, value=int(value * 100), slave=1)
         elif key == HEATING_CURVE_LOW_END_HK1:
-            await self.write_register(address=1008, value=int(value * 100), slave=1)
+            await self.write_register(address=1008, value=int(value * 10), slave=1)
         elif key == COMFORT_TEMPERATURE_TARGET_HK2:
             await self.write_register(address=1004, value=int(value * 10), slave=1)
         elif key == ECO_TEMPERATURE_TARGET_HK2:
@@ -547,7 +545,7 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
         elif key == HEATING_CURVE_RISE_HK2:
             await self.write_register(address=1009, value=int(value * 100), slave=1)
         elif key == HEATING_CURVE_LOW_END_HK2:
-            await self.write_register(address=1010, value=int(value * 100), slave=1)
+            await self.write_register(address=1010, value=int(value * 10), slave=1)
         elif key == COMFORT_WATER_TEMPERATURE_TARGET:
             await self.write_register(address=1011, value=int(value * 10), slave=1)
         elif key == ECO_WATER_TEMPERATURE_TARGET:
