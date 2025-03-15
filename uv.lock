@@ -1469,7 +1469,7 @@ wheels = [
 
 [[package]]
 name = "pytest-homeassistant-custom-component"
-version = "0.13.212"
+version = "0.13.224"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "coverage" },
