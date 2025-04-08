@@ -72,6 +72,7 @@ async def get_controller_model(host, port) -> int:
     client = AsyncModbusTcpClient(host=host, port=port)
     try:
         await client.connect()
+        # Modbus address 5002 (register address 5001)
         inverter_data = await client.read_input_registers(
             address=5001,
             count=1,
@@ -105,23 +106,19 @@ async def async_setup_entry(
     port_data = entry.data.get(CONF_PORT)
     port = int(port_data) if port_data is not None else 502
     scan_interval = int(entry.data[CONF_SCAN_INTERVAL])
+    _LOGGER.debug("Setting up Stiebel Eltron ISG integration, connect %s:%s", host, port)
 
     try:
         model = await get_controller_model(host, port)
     except Exception as exception:
         raise ConfigEntryNotReady(exception) from exception
 
-    coordinator = (
-        StiebelEltronModbusWPMDataCoordinator(hass, name, host, port, scan_interval)
-        if model >= 390
-        else StiebelEltronModbusLWZDataCoordinator(
-            hass,
-            name,
-            host,
-            port,
-            scan_interval,
-        )
-    )
+    if model >= 390:
+        _LOGGER.debug("Use StiebelEltronModbusWPMDataCoordinator for model %d", model)
+        coordinator = StiebelEltronModbusWPMDataCoordinator(hass, name, host, port, scan_interval)
+    else:
+        _LOGGER.debug("Use StiebelEltronModbusLWZDataCoordinator for model %d", model)
+        coordinator = StiebelEltronModbusLWZDataCoordinator(hass, name, host, port, scan_interval)
 
     entry.runtime_data = StiebEltronISGIntegrationData(
         coordinator=coordinator,

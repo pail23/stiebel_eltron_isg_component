@@ -100,6 +100,9 @@ from .const import (
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
     SOLAR_COLLECTOR_TEMPERATURE,
+    HOT_GAS_TEMPERATURE,
+    HIGH_PRESSURE,
+    LOW_PRESSURE,
     SWITCHING_PROGRAM_ENABLED,
     TARGET_ROOM_TEMPERATURE_HK1,
     TARGET_ROOM_TEMPERATURE_HK2,
@@ -139,6 +142,8 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
                 inverter_data.registers,
                 byteorder=Endian.BIG,
             )
+            
+            # 2001
             state = decoder.decode_16bit_uint()
             result[SWITCHING_PROGRAM_ENABLED] = (state & 1) != 0
             result[COMPRESSOR_ON] = (state & (1 << 1)) != 0
@@ -158,8 +163,14 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[FILTER_VENTILATION_AIR] = (state & (1 << 13)) != 0
             result[HEAT_UP_PROGRAM] = (state & (1 << 14)) != 0
 
+            # 2002 ERROR_STATUS
             result[ERROR_STATUS] = decoder.decode_16bit_uint()
+
+            # 2003, 2004
             decoder.skip_bytes(4)
+
+            # 2005 Bit 0: IS_SUMMER_MODE
+            # 2005 BIT 1: FIREPLACE MODE ACTIVE
             state = decoder.decode_16bit_uint()
             result[IS_SUMMER_MODE] = (state & 1) != 0
         return result
@@ -220,16 +231,21 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[TARGET_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
+
             # 12
             result[FLOW_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+
             # 13
             result[RETURN_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
             )
+
             # 14
             result[HEATER_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+
             # 15
             result[VOLUME_STREAM] = get_isg_scaled_value(decoder.decode_16bit_int())
+
             # 16
             result[ACTUAL_TEMPERATURE_WATER] = get_isg_scaled_value(
                 decoder.decode_16bit_int(),
@@ -257,15 +273,26 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             result[DEWPOINT_TEMPERATURE_HK2] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
+
             # 27
             result[SOLAR_COLLECTOR_TEMPERATURE] = get_isg_scaled_value(
                 decoder.decode_16bit_int()
             )
-            # skip 28-30
-            decoder.skip_bytes(6)
+            # 28 HOT_GAS_TEMPERATURE
+            result[HOT_GAS_TEMPERATURE] = get_isg_scaled_value(decoder.decode_16bit_int())
+
+            # 29 HIGH_PRESSURE 
+            result[HIGH_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
+
+            # 30 LOW_PRESSURE
+            result[LOW_PRESSURE] = get_isg_scaled_value(decoder.decode_16bit_int(), 100)
+            
             # 31
             compressor_starts_high = decoder.decode_16bit_uint()
+
+            # skip 4 bytes
             decoder.skip_bytes(4)
+
             compressor_starts_low = decoder.decode_16bit_uint()
             if compressor_starts_high == 32768:
                 result[COMPRESSOR_STARTS] = compressor_starts_high

@@ -51,6 +51,15 @@ This is the preferred installation option. If you are using HACS:
 
 <!---->
 
+
+## Modbus Address Reference
+[ISG web (229336), ISG plus (233493) Modbus Documentation](https://www.stiebel-eltron.de/content/dam/ste/cdbassets/installation/ISG_Modbus/321798-44755-9770_ISG%20Modbus_de_en_fr_it_nl_cs_sk_pl_hu.pdf)
+
+### Why Modbus Address in Code and Documentation Differ
+
+Modbus addresses in the code are typically zero-based (starting from 0), while documentation often uses one-based addresses (starting from 1). For example, an address listed as `5001` in the documentation would correspond to `5000` in the code.
+
+
 ## Contributions are welcome!
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
