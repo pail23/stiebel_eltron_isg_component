@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
+    StiebelEltronModbusDataCoordinatorOld,
 )
 
 from .const import (
@@ -46,7 +46,7 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     HEATING_CURVE_RISE_HK3,
 )
-from .data import StiebelEltronISGIntegrationConfigEntry
+from .data import StiebelEltronIsgIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -348,7 +348,7 @@ NUMBER_TYPES_LWZ = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,  # Unused function argument: `hass`
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):
     """Set up the select platform."""
@@ -381,8 +381,8 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinator,
-        config_entry: StiebelEltronISGIntegrationConfigEntry,
+        coordinator: StiebelEltronModbusDataCoordinatorOld,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: NumberEntityDescription,
     ):
         """Initialize the sensor."""

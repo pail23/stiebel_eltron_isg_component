@@ -137,9 +137,6 @@ from .const import (
     RETURN_TEMPERATURE_WP2,
     SECOND_GENERATOR_DHW,
     SECOND_GENERATOR_HEATING,
-    SG_READY_ACTIVE,
-    SG_READY_INPUT_1,
-    SG_READY_INPUT_2,
     SOLAR_COLLECTOR_TEMPERATURE,
     SOLAR_CYLINDER_TEMPERATURE,
     SOLAR_RUNTIME,
@@ -162,12 +159,29 @@ from .const import (
     VOLUME_STREAM_WP1,
     VOLUME_STREAM_WP2,
 )
+from .python_stiebel_eltron.wpm import (
+    WpmStiebelEltronAPI,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Communicates with WPM Controllers."""
+
+    def __init__(
+        self,
+        hass,
+        name: str,
+        host: str,
+        port: int,
+        scan_interval,
+    ):
+        """Initialize the Modbus hub."""
+
+        super().__init__(
+            hass, WpmStiebelEltronAPI(host=host, port=port), name, scan_interval
+        )
 
     async def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
@@ -176,14 +190,13 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             **await self.read_modbus_system_state(),
             **await self.read_modbus_system_values(),
             **await self.read_modbus_system_paramter(),
-            **await self.read_modbus_sg_ready(),
         }
 
     async def read_modbus_system_state(self) -> dict:  # noqa: C901
         """Read the system state values from the ISG."""
-        result = {}
-        inverter_data = await self.read_input_registers(slave=1, address=2500, count=47)
-        if not inverter_data.isError():
+        result: dict = {}
+        inverter_data = self._api_client._modbus_data.get("System State")
+        if inverter_data is not None:
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers,
                 byteorder=Endian.BIG,
@@ -379,8 +392,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def read_modbus_system_values(self) -> dict:
         """Read the system related values from the ISG."""
         result: dict = {}
-        inverter_data = await self.read_input_registers(slave=1, address=500, count=112)
-        if not inverter_data.isError():
+        inverter_data = self._api_client._modbus_data.get("System Values")
+        if inverter_data is not None:
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers,
                 byteorder=Endian.BIG,
@@ -646,12 +659,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def read_modbus_system_paramter(self) -> dict:
         """Read the system paramters from the ISG."""
         result = {}
-        inverter_data = await self.read_holding_registers(
-            slave=1,
-            address=1500,
-            count=54,
-        )
-        if not inverter_data.isError():
+        inverter_data = self._api_client._modbus_data.get("System Parameters")
+        if inverter_data is not None:
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers,
                 byteorder=Endian.BIG,
@@ -746,13 +755,8 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def read_modbus_energy(self) -> dict:
         """Read the energy consumption related values from the ISG."""
         result = {}
-        inverter_data = await self.read_input_registers(
-            slave=1,
-            address=3500,
-            count=22,
-        )  # count=180
-        _LOGGER.debug(f"Energy Data: {inverter_data.registers}")
-        if not inverter_data.isError():
+        inverter_data = self._api_client._modbus_data.get("Energy Data")
+        if inverter_data is not None:
             decoder = BinaryPayloadDecoder.fromRegisters(
                 inverter_data.registers,
                 byteorder=Endian.BIG,
@@ -869,7 +873,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         return result
 
     async def set_data(self, key, value) -> None:
-        """Write the data to the modbus."""
+        """Write the data to the modbus.
         _LOGGER.debug(f"set modbus register for {key} to {value}")
         if key == SG_READY_ACTIVE:
             await self.write_register(address=4000, value=value, slave=1)
@@ -917,9 +921,28 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             await self.write_register(address=47012, value=value, slave=1)
         else:
             return
+        """
         self.data[key] = value
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
-        await self.write_register(address=1519, value=3, slave=1)
+        # await self.write_register(address=1519, value=3, slave=1)
+
+    def assign_if_increased(self, value: float | int, key: str) -> float:
+        """Assign the value as new value or keep the old value from the internal cache in case the old value is larger than value."""
+        if value == 0:
+            return 0
+        if self.data:
+            data = self.data.get(key)
+            if data is not None:
+                old_value = float(data)
+                _LOGGER.debug(
+                    f"old value for {key} is {old_value} new value is {value}"
+                )
+                if old_value > value:
+                    _LOGGER.info(
+                        f"Value for {key} is not strictly increasing existing value is {old_value} and new value is {value}",
+                    )
+                    return old_value
+        return value

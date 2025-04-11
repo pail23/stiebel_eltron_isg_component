@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronISGIntegrationConfigEntry,
+    StiebelEltronIsgIntegrationConfigEntry,
 )
 
 CONFIG_FIELDS_TO_REDACT: list = []
@@ -18,7 +18,7 @@ DATA_FIELDS_TO_REDACT: list = []
 
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant,
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data.coordinator
@@ -35,7 +35,7 @@ async def async_get_config_entry_diagnostics(
 
 async def async_get_device_diagnostics(
     hass: HomeAssistant,
-    config_entry: StiebelEltronISGIntegrationConfigEntry,
+    config_entry: StiebelEltronIsgIntegrationConfigEntry,
     device: DeviceEntry,
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""

@@ -67,7 +67,7 @@ from .const import (
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
 )
-from .data import StiebelEltronISGIntegrationConfigEntry
+from .data import StiebelEltronIsgIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
 BINARY_SENSOR_TYPES = [
@@ -413,7 +413,7 @@ BINARY_SENSOR_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,  # Unused function argument: `hass`
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ):
     """Set up the binary_sensor platform."""

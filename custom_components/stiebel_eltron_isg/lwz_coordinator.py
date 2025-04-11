@@ -13,6 +13,9 @@ from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
     get_isg_scaled_value,
 )
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
+    LwzStiebelEltronAPI,
+)
 
 from .const import (
     ACTUAL_HUMIDITY,
@@ -120,6 +123,20 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
 
+    def __init__(
+        self,
+        hass,
+        name: str,
+        host: str,
+        port: int,
+        scan_interval,
+    ):
+        """Initialize the Modbus hub."""
+
+        super().__init__(
+            hass, LwzStiebelEltronAPI(host=host, port=port), name, scan_interval
+        )
+
     async def read_modbus_data(self) -> dict:
         """Read the ISG data through modbus."""
         return {
@@ -127,7 +144,6 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             **await self.read_modbus_system_state(),
             **await self.read_modbus_system_values(),
             **await self.read_modbus_system_paramter(),
-            **await self.read_modbus_sg_ready(),
         }
 
     async def read_modbus_system_state(self) -> dict:

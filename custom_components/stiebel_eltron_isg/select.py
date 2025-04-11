@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronISGIntegrationConfigEntry,
+    StiebelEltronIsgIntegrationConfigEntry,
 )
 
 from .const import DOMAIN, OPERATION_MODE
@@ -50,7 +50,7 @@ SELECT_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,  # Unused function argument: `hass`
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the select platform."""

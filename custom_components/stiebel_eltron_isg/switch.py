@@ -12,10 +12,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
+    StiebelEltronModbusDataCoordinatorOld,
 )
 from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronISGIntegrationConfigEntry,
+    StiebelEltronIsgIntegrationConfigEntry,
 )
 
 from .const import (
@@ -59,7 +59,7 @@ SWITCH_TYPES = [
 
 async def async_setup_entry(
     hass: HomeAssistant,  # Unused function argument: `hass`
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
@@ -82,7 +82,10 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     """stiebel_eltron_isg Sensor class."""
 
     def __init__(
-        self, coordinator: StiebelEltronModbusDataCoordinator, config_entry, description
+        self,
+        coordinator: StiebelEltronModbusDataCoordinatorOld,
+        config_entry,
+        description,
     ):
         """Initialize the sensor."""
         self.entity_description = description

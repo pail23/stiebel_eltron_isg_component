@@ -3,16 +3,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.loader import Integration
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.loader import Integration
 
-    from .coordinator import StiebelEltronModbusDataCoordinator
-
-
-type StiebelEltronISGIntegrationConfigEntry = ConfigEntry[StiebEltronISGIntegrationData]
+from .coordinator import StiebelEltronModbusDataCoordinator
 
 
 @dataclass
@@ -21,3 +16,6 @@ class StiebEltronISGIntegrationData:
 
     coordinator: StiebelEltronModbusDataCoordinator
     integration: Integration
+
+
+type StiebelEltronIsgIntegrationConfigEntry = ConfigEntry[StiebEltronISGIntegrationData]

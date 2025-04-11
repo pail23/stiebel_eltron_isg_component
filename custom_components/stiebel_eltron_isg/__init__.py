@@ -17,7 +17,7 @@ from homeassistant.loader import async_get_loaded_integration
 from pymodbus.client import AsyncModbusTcpClient
 
 from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronISGIntegrationConfigEntry,
+    StiebelEltronIsgIntegrationConfigEntry,
     StiebEltronISGIntegrationData,
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
@@ -96,7 +96,7 @@ async def async_setup(hass: HomeAssistant, config: Config):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
 ):
     """Set up this integration using UI."""
 
@@ -140,7 +140,7 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
 ) -> bool:
     """Handle removal of an entry."""
     coordinator = entry.runtime_data.coordinator
@@ -150,7 +150,7 @@ async def async_unload_entry(
 
 async def async_reload_entry(
     hass: HomeAssistant,
-    entry: StiebelEltronISGIntegrationConfigEntry,
+    entry: StiebelEltronIsgIntegrationConfigEntry,
 ) -> None:
     """Reload config entry."""
     await async_unload_entry(hass, entry)

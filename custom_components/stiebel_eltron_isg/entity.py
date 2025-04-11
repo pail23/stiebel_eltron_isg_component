@@ -1,20 +1,46 @@
 """StiebelEltronISGEntity class."""
 
-from homeassistant.helpers.entity import DeviceInfo
+from dataclasses import dataclass
+
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronIsgIntegrationConfigEntry,
+)
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+    IsgRegisters,
+    IsgRegistersNone,
+)
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 
 
-class StiebelEltronISGEntity(CoordinatorEntity):
+@dataclass(frozen=True, kw_only=True)
+class StiebelEltronEntityDescription(EntityDescription):
+    """Entity description for stiebel eltron with modbus register."""
+
+    modbus_register: IsgRegisters
+
+
+class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinator]):
     """stiebel_eltron_isg entity base class."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, config_entry):
+    def __init__(
+        self,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+    ):
         """Initialize the entity base class."""
         super().__init__(coordinator)
         self.config_entry = config_entry
+        self.modbus_register: IsgRegisters = IsgRegistersNone.NONE
 
     @property
     def device_info(self):
@@ -33,4 +59,4 @@ class StiebelEltronISGEntity(CoordinatorEntity):
 
         This only applies when fist added to the entity registry.
         """
-        return self.coordinator.data.get(self.entity_description.key) is not None
+        return self.coordinator.has_register_value(self.modbus_register)
