@@ -13,10 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfEnergy,
+    UnitOfFrequency,
     UnitOfPressure,
     UnitOfTemperature,
-    EntityCategory,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -28,7 +30,12 @@ from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron import IsgRegisters
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
+    LwzEnergyDataRegisters,
+    LwzSystemValuesRegisters,
+)
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron.wpm import (
+    WpmEnergyDataRegisters,
     WpmEnergyManagementSettingsRegisters,
     WpmSystemStateRegisters,
     WpmSystemValuesRegisters,
@@ -132,7 +139,7 @@ from .const import (
     VOLUME_STREAM_WP1,
     VOLUME_STREAM_WP2,
 )
-from .entity import StiebelEltronEntityDescription, StiebelEltronISGEntity
+from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -535,69 +542,88 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
         modbus_register=WpmEnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
     ),
 ]
-"""
 
 ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
+        WpmEnergyDataRegisters.VD_HEATING_TOTAL,
     ),
     create_energy_entity_description(
-        "Produced Heating",
-        PRODUCED_HEATING,
+        "Produced Heating", PRODUCED_HEATING, WpmEnergyDataRegisters.VD_HEATING_TOTAL
     ),
     create_energy_entity_description(
         "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
+        WpmEnergyDataRegisters.VD_DHW_TOTAL,
     ),
     create_energy_entity_description(
-        "Produced Electrical Booster Heating Total",
-        PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
-    ),
-    create_energy_entity_description(
-        "Produced Electrical Booster Water Heating Total",
-        PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
-    ),
-    create_energy_entity_description("Produced Water Heating", PRODUCED_WATER_HEATING),
-    create_energy_entity_description(
-        "Produced Recovery",
-        PRODUCED_RECOVERY,
-    ),
-    create_energy_entity_description(
-        "Produced Recovery Total",
-        PRODUCED_RECOVERY_TOTAL,
-    ),
-    create_energy_entity_description(
-        "Produced Solar Heating",
-        PRODUCED_SOLAR_HEATING,
-    ),
-    create_energy_entity_description(
-        "Produced Solar Heating Total",
-        PRODUCED_SOLAR_HEATING_TOTAL,
-    ),
-    create_energy_entity_description(
-        "Produced Solar Water Heating Total",
-        PRODUCED_SOLAR_WATER_HEATING_TOTAL,
-    ),
-    create_energy_entity_description(
-        "Produced Solar Water Heating",
-        PRODUCED_SOLAR_WATER_HEATING,
+        "Produced Water Heating",
+        PRODUCED_WATER_HEATING,
+        WpmEnergyDataRegisters.VD_DHW_TOTAL,
     ),
     create_energy_entity_description(
         "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
+        WpmEnergyDataRegisters.VD_HEATING_TOTAL_CONSUMED,
     ),
     create_energy_entity_description(
         "Consumed Heating",
         CONSUMED_HEATING,
+        WpmEnergyDataRegisters.VD_HEATING_TOTAL_CONSUMED,
     ),
     create_energy_entity_description(
         "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
+        WpmEnergyDataRegisters.VD_DHW_TOTAL_CONSUMED,
     ),
     create_energy_entity_description(
         "Consumed Water Heating",
         CONSUMED_WATER_HEATING,
+        WpmEnergyDataRegisters.VD_DHW_DAY_CONSUMED,
+    ),
+]
+
+LWZ_ENERGY_SENSOR_TYPES = [
+    create_energy_entity_description(
+        "Produced Electrical Booster Heating Total",
+        PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
+        LwzEnergyDataRegisters.HEAT_M_BOOST_HTG_TTL,
+    ),
+    create_energy_entity_description(
+        "Produced Electrical Booster Water Heating Total",
+        PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
+        LwzEnergyDataRegisters.HEAT_M_BOOST_DHW_TTL,
+    ),
+    create_energy_entity_description(
+        "Produced Recovery",
+        PRODUCED_RECOVERY,
+        LwzEnergyDataRegisters.HEAT_M_RECOVERY_DAY,
+    ),
+    create_energy_entity_description(
+        "Produced Recovery Total",
+        PRODUCED_RECOVERY_TOTAL,
+        LwzEnergyDataRegisters.HEAT_M_RECOVERY_TTL,
+    ),
+    create_energy_entity_description(
+        "Produced Solar Heating",
+        PRODUCED_SOLAR_HEATING,
+        LwzEnergyDataRegisters.HM_SOLAR_HTG_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Solar Heating Total",
+        PRODUCED_SOLAR_HEATING_TOTAL,
+        LwzEnergyDataRegisters.HM_SOLAR_HTG_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Solar Water Heating Total",
+        PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+        LwzEnergyDataRegisters.HM_SOLAR_DWH_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Solar Water Heating",
+        PRODUCED_SOLAR_WATER_HEATING,
+        LwzEnergyDataRegisters.HM_SOLAR_DWH_TOTAL,
     ),
 ]
 
@@ -605,40 +631,51 @@ ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
+        WpmEnergyDataRegisters.VD_HEATING_DAY,
     ),
     create_daily_energy_entity_description(
         "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
-    ),
-    create_daily_energy_entity_description(
-        "Produced Recovery Today",
-        PRODUCED_RECOVERY_TODAY,
-    ),
-    create_daily_energy_entity_description(
-        "Produced Solar Heating Today",
-        PRODUCED_SOLAR_HEATING_TODAY,
-    ),
-    create_daily_energy_entity_description(
-        "Produced Solar Water Heating Today",
-        PRODUCED_SOLAR_WATER_HEATING_TODAY,
+        WpmEnergyDataRegisters.VD_DHW_DAY,
     ),
     create_daily_energy_entity_description(
         "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
+        WpmEnergyDataRegisters.VD_HEATING_DAY_CONSUMED,
     ),
     create_daily_energy_entity_description(
         "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
+        WpmEnergyDataRegisters.VD_DHW_DAY_CONSUMED,
+    ),
+]
+
+LWZ_ENERGY_DAILY_SENSOR_TYPES = [
+    create_daily_energy_entity_description(
+        "Produced Recovery Today",
+        PRODUCED_RECOVERY_TODAY,
+        LwzEnergyDataRegisters.HEAT_M_RECOVERY_DAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Solar Heating Today",
+        PRODUCED_SOLAR_HEATING_TODAY,
+        LwzEnergyDataRegisters.HM_SOLAR_HTG_DAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Solar Water Heating Today",
+        PRODUCED_SOLAR_WATER_HEATING_TODAY,
+        LwzEnergyDataRegisters.HM_SOLAR_DHW_DAY,
     ),
 ]
 
 
-COMPRESSOR_SENSOR_TYPES = [
+LWZ_COMPRESSOR_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_STARTS,
         name="Compressor starts",
         icon="mdi:restart",
         has_entity_name=True,
+        modbus_register=LwzSystemValuesRegisters.COMPRESSOR_STARTS,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_HEATING,
@@ -647,6 +684,7 @@ COMPRESSOR_SENSOR_TYPES = [
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzEnergyDataRegisters.COMPRESSOR_HEATING,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_HEATING_WATER,
@@ -655,6 +693,7 @@ COMPRESSOR_SENSOR_TYPES = [
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzEnergyDataRegisters.COMPRESSOR_DHW,
     ),
     StiebelEltronSensorEntityDescription(
         key=ELECTRICAL_BOOSTER_HEATING,
@@ -663,6 +702,7 @@ COMPRESSOR_SENSOR_TYPES = [
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzEnergyDataRegisters.ELEC_BOOSTER_HEATING,
     ),
     StiebelEltronSensorEntityDescription(
         key=ELECTRICAL_BOOSTER_HEATING_WATER,
@@ -671,10 +711,11 @@ COMPRESSOR_SENSOR_TYPES = [
         has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzEnergyDataRegisters.ELEC_BOOSTER_DHW,
     ),
 ]
 
-VENTILATION_SENSOR_TYPES = [
+LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
         name="Ventilation air actual fan speed",
@@ -683,6 +724,7 @@ VENTILATION_SENSOR_TYPES = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzSystemValuesRegisters.VENTILATION_AIR_ACTUAL_FAN_SPEED,
     ),
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_TARGET_FLOW_RATE,
@@ -691,6 +733,7 @@ VENTILATION_SENSOR_TYPES = [
         has_entity_name=True,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzSystemValuesRegisters.VENTILATION_AIR_SET_FLOW_RATE,
     ),
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
@@ -700,6 +743,7 @@ VENTILATION_SENSOR_TYPES = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzSystemValuesRegisters.EXTRACT_AIR_ACTUAL_FAN_SPEED,
     ),
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_TARGET_FLOW_RATE,
@@ -708,16 +752,36 @@ VENTILATION_SENSOR_TYPES = [
         has_entity_name=True,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzSystemValuesRegisters.EXTRACT_AIR_SET_FLOW_RATE,
     ),
     create_temperature_entity_description(
-        "Extract air dew point", EXTRACT_AIR_DEW_POINT
+        "Extract air dew point",
+        EXTRACT_AIR_DEW_POINT,
+        LwzSystemValuesRegisters.EXTRACT_AIR_DEW_POINT,
     ),
-    create_humidity_entity_description("Extract air humidity", EXTRACT_AIR_HUMIDITY),
+    create_humidity_entity_description(
+        "Extract air humidity",
+        EXTRACT_AIR_HUMIDITY,
+        LwzSystemValuesRegisters.EXTRACT_AIR_HUMIDITY,
+    ),
     create_temperature_entity_description(
-        "Extract air temperature", EXTRACT_AIR_TEMPERATURE
+        "Extract air temperature",
+        EXTRACT_AIR_TEMPERATURE,
+        LwzSystemValuesRegisters.EXTRACT_AIR_TEMP,
     ),
 ]
-"""
+
+
+WPM_SENSOR_TYPES = (
+    SYSTEM_VALUES_SENSOR_TYPES + ENERGYMANAGEMENT_SENSOR_TYPES + ENERGY_SENSOR_TYPES
+)
+
+LWZ_SENSOR_TYPES = (
+    ENERGYMANAGEMENT_SENSOR_TYPES
+    + LWZ_ENERGY_SENSOR_TYPES
+    + LWZ_COMPRESSOR_SENSOR_TYPES
+    + LWZ_VENTILATION_SENSOR_TYPES
+)
 
 
 async def async_setup_entry(
@@ -728,55 +792,42 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = entry.runtime_data.coordinator
 
-    entities = []
-    for description in SYSTEM_VALUES_SENSOR_TYPES:
-        sensor = StiebelEltronISGSensor(
-            coordinator,
-            entry,
-            description,
-        )
-        entities.append(sensor)
-    """
-    for description in ENERGYMANAGEMENT_SENSOR_TYPES:
-        sensor = StiebelEltronISGSensor(
-            coordinator,
-            entry,
-            description,
-        )
-        entities.append(sensor)
-
-    for description in ENERGY_SENSOR_TYPES:
-        sensor = StiebelEltronISGSensor(
-            coordinator,
-            entry,
-            description,
-        )
-        entities.append(sensor)
-
-    for description in ENERGY_DAILY_SENSOR_TYPES:
-        sensor = StiebelEltronISGEnergySensor(
-            coordinator,
-            entry,
-            description,
-        )
-        entities.append(sensor)
-
-    if not coordinator.is_wpm:
-        for description in COMPRESSOR_SENSOR_TYPES:
-            sensor = StiebelEltronISGSensor(
+    if coordinator.is_wpm:
+        entities = [
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
             )
-            entities.append(sensor)
-        for description in VENTILATION_SENSOR_TYPES:
-            sensor = StiebelEltronISGSensor(
+            for description in WPM_SENSOR_TYPES
+        ]
+        daily_energy_entities = [
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
             )
-            entities.append(sensor)
-    """
+            for description in ENERGY_DAILY_SENSOR_TYPES
+        ]
+        entities.extend(daily_energy_entities)
+    else:
+        entities = [
+            StiebelEltronISGSensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in LWZ_SENSOR_TYPES
+        ]
+        daily_energy_entities = [
+            StiebelEltronISGSensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in LWZ_ENERGY_DAILY_SENSOR_TYPES
+        ]
+        entities.extend(daily_energy_entities)
     async_add_devices(entities)
 
 
@@ -802,6 +853,11 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if self.modbus_register == WpmSystemStateRegisters.ACTIVE_ERROR:
+            error = int(self.coordinator.get_register_value(self.modbus_register))
+            if error in (32768, 0):
+                return "no error"
+            return f"error {error}"
         return self.coordinator.get_register_value(self.modbus_register)
 
     @property

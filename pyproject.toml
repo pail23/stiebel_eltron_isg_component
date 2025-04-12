@@ -31,6 +31,7 @@ addopts = "--disable-socket --allow-unix-socket"
 [tool.ruff]
 
 target-version = "py312"
+exclude = ["custom_components/stiebel_eltron_isg/python_stiebel_eltron"]
 
 [tool.ruff.lint]
 extend-select = [
