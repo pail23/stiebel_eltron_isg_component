@@ -165,7 +165,7 @@ class StiebelEltronAPI:
 
     def has_register_value(self, register: IsgRegisters) -> bool:
         """Check if a value for the registers has been read. The async_udpate needs to be called first."""
-        return register in self._data
+        return register in self._data and self._data[register] is not None
 
     async def write_register_value(self, register: IsgRegisters, value: int | float) -> None:
         """Writes a modbus register."""

@@ -419,15 +419,14 @@ async def async_setup_entry(
     """Set up the binary_sensor platform."""
     coordinator = entry.runtime_data.coordinator
 
-    entities = []
-    for description in BINARY_SENSOR_TYPES:
-        sensor = StiebelEltronISGBinarySensor(
+    entities = [
+        StiebelEltronISGBinarySensor(
             coordinator,
             entry,
             description,
         )
-        entities.append(sensor)
-
+        for description in BINARY_SENSOR_TYPES
+    ]
     async_add_devices(entities)
 
 
@@ -452,9 +451,4 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
     @property
     def is_on(self):
         """Return true if the binary_sensor is on."""
-        return self.coordinator.data.get(self.entity_description.key)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.data.get(self.entity_description.key) is not None
+        return self.coordinator.get_register_value(self.modbus_register) > 0

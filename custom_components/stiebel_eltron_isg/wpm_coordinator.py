@@ -161,6 +161,7 @@ from .const import (
 )
 from .python_stiebel_eltron.wpm import (
     WpmStiebelEltronAPI,
+    WpmSystemParametersRegisters,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -927,7 +928,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
-        # await self.write_register(address=1519, value=3, slave=1)
+        await self.write_register(WpmSystemParametersRegisters.RESET, value=3)
 
     def assign_if_increased(self, value: float | int, key: str) -> float:
         """Assign the value as new value or keep the old value from the internal cache in case the old value is larger than value."""

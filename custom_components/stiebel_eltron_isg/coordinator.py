@@ -123,6 +123,10 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Get a value form the registers. The async_udpate needs to be called first."""
         return self._api_client.get_register_value(register)
 
+    async def write_register(self, register: IsgRegisters, value: int | float) -> None:
+        """Write a modbus register."""
+        await self._api_client.write_register_value(register, value)
+
 
 class StiebelEltronModbusDataCoordinatorOld(DataUpdateCoordinator):
     """Thread safe wrapper class for pymodbus."""

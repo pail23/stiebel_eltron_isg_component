@@ -29,14 +29,16 @@ from custom_components.stiebel_eltron_isg.coordinator import (
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron import IsgRegisters
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+    IsgRegisters,
+    EnergyManagementSettingsRegisters,
+)
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
     LwzEnergyDataRegisters,
     LwzSystemValuesRegisters,
 )
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron.wpm import (
     WpmEnergyDataRegisters,
-    WpmEnergyManagementSettingsRegisters,
     WpmSystemStateRegisters,
     WpmSystemValuesRegisters,
 )
@@ -533,13 +535,111 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     ),
 ]
 
+LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
+    create_temperature_entity_description(
+        "Actual Temperature",
+        ACTUAL_TEMPERATURE,
+        LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature",
+        TARGET_TEMPERATURE,
+        LwzSystemValuesRegisters.SET_ROOM_TEMPERATURE_HC1,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature FEK",
+        ACTUAL_TEMPERATURE_FEK,
+        LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature FEK",
+        TARGET_TEMPERATURE_FEK,
+        LwzSystemValuesRegisters.SET_ROOM_TEMPERATURE_HC2,
+    ),
+    create_humidity_entity_description(
+        "Humidity", ACTUAL_HUMIDITY, LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1
+    ),
+    create_humidity_entity_description(
+        "Humidity HK 2",
+        ACTUAL_HUMIDITY_HK2,
+        LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC2,
+    ),
+    create_temperature_entity_description(
+        "Dew Point Temperature HK 1",
+        DEWPOINT_TEMPERATURE_HK1,
+        LwzSystemValuesRegisters.DEW_POINT_TEMP_HC1,
+    ),
+    create_temperature_entity_description(
+        "Dew Point Temperature HK 2",
+        DEWPOINT_TEMPERATURE_HK2,
+        LwzSystemValuesRegisters.DEW_POINT_TEMP_HC2,
+    ),
+    create_temperature_entity_description(
+        "Outdoor Temperature",
+        OUTDOOR_TEMPERATURE,
+        LwzSystemValuesRegisters.OUTSIDE_TEMPERATURE,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature HK 1",
+        ACTUAL_TEMPERATURE_HK1,
+        LwzSystemValuesRegisters.ACTUAL_VALUE_HC1,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 1",
+        TARGET_TEMPERATURE_HK1,
+        LwzSystemValuesRegisters.SET_VALUE_HC1,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature HK 2",
+        ACTUAL_TEMPERATURE_HK2,
+        LwzSystemValuesRegisters.ACTUAL_VALUE_HC2,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 2",
+        TARGET_TEMPERATURE_HK2,
+        LwzSystemValuesRegisters.SET_VALUE_HC2,
+    ),
+    create_temperature_entity_description(
+        "Flow Temperature",
+        FLOW_TEMPERATURE,
+        LwzSystemValuesRegisters.FLOW_TEMPERATURE,
+    ),
+    create_temperature_entity_description(
+        "Return Temperature",
+        RETURN_TEMPERATURE,
+        LwzSystemValuesRegisters.RETURN_TEMPERATURE,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Water",
+        ACTUAL_TEMPERATURE_WATER,
+        LwzSystemValuesRegisters.ACTUAL_DHW_T,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Water",
+        TARGET_TEMPERATURE_WATER,
+        LwzSystemValuesRegisters.DHW_SET_TEMPERATURE,
+    ),
+    create_temperature_entity_description(
+        "Hot Gas Temperature",
+        HOT_GAS_TEMPERATURE,
+        LwzSystemValuesRegisters.HOT_GAS_TEMPERATURE,
+    ),
+    create_pressure_entity_description(
+        "High Pressure", HIGH_PRESSURE, LwzSystemValuesRegisters.HIGH_PRESSURE
+    ),
+    create_pressure_entity_description(
+        "Low Pressure", LOW_PRESSURE, LwzSystemValuesRegisters.LOW_PRESSURE
+    ),
+]
+
+
 ENERGYMANAGEMENT_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=SG_READY_STATE,
         name="SG Ready State",
         icon="mdi:solar-power",
         has_entity_name=True,
-        modbus_register=WpmEnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
+        modbus_register=EnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
     ),
 ]
 
@@ -777,7 +877,8 @@ WPM_SENSOR_TYPES = (
 )
 
 LWZ_SENSOR_TYPES = (
-    ENERGYMANAGEMENT_SENSOR_TYPES
+    LWZ_SYSTEM_VALUES_SENSOR_TYPES
+    + ENERGYMANAGEMENT_SENSOR_TYPES
     + LWZ_ENERGY_SENSOR_TYPES
     + LWZ_COMPRESSOR_SENSOR_TYPES
     + LWZ_VENTILATION_SENSOR_TYPES
@@ -860,11 +961,6 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
             return f"error {error}"
         return self.coordinator.get_register_value(self.modbus_register)
 
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.has_register_value(self.modbus_register)
-
 
 class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
     """stiebel_eltron_isg Energy Sensor class."""
@@ -889,11 +985,6 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
     def native_value(self):
         """Return the state of the sensor."""
         return self.coordinator.get_register_value(self.modbus_register)
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.has_register_value(self.modbus_register)
 
     @property
     def last_reset(self) -> datetime.datetime | None:

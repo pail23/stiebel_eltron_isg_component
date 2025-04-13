@@ -20,14 +20,14 @@ from .entity import StiebelEltronISGEntity
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
+@dataclass(frozen=True)
 class StiebelEltronISGButtonDescriptionMixin:
     """Mixin to describe aStiebel Eltron ISG button."""
 
     press_action: Callable[[StiebelEltronModbusDataCoordinatorOld], Coroutine]
 
 
-@dataclass
+@dataclass(frozen=True)
 class StiebelEltronISGButtonDescription(
     ButtonEntityDescription,
     StiebelEltronISGButtonDescriptionMixin,

@@ -15,6 +15,7 @@ from custom_components.stiebel_eltron_isg.coordinator import (
 )
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
     LwzStiebelEltronAPI,
+    LwzSystemParametersRegisters,
 )
 
 from .const import (
@@ -587,3 +588,4 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump is not implemented of LWZ/LWA")
+        await self.write_register(LwzSystemParametersRegisters.RESET, value=1)
