@@ -1,7 +1,7 @@
 """Select platform for stiebel_eltron_isg."""
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from homeassistant.components.select import (
     SelectEntity,
