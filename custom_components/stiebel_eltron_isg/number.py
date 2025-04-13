@@ -1,7 +1,7 @@
 """Sensor number for stiebel_eltron_isg."""
 
-from dataclasses import dataclass
 import logging
+from dataclasses import dataclass
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -29,7 +29,6 @@ from .const import (
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
     COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
-    COMFORT_COOLING_TEMPERATURE_TARGET_HK3,
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
     COMFORT_TEMPERATURE_TARGET_HK3,
@@ -39,7 +38,6 @@ from .const import (
     DUALMODE_TEMPERATURE_WW,
     ECO_COOLING_TEMPERATURE_TARGET_HK1,
     ECO_COOLING_TEMPERATURE_TARGET_HK2,
-    ECO_COOLING_TEMPERATURE_TARGET_HK3,
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK3,

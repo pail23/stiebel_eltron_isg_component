@@ -163,6 +163,45 @@ class WpmSystemStateRegisters(IsgRegisters):
     DEFROST_INITIATED = 2506
     ACTIVE_ERROR = 2507
     MESSAGE_NUMBER = 2508
+    HEATING_CIRCUIT_PUMP_1 = 2509
+    HEATING_CIRCUIT_PUMP_2 = 2510
+    HEATING_CIRCUIT_PUMP_3 = 2511
+    BUFFER_CHARGING_PUMP_1 = 2512
+    BUFFER_CHARGING_PUMP_2 = 2513
+    DHW_CHARGING_PUMP = 2514
+    SOURCE_PUMP = 2515
+    FAULT_OUTPUT = 2516
+    DHW_CIRCULATION_PUMP = 2517
+    WE_2_DHW = 2518
+    WE_2_HEATING = 2519
+    COOLING_MODE_ = 2520
+    MIXER_OPEN_HC2 = 2521
+    MIXER_CLOSE_HC2 = 2522
+    MIXER_OPEN_HC3 = 2523
+    MIXER_CLOSE_HC3 = 2524
+    NHZ_1_ = 2525
+    NHZ_2 = 2526
+    NHZ_1_2 = 2527
+    HEATING_CIRCUIT_PUMP_4 = 2528
+    HEATING_CIRCUIT_PUMP_5 = 2529
+    BUFFER_CHARGING_PUMP_3 = 2530
+    BUFFER_CHARGING_PUMP_4 = 2531
+    BUFFER_CHARGING_PUMP_5 = 2532
+    BUFFER_CHARGING_PUMP_6 = 2533
+    DIFF_CONTROLLER_PUMP_1 = 2534
+    DIFF_CONTROLLER_PUMP_2 = 2535
+    POOL_PUMP_PRIMARY = 2536
+    POOL_PUMP_SECONDARY = 2537
+    MIXER_OPEN_HC4 = 2538
+    MIXER_CLOSE_HC4 = 2539
+    MIXER_OPEN_HC5 = 2540
+    MIXER_CLOSE_HC5 = 2541
+    COMPRESSOR_1 = 2542
+    COMPRESSOR_2 = 2543
+    COMPRESSOR_3 = 2544
+    COMPRESSOR_4 = 2545
+    COMPRESSOR_5 = 2546
+    COMPRESSOR_6 = 2547
 
 
 class WpmEnergyDataRegisters(IsgRegisters):
@@ -584,6 +623,71 @@ WPM_SYSTEM_STATE_REGISTERS = {
     WpmSystemStateRegisters.DEFROST_INITIATED: ModbusRegister(address=2506, name="DEFROST INITIATED", unit="", min=0.0, max=1.0, data_type=6, key=WpmSystemStateRegisters.DEFROST_INITIATED),
     WpmSystemStateRegisters.ACTIVE_ERROR: ModbusRegister(address=2507, name="ACTIVE ERROR", unit="", min=0.0, max=65535.0, data_type=6, key=WpmSystemStateRegisters.ACTIVE_ERROR),
     WpmSystemStateRegisters.MESSAGE_NUMBER: ModbusRegister(address=2508, name="MESSAGE NUMBER", unit="", min=0.0, max=65535.0, data_type=6, key=WpmSystemStateRegisters.MESSAGE_NUMBER),
+    WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_1: ModbusRegister(
+        address=2509, name="HEATING CIRCUIT PUMP 1", unit="", min=0.0, max=1.0, data_type=6, key=WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_1
+    ),
+    WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_2: ModbusRegister(
+        address=2510, name="HEATING CIRCUIT PUMP 2", unit="", min=1.0, max=2.0, data_type=7, key=WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_2
+    ),
+    WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_3: ModbusRegister(
+        address=2511, name="HEATING CIRCUIT PUMP 3", unit="", min=2.0, max=3.0, data_type=8, key=WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_3
+    ),
+    WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_1: ModbusRegister(
+        address=2512, name="BUFFER CHARGING PUMP 1", unit="", min=3.0, max=4.0, data_type=9, key=WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_1
+    ),
+    WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_2: ModbusRegister(
+        address=2513, name="BUFFER CHARGING PUMP 2", unit="", min=4.0, max=5.0, data_type=10, key=WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_2
+    ),
+    WpmSystemStateRegisters.DHW_CHARGING_PUMP: ModbusRegister(address=2514, name="DHW CHARGING PUMP", unit="", min=5.0, max=6.0, data_type=11, key=WpmSystemStateRegisters.DHW_CHARGING_PUMP),
+    WpmSystemStateRegisters.SOURCE_PUMP: ModbusRegister(address=2515, name="SOURCE PUMP", unit="", min=6.0, max=7.0, data_type=12, key=WpmSystemStateRegisters.SOURCE_PUMP),
+    WpmSystemStateRegisters.FAULT_OUTPUT: ModbusRegister(address=2516, name="FAULT OUTPUT", unit="", min=7.0, max=8.0, data_type=13, key=WpmSystemStateRegisters.FAULT_OUTPUT),
+    WpmSystemStateRegisters.DHW_CIRCULATION_PUMP: ModbusRegister(address=2517, name="DHW CIRCULATION PUMP", unit="", min=8.0, max=9.0, data_type=14, key=WpmSystemStateRegisters.DHW_CIRCULATION_PUMP),
+    WpmSystemStateRegisters.WE_2_DHW: ModbusRegister(address=2518, name="WE 2 DHW", unit="", min=9.0, max=10.0, data_type=15, key=WpmSystemStateRegisters.WE_2_DHW),
+    WpmSystemStateRegisters.WE_2_HEATING: ModbusRegister(address=2519, name="WE 2 HEATING", unit="", min=9.0, max=10.0, data_type=15, key=WpmSystemStateRegisters.WE_2_HEATING),
+    WpmSystemStateRegisters.COOLING_MODE_: ModbusRegister(address=2520, name="COOLING MODE ", unit="", min=10.0, max=11.0, data_type=16, key=WpmSystemStateRegisters.COOLING_MODE_),
+    WpmSystemStateRegisters.MIXER_OPEN_HC2: ModbusRegister(address=2521, name="MIXER OPEN HC2", unit="", min=11.0, max=12.0, data_type=17, key=WpmSystemStateRegisters.MIXER_OPEN_HC2),
+    WpmSystemStateRegisters.MIXER_CLOSE_HC2: ModbusRegister(address=2522, name="MIXER CLOSE HC2", unit="", min=12.0, max=13.0, data_type=18, key=WpmSystemStateRegisters.MIXER_CLOSE_HC2),
+    WpmSystemStateRegisters.MIXER_OPEN_HC3: ModbusRegister(address=2523, name="MIXER OPEN HC3", unit="", min=13.0, max=14.0, data_type=19, key=WpmSystemStateRegisters.MIXER_OPEN_HC3),
+    WpmSystemStateRegisters.MIXER_CLOSE_HC3: ModbusRegister(address=2524, name="MIXER CLOSE HC3", unit="", min=14.0, max=15.0, data_type=20, key=WpmSystemStateRegisters.MIXER_CLOSE_HC3),
+    WpmSystemStateRegisters.NHZ_1_: ModbusRegister(address=2525, name="NHZ 1 ", unit="", min=15.0, max=16.0, data_type=21, key=WpmSystemStateRegisters.NHZ_1_),
+    WpmSystemStateRegisters.NHZ_2: ModbusRegister(address=2526, name="NHZ 2", unit="", min=16.0, max=17.0, data_type=22, key=WpmSystemStateRegisters.NHZ_2),
+    WpmSystemStateRegisters.NHZ_1_2: ModbusRegister(address=2527, name="NHZ 1 2", unit="", min=17.0, max=18.0, data_type=23, key=WpmSystemStateRegisters.NHZ_1_2),
+    WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_4: ModbusRegister(
+        address=2528, name="HEATING CIRCUIT PUMP 4", unit="", min=18.0, max=19.0, data_type=24, key=WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_4
+    ),
+    WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_5: ModbusRegister(
+        address=2529, name="HEATING CIRCUIT PUMP 5", unit="", min=19.0, max=20.0, data_type=25, key=WpmSystemStateRegisters.HEATING_CIRCUIT_PUMP_5
+    ),
+    WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_3: ModbusRegister(
+        address=2530, name="BUFFER CHARGING PUMP 3", unit="", min=20.0, max=21.0, data_type=26, key=WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_3
+    ),
+    WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_4: ModbusRegister(
+        address=2531, name="BUFFER CHARGING PUMP 4", unit="", min=21.0, max=22.0, data_type=27, key=WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_4
+    ),
+    WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_5: ModbusRegister(
+        address=2532, name="BUFFER CHARGING PUMP 5", unit="", min=22.0, max=23.0, data_type=28, key=WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_5
+    ),
+    WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_6: ModbusRegister(
+        address=2533, name="BUFFER CHARGING PUMP 6", unit="", min=23.0, max=24.0, data_type=29, key=WpmSystemStateRegisters.BUFFER_CHARGING_PUMP_6
+    ),
+    WpmSystemStateRegisters.DIFF_CONTROLLER_PUMP_1: ModbusRegister(
+        address=2534, name="DIFF CONTROLLER PUMP 1", unit="", min=24.0, max=25.0, data_type=30, key=WpmSystemStateRegisters.DIFF_CONTROLLER_PUMP_1
+    ),
+    WpmSystemStateRegisters.DIFF_CONTROLLER_PUMP_2: ModbusRegister(
+        address=2535, name="DIFF CONTROLLER PUMP 2", unit="", min=25.0, max=26.0, data_type=31, key=WpmSystemStateRegisters.DIFF_CONTROLLER_PUMP_2
+    ),
+    WpmSystemStateRegisters.POOL_PUMP_PRIMARY: ModbusRegister(address=2536, name="POOL PUMP PRIMARY", unit="", min=26.0, max=27.0, data_type=32, key=WpmSystemStateRegisters.POOL_PUMP_PRIMARY),
+    WpmSystemStateRegisters.POOL_PUMP_SECONDARY: ModbusRegister(address=2537, name="POOL PUMP SECONDARY", unit="", min=27.0, max=28.0, data_type=33, key=WpmSystemStateRegisters.POOL_PUMP_SECONDARY),
+    WpmSystemStateRegisters.MIXER_OPEN_HC4: ModbusRegister(address=2538, name="MIXER OPEN HC4", unit="", min=28.0, max=29.0, data_type=34, key=WpmSystemStateRegisters.MIXER_OPEN_HC4),
+    WpmSystemStateRegisters.MIXER_CLOSE_HC4: ModbusRegister(address=2539, name="MIXER CLOSE HC4", unit="", min=29.0, max=30.0, data_type=35, key=WpmSystemStateRegisters.MIXER_CLOSE_HC4),
+    WpmSystemStateRegisters.MIXER_OPEN_HC5: ModbusRegister(address=2540, name="MIXER OPEN HC5", unit="", min=30.0, max=31.0, data_type=36, key=WpmSystemStateRegisters.MIXER_OPEN_HC5),
+    WpmSystemStateRegisters.MIXER_CLOSE_HC5: ModbusRegister(address=2541, name="MIXER CLOSE HC5", unit="", min=31.0, max=32.0, data_type=37, key=WpmSystemStateRegisters.MIXER_CLOSE_HC5),
+    WpmSystemStateRegisters.COMPRESSOR_1: ModbusRegister(address=2542, name="COMPRESSOR 1", unit="", min=32.0, max=33.0, data_type=38, key=WpmSystemStateRegisters.COMPRESSOR_1),
+    WpmSystemStateRegisters.COMPRESSOR_2: ModbusRegister(address=2543, name="COMPRESSOR 2", unit="", min=33.0, max=34.0, data_type=39, key=WpmSystemStateRegisters.COMPRESSOR_2),
+    WpmSystemStateRegisters.COMPRESSOR_3: ModbusRegister(address=2544, name="COMPRESSOR 3", unit="", min=34.0, max=35.0, data_type=40, key=WpmSystemStateRegisters.COMPRESSOR_3),
+    WpmSystemStateRegisters.COMPRESSOR_4: ModbusRegister(address=2545, name="COMPRESSOR 4", unit="", min=35.0, max=36.0, data_type=41, key=WpmSystemStateRegisters.COMPRESSOR_4),
+    WpmSystemStateRegisters.COMPRESSOR_5: ModbusRegister(address=2546, name="COMPRESSOR 5", unit="", min=36.0, max=37.0, data_type=42, key=WpmSystemStateRegisters.COMPRESSOR_5),
+    WpmSystemStateRegisters.COMPRESSOR_6: ModbusRegister(address=2547, name="COMPRESSOR 6", unit="", min=37.0, max=38.0, data_type=43, key=WpmSystemStateRegisters.COMPRESSOR_6),
 }
 
 WPM_ENERGY_DATA_REGISTERS = {
@@ -716,7 +820,7 @@ class WpmStiebelEltronAPI(StiebelEltronAPI):
             [
                 ModbusRegisterBlock(base_address=500, count=110, name="System Values", registers=WPM_SYSTEM_VALUES_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=1500, count=24, name="System Parameters", registers=WPM_SYSTEM_PARAMETERS_REGISTERS, register_type=RegisterType.HOLDING_REGISTER),
-                ModbusRegisterBlock(base_address=2500, count=8, name="System State", registers=WPM_SYSTEM_STATE_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
+                ModbusRegisterBlock(base_address=2500, count=47, name="System State", registers=WPM_SYSTEM_STATE_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=3500, count=72, name="Energy Data", registers=WPM_ENERGY_DATA_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=4000, count=3, name="Energy Management Settings", registers=ENERGY_MANAGEMENT_SETTINGS_REGISTERS, register_type=RegisterType.HOLDING_REGISTER),
                 ModbusRegisterBlock(base_address=5000, count=2, name="Energy System Information", registers=ENERGY_SYSTEM_INFORMATION_REGISTERS, register_type=RegisterType.INPUT_REGISTER),

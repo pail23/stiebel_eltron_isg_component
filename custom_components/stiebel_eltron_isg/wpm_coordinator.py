@@ -873,58 +873,6 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             # _LOGGER.debug(f"current power consumption {result[CURRENT_POWER_CONSUMPTION]}")
         return result
 
-    async def set_data(self, key, value) -> None:
-        """Write the data to the modbus.
-        _LOGGER.debug(f"set modbus register for {key} to {value}")
-        if key == SG_READY_ACTIVE:
-            await self.write_register(address=4000, value=value, slave=1)
-        elif key == SG_READY_INPUT_1:
-            await self.write_register(address=4001, value=value, slave=1)
-        elif key == SG_READY_INPUT_2:
-            await self.write_register(address=4002, value=value, slave=1)
-        elif key == OPERATION_MODE:
-            await self.write_register(address=1500, value=value, slave=1)
-        elif key == COMFORT_TEMPERATURE_TARGET_HK1:
-            await self.write_register(address=1501, value=int(value * 10), slave=1)
-        elif key == ECO_TEMPERATURE_TARGET_HK1:
-            await self.write_register(address=1502, value=int(value * 10), slave=1)
-        elif key == HEATING_CURVE_RISE_HK1:
-            await self.write_register(address=1503, value=int(value * 100), slave=1)
-        elif key == COMFORT_TEMPERATURE_TARGET_HK2:
-            await self.write_register(address=1504, value=int(value * 10), slave=1)
-        elif key == ECO_TEMPERATURE_TARGET_HK2:
-            await self.write_register(address=1505, value=int(value * 10), slave=1)
-        elif key == HEATING_CURVE_RISE_HK2:
-            await self.write_register(address=1506, value=int(value * 100), slave=1)
-        elif key == COMFORT_TEMPERATURE_TARGET_HK3:
-            await self.write_register(address=1550, value=int(value * 10), slave=1)
-        elif key == ECO_TEMPERATURE_TARGET_HK3:
-            await self.write_register(address=1551, value=int(value * 10), slave=1)
-        elif key == HEATING_CURVE_RISE_HK3:
-            await self.write_register(address=1552, value=int(value * 100), slave=1)
-        elif key == DUALMODE_TEMPERATURE_HZG:
-            await self.write_register(address=1508, value=int(value * 10), slave=1)
-        elif key == COMFORT_WATER_TEMPERATURE_TARGET:
-            await self.write_register(address=1509, value=int(value * 10), slave=1)
-        elif key == ECO_WATER_TEMPERATURE_TARGET:
-            await self.write_register(address=1510, value=int(value * 10), slave=1)
-        elif key == DUALMODE_TEMPERATURE_WW:
-            await self.write_register(address=1512, value=int(value * 10), slave=1)
-        elif key == AREA_COOLING_TARGET_FLOW_TEMPERATURE:
-            await self.write_register(address=1513, value=int(value * 10), slave=1)
-        elif key == AREA_COOLING_TARGET_ROOM_TEMPERATURE:
-            await self.write_register(address=1515, value=int(value * 10), slave=1)
-        elif key == FAN_COOLING_TARGET_FLOW_TEMPERATURE:
-            await self.write_register(address=1516, value=int(value * 10), slave=1)
-        elif key == FAN_COOLING_TARGET_ROOM_TEMPERATURE:
-            await self.write_register(address=1518, value=int(value * 10), slave=1)
-        elif key == CIRCULATION_PUMP:
-            await self.write_register(address=47012, value=value, slave=1)
-        else:
-            return
-        """
-        self.data[key] = value
-
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")

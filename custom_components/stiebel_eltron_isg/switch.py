@@ -1,6 +1,7 @@
 """Switch platform for stiebel_eltron_isg."""
 
 import logging
+from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.switch import (
@@ -12,10 +13,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinatorOld,
+    StiebelEltronModbusDataCoordinator,
 )
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
+)
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+    EnergyManagementSettingsRegisters,
+    IsgRegisters,
 )
 
 from .const import (
@@ -29,30 +34,35 @@ from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+
+@dataclass(frozen=True, kw_only=True)
+class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
+    """Entity description for stiebel eltron with modbus register."""
+
+    modbus_register: IsgRegisters
+
+
 SWITCH_TYPES = [
-    SwitchEntityDescription(
-        SG_READY_ACTIVE,
-        SwitchDeviceClass.SWITCH,
+    StiebelEltronSwitchEntityDescription(
+        key=SG_READY_ACTIVE,
+        device_class=SwitchDeviceClass.SWITCH,
         has_entity_name=True,
         name="SG Ready Active",
+        modbus_register=EnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
     ),
-    SwitchEntityDescription(
-        SG_READY_INPUT_1,
-        SwitchDeviceClass.SWITCH,
+    StiebelEltronSwitchEntityDescription(
+        key=SG_READY_INPUT_1,
+        device_class=SwitchDeviceClass.SWITCH,
         has_entity_name=True,
         name="SG Ready Input 1",
+        modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
     ),
-    SwitchEntityDescription(
-        SG_READY_INPUT_2,
-        SwitchDeviceClass.SWITCH,
+    StiebelEltronSwitchEntityDescription(
+        key=SG_READY_INPUT_2,
+        device_class=SwitchDeviceClass.SWITCH,
         has_entity_name=True,
         name="SG Ready Input 2",
-    ),
-    SwitchEntityDescription(
-        CIRCULATION_PUMP,
-        SwitchDeviceClass.SWITCH,
-        has_entity_name=True,
-        name="Circulation Pump",
+        modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
     ),
 ]
 
@@ -65,15 +75,14 @@ async def async_setup_entry(
     """Set up the switch platform."""
     coordinator = entry.runtime_data.coordinator
 
-    entities = []
-
-    for description in SWITCH_TYPES:
-        switch = StiebelEltronISGSwitch(
+    entities = [
+        StiebelEltronISGSwitch(
             coordinator,
             entry,
             description,
         )
-        entities.append(switch)
+        for description in SWITCH_TYPES
+    ]
 
     async_add_devices(entities)
 
@@ -83,13 +92,14 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinatorOld,
-        config_entry,
-        description,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        description: StiebelEltronSwitchEntityDescription,
     ):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
+        self.modbus_register = description.modbus_register
 
     @property
     def unique_id(self) -> str | None:
@@ -99,22 +109,17 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        value = self.coordinator.data.get(self.entity_description.key)
+        value = self.coordinator.get_register_value(self.modbus_register)
         if value is not None:
-            return self.coordinator.data.get(self.entity_description.key) != 0
+            return value != 0
         return False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.set_data(self.entity_description.key, 1)
+        await self.coordinator.write_register(self.modbus_register, 1)
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.coordinator.set_data(self.entity_description.key, 0)
+        await self.coordinator.write_register(self.modbus_register, 0)
         await self.async_update()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.data.get(self.entity_description.key) is not None
