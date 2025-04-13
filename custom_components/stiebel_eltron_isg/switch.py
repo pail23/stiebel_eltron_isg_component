@@ -24,7 +24,6 @@ from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
 )
 
 from .const import (
-    CIRCULATION_PUMP,
     DOMAIN,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
