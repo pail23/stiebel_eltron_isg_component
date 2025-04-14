@@ -1,16 +1,16 @@
 """Climate platform for stiebel_eltron_isg."""
 
 import logging
+from dataclasses import dataclass
 
-from homeassistant.components.climate import (
+from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
+from homeassistant.components.climate.const import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
     FAN_OFF,
     PRESET_COMFORT,
     PRESET_ECO,
-    ClimateEntity,
-    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -21,20 +21,18 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron import IsgRegisters
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
+    LwzSystemParametersRegisters,
+    LwzSystemValuesRegisters,
+)
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron.wpm import (
+    WpmSystemParametersRegisters,
+    WpmSystemValuesRegisters,
+)
 
 from .const import (
-    ACTUAL_HUMIDITY,
-    ACTUAL_TEMPERATURE,
-    ACTUAL_TEMPERATURE_FEK,
-    COMFORT_TEMPERATURE_TARGET_HK1,
-    COMFORT_TEMPERATURE_TARGET_HK2,
-    COMFORT_TEMPERATURE_TARGET_HK3,
     DOMAIN,
-    ECO_TEMPERATURE_TARGET_HK1,
-    ECO_TEMPERATURE_TARGET_HK2,
-    ECO_TEMPERATURE_TARGET_HK3,
-    FAN_LEVEL_DAY,
-    FAN_LEVEL_NIGHT,
     OPERATION_MODE,
 )
 from .entity import StiebelEltronISGEntity
@@ -127,17 +125,66 @@ LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
 HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 
 
-CLIMATE_TYPES = [
-    ClimateEntityDescription(CLIMATE_HK_1, has_entity_name=True, name="Heat Circuit 1"),
-    ClimateEntityDescription(CLIMATE_HK_2, has_entity_name=True, name="Heat Circuit 2"),
-    ClimateEntityDescription(CLIMATE_HK_3, has_entity_name=True, name="Heat Circuit 3"),
+@dataclass(frozen=True, kw_only=True)
+class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
+    """Entity description for stiebel eltron with modbus register."""
+
+    humidity_modbus_register: IsgRegisters
+    actual_temperature_register: IsgRegisters
+    eco_target_temp_register: IsgRegisters
+    comfort_target_temp_register: IsgRegisters
+
+
+WPM_CLIMATE_TYPES = [
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_1,
+        has_entity_name=True,
+        name="Heat Circuit 1",
+        humidity_modbus_register=WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
+        actual_temperature_register=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
+        eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_1,
+        comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_1,
+    ),
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_2,
+        has_entity_name=True,
+        name="Heat Circuit 2",
+        humidity_modbus_register=WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
+        actual_temperature_register=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
+        eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_2,
+        comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_3,
+    ),
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_3,
+        has_entity_name=True,
+        name="Heat Circuit 3",
+        humidity_modbus_register=WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
+        actual_temperature_register=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
+        eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_3,
+        comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_3,
+    ),
 ]
 
-TEMPERATURE_KEY_MAP = {
-    CLIMATE_HK_1: [ECO_TEMPERATURE_TARGET_HK1, COMFORT_TEMPERATURE_TARGET_HK1],
-    CLIMATE_HK_2: [ECO_TEMPERATURE_TARGET_HK2, COMFORT_TEMPERATURE_TARGET_HK2],
-    CLIMATE_HK_3: [ECO_TEMPERATURE_TARGET_HK3, COMFORT_TEMPERATURE_TARGET_HK3],
-}
+LWZ_CLIMATE_TYPES = [
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_1,
+        has_entity_name=True,
+        name="Heat Circuit 1",
+        humidity_modbus_register=LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1,
+        actual_temperature_register=LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1,
+        eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK1,
+        comfort_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1,
+    ),
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_2,
+        has_entity_name=True,
+        name="Heat Circuit 2",
+        humidity_modbus_register=LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC2,
+        actual_temperature_register=LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2,
+        eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK2,
+        comfort_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK2,
+    ),
+]
 
 
 async def async_setup_entry(
@@ -148,14 +195,25 @@ async def async_setup_entry(
     """Set up the select platform."""
     coordinator = entry.runtime_data.coordinator
 
-    entities = []
-    for description in CLIMATE_TYPES:
-        climate_entity = (
-            StiebelEltronWPMClimateEntity(coordinator, entry, description)
-            if coordinator.is_wpm
-            else StiebelEltronLWZClimateEntity(coordinator, entry, description)
-        )
-        entities.append(climate_entity)
+    if coordinator.is_wpm:
+        entities = [
+            StiebelEltronWPMClimateEntity(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in WPM_CLIMATE_TYPES
+        ]
+    else:
+        entities = [
+            StiebelEltronLWZClimateEntity(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in LWZ_CLIMATE_TYPES
+        ]
+
     async_add_devices(entities)
 
 
@@ -171,7 +229,12 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
 
-    def __init__(self, coordinator, config_entry, description):
+    def __init__(
+        self,
+        coordinator,
+        config_entry,
+        description: StiebelEltronClimateEntityDescription,
+    ):
         """Initialize the climate entity."""
         self.entity_description = description
 
@@ -182,6 +245,17 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
         super().__init__(coordinator, config_entry)
 
+        self.modbus_register = description.humidity_modbus_register
+        self.humidity_modbus_register = description.humidity_modbus_register
+        self.actual_temperature_register = description.actual_temperature_register
+        self.eco_target_temp_register = description.eco_target_temp_register
+        self.comfort_target_temp_register = description.comfort_target_temp_register
+
+    @property
+    def operation_mode(self) -> int:
+        """Operating mode of the heat pump."""
+        raise NotImplementedError()
+
     @property
     def unique_id(self) -> str | None:
         """Return the unique id of the climate entity."""
@@ -190,61 +264,44 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return self.coordinator.data.get(ACTUAL_HUMIDITY)
+        return int(self.coordinator.get_register_value(self.humidity_modbus_register))
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        temperature = self.coordinator.data.get(ACTUAL_TEMPERATURE)
-        return (
-            temperature
-            if temperature is not None
-            else self.coordinator.data.get(ACTUAL_TEMPERATURE_FEK)
-        )
+        return self.coordinator.get_register_value(self.actual_temperature_register)
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            return self.coordinator.data.get(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][0],
-            )
-        return self.coordinator.data.get(
-            TEMPERATURE_KEY_MAP[self.entity_description.key][1],
-        )
+        if self.operation_mode == ECO_MODE:
+            return self.coordinator.get_register_value(self.eco_target_temp_register)
+        return self.coordinator.get_register_value(self.comfort_target_temp_register)
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
-        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            await self.coordinator.set_data(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][0],
+        if self.operation_mode == ECO_MODE:
+            await self.coordinator.write_register(
+                self.eco_target_temp_register,
                 value,
             )
         else:
-            await self.coordinator.set_data(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][1],
+            await self.coordinator.write_register(
+                self.comfort_target_temp_register,
                 value,
             )
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added.
-
-        This only applies when fist added to the entity registry.
-        """
-        return (
-            self.coordinator.data.get(
-                TEMPERATURE_KEY_MAP[self.entity_description.key][0],
-            )
-            is not None
-        )
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     """stiebel_eltron_isg climate class for wpm."""
 
-    def __init__(self, coordinator, config_entry, description):
+    def __init__(
+        self,
+        coordinator,
+        config_entry,
+        description: StiebelEltronClimateEntityDescription,
+    ):
         """Initialize the climate entity."""
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
         self._attr_preset_modes = [
@@ -258,30 +315,62 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         super().__init__(coordinator, config_entry, description)
 
     @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        temperature = super().current_temperature
+        return (
+            temperature
+            if temperature is not None
+            else self.coordinator.get_register_value(
+                WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FEK
+            )
+        )
+
+    @property
+    def operation_mode(self) -> int:
+        """Operating mode of the heat pump."""
+        return int(
+            self.coordinator.get_register_value(
+                WpmSystemParametersRegisters.OPERATING_MODE
+            )
+        )
+
+    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return WPM_TO_HA_HVAC.get(self.coordinator.data.get(OPERATION_MODE))
+        return WPM_TO_HA_HVAC.get(self.operation_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
-        await self.coordinator.set_data(OPERATION_MODE, new_mode)
+        if new_mode is not None:
+            await self.coordinator.write_register(
+                WpmSystemParametersRegisters.OPERATING_MODE, new_mode
+            )
 
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        return WPM_TO_HA_PRESET.get(self.coordinator.data.get(OPERATION_MODE))
+        return WPM_TO_HA_PRESET.get(self.operation_mode)
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
-        await self.coordinator.set_data(OPERATION_MODE, new_mode)
+        if new_mode is not None:
+            await self.coordinator.write_register(
+                WpmSystemParametersRegisters.OPERATING_MODE, new_mode
+            )
 
 
 class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     """stiebel_eltron_isg climate class for lwz."""
 
-    def __init__(self, coordinator, config_entry, description):
+    def __init__(
+        self,
+        coordinator,
+        config_entry,
+        description: StiebelEltronClimateEntityDescription,
+    ):
         """Initialize the climate entity."""
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
         self._attr_preset_modes = [
@@ -300,36 +389,68 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         )
 
     @property
+    def operation_mode(self) -> int:
+        """Operating mode of the heat pump."""
+        return int(
+            self.coordinator.get_register_value(
+                LwzSystemParametersRegisters.OPERATING_MODE
+            )
+        )
+
+    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return LWZ_TO_HA_HVAC.get(self.coordinator.data.get(OPERATION_MODE))
+        return LWZ_TO_HA_HVAC.get(self.operation_mode)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
-        await self.coordinator.set_data(OPERATION_MODE, new_mode)
+        if new_mode is not None:
+            await self.coordinator.write_register(
+                LwzSystemParametersRegisters.OPERATING_MODE, new_mode
+            )
 
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        return LWZ_TO_HA_PRESET.get(self.coordinator.data.get(OPERATION_MODE))
+        return LWZ_TO_HA_PRESET.get(self.operation_mode)
 
     async def async_set_preset_mode(self, preset_mode):
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
-        await self.coordinator.set_data(OPERATION_MODE, new_mode)
+        if new_mode is not None:
+            await self.coordinator.write_register(
+                LwzSystemParametersRegisters.OPERATING_MODE, new_mode
+            )
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_NIGHT))
-        return LWZ_TO_HA_FAN.get(self.coordinator.data.get(FAN_LEVEL_DAY))
+            return LWZ_TO_HA_FAN.get(
+                int(
+                    self.coordinator.get_register_value(
+                        LwzSystemParametersRegisters.NIGHT_STAGE
+                    )
+                )
+            )
+        return LWZ_TO_HA_FAN.get(
+            int(
+                self.coordinator.get_register_value(
+                    LwzSystemParametersRegisters.DAY_STAGE
+                )
+            )
+        )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
-        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            await self.coordinator.set_data(FAN_LEVEL_NIGHT, new_mode)
-        else:
-            await self.coordinator.set_data(FAN_LEVEL_DAY, new_mode)
+        if new_mode is not None:
+            if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+                await self.coordinator.write_register(
+                    LwzSystemParametersRegisters.NIGHT_STAGE, new_mode
+                )
+            else:
+                await self.coordinator.write_register(
+                    LwzSystemParametersRegisters.DAY_STAGE, new_mode
+                )
