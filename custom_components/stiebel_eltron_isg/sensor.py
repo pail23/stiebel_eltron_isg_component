@@ -377,32 +377,32 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Actual Room Temperature HK 1",
         ACTUAL_ROOM_TEMPERATURE_HK1,
-        WpmSystemValuesRegisters.ACTUAL_TEMPERATURE__ROOM_TEMP_HC1,
+        WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC1,
     ),
     create_temperature_entity_description(
         "Target Room Temperature HK 1",
         TARGET_ROOM_TEMPERATURE_HK1,
-        WpmSystemValuesRegisters.SET_TEMPERATURE__ROOM_TEMP_HC1,
+        WpmSystemValuesRegisters.SET_TEMPERATURE_ROOM_TEMP_HC1,
     ),
     create_temperature_entity_description(
         "Actual Room Temperature HK 2",
         ACTUAL_ROOM_TEMPERATURE_HK2,
-        WpmSystemValuesRegisters.ACTUAL_TEMPERATURE__ROOM_TEMP_HC2,
+        WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC2,
     ),
     create_temperature_entity_description(
         "Target Room Temperature HK 2",
         TARGET_ROOM_TEMPERATURE_HK2,
-        WpmSystemValuesRegisters.SET_TEMPERATURE__ROOM_TEMP_HC2,
+        WpmSystemValuesRegisters.SET_TEMPERATURE_ROOM_TEMP_HC2,
     ),
     create_temperature_entity_description(
         "Actual Room Temperature HK 3",
         ACTUAL_ROOM_TEMPERATURE_HK3,
-        WpmSystemValuesRegisters.ACTUAL_TEMPERATURE__ROOM_TEMP_HC3,
+        WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC3,
     ),
     create_temperature_entity_description(
         "Target Room Temperature HK 3",
         TARGET_ROOM_TEMPERATURE_HK3,
-        WpmSystemValuesRegisters.SET_TEMPERATURE__ROOM_TEMP_HC3,
+        WpmSystemValuesRegisters.SET_TEMPERATURE_ROOM_TEMP_HC3,
     ),
     create_temperature_entity_description(
         "Flow Temperature",

@@ -29,7 +29,7 @@ class LwzSystemValuesRegisters(IsgRegisters):
     FLOW_TEMPERATURE = 12
     RETURN_TEMPERATURE = 13
     PRESSURE_HTG_CIRC = 14
-    FLOW_RATE_ = 15
+    FLOW_RATE = 15
     ACTUAL_DHW_T = 16
     DHW_SET_TEMPERATURE = 17
     VENTILATION_AIR_ACTUAL_FAN_SPEED = 18
@@ -156,7 +156,7 @@ LWZ_SYSTEM_VALUES_REGISTERS = {
     LwzSystemValuesRegisters.FLOW_TEMPERATURE: ModbusRegister(address=12, name="FLOW TEMPERATURE", unit="°C", min=0.0, max=90.0, data_type=2, key=LwzSystemValuesRegisters.FLOW_TEMPERATURE),
     LwzSystemValuesRegisters.RETURN_TEMPERATURE: ModbusRegister(address=13, name="RETURN TEMPERATURE", unit="°C", min=0.0, max=90.0, data_type=2, key=LwzSystemValuesRegisters.RETURN_TEMPERATURE),
     LwzSystemValuesRegisters.PRESSURE_HTG_CIRC: ModbusRegister(address=14, name="PRESSURE HTG CIRC", unit="bar", min=0.0, max=6.0, data_type=2, key=LwzSystemValuesRegisters.PRESSURE_HTG_CIRC),
-    LwzSystemValuesRegisters.FLOW_RATE_: ModbusRegister(address=15, name="FLOW RATE ", unit="l/min", min=None, max=None, data_type=2, key=LwzSystemValuesRegisters.FLOW_RATE_),
+    LwzSystemValuesRegisters.FLOW_RATE: ModbusRegister(address=15, name="FLOW RATE ", unit="l/min", min=None, max=None, data_type=2, key=LwzSystemValuesRegisters.FLOW_RATE),
     LwzSystemValuesRegisters.ACTUAL_DHW_T: ModbusRegister(address=16, name="ACTUAL DHW T", unit="°C", min=10.0, max=65.0, data_type=2, key=LwzSystemValuesRegisters.ACTUAL_DHW_T),
     LwzSystemValuesRegisters.DHW_SET_TEMPERATURE: ModbusRegister(address=17, name="DHW SET TEMPERATURE", unit="°C", min=10.0, max=65.0, data_type=2, key=LwzSystemValuesRegisters.DHW_SET_TEMPERATURE),
     LwzSystemValuesRegisters.VENTILATION_AIR_ACTUAL_FAN_SPEED: ModbusRegister(
