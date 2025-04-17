@@ -30,7 +30,6 @@ from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
-    EnergyManagementSettingsRegisters,
     EnergySystemInformationRegisters,
     IsgRegisters,
 )
