@@ -31,6 +31,7 @@ from custom_components.stiebel_eltron_isg.data import (
 )
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
     EnergyManagementSettingsRegisters,
+    EnergySystemInformationRegisters,
     IsgRegisters,
 )
 from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
@@ -639,7 +640,7 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
         name="SG Ready State",
         icon="mdi:solar-power",
         has_entity_name=True,
-        modbus_register=EnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
+        modbus_register=EnergySystemInformationRegisters.SG_READY_OPERATING_STATE,
     ),
 ]
 
@@ -650,7 +651,9 @@ ENERGY_SENSOR_TYPES = [
         WpmEnergyDataRegisters.VD_HEATING_TOTAL,
     ),
     create_energy_entity_description(
-        "Produced Heating", PRODUCED_HEATING, WpmEnergyDataRegisters.VD_HEATING_TOTAL
+        "Produced Heating",
+        PRODUCED_HEATING,
+        WpmEnergyDataRegisters.VD_HEATING_DAY_AND_TOTAL,
     ),
     create_energy_entity_description(
         "Produced Water Heating Total",
@@ -660,7 +663,7 @@ ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Produced Water Heating",
         PRODUCED_WATER_HEATING,
-        WpmEnergyDataRegisters.VD_DHW_TOTAL,
+        WpmEnergyDataRegisters.VD_DHW_DAY_AND_TOTAL,
     ),
     create_energy_entity_description(
         "Consumed Heating Total",
@@ -670,7 +673,7 @@ ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Consumed Heating",
         CONSUMED_HEATING,
-        WpmEnergyDataRegisters.VD_HEATING_TOTAL_CONSUMED,
+        WpmEnergyDataRegisters.VD_HEATING_DAY_AND_TOTAL_CONSUMED,
     ),
     create_energy_entity_description(
         "Consumed Water Heating Total",
@@ -680,7 +683,7 @@ ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Consumed Water Heating",
         CONSUMED_WATER_HEATING,
-        WpmEnergyDataRegisters.VD_DHW_DAY_CONSUMED,
+        WpmEnergyDataRegisters.VD_DHW_DAY_AND_TOTAL_CONSUMED,
     ),
 ]
 

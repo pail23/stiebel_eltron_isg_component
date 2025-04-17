@@ -8,9 +8,9 @@ from . import (
     RegisterType,
     ENERGY_DATA_BLOCK_NAME,
     VIRTUAL_REGISTER_OFFSET,
-    get_register_descriptor,
     ENERGY_MANAGEMENT_SETTINGS_REGISTERS,
     ENERGY_SYSTEM_INFORMATION_REGISTERS,
+    VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET,
 )
 
 
@@ -206,10 +206,12 @@ class WpmSystemStateRegisters(IsgRegisters):
 
 class WpmEnergyDataRegisters(IsgRegisters):
     VD_HEATING_DAY = 3501
+    VD_HEATING_DAY_AND_TOTAL = 203502
     VD_HEATING_TOTAL_LOW = 3502
     VD_HEATING_TOTAL = 103502
     VD_HEATING_TOTAL_HI = 3503
     VD_DHW_DAY = 3504
+    VD_DHW_DAY_AND_TOTAL = 203505
     VD_DHW_TOTAL_LOW = 3505
     VD_DHW_TOTAL = 103505
     VD_DHW_TOTAL_HI = 3506
@@ -220,10 +222,12 @@ class WpmEnergyDataRegisters(IsgRegisters):
     NHZ_DHW_TOTAL = 103509
     NHZ_DHW_TOTAL_HI = 3510
     VD_HEATING_DAY_CONSUMED = 3511
+    VD_HEATING_DAY_AND_TOTAL_CONSUMED = 203512
     VD_HEATING_TOTAL_LOW_CONSUMED = 3512
     VD_HEATING_TOTAL_CONSUMED = 103512
     VD_HEATING_TOTAL_HI_CONSUMED = 3513
     VD_DHW_DAY_CONSUMED = 3514
+    VD_DHW_DAY_AND_TOTAL_CONSUMED = 203515
     VD_DHW_TOTAL_LOW_CONSUMED = 3515
     VD_DHW_TOTAL_CONSUMED = 103515
     VD_DHW_TOTAL_HI_CONSUMED = 3516
@@ -234,10 +238,12 @@ class WpmEnergyDataRegisters(IsgRegisters):
     NHZ_2 = 3521
     NHZ_1_2 = 3522
     VD_HEATING_DAY_HP_1 = 3523
+    VD_HEATING_DAY_AND_TOTAL_HP_1 = 203524
     VD_HEATING_TOTAL_LOW_HP_1 = 3524
     VD_HEATING_TOTAL_HP_1 = 103524
     VD_HEATING_TOTAL_HI_HP_1 = 3525
     VD_DHW_DAY_HP_1 = 3526
+    VD_DHW_DAY_AND_TOTAL_HP_1 = 203527
     VD_DHW_TOTAL_LOW_HP_1 = 3527
     VD_DHW_TOTAL_HP_1 = 103527
     VD_DHW_TOTAL_HI_HP_1 = 3528
@@ -248,10 +254,12 @@ class WpmEnergyDataRegisters(IsgRegisters):
     NHZ_DHW_TOTAL_HP_1 = 103531
     NHZ_DHW_TOTAL_HI_HP_1 = 3532
     VD_HEATING_DAY_CONSUMED_HP_1 = 3533
+    VD_HEATING_DAY_AND_TOTAL_CONSUMED_HP_1 = 203534
     VD_HEATING_TOTAL_LOW_CONSUMED_HP_1 = 3534
     VD_HEATING_TOTAL_CONSUMED_HP_1 = 103534
     VD_HEATING_TOTAL_HI_CONSUMED_HP_1 = 3535
     VD_DHW_DAY_CONSUMEDHP_1 = 3536
+    VD_DHW_DAY_AND_TOTAL_CONSUMEDHP_1 = 203537
     VD_DHW_TOTAL_LOW_CONSUMED_HP_1 = 3537
     VD_DHW_TOTAL_CONSUMED_HP_1 = 103537
     VD_DHW_TOTAL_HI_CONSUMED_HP_1 = 3538
@@ -266,18 +274,22 @@ class WpmEnergyDataRegisters(IsgRegisters):
     NHZ_2_REHEATING = 3547
     NHZ_1_2_REHEATING = 3548
     VD_HEATING_DAY_HP_2 = 3549
+    VD_HEATING_DAY_AND_TOTAL_HP_2 = 203550
     VD_HEATING_TOTAL_LOW_HP_2 = 3550
     VD_HEATING_TOTAL_HP_2 = 103550
     VD_HEATING_TOTAL_HI_HP_2 = 3551
     VD_DHW_DAY_HP_2 = 3552
+    VD_DHW_DAY_AND_TOTAL_HP_2 = 203553
     VD_DHW_TOTAL_LOW_HP_2 = 3553
     VD_DHW_TOTAL_HP_2 = 103553
     VD_DHW_TOTAL_HI_HP_2 = 3554
     VD_HEATING_DAY_CONSUMED_HP_2 = 3555
+    VD_HEATING_DAY_AND_TOTAL_CONSUMED_HP_2 = 203556
     VD_HEATING_TOTAL_LOW_CONSUMED_HP_2 = 3556
     VD_HEATING_TOTAL_CONSUMED_HP_2 = 103556
     VD_HEATING_TOTAL_HI_CONSUMED_HP_2 = 3557
     VD_DHW_DAY_CONSUMED_HP_2 = 3558
+    VD_DHW_DAY_AND_TOTAL_CONSUMED_HP_2 = 203559
     VD_DHW_TOTAL_LOW_CONSUMED_HP_2 = 3559
     VD_DHW_TOTAL_CONSUMED_HP_2 = 103559
     VD_DHW_TOTAL_HI_CONSUMED_HP_2 = 3560
@@ -289,11 +301,32 @@ class WpmEnergyDataRegisters(IsgRegisters):
     VD_1_2_DHW_HP_2 = 3566
     VD_COOLING_HP_2 = 3567
     VD_HEATING_DAY_HP_3 = 3568
+    VD_HEATING_DAY_AND_TOTAL_HP_3 = 203569
     VD_HEATING_TOTAL_LOW_HP_3 = 3569
     VD_HEATING_TOTAL_HP_3 = 103569
     VD_HEATING_TOTAL_HI_HP_3 = 3570
     VD_DHW_DAY_HP_3 = 3571
-    VD_DHW_TOTAL_HP_3 = 3572
+    VD_DHW_DAY_AND_TOTAL_HP_3 = 203572
+    VD_DHW_TOTAL_LOW_HP_3 = 3572
+    VD_DHW_TOTAL_HP_3 = 103572
+    VD_DHW_TOTAL_HI_HP_3 = 3573
+    VD_HEATING_DAY_CONSUMED_HP_3 = 3574
+    VD_HEATING_DAY_AND_TOTAL_CONSUMED_HP_3 = 203575
+    VD_HEATING_TOTAL_LOW_CONSUMED_HP_3 = 3575
+    VD_HEATING_TOTAL_CONSUMED_HP_3 = 103575
+    VD_HEATING_TOTAL_HI_CONSUMED_HP_3 = 3576
+    VD_DHW_DAY_CONSUMED_HP_3 = 3577
+    VD_DHW_DAY_AND_TOTAL_CONSUMED_HP_3 = 203578
+    VD_DHW_TOTAL_LOW_CONSUMED_HP_3 = 3578
+    VD_DHW_TOTAL_CONSUMED_HP_3 = 103578
+    VD_DHW_TOTAL_HI_CONSUMED_HP_3 = 3579
+    VD_1_HEATING_HP_3 = 3580
+    VD_2_HEATING_HP_3 = 3581
+    VD_1_2_HEATING_HP_3 = 3582
+    VD_1_DHW_HP_3 = 3583
+    VD_2_DHW_HP_3 = 3584
+    VD_1_2_DHW_HP_3 = 3585
+    VD_COOLING_HP_3 = 3586
 
 
 WPM_SYSTEM_VALUES_REGISTERS = {
@@ -810,7 +843,33 @@ WPM_ENERGY_DATA_REGISTERS = {
         address=3570, name="VD HEATING TOTAL", unit="MWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_HEATING_TOTAL_HI_HP_3
     ),
     WpmEnergyDataRegisters.VD_DHW_DAY_HP_3: ModbusRegister(address=3571, name="VD DHW DAY", unit="kWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_DAY_HP_3),
-    WpmEnergyDataRegisters.VD_DHW_TOTAL_HP_3: ModbusRegister(address=3572, name="VD DHW TOTAL", unit="kWh", min=0.0, max=999.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_TOTAL_HP_3),
+    WpmEnergyDataRegisters.VD_DHW_TOTAL_LOW_HP_3: ModbusRegister(address=3572, name="VD DHW TOTAL", unit="kWh", min=0.0, max=999.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_TOTAL_LOW_HP_3),
+    WpmEnergyDataRegisters.VD_DHW_TOTAL_HI_HP_3: ModbusRegister(address=3573, name="VD DHW TOTAL", unit="MWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_TOTAL_HI_HP_3),
+    WpmEnergyDataRegisters.VD_HEATING_DAY_CONSUMED_HP_3: ModbusRegister(
+        address=3574, name="VD HEATING DAY", unit="kWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_HEATING_DAY_CONSUMED_HP_3
+    ),
+    WpmEnergyDataRegisters.VD_HEATING_TOTAL_LOW_CONSUMED_HP_3: ModbusRegister(
+        address=3575, name="VD HEATING TOTAL", unit="kWh", min=0.0, max=999.0, data_type=6, key=WpmEnergyDataRegisters.VD_HEATING_TOTAL_LOW_CONSUMED_HP_3
+    ),
+    WpmEnergyDataRegisters.VD_HEATING_TOTAL_HI_CONSUMED_HP_3: ModbusRegister(
+        address=3576, name="VD HEATING TOTAL", unit="MWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_HEATING_TOTAL_HI_CONSUMED_HP_3
+    ),
+    WpmEnergyDataRegisters.VD_DHW_DAY_CONSUMED_HP_3: ModbusRegister(
+        address=3577, name="VD DHW DAY", unit="kWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_DAY_CONSUMED_HP_3
+    ),
+    WpmEnergyDataRegisters.VD_DHW_TOTAL_LOW_CONSUMED_HP_3: ModbusRegister(
+        address=3578, name="VD DHW TOTAL", unit="kWh", min=0.0, max=999.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_TOTAL_LOW_CONSUMED_HP_3
+    ),
+    WpmEnergyDataRegisters.VD_DHW_TOTAL_HI_CONSUMED_HP_3: ModbusRegister(
+        address=3579, name="VD DHW TOTAL", unit="MWh", min=0.0, max=65535.0, data_type=6, key=WpmEnergyDataRegisters.VD_DHW_TOTAL_HI_CONSUMED_HP_3
+    ),
+    WpmEnergyDataRegisters.VD_1_HEATING_HP_3: ModbusRegister(address=3580, name="VD 1 HEATING", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_1_HEATING_HP_3),
+    WpmEnergyDataRegisters.VD_2_HEATING_HP_3: ModbusRegister(address=3581, name="VD 2 HEATING", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_2_HEATING_HP_3),
+    WpmEnergyDataRegisters.VD_1_2_HEATING_HP_3: ModbusRegister(address=3582, name="VD 1_2 HEATING", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_1_2_HEATING_HP_3),
+    WpmEnergyDataRegisters.VD_1_DHW_HP_3: ModbusRegister(address=3583, name="VD 1 DHW", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_1_DHW_HP_3),
+    WpmEnergyDataRegisters.VD_2_DHW_HP_3: ModbusRegister(address=3584, name="VD 2 DHW", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_2_DHW_HP_3),
+    WpmEnergyDataRegisters.VD_1_2_DHW_HP_3: ModbusRegister(address=3585, name="VD 1_2 DHW", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_1_2_DHW_HP_3),
+    WpmEnergyDataRegisters.VD_COOLING_HP_3: ModbusRegister(address=3586, name="VD COOLING", unit="h", min=None, max=None, data_type=6, key=WpmEnergyDataRegisters.VD_COOLING_HP_3),
 }
 
 
@@ -821,7 +880,7 @@ class WpmStiebelEltronAPI(StiebelEltronAPI):
                 ModbusRegisterBlock(base_address=500, count=110, name="System Values", registers=WPM_SYSTEM_VALUES_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=1500, count=24, name="System Parameters", registers=WPM_SYSTEM_PARAMETERS_REGISTERS, register_type=RegisterType.HOLDING_REGISTER),
                 ModbusRegisterBlock(base_address=2500, count=47, name="System State", registers=WPM_SYSTEM_STATE_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
-                ModbusRegisterBlock(base_address=3500, count=72, name="Energy Data", registers=WPM_ENERGY_DATA_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
+                ModbusRegisterBlock(base_address=3500, count=86, name="Energy Data", registers=WPM_ENERGY_DATA_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=4000, count=3, name="Energy Management Settings", registers=ENERGY_MANAGEMENT_SETTINGS_REGISTERS, register_type=RegisterType.HOLDING_REGISTER),
                 ModbusRegisterBlock(base_address=5000, count=2, name="Energy System Information", registers=ENERGY_SYSTEM_INFORMATION_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
             ],
@@ -835,19 +894,25 @@ class WpmStiebelEltronAPI(StiebelEltronAPI):
         await super().async_update()
         for registerblock in self._register_blocks:
             if registerblock.name == ENERGY_DATA_BLOCK_NAME:
-                for register in WpmEnergyDataRegisters:
-                    if register.value > VIRTUAL_REGISTER_OFFSET:
-                        low_descriptor = get_register_descriptor(
-                            list(registerblock.registers.values()),
-                            register.value - VIRTUAL_REGISTER_OFFSET,
-                        )
-                        if low_descriptor is not None:
-                            high_descriptor = get_register_descriptor(
-                                list(registerblock.registers.values()),
-                                register.value - VIRTUAL_REGISTER_OFFSET + 1,
-                            )
-                            if high_descriptor is not None:
-                                high_value = self._data.get(high_descriptor.key)
-                                low_value = self._data.get(low_descriptor.key)
-                                if high_value is not None and low_value is not None:
-                                    self._data[register] = high_value * 1000 + low_value
+                registers = [r.value for r in WpmEnergyDataRegisters]
+                registers.sort()
+                for register in registers:
+                    if register > VIRTUAL_REGISTER_OFFSET:
+                        if register > VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET:
+                            total_key = WpmEnergyDataRegisters(register - VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET + VIRTUAL_REGISTER_OFFSET)
+                            day_key = WpmEnergyDataRegisters(register - VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET - 1)
+                            total_value = self._data.get(total_key)
+                            day_value = self._data.get(day_key)
+                            if total_value is not None and day_value is not None:
+                                prev_value = self._previous_data.get(WpmEnergyDataRegisters(register))
+                                if prev_value is not None:
+                                    self._data[WpmEnergyDataRegisters(register)] = max(total_value + day_value, prev_value)
+                                else:
+                                    self._data[WpmEnergyDataRegisters(register)] = total_value + day_value
+                        else:
+                            low_key = WpmEnergyDataRegisters(register - VIRTUAL_REGISTER_OFFSET)
+                            high_key = WpmEnergyDataRegisters(register - VIRTUAL_REGISTER_OFFSET + 1)
+                            high_value = self._data.get(high_key)
+                            low_value = self._data.get(low_key)
+                            if high_value is not None and low_value is not None:
+                                self._data[WpmEnergyDataRegisters(register)] = high_value * 1000 + low_value

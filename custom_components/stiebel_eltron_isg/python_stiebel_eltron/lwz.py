@@ -8,7 +8,7 @@ from . import (
     RegisterType,
     ENERGY_DATA_BLOCK_NAME,
     VIRTUAL_REGISTER_OFFSET,
-    get_register_descriptor,
+    VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET,
     ENERGY_MANAGEMENT_SETTINGS_REGISTERS,
     ENERGY_SYSTEM_INFORMATION_REGISTERS,
 )
@@ -53,9 +53,11 @@ class LwzSystemValuesRegisters(IsgRegisters):
 class LwzSystemParametersRegisters(IsgRegisters):
     OPERATING_MODE = 1001
     ROOM_TEMPERATURE_DAY_HK1 = 1002
+    ROOM_TEMPERATURE_DAY_AND_TOTAL_HK1 = 201003
     ROOM_TEMPERATURE_NIGHT_HK1 = 1003
     MANUAL_HC_SET_HK1 = 1004
     ROOM_TEMPERATURE_DAY_HK2 = 1005
+    ROOM_TEMPERATURE_DAY_AND_TOTAL_HK2 = 201006
     ROOM_TEMPERATURE_NIGHT_HK2 = 1006
     MANUAL_HC_SET_HK2 = 1007
     GRADIENT_HK1 = 1008
@@ -63,9 +65,11 @@ class LwzSystemParametersRegisters(IsgRegisters):
     GRADIENT_HK2 = 1010
     LOW_END_HK2 = 1011
     DHW_SET_DAY = 1012
+    DHW_SET_DAY_AND_TOTAL = 201013
     DHW_SET_NIGHT = 1013
     DHW_SET_MANUAL = 1014
     MWM_SET_DAY = 1015
+    MWM_SET_DAY_AND_TOTAL = 201016
     MWM_SET_NIGHT = 1016
     MWM_SET_MANUAL = 1017
     DAY_STAGE = 1018
@@ -73,8 +77,10 @@ class LwzSystemParametersRegisters(IsgRegisters):
     PARTY_STAGE = 1020
     MANUAL_STAGE = 1021
     ROOM_TEMPERATURE_DAY_HK1_COOLING = 1022
+    ROOM_TEMPERATURE_DAY_AND_TOTAL_HK1_COOLING = 201023
     ROOM_TEMPERATURE_NIGHT_HK1_COOLING = 1023
     ROOM_TEMPERATURE_DAY_HK2_COOLING = 1024
+    ROOM_TEMPERATURE_DAY_AND_TOTAL_HK2_COOLING = 201025
     ROOM_TEMPERATURE_NIGHT_HK2_COOLING = 1025
     RESET = 1026
     RESTART_ISG = 1027
@@ -90,10 +96,12 @@ class LwzSystemStateRegisters(IsgRegisters):
 
 class LwzEnergyDataRegisters(IsgRegisters):
     HEAT_METER_HTG_DAY = 3001
+    HEAT_METER_HTG_DAY_AND_TOTAL = 203002
     HEAT_METER_HTG_TTL_LOW = 3002
     HEAT_METER_HTG_TTL = 103002
     HEAT_METER_HTG_TTL_HI = 3003
     HEAT_METER_DHW_DAY = 3004
+    HEAT_METER_DHW_DAY_AND_TOTAL = 203005
     HEAT_METER_DHW_TTL_LOW = 3005
     HEAT_METER_DHW_TTL = 103005
     HEAT_METER_DHW_TTL_HI = 3006
@@ -104,14 +112,17 @@ class LwzEnergyDataRegisters(IsgRegisters):
     HEAT_M_BOOST_DHW_TTL = 103009
     HEAT_M_BOOST_DHW_HI = 3010
     HEAT_M_RECOVERY_DAY = 3011
+    HEAT_M_RECOVERY_DAY_AND_TOTAL = 203012
     HEAT_M_RECOVERY_TTL_LOW = 3012
     HEAT_M_RECOVERY_TTL = 103012
     HEAT_M_RECOVERY_TTL_HI = 3013
     HM_SOLAR_HTG_DAY = 3014
+    HM_SOLAR_HTG_DAY_AND_TOTAL = 203015
     HM_SOLAR_HTG_TOTAL_LOW = 3015
     HM_SOLAR_HTG_TOTAL = 103015
     HM_SOLAR_HTG_TOTAL_HI = 3016
     HM_SOLAR_DHW_DAY = 3017
+    HM_SOLAR_DHW_DAY_AND_TOTAL = 203018
     HM_SOLAR_DWH_TOTAL_LOW = 3018
     HM_SOLAR_DWH_TOTAL = 103018
     HM_SOLAR_DWH_TOTAL_HI = 3019
@@ -119,10 +130,12 @@ class LwzEnergyDataRegisters(IsgRegisters):
     HM_COOLING_TOTAL = 103020
     HM_COOLING_TOTAL_HI = 3021
     PWR_CON_HTG_DAY = 3022
+    PWR_CON_HTG_DAY_AND_TOTAL = 203023
     PWR_CON_HTG_TTL_LOW = 3023
     PWR_CON_HTG_TTL = 103023
     PWR_CON_HTG_TTL_HI = 3024
     PWR_CON_DHW_DAY = 3025
+    PWR_CON_DHW_DAY_AND_TOTAL = 203026
     PWR_CON_DHW_TTL_LOW = 3026
     PWR_CON_DHW_TTL = 103026
     PWR_CON_DHW_TTL_HI = 3027
@@ -330,19 +343,25 @@ class LwzStiebelEltronAPI(StiebelEltronAPI):
         await super().async_update()
         for registerblock in self._register_blocks:
             if registerblock.name == ENERGY_DATA_BLOCK_NAME:
-                for register in LwzEnergyDataRegisters:
-                    if register.value > VIRTUAL_REGISTER_OFFSET:
-                        low_descriptor = get_register_descriptor(
-                            list(registerblock.registers.values()),
-                            register.value - VIRTUAL_REGISTER_OFFSET,
-                        )
-                        if low_descriptor is not None:
-                            high_descriptor = get_register_descriptor(
-                                list(registerblock.registers.values()),
-                                register.value - VIRTUAL_REGISTER_OFFSET + 1,
-                            )
-                            if high_descriptor is not None:
-                                high_value = self._data.get(high_descriptor.key)
-                                low_value = self._data.get(low_descriptor.key)
-                                if high_value is not None and low_value is not None:
-                                    self._data[register] = high_value * 1000 + low_value
+                registers = [r.value for r in LwzEnergyDataRegisters]
+                registers.sort()
+                for register in registers:
+                    if register > VIRTUAL_REGISTER_OFFSET:
+                        if register > VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET:
+                            total_key = LwzEnergyDataRegisters(register - VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET + VIRTUAL_REGISTER_OFFSET)
+                            day_key = LwzEnergyDataRegisters(register - VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET - 1)
+                            total_value = self._data.get(total_key)
+                            day_value = self._data.get(day_key)
+                            if total_value is not None and day_value is not None:
+                                prev_value = self._previous_data.get(LwzEnergyDataRegisters(register))
+                                if prev_value is not None:
+                                    self._data[LwzEnergyDataRegisters(register)] = max(total_value + day_value, prev_value)
+                                else:
+                                    self._data[LwzEnergyDataRegisters(register)] = total_value + day_value
+                        else:
+                            low_key = LwzEnergyDataRegisters(register - VIRTUAL_REGISTER_OFFSET)
+                            high_key = LwzEnergyDataRegisters(register - VIRTUAL_REGISTER_OFFSET + 1)
+                            high_value = self._data.get(high_key)
+                            low_value = self._data.get(low_key)
+                            if high_value is not None and low_value is not None:
+                                self._data[LwzEnergyDataRegisters(register)] = high_value * 1000 + low_value

@@ -11,6 +11,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 ENERGY_DATA_BLOCK_NAME = "Energy Data"
 VIRTUAL_REGISTER_OFFSET = 100000
+VIRTUAL_TOTAL_AND_DAY_REGISTER_OFFSET = 200000
 
 
 class IsgRegisters(Enum):
@@ -122,6 +123,7 @@ class StiebelEltronAPI:
         self._lock = asyncio.Lock()
         self._register_blocks = register_blocks
         self._data = {}
+        self._previous_data = {}
         self._modbus_data = {}  # store raw data from modbus for debug purpose
 
     async def close(self) -> None:
@@ -262,5 +264,5 @@ class StiebelEltronAPI:
                         result[descriptor.key] = self.convert_value_from_modbus(heat_pump_data.registers[i], descriptor)
             else:
                 self._modbus_data[registerblock.name] = None
-
+        self._previous_data = self._data
         self._data = result
