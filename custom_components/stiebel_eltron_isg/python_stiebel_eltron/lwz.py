@@ -1,5 +1,7 @@
 """Modbus api for stiebel eltron heat pumps. This file is generated. Do not modify it manually."""
 
+from enum import Enum
+
 from . import (
     ModbusRegister,
     ModbusRegisterBlock,
@@ -322,6 +324,25 @@ LWZ_ENERGY_DATA_REGISTERS = {
 }
 
 
+class OperatingMode(Enum):
+    """Enum for the operation mode of the heat pump."""
+
+    # AUTOMATIK
+    AUTOMATIC = 11
+    # BEREITSCHAFT
+    STANDBY = 1
+    # TAGBETRIEB
+    DAY_MODE = 3
+    # ABSENKBETRIEB
+    SETBACK_MODE = 4
+    # WARMWASSER
+    DHW = 5
+    # HANDBETRIEB
+    MANUAL_MODE = 14
+    # NOTBETRIEB
+    EMERGENCY_OPERATION = 0
+
+
 class LwzStiebelEltronAPI(StiebelEltronAPI):
     def __init__(self, host: str, port: int = 502, slave: int = 1) -> None:
         super().__init__(
@@ -365,3 +386,30 @@ class LwzStiebelEltronAPI(StiebelEltronAPI):
                             low_value = self._data.get(low_key)
                             if high_value is not None and low_value is not None:
                                 self._data[LwzEnergyDataRegisters(register)] = high_value * 1000 + low_value
+
+    def get_current_temp(self):
+        """Get the current room temperature."""
+        return self.get_register_value(LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1)
+
+    def get_target_temp(self):
+        """Get the target room temperature."""
+        return self.get_register_value(LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1)
+
+    async def set_target_temp(self, temp):
+        """Set the target room temperature (day)(HC1)."""
+        await self.write_register_value(LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1, temp)
+
+    def get_current_humidity(self):
+        """Get the current room humidity."""
+        return self.get_register_value(LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1)
+
+    # Handle operation mode
+
+    def get_operation(self) -> OperatingMode:
+        """Return the current mode of operation."""
+        op_mode = int(self.get_register_value(LwzSystemParametersRegisters.OPERATING_MODE))
+        return OperatingMode(op_mode)
+
+    async def set_operation(self, mode: OperatingMode):
+        """Set the operation mode."""
+        await self.write_register_value(LwzSystemParametersRegisters.OPERATING_MODE, mode.value)

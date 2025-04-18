@@ -157,7 +157,7 @@ def modbus_lwz_fixture():
 def error_get_data_fixture():
     """Simulate error when retrieving data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm_coordinator.StiebelEltronModbusWPMDataCoordinator.read_modbus_data",
+        "custom_components.stiebel_eltron_isg.wpm_coordinator.StiebelEltronModbusWPMDataCoordinator._async_update_data",
         side_effect=Exception,
     ):
         yield
