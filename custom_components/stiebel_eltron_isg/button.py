@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RESET_HEATPUMP
-from .coordinator import StiebelEltronModbusDataCoordinatorOld
+from .coordinator import StiebelEltronModbusDataCoordinator
 from .data import StiebelEltronIsgIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 class StiebelEltronISGButtonDescriptionMixin:
     """Mixin to describe aStiebel Eltron ISG button."""
 
-    press_action: Callable[[StiebelEltronModbusDataCoordinatorOld], Coroutine]
+    press_action: Callable[[StiebelEltronModbusDataCoordinator], Coroutine]
 
 
 @dataclass(frozen=True)

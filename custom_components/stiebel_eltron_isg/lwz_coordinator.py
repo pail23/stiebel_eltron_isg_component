@@ -34,10 +34,6 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
             hass, LwzStiebelEltronAPI(host=host, port=port), name, scan_interval
         )
 
-    async def read_modbus_data(self) -> dict:
-        """Read the ISG data through modbus."""
-        return {}
-
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump is not implemented of LWZ/LWA")
