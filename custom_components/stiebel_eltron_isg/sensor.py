@@ -547,12 +547,12 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
         LwzSystemValuesRegisters.SET_ROOM_TEMPERATURE_HC1,
     ),
     create_temperature_entity_description(
-        "Actual Temperature FEK",
+        "Actual Temperature HK 2",
         ACTUAL_TEMPERATURE_FEK,
         LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2,
     ),
     create_temperature_entity_description(
-        "Target Temperature FEK",
+        "Target Temperature HK 2",
         TARGET_TEMPERATURE_FEK,
         LwzSystemValuesRegisters.SET_ROOM_TEMPERATURE_HC2,
     ),
@@ -611,6 +611,9 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
     ),
     create_volume_stream_entity_description(
         "Volume Stream", VOLUME_STREAM, LwzSystemValuesRegisters.FLOW_RATE
+    ),
+    create_pressure_entity_description(
+        "Heater Pressure", HEATER_PRESSURE, LwzSystemValuesRegisters.PRESSURE_HTG_CIRC
     ),
     create_temperature_entity_description(
         "Actual Temperature Water",
