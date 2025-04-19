@@ -74,7 +74,7 @@ LWZ_SELECT_TYPES = [
         has_entity_name=True,
         name="Operation Mode",
         modbus_register=LwzSystemParametersRegisters.OPERATING_MODE,
-        operation_modes=OPERATION_MODE_WPM_OPTIONS,
+        operation_modes=OPERATION_MODE_LWZ_OPTIONS,
     ),
 ]
 

@@ -609,6 +609,9 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
         RETURN_TEMPERATURE,
         LwzSystemValuesRegisters.RETURN_TEMPERATURE,
     ),
+    create_volume_stream_entity_description(
+        "Volume Stream", VOLUME_STREAM, LwzSystemValuesRegisters.FLOW_RATE
+    ),
     create_temperature_entity_description(
         "Actual Temperature Water",
         ACTUAL_TEMPERATURE_WATER,
