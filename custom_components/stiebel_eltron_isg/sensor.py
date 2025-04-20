@@ -626,6 +626,11 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
         LwzSystemValuesRegisters.DHW_SET_TEMPERATURE,
     ),
     create_temperature_entity_description(
+        "Solar Collector Temperature",
+        SOLAR_COLLECTOR_TEMPERATURE,
+        LwzSystemValuesRegisters.COLLECTOR_TEMPERATURE,
+    ),
+    create_temperature_entity_description(
         "Hot Gas Temperature",
         HOT_GAS_TEMPERATURE,
         LwzSystemValuesRegisters.HOT_GAS_TEMPERATURE,
@@ -911,7 +916,7 @@ async def async_setup_entry(
             for description in WPM_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGSensor(
+            StiebelEltronISGEnergySensor(
                 coordinator,
                 entry,
                 description,
@@ -929,7 +934,7 @@ async def async_setup_entry(
             for description in LWZ_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGSensor(
+            StiebelEltronISGEnergySensor(
                 coordinator,
                 entry,
                 description,
@@ -970,7 +975,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
         return self.coordinator.get_register_value(self.modbus_register)
 
 
-class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
+class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):
     """stiebel_eltron_isg Energy Sensor class."""
 
     def __init__(
@@ -980,19 +985,7 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGEntity, SensorEntity):
         description: StiebelEltronSensorEntityDescription,
     ):
         """Initialize the sensor."""
-        self.entity_description = description
-        super().__init__(coordinator, config_entry)
-        self.modbus_register = description.modbus_register
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the sensor."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        return self.coordinator.get_register_value(self.modbus_register)
+        super().__init__(coordinator, config_entry, description)
 
     @property
     def last_reset(self) -> datetime.datetime | None:
