@@ -80,7 +80,7 @@ async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz) -> Non
 
     assert config_entry.state == ConfigEntryState.LOADED
 
-    state = hass.states.get("sensor.stiebel_eltron_isg_actual_temperature_fek")
+    state = hass.states.get("sensor.stiebel_eltron_isg_actual_room_temperature_hk_2")
     assert state is not None
     assert state.state == "0.3"
     await hass.config_entries.async_unload(config_entry.entry_id)

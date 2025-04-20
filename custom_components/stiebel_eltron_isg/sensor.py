@@ -537,27 +537,27 @@ SYSTEM_VALUES_SENSOR_TYPES = [
 
 LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
-        "Actual Temperature",
-        ACTUAL_TEMPERATURE,
+        "Actual Room Temperature HK 1",
+        ACTUAL_ROOM_TEMPERATURE_HK1,
         LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1,
     ),
     create_temperature_entity_description(
-        "Target Temperature",
-        TARGET_TEMPERATURE,
+        "Target Room Temperature HK 1",
+        TARGET_ROOM_TEMPERATURE_HK1,
         LwzSystemValuesRegisters.SET_ROOM_TEMPERATURE_HC1,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 2",
-        ACTUAL_TEMPERATURE_FEK,
+        "Actual Room Temperature HK 2",
+        ACTUAL_ROOM_TEMPERATURE_HK2,
         LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 2",
-        TARGET_TEMPERATURE_FEK,
+        "Target Room Temperature HK 2",
+        TARGET_ROOM_TEMPERATURE_HK2,
         LwzSystemValuesRegisters.SET_ROOM_TEMPERATURE_HC2,
     ),
     create_humidity_entity_description(
-        "Humidity", ACTUAL_HUMIDITY, LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1
+        "Humidity HK 1", ACTUAL_HUMIDITY, LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1
     ),
     create_humidity_entity_description(
         "Humidity HK 2",
