@@ -699,6 +699,46 @@ ENERGY_SENSOR_TYPES = [
 
 LWZ_ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
+        "Produced Heating Total",
+        PRODUCED_HEATING_TOTAL,
+        LwzEnergyDataRegisters.HEAT_METER_HTG_TTL,
+    ),
+    create_energy_entity_description(
+        "Produced Heating",
+        PRODUCED_HEATING,
+        LwzEnergyDataRegisters.HEAT_METER_HTG_DAY_AND_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Produced Water Heating Total",
+        PRODUCED_WATER_HEATING_TOTAL,
+        LwzEnergyDataRegisters.HEAT_METER_DHW_TTL,
+    ),
+    create_energy_entity_description(
+        "Produced Water Heating",
+        PRODUCED_WATER_HEATING,
+        LwzEnergyDataRegisters.HEAT_METER_DHW_DAY_AND_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Consumed Heating Total",
+        CONSUMED_HEATING_TOTAL,
+        LwzEnergyDataRegisters.PWR_CON_HTG_TTL,
+    ),
+    create_energy_entity_description(
+        "Consumed Heating",
+        CONSUMED_HEATING,
+        LwzEnergyDataRegisters.PWR_CON_HTG_DAY_AND_TOTAL,
+    ),
+    create_energy_entity_description(
+        "Consumed Water Heating Total",
+        CONSUMED_WATER_HEATING_TOTAL,
+        LwzEnergyDataRegisters.PWR_CON_DHW_TTL,
+    ),
+    create_energy_entity_description(
+        "Consumed Water Heating",
+        CONSUMED_WATER_HEATING,
+        LwzEnergyDataRegisters.PWR_CON_DHW_DAY_AND_TOTAL,
+    ),
+    create_energy_entity_description(
         "Produced Electrical Booster Heating Total",
         PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
         LwzEnergyDataRegisters.HEAT_M_BOOST_HTG_TTL,
@@ -711,7 +751,7 @@ LWZ_ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Produced Recovery",
         PRODUCED_RECOVERY,
-        LwzEnergyDataRegisters.HEAT_M_RECOVERY_DAY,
+        LwzEnergyDataRegisters.HEAT_M_RECOVERY_DAY_AND_TOTAL,
     ),
     create_energy_entity_description(
         "Produced Recovery Total",
@@ -764,6 +804,26 @@ ENERGY_DAILY_SENSOR_TYPES = [
 ]
 
 LWZ_ENERGY_DAILY_SENSOR_TYPES = [
+    create_daily_energy_entity_description(
+        "Produced Heating Today",
+        PRODUCED_HEATING_TODAY,
+        LwzEnergyDataRegisters.HEAT_METER_HTG_DAY,
+    ),
+    create_daily_energy_entity_description(
+        "Produced Water Heating Today",
+        PRODUCED_WATER_HEATING_TODAY,
+        LwzEnergyDataRegisters.HEAT_METER_DHW_DAY,
+    ),
+    create_daily_energy_entity_description(
+        "Consumed Heating Today",
+        CONSUMED_HEATING_TODAY,
+        LwzEnergyDataRegisters.PWR_CON_HTG_DAY,
+    ),
+    create_daily_energy_entity_description(
+        "Consumed Water Heating Today",
+        CONSUMED_WATER_HEATING_TODAY,
+        LwzEnergyDataRegisters.PWR_CON_DHW_DAY,
+    ),
     create_daily_energy_entity_description(
         "Produced Recovery Today",
         PRODUCED_RECOVERY_TODAY,
