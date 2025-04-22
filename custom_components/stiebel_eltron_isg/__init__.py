@@ -14,7 +14,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.core_config import Config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.loader import async_get_loaded_integration
-from pymodbus.client import AsyncModbusTcpClient
 
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
@@ -22,6 +21,9 @@ from custom_components.stiebel_eltron_isg.data import (
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+    get_controller_model,
 )
 from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
@@ -55,40 +57,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
-class StiebelEltronModbusError(Exception):
-    """Exception during modbus communication."""
-
-    def __init(self) -> None:
-        """Initialize the error."""
-        super().__init__("Data error on the modbus")
-
-
-async def get_controller_model(host, port) -> int:
-    """Read the model of the controller.
-
-    LWA and LWZ controllers have model ids 103 and 104.
-    WPM controllers have 390, 391 or 449.
-    """
-    client = AsyncModbusTcpClient(host=host, port=port)
-    try:
-        await client.connect()
-        inverter_data = await client.read_input_registers(
-            address=5001,
-            count=1,
-            slave=1,
-        )
-        if not inverter_data.isError():
-            value = client.convert_from_registers(
-                inverter_data.registers, client.DATATYPE.UINT16
-            )
-            if isinstance(value, int):
-                return value
-
-        raise StiebelEltronModbusError
-    finally:
-        client.close()
-
-
 async def async_setup(hass: HomeAssistant, config: Config):
     """Set up this integration using YAML is not supported."""
     return True
@@ -113,7 +81,7 @@ async def async_setup_entry(
 
     coordinator = (
         StiebelEltronModbusWPMDataCoordinator(hass, name, host, port, scan_interval)
-        if model >= 390
+        if model.value >= 390
         else StiebelEltronModbusLWZDataCoordinator(
             hass,
             name,

@@ -116,7 +116,18 @@ class StiebelEltronModbusError(Exception):
         super().__init__("Data error on the modbus")
 
 
-async def get_controller_model(host, port) -> int:
+class ControllerModel(Enum):
+    """Controller model."""
+
+    LWZ = 103
+    LWZ_x04_SOL = 104
+
+    WPM_3 = 390
+    WPM_3i = 391
+    WPMsystem = 449
+
+
+async def get_controller_model(host, port) -> ControllerModel:
     """Read the model of the controller.
 
     LWA and LWZ controllers have model ids 103 and 104.
@@ -133,7 +144,7 @@ async def get_controller_model(host, port) -> int:
         if not inverter_data.isError():
             value = client.convert_from_registers(inverter_data.registers, client.DATATYPE.UINT16)
             if isinstance(value, int):
-                return value
+                return ControllerModel(value)
 
         raise StiebelEltronModbusError
     finally:
