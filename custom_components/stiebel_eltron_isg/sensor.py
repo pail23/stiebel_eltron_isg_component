@@ -84,6 +84,7 @@ from .const import (
     EXTRACT_AIR_TEMPERATURE,
     FLOW_TEMPERATURE,
     FLOW_TEMPERATURE_NHZ,
+    FLOW_TEMPERATURE_WP,
     FLOW_TEMPERATURE_WP1,
     FLOW_TEMPERATURE_WP2,
     HEATER_PRESSURE,
@@ -405,14 +406,19 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         WpmSystemValuesRegisters.SET_TEMPERATURE_ROOM_TEMP_HC3,
     ),
     create_temperature_entity_description(
-        "Flow Temperature",
-        FLOW_TEMPERATURE,
+        "Flow Temperature WP",
+        FLOW_TEMPERATURE_WP,
         WpmSystemValuesRegisters.ACTUAL_FLOW_TEMPERATURE_WP,
     ),
     create_temperature_entity_description(
         "Flow Temperature NHZ",
         FLOW_TEMPERATURE_NHZ,
         WpmSystemValuesRegisters.ACTUAL_FLOW_TEMPERATURE_NHZ,
+    ),
+    create_temperature_entity_description(
+        "Flow Temperature",
+        FLOW_TEMPERATURE,
+        WpmSystemValuesRegisters.ACTUAL_FLOW_TEMPERATURE,
     ),
     create_temperature_entity_description(
         "Return Temperature",
