@@ -47,9 +47,11 @@ class LwzSystemValuesRegisters(IsgRegisters):
     HOT_GAS_TEMPERATURE = 28
     HIGH_PRESSURE = 29
     LOW_PRESSURE = 30
-    COMPRESSOR_STARTS = 31
+    COMPRESSOR_STARTS_HI = 31
     COMPRESSOR_SPEED = 32
     MIXED_WATER_AMOUNT = 33
+    COMPRESSOR_STARTS_LOW = 34
+    COMPRESSOR_STARTS = 100032
 
 
 class LwzSystemParametersRegisters(IsgRegisters):
@@ -201,9 +203,12 @@ LWZ_SYSTEM_VALUES_REGISTERS = {
     LwzSystemValuesRegisters.HOT_GAS_TEMPERATURE: ModbusRegister(address=28, name="HOT GAS TEMPERATURE", unit="°C", min=0.0, max=140.0, data_type=2, key=LwzSystemValuesRegisters.HOT_GAS_TEMPERATURE),
     LwzSystemValuesRegisters.HIGH_PRESSURE: ModbusRegister(address=29, name="HIGH PRESSURE", unit="bar", min=0.0, max=50.0, data_type=7, key=LwzSystemValuesRegisters.HIGH_PRESSURE),
     LwzSystemValuesRegisters.LOW_PRESSURE: ModbusRegister(address=30, name="LOW PRESSURE", unit="bar", min=0.0, max=25.0, data_type=7, key=LwzSystemValuesRegisters.LOW_PRESSURE),
-    LwzSystemValuesRegisters.COMPRESSOR_STARTS: ModbusRegister(address=31, name="COMPRESSOR STARTS", unit="", min=0.0, max=65535.0, data_type=6, key=LwzSystemValuesRegisters.COMPRESSOR_STARTS),
+    LwzSystemValuesRegisters.COMPRESSOR_STARTS_HI: ModbusRegister(address=31, name="COMPRESSOR STARTS", unit="", min=0.0, max=65535.0, data_type=6, key=LwzSystemValuesRegisters.COMPRESSOR_STARTS_HI),
     LwzSystemValuesRegisters.COMPRESSOR_SPEED: ModbusRegister(address=32, name="COMPRESSOR SPEED", unit="Hz", min=0.0, max=240.0, data_type=2, key=LwzSystemValuesRegisters.COMPRESSOR_SPEED),
     LwzSystemValuesRegisters.MIXED_WATER_AMOUNT: ModbusRegister(address=33, name="MIXED WATER AMOUNT", unit="l", min=0.0, max=65535.0, data_type=6, key=LwzSystemValuesRegisters.MIXED_WATER_AMOUNT),
+    LwzSystemValuesRegisters.COMPRESSOR_STARTS_LOW: ModbusRegister(
+        address=34, name="COMPRESSOR STARTS", unit="", min=0.0, max=65535.0, data_type=6, key=LwzSystemValuesRegisters.COMPRESSOR_STARTS_LOW
+    ),
 }
 
 LWZ_SYSTEM_PARAMETERS_REGISTERS = {
@@ -347,7 +352,7 @@ class LwzStiebelEltronAPI(StiebelEltronAPI):
     def __init__(self, host: str, port: int = 502, slave: int = 1) -> None:
         super().__init__(
             [
-                ModbusRegisterBlock(base_address=0, count=33, name="System Values", registers=LWZ_SYSTEM_VALUES_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
+                ModbusRegisterBlock(base_address=0, count=34, name="System Values", registers=LWZ_SYSTEM_VALUES_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=1000, count=27, name="System Parameters", registers=LWZ_SYSTEM_PARAMETERS_REGISTERS, register_type=RegisterType.HOLDING_REGISTER),
                 ModbusRegisterBlock(base_address=2000, count=5, name="System State", registers=LWZ_SYSTEM_STATE_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
                 ModbusRegisterBlock(base_address=3000, count=32, name="Energy Data", registers=LWZ_ENERGY_DATA_REGISTERS, register_type=RegisterType.INPUT_REGISTER),
@@ -386,6 +391,16 @@ class LwzStiebelEltronAPI(StiebelEltronAPI):
                             low_value = self._data.get(low_key)
                             if high_value is not None and low_value is not None:
                                 self._data[LwzEnergyDataRegisters(register)] = high_value * 1000 + low_value
+
+        compressor_starts_high = self.get_register_value(LwzSystemValuesRegisters.COMPRESSOR_STARTS_HI)
+        if compressor_starts_high is None or compressor_starts_high == 32768:
+            self._data[LwzSystemValuesRegisters.COMPRESSOR_STARTS] = 32768
+        else:
+            compressor_starts_low = self.get_register_value(LwzSystemValuesRegisters.COMPRESSOR_STARTS_LOW)
+            if compressor_starts_low is None:
+                self._data[LwzSystemValuesRegisters.COMPRESSOR_STARTS] = compressor_starts_high * 1000
+            else:
+                self._data[LwzSystemValuesRegisters.COMPRESSOR_STARTS] = compressor_starts_high * 1000 + compressor_starts_low
 
     def get_current_temp(self):
         """Get the current room temperature."""
