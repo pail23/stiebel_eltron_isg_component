@@ -23,6 +23,8 @@ from pymodbus.pdu.register_message import (
     ReadInputRegistersResponse,
 )
 
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron import ControllerModel
+
 pytest_plugins = "pytest_homeassistant_custom_component"
 
 
@@ -170,7 +172,7 @@ def get_model_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
         "custom_components.stiebel_eltron_isg.get_controller_model",
-        return_value=391,
+        return_value=ControllerModel.WPM_3i,
     ):
         yield
 
@@ -182,6 +184,6 @@ def get_model_lwz_fixture():
     """Skip calls to get data from API."""
     with patch(
         "custom_components.stiebel_eltron_isg.get_controller_model",
-        return_value=103,
+        return_value=ControllerModel.LWZ,
     ):
         yield
