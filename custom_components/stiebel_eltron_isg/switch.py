@@ -73,13 +73,6 @@ SWITCH_TYPES = [
         name="SG Ready Input 2",
         modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
     ),
-    StiebelEltronSwitchEntityDescription(
-        key=CIRCULATION_PUMP,
-        device_class=SwitchDeviceClass.SWITCH,
-        has_entity_name=True,
-        name="Circulation Pump",
-        modbus_register=WpmSystemStateRegisters.DHW_CIRCULATION_PUMP,
-    ),
 ]
 
 
@@ -99,6 +92,22 @@ async def async_setup_entry(
         )
         for description in SWITCH_TYPES
     ]
+
+    if coordinator.is_wpm:
+        # Add the circulation pump switch for WPM systems
+        entities.append(
+            StiebelEltronISGSwitch(
+                coordinator,
+                entry,
+                StiebelEltronSwitchEntityDescription(
+                    key=CIRCULATION_PUMP,
+                    device_class=SwitchDeviceClass.SWITCH,
+                    has_entity_name=True,
+                    name="Circulation Pump",
+                    modbus_register=WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
+                ),
+            )
+        )
 
     async_add_devices(entities)
 
