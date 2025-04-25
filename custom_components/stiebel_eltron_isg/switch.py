@@ -22,8 +22,12 @@ from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
     EnergyManagementSettingsRegisters,
     IsgRegisters,
 )
+from custom_components.stiebel_eltron_isg.python_stiebel_eltron.wpm import (
+    WpmSystemStateRegisters,
+)
 
 from .const import (
+    CIRCULATION_PUMP,
     DOMAIN,
     SG_READY_ACTIVE,
     SG_READY_INPUT_1,
@@ -32,6 +36,12 @@ from .const import (
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class WpmCirculationPumpRegisters(IsgRegisters):
+    """Registers related to the circulation pump in the WPM system."""
+
+    DHW_CIRCULATION_PUMP = 47012
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -62,6 +72,13 @@ SWITCH_TYPES = [
         has_entity_name=True,
         name="SG Ready Input 2",
         modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
+    ),
+    StiebelEltronSwitchEntityDescription(
+        key=CIRCULATION_PUMP,
+        device_class=SwitchDeviceClass.SWITCH,
+        has_entity_name=True,
+        name="Circulation Pump",
+        modbus_register=WpmSystemStateRegisters.DHW_CIRCULATION_PUMP,
     ),
 ]
 
@@ -115,10 +132,22 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.write_register(self.modbus_register, 1)
+        if self.modbus_register == WpmSystemStateRegisters.DHW_CIRCULATION_PUMP:
+            # For the circulation pump, we need to set the value to 1 to turn it on
+            await self.coordinator.write_register(
+                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP, 1
+            )
+        else:
+            await self.coordinator.write_register(self.modbus_register, 1)
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        await self.coordinator.write_register(self.modbus_register, 0)
+        if self.modbus_register == WpmSystemStateRegisters.DHW_CIRCULATION_PUMP:
+            # For the circulation pump, we need to set the value to 1 to turn it on
+            await self.coordinator.write_register(
+                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP, 0
+            )
+        else:
+            await self.coordinator.write_register(self.modbus_register, 0)
         await self.async_update()
