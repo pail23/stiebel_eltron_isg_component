@@ -76,10 +76,6 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         self._errors = {}
 
-        # Uncomment the next 2 lines if only a single instance of the integration is allowed:
-        # if self._async_current_entries():
-        #     return self.async_abort(reason="single_instance_allowed")
-
         if user_input is not None:
             host = user_input[CONF_HOST]
             name = user_input[CONF_NAME]
@@ -106,10 +102,6 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input[CONF_PORT] = DEFAULT_PORT
         user_input[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         return await self._show_config_form(user_input)
-
-    #        return self.async_show_form(
-    #            step_id="user", data_schema=DATA_SCHEMA, errors=self._errors
-    #        )
 
     async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
         """Show the configuration form to edit location data."""

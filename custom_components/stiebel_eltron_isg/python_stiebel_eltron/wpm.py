@@ -382,7 +382,7 @@ WPM_SYSTEM_VALUES_REGISTERS = {
         address=519, name="SET BUFFER TEMPERATURE", unit="°C", min=None, max=None, data_type=2, key=WpmSystemValuesRegisters.SET_BUFFER_TEMPERATURE
     ),
     WpmSystemValuesRegisters.HEATING_PRESSURE: ModbusRegister(address=520, name="HEATING PRESSURE", unit="bar", min=None, max=None, data_type=7, key=WpmSystemValuesRegisters.HEATING_PRESSURE),
-    WpmSystemValuesRegisters.FLOW_RATE: ModbusRegister(address=521, name="FLOW RATE", unit="l/min", min=None, max=None, data_type=2, key=WpmSystemValuesRegisters.FLOW_RATE),
+    WpmSystemValuesRegisters.FLOW_RATE: ModbusRegister(address=521, name="FLOW RATE", unit="l/min", min=None, max=None, data_type=7, key=WpmSystemValuesRegisters.FLOW_RATE),
     WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_DHW: ModbusRegister(
         address=522, name="ACTUAL TEMPERATURE DHW", unit="°C", min=10.0, max=65.0, data_type=2, key=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_DHW
     ),
