@@ -12,12 +12,16 @@ Issues not containing the minimum requirements will be closed:
 - Issues without debug logging will be closed.
 - Issues without configuration will be closed
 
+Please download and attach the diagnostics information
 -->
 
 ## Version of the custom_component
 <!-- If you are not using the newest version, download and try that before opening an issue
 If you are unsure about the version check the const.py file.
 -->
+
+## Hardware model of the heat pump
+<!-- Please specify here whether you use a WPM or an LWZ/LWA based heat pump.>
 
 ## Configuration
 
