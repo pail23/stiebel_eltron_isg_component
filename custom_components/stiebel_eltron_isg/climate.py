@@ -141,7 +141,7 @@ WPM_CLIMATE_TYPES = [
         has_entity_name=True,
         name="Heat Circuit 1",
         humidity_modbus_register=[
-            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
+            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC1,
             WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
         ],
         actual_temperature_register=[
