@@ -59,7 +59,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinato
 
         This only applies when fist added to the entity registry.
         """
-        return self.coordinator.has_register_value(self.modbus_register)
+        return self.available
 
     @property
     def available(self) -> bool:

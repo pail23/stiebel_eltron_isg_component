@@ -129,8 +129,8 @@ HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    humidity_modbus_register: IsgRegisters
-    actual_temperature_register: IsgRegisters
+    humidity_modbus_register: list[IsgRegisters]
+    actual_temperature_register: list[IsgRegisters]
     eco_target_temp_register: IsgRegisters
     comfort_target_temp_register: IsgRegisters
 
@@ -140,8 +140,15 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_1,
         has_entity_name=True,
         name="Heat Circuit 1",
-        humidity_modbus_register=WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
-        actual_temperature_register=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
+        humidity_modbus_register=[
+            WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
+            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
+        ],
+        actual_temperature_register=[
+            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
+            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FEK,
+            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC1,
+        ],
         eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_1,
         comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_1,
     ),
@@ -149,8 +156,12 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_2,
         has_entity_name=True,
         name="Heat Circuit 2",
-        humidity_modbus_register=WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
-        actual_temperature_register=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC2,
+        humidity_modbus_register=[
+            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2
+        ],
+        actual_temperature_register=[
+            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC2
+        ],
         eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_2,
         comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_2,
     ),
@@ -158,8 +169,12 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_3,
         has_entity_name=True,
         name="Heat Circuit 3",
-        humidity_modbus_register=WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC3,
-        actual_temperature_register=WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC3,
+        humidity_modbus_register=[
+            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC3
+        ],
+        actual_temperature_register=[
+            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC3
+        ],
         eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_3,
         comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_3,
     ),
@@ -170,8 +185,8 @@ LWZ_CLIMATE_TYPES = [
         key=CLIMATE_HK_1,
         has_entity_name=True,
         name="Heat Circuit 1",
-        humidity_modbus_register=LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1,
-        actual_temperature_register=LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1,
+        humidity_modbus_register=[LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1],
+        actual_temperature_register=[LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1],
         eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK1,
         comfort_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1,
     ),
@@ -179,8 +194,8 @@ LWZ_CLIMATE_TYPES = [
         key=CLIMATE_HK_2,
         has_entity_name=True,
         name="Heat Circuit 2",
-        humidity_modbus_register=LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC2,
-        actual_temperature_register=LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2,
+        humidity_modbus_register=[LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC2],
+        actual_temperature_register=[LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2],
         eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK2,
         comfort_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK2,
     ),
@@ -245,11 +260,15 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
         super().__init__(coordinator, config_entry)
 
-        self.modbus_register = description.humidity_modbus_register
         self.humidity_modbus_register = description.humidity_modbus_register
         self.actual_temperature_register = description.actual_temperature_register
         self.eco_target_temp_register = description.eco_target_temp_register
         self.comfort_target_temp_register = description.comfort_target_temp_register
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self.current_temperature is not None
 
     @property
     def operation_mode(self) -> int:
@@ -264,12 +283,18 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        return int(self.coordinator.get_register_value(self.humidity_modbus_register))
+        for register in self.humidity_modbus_register:
+            if self.coordinator.get_register_value(register) is not None:
+                return int(self.coordinator.get_register_value(register))
+        return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.coordinator.get_register_value(self.actual_temperature_register)
+        for register in self.actual_temperature_register:
+            if self.coordinator.get_register_value(register) is not None:
+                return self.coordinator.get_register_value(register)
+        return None
 
     @property
     def target_temperature(self) -> float | None:
@@ -313,18 +338,6 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
             PRESET_EMERGENCY,
         ]
         super().__init__(coordinator, config_entry, description)
-
-    @property
-    def current_temperature(self) -> float | None:
-        """Return the current temperature."""
-        temperature = super().current_temperature
-        return (
-            temperature
-            if temperature is not None
-            else self.coordinator.get_register_value(
-                WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FEK
-            )
-        )
 
     @property
     def operation_mode(self) -> int:
