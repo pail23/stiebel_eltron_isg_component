@@ -279,12 +279,12 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_humidity_entity_description(
         "Humidity HK 2",
         ACTUAL_HUMIDITY_HK2,
-        WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC1,
+        WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
     ),
     create_humidity_entity_description(
         "Humidity HK 3",
         ACTUAL_HUMIDITY_HK3,
-        WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC1,
+        WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC3,
     ),
     create_temperature_entity_description(
         "Dew Point Temperature",

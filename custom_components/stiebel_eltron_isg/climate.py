@@ -141,13 +141,13 @@ WPM_CLIMATE_TYPES = [
         has_entity_name=True,
         name="Heat Circuit 1",
         humidity_modbus_register=[
-            WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
             WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2,
+            WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
         ],
         actual_temperature_register=[
+            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC1,
             WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
             WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FEK,
-            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC1,
         ],
         eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_1,
         comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_1,
@@ -268,7 +268,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.current_temperature is not None
+        return self.target_temperature is not None
 
     @property
     def operation_mode(self) -> int:
