@@ -107,6 +107,43 @@ async def test_energy_data_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
 
 
 @pytest.mark.asyncio()
+async def test_climate_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
+    """Test creating a data coordinator for lwz models."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_1")
+    assert state is not None
+    assert state.state == "auto"
+    assert state.attributes["current_temperature"] == 0.0
+    assert state.attributes["temperature"] == 0.1
+    assert state.attributes["current_humidity"] == 0.0
+
+    state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_2")
+    assert state is not None
+    assert state.state == "auto"
+    assert state.attributes["current_temperature"] == 8.7
+    assert state.attributes["temperature"] == 0.4
+    assert state.attributes["current_humidity"] == 8
+
+    state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_3")
+    assert state is not None
+    assert state.state == "auto"
+    assert state.attributes["current_temperature"] == 9.1
+    assert state.attributes["temperature"] == 4.9
+    assert state.attributes["current_humidity"] == 9
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.asyncio()
 async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
