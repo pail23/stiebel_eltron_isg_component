@@ -169,5 +169,12 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
             EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
             EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
         ):
+            if not self.coordinator.has_register_value(self.modbus_register):
+                _LOGGER.debug(
+                    "Switch %s should not be available because register %s is not available",
+                    self.entity_description.key,
+                    self.modbus_register,
+                )
+                return False
             return True
         return super().available
