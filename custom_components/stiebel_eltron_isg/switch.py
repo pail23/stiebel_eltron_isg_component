@@ -160,3 +160,14 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         else:
             await self.coordinator.write_register(self.modbus_register, 0)
         await self.async_update()
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        if self.modbus_register in (
+            WpmSystemStateRegisters.DHW_CIRCULATION_PUMP,
+            EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
+            EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
+        ):
+            return True
+        return super().available
