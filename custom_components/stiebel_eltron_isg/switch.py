@@ -175,6 +175,5 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
                     self.entity_description.key,
                     self.modbus_register,
                 )
-                return False
             return True
         return super().available
