@@ -1442,11 +1442,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/2e/0f/a92acea368e2b37fb
 
 [[package]]
 name = "pymodbus"
-version = "3.9.1"
+version = "3.9.2"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/95/5b/14689bc12b3cd516eb767749b069c4b335b998de3074a85d62a27cfaa8bb/pymodbus-3.9.1.tar.gz", hash = "sha256:ec6216f218dd7e370fa43692535ee5268adb6b1cf7037dda6c78ac92c9a43a84", size = 161864, upload-time = "2025-04-09T08:51:05.347Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/9e/9f/434efbc3edd1445efca2c17d24877010746d65783ddbb937de753de6bec7/pymodbus-3.9.2.tar.gz", hash = "sha256:2d08ab7bf6d1abc55a87f4faa3a7b04f74d7310b8c9771c3d66ee5fccf2e25ac", size = 163040, upload-time = "2025-04-18T15:24:36.377Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/8d/30/b4ade3cfb5fbd605b31520d4a4ed9668a0286e35c5f78c04c58897ec6a8b/pymodbus-3.9.1-py3-none-any.whl", hash = "sha256:c469298ff81d44f2d44d4ed57202023d57a58b6a66095c2c6127347d4d23e02b", size = 164021, upload-time = "2025-04-09T08:51:02.523Z" },
+    { url = "https://files.pythonhosted.org/packages/4c/7e/ae151f2750fb604247088774634fea321a178fb898cf8e961879825f9e41/pymodbus-3.9.2-py3-none-any.whl", hash = "sha256:292dcf859d6f232c30abc9753c1f0b7804771fd9c749641b32831de01b360b30", size = 165153, upload-time = "2025-04-18T15:24:34.428Z" },
 ]
 
 [[package]]
