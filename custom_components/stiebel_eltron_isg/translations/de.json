@@ -34,6 +34,20 @@
                     }
                 }
             }
+        },
+        "select": {
+            "operation_mode": {
+                "state": {
+                    "water_heating": "Warmwasserbetrieb",
+                    "emergency": "Notbetrieb",
+                    "program": "Programmbetrieb",
+                    "ready": "Bereitschaftsbetrieb",
+                    "auto": "Automatikbetrieb",
+                    "manual": "Handbetrieb",
+                    "comfort": "Tagbetrieb",
+                    "eco": "Absenkbetrieb"
+                }
+            }
         }
     }
 }

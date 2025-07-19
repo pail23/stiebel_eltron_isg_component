@@ -2979,7 +2979,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "colorlog", specifier = ">=6.9.0" },
-    { name = "pystiebeleltron", specifier = "==0.2.0" },
+    { name = "pystiebeleltron", specifier = ">=0.2.0" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.233" },
 ]
 

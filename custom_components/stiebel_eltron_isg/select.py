@@ -31,22 +31,22 @@ _LOGGER = logging.getLogger(__name__)
 
 
 OPERATION_MODE_WPM_OPTIONS = {
-    0: "Emergency",
-    1: "Ready",
-    2: "Program",
-    3: "Comfort",
-    4: "Eco",
-    5: "Water heating",
+    0: "emergency",
+    1: "ready",
+    2: "program",
+    3: "comfort",
+    4: "eco",
+    5: "water_heating",
 }
 
 OPERATION_MODE_LWZ_OPTIONS = {
-    0: "Emergency",
-    1: "Ready",
-    3: "Comfort",
-    4: "Eco",
-    5: "Water heating",
-    11: "Automatic",
-    14: "Manual",
+    0: "emergency",
+    1: "ready",
+    3: "comfort",
+    4: "eco",
+    5: "water_heating",
+    11: "automatic",
+    14: "manual",
 }
 
 
@@ -65,6 +65,7 @@ WPM_SELECT_TYPES = [
         name="Operation Mode",
         modbus_register=WpmSystemParametersRegisters.OPERATING_MODE,
         operation_modes=OPERATION_MODE_WPM_OPTIONS,
+        translation_key="operation_mode",
     ),
 ]
 
@@ -75,6 +76,7 @@ LWZ_SELECT_TYPES = [
         name="Operation Mode",
         modbus_register=LwzSystemParametersRegisters.OPERATING_MODE,
         operation_modes=OPERATION_MODE_LWZ_OPTIONS,
+        translation_key="operation_mode",
     ),
 ]
 

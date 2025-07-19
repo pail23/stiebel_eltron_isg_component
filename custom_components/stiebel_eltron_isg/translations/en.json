@@ -34,6 +34,20 @@
                     }
                 }
             }
+        },
+        "select": {
+            "operation_mode": {
+                "state": {
+                    "water_heating": "Water heating",
+                    "emergency": "Emergency",
+                    "program": "Program",
+                    "ready": "Ready",
+                    "auto": "Auto",
+                    "manual": "Manual",
+                    "comfort": "Comfort",
+                    "eco": "Eco"
+                }
+            }
         }
     }
 }
