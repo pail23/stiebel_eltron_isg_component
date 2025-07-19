@@ -9,7 +9,6 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
 from pystiebeleltron import IsgRegisters
 from pystiebeleltron.lwz import (
     LwzSystemStateRegisters,

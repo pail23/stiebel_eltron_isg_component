@@ -22,7 +22,6 @@ from pymodbus.pdu.register_message import (
     ReadHoldingRegistersResponse,
     ReadInputRegistersResponse,
 )
-
 from pystiebeleltron import ControllerModel
 
 pytest_plugins = "pytest_homeassistant_custom_component"

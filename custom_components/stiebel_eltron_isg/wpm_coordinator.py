@@ -6,13 +6,13 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
-)
-
 from pystiebeleltron.wpm import (
     WpmStiebelEltronAPI,
     WpmSystemParametersRegisters,
+)
+
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)

@@ -17,10 +17,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
 from pystiebeleltron import IsgRegisters
 from pystiebeleltron.lwz import (
     LwzSystemParametersRegisters,
@@ -29,6 +25,10 @@ from pystiebeleltron.lwz import (
 from pystiebeleltron.wpm import (
     WpmSystemParametersRegisters,
     WpmSystemValuesRegisters,
+)
+
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronIsgIntegrationConfigEntry,
 )
 
 from .const import (

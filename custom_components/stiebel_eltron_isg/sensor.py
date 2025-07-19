@@ -22,13 +22,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
 from pystiebeleltron import (
     EnergySystemInformationRegisters,
     IsgRegisters,
@@ -41,6 +34,13 @@ from pystiebeleltron.wpm import (
     WpmEnergyDataRegisters,
     WpmSystemStateRegisters,
     WpmSystemValuesRegisters,
+)
+
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronIsgIntegrationConfigEntry,
 )
 
 from .const import (

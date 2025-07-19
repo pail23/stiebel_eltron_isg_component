@@ -9,19 +9,19 @@ from homeassistant.components.select import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
 from pystiebeleltron import IsgRegisters
 from pystiebeleltron.lwz import (
     LwzSystemParametersRegisters,
 )
 from pystiebeleltron.wpm import (
     WpmSystemParametersRegisters,
+)
+
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronIsgIntegrationConfigEntry,
 )
 
 from .const import DOMAIN, OPERATION_MODE
