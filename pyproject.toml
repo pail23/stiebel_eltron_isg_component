@@ -6,9 +6,8 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "colorlog>=6.9.0",
-    "pymodbus>=3.8.3",
     "pytest-homeassistant-custom-component>=0.13.233",
-    "pystiebeleltron==0.2.0",
+    "pystiebeleltron>=0.2.0",
 ]
 
 [dependency-groups]
