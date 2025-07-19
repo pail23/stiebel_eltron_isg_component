@@ -10,7 +10,7 @@ from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
 )
 
-from .python_stiebel_eltron.wpm import (
+from pystiebeleltron.wpm import (
     WpmStiebelEltronAPI,
     WpmSystemParametersRegisters,
 )

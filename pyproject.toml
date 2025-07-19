@@ -8,6 +8,7 @@ dependencies = [
     "colorlog>=6.9.0",
     "pymodbus>=3.8.3",
     "pytest-homeassistant-custom-component>=0.13.233",
+    "pystiebeleltron==0.2.0",
 ]
 
 [dependency-groups]
@@ -87,3 +88,4 @@ max-complexity = 25
 
 [tool.mypy]
 ignore_missing_imports = true
+

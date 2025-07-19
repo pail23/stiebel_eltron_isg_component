@@ -10,11 +10,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron import IsgRegisters
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
+from pystiebeleltron import IsgRegisters
+from pystiebeleltron.lwz import (
     LwzSystemStateRegisters,
 )
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron.wpm import (
+from pystiebeleltron.wpm import (
     WpmSystemStateRegisters,
 )
 

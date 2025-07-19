@@ -9,7 +9,7 @@ import logging
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
 )
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron.lwz import (
+from pystiebeleltron.lwz import (
     LwzStiebelEltronAPI,
     LwzSystemParametersRegisters,
 )

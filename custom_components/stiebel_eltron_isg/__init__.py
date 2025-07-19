@@ -22,7 +22,7 @@ from custom_components.stiebel_eltron_isg.data import (
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
 )
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+from pystiebeleltron import (
     get_controller_model,
 )
 from custom_components.stiebel_eltron_isg.wpm_coordinator import (

@@ -23,7 +23,7 @@ from pymodbus.pdu.register_message import (
     ReadInputRegistersResponse,
 )
 
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron import ControllerModel
+from pystiebeleltron import ControllerModel
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 

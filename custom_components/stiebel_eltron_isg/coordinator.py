@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+from pystiebeleltron import (
     EnergySystemInformationRegisters,
     IsgRegisters,
     StiebelEltronAPI,

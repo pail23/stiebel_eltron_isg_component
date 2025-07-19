@@ -18,11 +18,11 @@ from custom_components.stiebel_eltron_isg.coordinator import (
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron import (
+from pystiebeleltron import (
     EnergyManagementSettingsRegisters,
     IsgRegisters,
 )
-from custom_components.stiebel_eltron_isg.python_stiebel_eltron.wpm import (
+from pystiebeleltron.wpm import (
     WpmSystemStateRegisters,
 )
 
