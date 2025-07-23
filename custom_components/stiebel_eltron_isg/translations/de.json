@@ -42,7 +42,7 @@
                     "emergency": "Notbetrieb",
                     "program": "Programmbetrieb",
                     "ready": "Bereitschaftsbetrieb",
-                    "auto": "Automatikbetrieb",
+                    "automatic": "Automatikbetrieb",
                     "manual": "Handbetrieb",
                     "comfort": "Tagbetrieb",
                     "eco": "Absenkbetrieb"

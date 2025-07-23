@@ -42,7 +42,7 @@
                     "emergency": "Emergency",
                     "program": "Program",
                     "ready": "Ready",
-                    "auto": "Auto",
+                    "automatic": "Automatic",
                     "manual": "Manual",
                     "comfort": "Comfort",
                     "eco": "Eco"
