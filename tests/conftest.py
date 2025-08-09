@@ -82,7 +82,11 @@ def read_input_register(
 
 
 async def read_input_registers_wpm(
-    address: int, *, count: int = 1, slave: int = 0, no_response_expected: bool = False
+    address: int,
+    *,
+    count: int = 1,
+    device_id: int = 0,
+    no_response_expected: bool = False,
 ):
     """Simulate reads on the input registers on wpm models."""
     system_info = [2, 390]
@@ -94,7 +98,11 @@ async def read_input_registers_wpm(
 
 
 async def read_input_registers_lwz(
-    address: int, *, count: int = 1, slave: int = 0, no_response_expected: bool = False
+    address: int,
+    *,
+    count: int = 1,
+    device_id: int = 0,
+    no_response_expected: bool = False,
 ):
     """Simulate reads on the input registers on lwz models ."""
     system_info = [2, 103]
@@ -106,7 +114,11 @@ async def read_input_registers_lwz(
 
 
 async def read_holding_registers(
-    address: int, *, count: int = 1, slave: int = 0, no_response_expected: bool = False
+    address: int,
+    *,
+    count: int = 1,
+    device_id: int = 0,
+    no_response_expected: bool = False,
 ):
     """Simulate reads on the holding registers on lwz models ."""
     return ReadHoldingRegistersResponse(
