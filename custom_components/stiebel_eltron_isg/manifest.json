@@ -9,7 +9,7 @@
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pail23/stiebel_eltron_isg_component/issues",
   "requirements": [
-    "pystiebeleltron>=0.2.0"
+    "pystiebeleltron>=0.2.2"
   ],
   "version": "0.3.0"
 }
