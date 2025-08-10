@@ -2,7 +2,7 @@
     "name": "Stiebel Eltron ISG",
     "filename": "stiebel_eltron_isg.zip",
     "homeassistant": "2025.8.0",
-    "hacs": "2.0.1",
+    "hacs": "2.0.5",
     "render_readme": true,
     "zip_release": true
 }
