@@ -6,9 +6,6 @@ resolution-markers = [
     "python_full_version < '3.13.2'",
 ]
 
-[options]
-prerelease-mode = "allow"
-
 [[package]]
 name = "acme"
 version = "3.2.0"
