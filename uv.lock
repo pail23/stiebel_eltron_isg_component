@@ -2433,14 +2433,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/ee/1d/7d2ebb8f73c2b2e92
 
 [[package]]
 name = "pystiebeleltron"
-version = "0.2.3"
+version = "0.2.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "pymodbus" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/af/b2/20f0cfcd75c2dc1a3fe96687dca951623be5717e45ad680537312883c91d/pystiebeleltron-0.2.3.tar.gz", hash = "sha256:6310379b39d17212ca6d2b307d410a3aceb12d5172ab07c58e60e7615eb3dad6", size = 19851, upload-time = "2025-08-09T17:44:29.844Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/df/7e/c28d029d4da2ea8cdc5bbb78610bdeb553cb67d258ae03d0e006510a283c/pystiebeleltron-0.2.4.tar.gz", hash = "sha256:1ee52ba674e42d2647b15038e75b9fd824a959c0bd22b1434b36a3614a17e3c0", size = 20070, upload-time = "2025-10-04T12:29:37.254Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/49/d4/f0cc640585285cb91a87b9d3b389a35a1159b50f24c150b7eed0541ad038/pystiebeleltron-0.2.3-py3-none-any.whl", hash = "sha256:f56205b7830fbf10435221b989140f3675d22de69c914afa628b75eb88243370", size = 21714, upload-time = "2025-08-09T17:44:28.774Z" },
+    { url = "https://files.pythonhosted.org/packages/f3/11/828279ed6ace4c674f503b36f66fb2e66e535e2a90c93787fc6cb934d41e/pystiebeleltron-0.2.4-py3-none-any.whl", hash = "sha256:a45957f997e18f085d6f0207d0a5ab26db3c69c343e28e4814b09b6e989062e7", size = 21441, upload-time = "2025-10-04T12:29:35.811Z" },
 ]
 
 [[package]]
