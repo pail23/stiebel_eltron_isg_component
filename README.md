@@ -11,6 +11,8 @@
 
 [![Community Forum][forum-shield]][forum]
 
+## Preliminary Remark
+Although this integration has been created for Stiebel Eltron devices, it can successfully be used for Tecalor devices as well. 
 
 ## Prerequisite
 In order to use this Integration you need:
@@ -70,3 +72,4 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Paul%20Frank-green
 [releases-shield]: https://img.shields.io/github/v/release/pail23/stiebel_eltron_isg_component
 [releases]: https://github.com/pail23/stiebel_eltron_isg/releases
+
