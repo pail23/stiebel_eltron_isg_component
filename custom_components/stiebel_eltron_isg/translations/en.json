@@ -2,7 +2,7 @@
     "config": {
         "step": {
             "user": {
-                "description": "If you need help with the configuration, please check here: https://github.com/pail23/stiebel_eltron_isg",
+                "description": "Enter the connection details for your Stiebel Eltron ISG heat pump.",
                 "data": {
                     "host": "The IP address of the Stiebel Eltron ISG",
                     "port": "The TCP port of the Stiebel Eltron ISG (e.g. 502)",
