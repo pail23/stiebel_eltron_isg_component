@@ -97,6 +97,7 @@ from .const import (
     LOW_PRESSURE,
     LOW_PRESSURE_WP1,
     LOW_PRESSURE_WP2,
+    MIN_SOURCE_TEMPERATURE,
     OUTDOOR_TEMPERATURE,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
@@ -460,6 +461,11 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         "Source Temperature",
         SOURCE_TEMPERATURE,
         WpmSystemValuesRegisters.SOURCE_TEMPERATURE,
+    ),
+    create_temperature_entity_description(
+        "Min Source Temperature",
+        MIN_SOURCE_TEMPERATURE,
+        WpmSystemValuesRegisters.MIN_SOURCE_TEMPERATURE,
     ),
     create_pressure_entity_description(
         "Source Pressure", SOURCE_PRESSURE, WpmSystemValuesRegisters.SOURCE_PRESSURE
