@@ -76,3 +76,17 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Trigger the button action."""
         await self.entity_description.press_action(self.coordinator)
+
+    @property
+    def entity_registry_enabled_default(self) -> bool:
+        """Return if the entity should be enabled when first added.
+
+        This only applies when first added to the entity registry.
+        """
+        return True  # The button should be enabled by default as it doesn't rely on specific data from the coordinator
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+
+        return True  # The button is always available as it doesn't rely on specific data from the coordinator
