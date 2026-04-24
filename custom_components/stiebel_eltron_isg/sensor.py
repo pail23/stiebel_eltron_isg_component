@@ -63,6 +63,7 @@ from .const import (
     ACTUAL_TEMPERATURE_WATER,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_SPEED,
     COMPRESSOR_STARTS,
     CONSUMED_HEATING,
     CONSUMED_HEATING_TODAY,
@@ -153,6 +154,7 @@ class StiebelEltronSensorEntityDescription(SensorEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     modbus_register: IsgRegisters
+    scale_factor: float = 1.0
 
 
 def create_temperature_entity_description(name, key, modbus_register: IsgRegisters):
@@ -898,6 +900,17 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzEnergyDataRegisters.ELEC_BOOSTER_DHW,
     ),
+    StiebelEltronSensorEntityDescription(
+        key=COMPRESSOR_SPEED,
+        name="Compressor Frequency",
+        icon="mdi:sine-wave",
+        has_entity_name=True,
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=LwzSystemValuesRegisters.COMPRESSOR_SPEED,
+        scale_factor=10.0,
+    ),
 ]
 
 LWZ_VENTILATION_SENSOR_TYPES = [
@@ -1044,7 +1057,10 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
             if error in (32768, 0):
                 return "no error"
             return f"error {error}"
-        return self.coordinator.get_register_value(self.modbus_register)
+        value = self.coordinator.get_register_value(self.modbus_register)
+        if value is not None and self.entity_description.scale_factor != 1.0:
+            return float(value) * self.entity_description.scale_factor
+        return value
 
 
 class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):

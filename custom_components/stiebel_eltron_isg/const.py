@@ -137,6 +137,7 @@ CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 COMPRESSOR_STARTS = "compressor_starts"
 COMPRESSOR_HEATING = "compressor_heating"
 COMPRESSOR_HEATING_WATER = "compressor_heating_water"
+COMPRESSOR_SPEED = "compressor_speed"
 ELECTRICAL_BOOSTER_HEATING = "electrical_booster_heating"
 ELECTRICAL_BOOSTER_HEATING_WATER = "electrical_booster_heating_water"
 
