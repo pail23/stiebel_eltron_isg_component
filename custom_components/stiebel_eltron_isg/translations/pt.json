@@ -51,566 +51,566 @@
     "entity": {
         "sensor": {
             "actual_temperature": {
-                "name": "Actual Temperature"
+                "name": "Temperatura actual"
             },
             "target_temperature": {
-                "name": "Target Temperature"
+                "name": "Temperatura alvo"
             },
             "actual_temperature_fek": {
-                "name": "Actual Temperature FEK"
+                "name": "Temperatura actual FEK"
             },
             "target_temperature_fek": {
-                "name": "Target Temperature FEK"
+                "name": "Temperatura alvo FEK"
             },
             "actual_humidity": {
-                "name": "Humidity"
+                "name": "Humidade"
             },
             "actual_humidity_hk1": {
-                "name": "Humidity HK 1"
+                "name": "Humidade CC 1"
             },
             "actual_humidity_hk2": {
-                "name": "Humidity HK 2"
+                "name": "Humidade CC 2"
             },
             "actual_humidity_hk3": {
-                "name": "Humidity HK 3"
+                "name": "Humidade CC 3"
             },
             "dewpoint_temperature": {
-                "name": "Dew Point Temperature"
+                "name": "Temperatura de ponto de orvalho"
             },
             "dewpoint_temperature_hk1": {
-                "name": "Dew Point Temperature HK 1"
+                "name": "Temperatura ponto de orvalho CC 1"
             },
             "dewpoint_temperature_hk2": {
-                "name": "Dew Point Temperature HK 2"
+                "name": "Temperatura ponto de orvalho CC 2"
             },
             "dewpoint_temperature_hk3": {
-                "name": "Dew Point Temperature HK 3"
+                "name": "Temperatura ponto de orvalho CC 3"
             },
             "outdoor_temperature": {
-                "name": "Outdoor Temperature"
+                "name": "Temperatura exterior"
             },
             "actual_temperature_hk1": {
-                "name": "Actual Temperature HK 1"
+                "name": "Temperatura actual CC 1"
             },
             "target_temperature_hk1": {
-                "name": "Target Temperature HK 1"
+                "name": "Temperatura alvo CC 1"
             },
             "actual_temperature_hk2": {
-                "name": "Actual Temperature HK 2"
+                "name": "Temperatura actual CC 2"
             },
             "target_temperature_hk2": {
-                "name": "Target Temperature HK 2"
+                "name": "Temperatura alvo CC 2"
             },
             "actual_temperature_hk3": {
-                "name": "Actual Temperature HK 3"
+                "name": "Temperatura actual CC 3"
             },
             "target_temperature_hk3": {
-                "name": "Target Temperature HK 3"
+                "name": "Temperatura alvo CC 3"
             },
             "actual_temperature_cooling_fancoil": {
-                "name": "Actual Temperature Cooling Fancoil"
+                "name": "Temperatura actual arrefecimento fancoil"
             },
             "target_temperature_cooling_fancoil": {
-                "name": "Target Temperature Cooling Fancoil"
+                "name": "Temperatura alvo arrefecimento fancoil"
             },
             "actual_temperature_cooling_surface": {
-                "name": "Actual Temperature Cooling Surface"
+                "name": "Temperatura actual arrefecimento superficial"
             },
             "target_temperature_cooling_surface": {
-                "name": "Target Temperature Cooling Surface"
+                "name": "Temperatura alvo arrefecimento superficial"
             },
             "solar_cylinder_temperature": {
-                "name": "Solar Cylinder Temperature"
+                "name": "Temperatura do depósito solar"
             },
             "solar_runtime": {
-                "name": "Solar Runtime"
+                "name": "Tempo de funcionamento solar"
             },
             "actual_room_temperature_hk1": {
-                "name": "Actual Room Temperature HK 1"
+                "name": "Temperatura ambiente actual CC 1"
             },
             "target_room_temperature_hk1": {
-                "name": "Target Room Temperature HK 1"
+                "name": "Temperatura ambiente alvo CC 1"
             },
             "actual_room_temperature_hk2": {
-                "name": "Actual Room Temperature HK 2"
+                "name": "Temperatura ambiente actual CC 2"
             },
             "target_room_temperature_hk2": {
-                "name": "Target Room Temperature HK 2"
+                "name": "Temperatura ambiente alvo CC 2"
             },
             "actual_room_temperature_hk3": {
-                "name": "Actual Room Temperature HK 3"
+                "name": "Temperatura ambiente actual CC 3"
             },
             "target_room_temperature_hk3": {
-                "name": "Target Room Temperature HK 3"
+                "name": "Temperatura ambiente alvo CC 3"
             },
             "flow_temperature_wp": {
-                "name": "Flow Temperature WP"
+                "name": "Temperatura de saída BC"
             },
             "flow_temperature_nhz": {
-                "name": "Flow Temperature NHZ"
+                "name": "Temperatura de saída NHZ"
             },
             "flow_temperature": {
-                "name": "Flow Temperature"
+                "name": "Temperatura de saída"
             },
             "return_temperature": {
-                "name": "Return Temperature"
+                "name": "Temperatura de retorno"
             },
             "actual_temperature_buffer": {
-                "name": "Actual Temperature Buffer"
+                "name": "Temperatura actual acumulador"
             },
             "target_temperature_buffer": {
-                "name": "Target Temperature Buffer"
+                "name": "Temperatura alvo acumulador"
             },
             "heater_pressure": {
-                "name": "Heater Pressure"
+                "name": "Pressão do circuito de aquecimento"
             },
             "volume_stream": {
-                "name": "Volume Stream"
+                "name": "Caudal volumétrico"
             },
             "actual_temperature_water": {
-                "name": "Actual Temperature Water"
+                "name": "Temperatura actual AQS"
             },
             "target_temperature_water": {
-                "name": "Target Temperature Water"
+                "name": "Temperatura alvo AQS"
             },
             "solar_collector_temperature": {
-                "name": "Solar Collector Temperature"
+                "name": "Temperatura do colector solar"
             },
             "source_temperature": {
-                "name": "Source Temperature"
+                "name": "Temperatura da fonte"
             },
             "min_source_temperature": {
-                "name": "Min Source Temperature"
+                "name": "Temperatura mínima da fonte"
             },
             "source_pressure": {
-                "name": "Source Pressure"
+                "name": "Pressão da fonte"
             },
             "hot_gas_temperature": {
-                "name": "Hot Gas Temperature"
+                "name": "Temperatura do gás quente"
             },
             "high_pressure": {
-                "name": "High Pressure"
+                "name": "Alta pressão"
             },
             "low_pressure": {
-                "name": "Low Pressure"
+                "name": "Baixa pressão"
             },
             "return_temperature_wp1": {
-                "name": "Return Temperature WP1"
+                "name": "Temperatura de retorno BC1"
             },
             "flow_temperature_wp1": {
-                "name": "Flow Temperature WP1"
+                "name": "Temperatura de saída BC1"
             },
             "hot_gas_temperature_wp1": {
-                "name": "Hot Gas Temperature WP1"
+                "name": "Temperatura gás quente BC1"
             },
             "low_pressure_wp1": {
-                "name": "Low Pressure WP1"
+                "name": "Baixa pressão BC1"
             },
             "high_pressure_wp1": {
-                "name": "High Pressure WP1"
+                "name": "Alta pressão BC1"
             },
             "volume_stream_wp1": {
-                "name": "Volume Stream WP1"
+                "name": "Caudal volumétrico BC1"
             },
             "return_temperature_wp2": {
-                "name": "Return Temperature WP2"
+                "name": "Temperatura de retorno BC2"
             },
             "flow_temperature_wp2": {
-                "name": "Flow Temperature WP2"
+                "name": "Temperatura de saída BC2"
             },
             "hot_gas_temperature_wp2": {
-                "name": "Hot Gas Temperature WP2"
+                "name": "Temperatura gás quente BC2"
             },
             "low_pressure_wp2": {
-                "name": "Low Pressure WP2"
+                "name": "Baixa pressão BC2"
             },
             "high_pressure_wp2": {
-                "name": "High Pressure WP2"
+                "name": "Alta pressão BC2"
             },
             "volume_stream_wp2": {
-                "name": "Volume Stream WP2"
+                "name": "Caudal volumétrico BC2"
             },
             "active_error": {
-                "name": "Active Error"
+                "name": "Erro activo"
             },
             "sg_ready_state": {
-                "name": "SG Ready State"
+                "name": "Estado SG Ready"
             },
             "produced_heating_total": {
-                "name": "Produced Heating Total"
+                "name": "Calor produzido aquecimento total"
             },
             "produced_heating": {
-                "name": "Produced Heating"
+                "name": "Calor produzido aquecimento"
             },
             "produced_water_heating_total": {
-                "name": "Produced Water Heating Total"
+                "name": "Calor produzido AQS total"
             },
             "produced_water_heating": {
-                "name": "Produced Water Heating"
+                "name": "Calor produzido AQS"
             },
             "consumed_heating_total": {
-                "name": "Consumed Heating Total"
+                "name": "Energia consumida aquecimento total"
             },
             "consumed_heating": {
-                "name": "Consumed Heating"
+                "name": "Energia consumida aquecimento"
             },
             "consumed_water_heating_total": {
-                "name": "Consumed Water Heating Total"
+                "name": "Energia consumida AQS total"
             },
             "consumed_water_heating": {
-                "name": "Consumed Water Heating"
+                "name": "Energia consumida AQS"
             },
             "produced_electrical_booster_heating_total": {
-                "name": "Produced Electrical Booster Heating Total"
+                "name": "Calor resistência eléctrica aquecimento total"
             },
             "produced_electrical_booster_water_heating_total": {
-                "name": "Produced Electrical Booster Water Heating Total"
+                "name": "Calor resistência eléctrica AQS total"
             },
             "produced_recovery": {
-                "name": "Produced Recovery"
+                "name": "Calor recuperado"
             },
             "produced_recovery_total": {
-                "name": "Produced Recovery Total"
+                "name": "Calor recuperado total"
             },
             "produced_solar_heating": {
-                "name": "Produced Solar Heating"
+                "name": "Calor solar aquecimento"
             },
             "produced_solar_heating_total": {
-                "name": "Produced Solar Heating Total"
+                "name": "Calor solar aquecimento total"
             },
             "produced_solar_water_heating_total": {
-                "name": "Produced Solar Water Heating Total"
+                "name": "Calor solar AQS total"
             },
             "produced_solar_water_heating": {
-                "name": "Produced Solar Water Heating"
+                "name": "Calor solar AQS"
             },
             "produced_heating_today": {
-                "name": "Produced Heating Today"
+                "name": "Calor produzido aquecimento hoje"
             },
             "produced_water_heating_today": {
-                "name": "Produced Water Heating Today"
+                "name": "Calor produzido AQS hoje"
             },
             "consumed_heating_today": {
-                "name": "Consumed Heating Today"
+                "name": "Energia consumida aquecimento hoje"
             },
             "consumed_water_heating_today": {
-                "name": "Consumed Water Heating Today"
+                "name": "Energia consumida AQS hoje"
             },
             "produced_recovery_today": {
-                "name": "Produced Recovery Today"
+                "name": "Calor recuperado hoje"
             },
             "produced_solar_heating_today": {
-                "name": "Produced Solar Heating Today"
+                "name": "Calor solar aquecimento hoje"
             },
             "produced_solar_water_heating_today": {
-                "name": "Produced Solar Water Heating Today"
+                "name": "Calor solar AQS hoje"
             },
             "compressor_starts": {
-                "name": "Compressor Starts"
+                "name": "Arranques do compressor"
             },
             "compressor_heating": {
-                "name": "Compressor Heating"
+                "name": "Compressor aquecimento"
             },
             "compressor_heating_water": {
-                "name": "Compressor Heating Water"
+                "name": "Compressor AQS"
             },
             "electrical_booster_heating": {
-                "name": "Electrical Booster Heating"
+                "name": "Resistência eléctrica aquecimento"
             },
             "electrical_booster_heating_water": {
-                "name": "Electrical Booster Heating Water"
+                "name": "Resistência eléctrica AQS"
             },
             "ventilation_air_actual_fan_speed": {
-                "name": "Ventilation Air Actual Fan Speed"
+                "name": "Velocidade real ventilador ar de insuflação"
             },
             "ventilation_air_target_flow_rate": {
-                "name": "Ventilation Air Target Flow Rate"
+                "name": "Caudal alvo ar de insuflação"
             },
             "extract_air_actual_fan_speed": {
-                "name": "Extract Air Actual Fan Speed"
+                "name": "Velocidade real ventilador ar de extracção"
             },
             "extract_air_target_flow_rate": {
-                "name": "Extract Air Target Flow Rate"
+                "name": "Caudal alvo ar de extracção"
             },
             "extract_air_dew_point": {
-                "name": "Extract Air Dew Point"
+                "name": "Ponto de orvalho ar de extracção"
             },
             "extract_air_humidity": {
-                "name": "Extract Air Humidity"
+                "name": "Humidade ar de extracção"
             },
             "extract_air_temperature": {
-                "name": "Extract Air Temperature"
+                "name": "Temperatura ar de extracção"
             }
         },
         "binary_sensor": {
             "pump_on_hk1": {
-                "name": "Pump HK1"
+                "name": "Bomba CC 1"
             },
             "pump_on_hk2": {
-                "name": "Pump HK2"
+                "name": "Bomba CC 2"
             },
             "heat_up_program": {
-                "name": "Heat-up Program"
+                "name": "Programa de aquecimento"
             },
             "nhz_stages_running": {
-                "name": "NHZ Stages Running"
+                "name": "Escalões NHZ activos"
             },
             "is_heating": {
-                "name": "Is Heating"
+                "name": "Modo aquecimento"
             },
             "is_heating_water": {
-                "name": "Is Heating Boiler"
+                "name": "Modo AQS"
             },
             "compressor_on": {
                 "name": "Compressor"
             },
             "is_summer_mode": {
-                "name": "Is in Summer Mode"
+                "name": "Modo verão"
             },
             "is_cooling": {
-                "name": "Is Cooling"
+                "name": "Modo arrefecimento"
             },
             "evaporator_defrost": {
-                "name": "Evaporator Defrost"
+                "name": "Descongelação do evaporador"
             },
             "power_off": {
-                "name": "Power Off (EVU)"
+                "name": "Bloqueio (EVU)"
             },
             "error_status": {
-                "name": "Error Status"
+                "name": "Estado de erro"
             },
             "cooling_mode": {
-                "name": "Cooling Active"
+                "name": "Arrefecimento activo"
             },
             "heating_circuit_1_pump": {
-                "name": "Heating Circuit 1 Pump"
+                "name": "Bomba circuito aquecimento 1"
             },
             "heating_circuit_2_pump": {
-                "name": "Heating Circuit 2 Pump"
+                "name": "Bomba circuito aquecimento 2"
             },
             "heating_circuit_3_pump": {
-                "name": "Heating Circuit 3 Pump"
+                "name": "Bomba circuito aquecimento 3"
             },
             "heating_circuit_4_pump": {
-                "name": "Heating Circuit 4 Pump"
+                "name": "Bomba circuito aquecimento 4"
             },
             "heating_circuit_5_pump": {
-                "name": "Heating Circuit 5 Pump"
+                "name": "Bomba circuito aquecimento 5"
             },
             "buffer_1_charging_pump": {
-                "name": "Buffer 1 Charging Pump"
+                "name": "Bomba carga acumulador 1"
             },
             "buffer_2_charging_pump": {
-                "name": "Buffer 2 Charging Pump"
+                "name": "Bomba carga acumulador 2"
             },
             "buffer_3_charging_pump": {
-                "name": "Buffer 3 Charging Pump"
+                "name": "Bomba carga acumulador 3"
             },
             "buffer_4_charging_pump": {
-                "name": "Buffer 4 Charging Pump"
+                "name": "Bomba carga acumulador 4"
             },
             "buffer_5_charging_pump": {
-                "name": "Buffer 5 Charging Pump"
+                "name": "Bomba carga acumulador 5"
             },
             "buffer_6_charging_pump": {
-                "name": "Buffer 6 Charging Pump"
+                "name": "Bomba carga acumulador 6"
             },
             "dhw_charging_pump": {
-                "name": "DHW Charging Pump"
+                "name": "Bomba carga AQS"
             },
             "source_pump": {
-                "name": "Source Pump"
+                "name": "Bomba da fonte"
             },
             "diff_controller_1_pump": {
-                "name": "Diff. Controller 1 Pump"
+                "name": "Bomba controlador diferencial 1"
             },
             "diff_controller_2_pump": {
-                "name": "Diff. Controller 2 Pump"
+                "name": "Bomba controlador diferencial 2"
             },
             "pool_primary_pump": {
-                "name": "Pool Primary Pump"
+                "name": "Bomba primária piscina"
             },
             "pool_secondary_pump": {
-                "name": "Pool Secondary Pump"
+                "name": "Bomba secundária piscina"
             },
             "heat_pump_1_on": {
-                "name": "Heat Pump 1 ON"
+                "name": "Bomba de calor 1 LIGADA"
             },
             "heat_pump_2_on": {
-                "name": "Heat Pump 2 ON"
+                "name": "Bomba de calor 2 LIGADA"
             },
             "heat_pump_3_on": {
-                "name": "Heat Pump 3 ON"
+                "name": "Bomba de calor 3 LIGADA"
             },
             "heat_pump_4_on": {
-                "name": "Heat Pump 4 ON"
+                "name": "Bomba de calor 4 LIGADA"
             },
             "heat_pump_5_on": {
-                "name": "Heat Pump 5 ON"
+                "name": "Bomba de calor 5 LIGADA"
             },
             "heat_pump_6_on": {
-                "name": "Heat Pump 6 ON"
+                "name": "Bomba de calor 6 LIGADA"
             },
             "second_generator_dhw": {
-                "name": "Second Generator for DHW"
+                "name": "2.º gerador AQS"
             },
             "second_generator_heating": {
-                "name": "Second Generator for Heating"
+                "name": "2.º gerador aquecimento"
             },
             "mixer_open_htg_circuit_2": {
-                "name": "Mixer Opening Heating Circuit 2"
+                "name": "Misturador abre CC 2"
             },
             "mixer_open_htg_circuit_3": {
-                "name": "Mixer Opening Heating Circuit 3"
+                "name": "Misturador abre CC 3"
             },
             "mixer_open_htg_circuit_4": {
-                "name": "Mixer Opening Heating Circuit 4"
+                "name": "Misturador abre CC 4"
             },
             "mixer_open_htg_circuit_5": {
-                "name": "Mixer Opening Heating Circuit 5"
+                "name": "Misturador abre CC 5"
             },
             "mixer_close_htg_circuit_2": {
-                "name": "Mixer Closing Heating Circuit 2"
+                "name": "Misturador fecha CC 2"
             },
             "mixer_close_htg_circuit_3": {
-                "name": "Mixer Closing Heating Circuit 3"
+                "name": "Misturador fecha CC 3"
             },
             "mixer_close_htg_circuit_4": {
-                "name": "Mixer Closing Heating Circuit 4"
+                "name": "Misturador fecha CC 4"
             },
             "mixer_close_htg_circuit_5": {
-                "name": "Mixer Closing Heating Circuit 5"
+                "name": "Misturador fecha CC 5"
             },
             "emergency_heating_1": {
-                "name": "Emergency Heating 1"
+                "name": "Aquecimento de emergência 1"
             },
             "emergency_heating_2": {
-                "name": "Emergency Heating 2"
+                "name": "Aquecimento de emergência 2"
             },
             "emergency_heating_1_2": {
-                "name": "Emergency Heating 1 & 2"
+                "name": "Aquecimento de emergência 1 & 2"
             },
             "switching_program_enabled": {
-                "name": "Switching Program Enabled"
+                "name": "Programa de comutação activo"
             },
             "electric_reheating": {
-                "name": "Electric Heating"
+                "name": "Aquecimento eléctrico auxiliar"
             },
             "service": {
-                "name": "Service"
+                "name": "Assistência"
             },
             "filter": {
-                "name": "Filter"
+                "name": "Filtro"
             },
             "ventilation": {
-                "name": "Ventilation"
+                "name": "Ventilação"
             },
             "filter_extract_air": {
-                "name": "Filter Extract Air"
+                "name": "Filtro ar de extracção"
             },
             "filter_ventilation_air": {
-                "name": "Filter Ventilation Air"
+                "name": "Filtro ar de insuflação"
             }
         },
         "number": {
             "comfort_temperature_target_hk1": {
-                "name": "Comfort Temperature Target HK1"
+                "name": "Temperatura alvo conforto CC 1"
             },
             "eco_temperature_target_hk1": {
-                "name": "Eco Temperature Target HK1"
+                "name": "Temperatura alvo eco CC 1"
             },
             "comfort_temperature_target_hk2": {
-                "name": "Comfort Temperature Target HK2"
+                "name": "Temperatura alvo conforto CC 2"
             },
             "eco_temperature_target_hk2": {
-                "name": "Eco Temperature Target HK2"
+                "name": "Temperatura alvo eco CC 2"
             },
             "comfort_temperature_target_hk3": {
-                "name": "Comfort Temperature Target HK3"
+                "name": "Temperatura alvo conforto CC 3"
             },
             "eco_temperature_target_hk3": {
-                "name": "Eco Temperature Target HK3"
+                "name": "Temperatura alvo eco CC 3"
             },
             "dualmode_temperature_hzg": {
-                "name": "Dual Mode Temperature HZG"
+                "name": "Temperatura de bivalência aquecimento"
             },
             "comfort_water_temperature_target": {
-                "name": "Comfort Water Temperature Target"
+                "name": "Temperatura alvo AQS conforto"
             },
             "eco_water_temperature_target": {
-                "name": "Eco Water Temperature Target"
+                "name": "Temperatura alvo AQS eco"
             },
             "dualmode_temperature_ww": {
-                "name": "Dual Mode Temperature WW"
+                "name": "Temperatura de bivalência AQS"
             },
             "area_cooling_target_room_temperature": {
-                "name": "Area Cooling Room Temperature Target"
+                "name": "Temperatura ambiente alvo arrefecimento superficial"
             },
             "area_cooling_target_flow_temperature": {
-                "name": "Area Cooling Flow Temperature Target"
+                "name": "Temperatura saída alvo arrefecimento superficial"
             },
             "fan_cooling_target_room_temperature": {
-                "name": "Fan Cooling Room Temperature Target"
+                "name": "Temperatura ambiente alvo arrefecimento fancoil"
             },
             "fan_cooling_target_flow_temperature": {
-                "name": "Fan Cooling Flow Temperature Target"
+                "name": "Temperatura saída alvo arrefecimento fancoil"
             },
             "heating_curve_rise_hk1": {
-                "name": "Heating Curve Rise HK1"
+                "name": "Inclinação curva de aquecimento CC 1"
             },
             "heating_curve_rise_hk2": {
-                "name": "Heating Curve Rise HK2"
+                "name": "Inclinação curva de aquecimento CC 2"
             },
             "heating_curve_rise_hk3": {
-                "name": "Heating Curve Rise HK3"
+                "name": "Inclinação curva de aquecimento CC 3"
             },
             "fan_level_day": {
-                "name": "Fan Level Day"
+                "name": "Nível ventilador dia"
             },
             "fan_level_night": {
-                "name": "Fan Level Night"
+                "name": "Nível ventilador noite"
             },
             "comfort_cooling_temperature_target_hk1": {
-                "name": "Comfort Cooling Temperature Target HK1"
+                "name": "Temperatura alvo arrefecimento conforto CC 1"
             },
             "eco_cooling_temperature_target_hk1": {
-                "name": "Eco Cooling Temperature Target HK1"
+                "name": "Temperatura alvo arrefecimento eco CC 1"
             },
             "comfort_cooling_temperature_target_hk2": {
-                "name": "Comfort Cooling Temperature Target HK2"
+                "name": "Temperatura alvo arrefecimento conforto CC 2"
             },
             "eco_cooling_temperature_target_hk2": {
-                "name": "Eco Cooling Temperature Target HK2"
+                "name": "Temperatura alvo arrefecimento eco CC 2"
             },
             "heating_curve_low_end_hk1": {
-                "name": "Heating Curve Low End HK1"
+                "name": "Ponto baixo curva de aquecimento CC 1"
             },
             "heating_curve_low_end_hk2": {
-                "name": "Heating Curve Low End HK2"
+                "name": "Ponto baixo curva de aquecimento CC 2"
             }
         },
         "switch": {
             "sg_ready_active": {
-                "name": "SG Ready Active"
+                "name": "SG Ready activo"
             },
             "sg_ready_input_1": {
-                "name": "SG Ready Input 1"
+                "name": "SG Ready entrada 1"
             },
             "sg_ready_input_2": {
-                "name": "SG Ready Input 2"
+                "name": "SG Ready entrada 2"
             },
             "circulation_pump": {
-                "name": "Circulation Pump"
+                "name": "Bomba de circulação"
             }
         },
         "button": {
             "reset_heatpump": {
-                "name": "Reset Heatpump"
+                "name": "Reiniciar bomba de calor"
             }
         },
         "select": {
             "operation_mode": {
-                "name": "Operation Mode",
+                "name": "Modo de funcionamento",
                 "state": {
                     "water_heating": "Aquecimento de água",
                     "emergency": "Emergência",
@@ -625,7 +625,7 @@
         },
         "climate": {
             "climate_hk_1": {
-                "name": "Heat Circuit 1",
+                "name": "Circuito aquecimento 1",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
@@ -640,7 +640,7 @@
                 }
             },
             "climate_hk_2": {
-                "name": "Heat Circuit 2",
+                "name": "Circuito aquecimento 2",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
@@ -655,7 +655,7 @@
                 }
             },
             "climate_hk_3": {
-                "name": "Heat Circuit 3",
+                "name": "Circuito aquecimento 3",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {

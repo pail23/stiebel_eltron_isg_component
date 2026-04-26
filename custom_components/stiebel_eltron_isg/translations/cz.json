@@ -51,566 +51,566 @@
     "entity": {
         "sensor": {
             "actual_temperature": {
-                "name": "Actual Temperature"
+                "name": "Skutečná teplota"
             },
             "target_temperature": {
-                "name": "Target Temperature"
+                "name": "Požadovaná teplota"
             },
             "actual_temperature_fek": {
-                "name": "Actual Temperature FEK"
+                "name": "Skutečná teplota FEK"
             },
             "target_temperature_fek": {
-                "name": "Target Temperature FEK"
+                "name": "Požadovaná teplota FEK"
             },
             "actual_humidity": {
-                "name": "Humidity"
+                "name": "Vlhkost vzduchu"
             },
             "actual_humidity_hk1": {
-                "name": "Humidity HK 1"
+                "name": "Vlhkost vzduchu TO 1"
             },
             "actual_humidity_hk2": {
-                "name": "Humidity HK 2"
+                "name": "Vlhkost vzduchu TO 2"
             },
             "actual_humidity_hk3": {
-                "name": "Humidity HK 3"
+                "name": "Vlhkost vzduchu TO 3"
             },
             "dewpoint_temperature": {
-                "name": "Dew Point Temperature"
+                "name": "Teplota rosného bodu"
             },
             "dewpoint_temperature_hk1": {
-                "name": "Dew Point Temperature HK 1"
+                "name": "Teplota rosného bodu TO 1"
             },
             "dewpoint_temperature_hk2": {
-                "name": "Dew Point Temperature HK 2"
+                "name": "Teplota rosného bodu TO 2"
             },
             "dewpoint_temperature_hk3": {
-                "name": "Dew Point Temperature HK 3"
+                "name": "Teplota rosného bodu TO 3"
             },
             "outdoor_temperature": {
-                "name": "Outdoor Temperature"
+                "name": "Venkovní teplota"
             },
             "actual_temperature_hk1": {
-                "name": "Actual Temperature HK 1"
+                "name": "Skutečná teplota TO 1"
             },
             "target_temperature_hk1": {
-                "name": "Target Temperature HK 1"
+                "name": "Požadovaná teplota TO 1"
             },
             "actual_temperature_hk2": {
-                "name": "Actual Temperature HK 2"
+                "name": "Skutečná teplota TO 2"
             },
             "target_temperature_hk2": {
-                "name": "Target Temperature HK 2"
+                "name": "Požadovaná teplota TO 2"
             },
             "actual_temperature_hk3": {
-                "name": "Actual Temperature HK 3"
+                "name": "Skutečná teplota TO 3"
             },
             "target_temperature_hk3": {
-                "name": "Target Temperature HK 3"
+                "name": "Požadovaná teplota TO 3"
             },
             "actual_temperature_cooling_fancoil": {
-                "name": "Actual Temperature Cooling Fancoil"
+                "name": "Skutečná teplota chlazení fancoil"
             },
             "target_temperature_cooling_fancoil": {
-                "name": "Target Temperature Cooling Fancoil"
+                "name": "Požadovaná teplota chlazení fancoil"
             },
             "actual_temperature_cooling_surface": {
-                "name": "Actual Temperature Cooling Surface"
+                "name": "Skutečná teplota plošného chlazení"
             },
             "target_temperature_cooling_surface": {
-                "name": "Target Temperature Cooling Surface"
+                "name": "Požadovaná teplota plošného chlazení"
             },
             "solar_cylinder_temperature": {
-                "name": "Solar Cylinder Temperature"
+                "name": "Teplota solárního zásobníku"
             },
             "solar_runtime": {
-                "name": "Solar Runtime"
+                "name": "Provozní doba solár"
             },
             "actual_room_temperature_hk1": {
-                "name": "Actual Room Temperature HK 1"
+                "name": "Skutečná pokojová teplota TO 1"
             },
             "target_room_temperature_hk1": {
-                "name": "Target Room Temperature HK 1"
+                "name": "Požadovaná pokojová teplota TO 1"
             },
             "actual_room_temperature_hk2": {
-                "name": "Actual Room Temperature HK 2"
+                "name": "Skutečná pokojová teplota TO 2"
             },
             "target_room_temperature_hk2": {
-                "name": "Target Room Temperature HK 2"
+                "name": "Požadovaná pokojová teplota TO 2"
             },
             "actual_room_temperature_hk3": {
-                "name": "Actual Room Temperature HK 3"
+                "name": "Skutečná pokojová teplota TO 3"
             },
             "target_room_temperature_hk3": {
-                "name": "Target Room Temperature HK 3"
+                "name": "Požadovaná pokojová teplota TO 3"
             },
             "flow_temperature_wp": {
-                "name": "Flow Temperature WP"
+                "name": "Teplota výstupu TČ"
             },
             "flow_temperature_nhz": {
-                "name": "Flow Temperature NHZ"
+                "name": "Teplota výstupu NHZ"
             },
             "flow_temperature": {
-                "name": "Flow Temperature"
+                "name": "Teplota výstupu"
             },
             "return_temperature": {
-                "name": "Return Temperature"
+                "name": "Teplota zpátečky"
             },
             "actual_temperature_buffer": {
-                "name": "Actual Temperature Buffer"
+                "name": "Skutečná teplota akumulační nádrže"
             },
             "target_temperature_buffer": {
-                "name": "Target Temperature Buffer"
+                "name": "Požadovaná teplota akumulační nádrže"
             },
             "heater_pressure": {
-                "name": "Heater Pressure"
+                "name": "Tlak topné soustavy"
             },
             "volume_stream": {
-                "name": "Volume Stream"
+                "name": "Průtok"
             },
             "actual_temperature_water": {
-                "name": "Actual Temperature Water"
+                "name": "Skutečná teplota teplé vody"
             },
             "target_temperature_water": {
-                "name": "Target Temperature Water"
+                "name": "Požadovaná teplota teplé vody"
             },
             "solar_collector_temperature": {
-                "name": "Solar Collector Temperature"
+                "name": "Teplota solárního kolektoru"
             },
             "source_temperature": {
-                "name": "Source Temperature"
+                "name": "Teplota zdroje"
             },
             "min_source_temperature": {
-                "name": "Min Source Temperature"
+                "name": "Min. teplota zdroje"
             },
             "source_pressure": {
-                "name": "Source Pressure"
+                "name": "Tlak zdroje"
             },
             "hot_gas_temperature": {
-                "name": "Hot Gas Temperature"
+                "name": "Teplota horkého plynu"
             },
             "high_pressure": {
-                "name": "High Pressure"
+                "name": "Vysoký tlak"
             },
             "low_pressure": {
-                "name": "Low Pressure"
+                "name": "Nízký tlak"
             },
             "return_temperature_wp1": {
-                "name": "Return Temperature WP1"
+                "name": "Teplota zpátečky TČ1"
             },
             "flow_temperature_wp1": {
-                "name": "Flow Temperature WP1"
+                "name": "Teplota výstupu TČ1"
             },
             "hot_gas_temperature_wp1": {
-                "name": "Hot Gas Temperature WP1"
+                "name": "Teplota horkého plynu TČ1"
             },
             "low_pressure_wp1": {
-                "name": "Low Pressure WP1"
+                "name": "Nízký tlak TČ1"
             },
             "high_pressure_wp1": {
-                "name": "High Pressure WP1"
+                "name": "Vysoký tlak TČ1"
             },
             "volume_stream_wp1": {
-                "name": "Volume Stream WP1"
+                "name": "Průtok TČ1"
             },
             "return_temperature_wp2": {
-                "name": "Return Temperature WP2"
+                "name": "Teplota zpátečky TČ2"
             },
             "flow_temperature_wp2": {
-                "name": "Flow Temperature WP2"
+                "name": "Teplota výstupu TČ2"
             },
             "hot_gas_temperature_wp2": {
-                "name": "Hot Gas Temperature WP2"
+                "name": "Teplota horkého plynu TČ2"
             },
             "low_pressure_wp2": {
-                "name": "Low Pressure WP2"
+                "name": "Nízký tlak TČ2"
             },
             "high_pressure_wp2": {
-                "name": "High Pressure WP2"
+                "name": "Vysoký tlak TČ2"
             },
             "volume_stream_wp2": {
-                "name": "Volume Stream WP2"
+                "name": "Průtok TČ2"
             },
             "active_error": {
-                "name": "Active Error"
+                "name": "Aktivní chyba"
             },
             "sg_ready_state": {
-                "name": "SG Ready State"
+                "name": "Stav SG Ready"
             },
             "produced_heating_total": {
-                "name": "Produced Heating Total"
+                "name": "Vyrobené teplo celkem"
             },
             "produced_heating": {
-                "name": "Produced Heating"
+                "name": "Vyrobené teplo"
             },
             "produced_water_heating_total": {
-                "name": "Produced Water Heating Total"
+                "name": "Vyrobené teplo TUV celkem"
             },
             "produced_water_heating": {
-                "name": "Produced Water Heating"
+                "name": "Vyrobené teplo TUV"
             },
             "consumed_heating_total": {
-                "name": "Consumed Heating Total"
+                "name": "Spotřebovaná energie celkem"
             },
             "consumed_heating": {
-                "name": "Consumed Heating"
+                "name": "Spotřebovaná energie"
             },
             "consumed_water_heating_total": {
-                "name": "Consumed Water Heating Total"
+                "name": "Spotřebovaná energie TUV celkem"
             },
             "consumed_water_heating": {
-                "name": "Consumed Water Heating"
+                "name": "Spotřebovaná energie TUV"
             },
             "produced_electrical_booster_heating_total": {
-                "name": "Produced Electrical Booster Heating Total"
+                "name": "Vyrobené teplo el. dohřev celkem"
             },
             "produced_electrical_booster_water_heating_total": {
-                "name": "Produced Electrical Booster Water Heating Total"
+                "name": "Vyrobené teplo el. dohřev TUV celkem"
             },
             "produced_recovery": {
-                "name": "Produced Recovery"
+                "name": "Zisk rekuperace"
             },
             "produced_recovery_total": {
-                "name": "Produced Recovery Total"
+                "name": "Zisk rekuperace celkem"
             },
             "produced_solar_heating": {
-                "name": "Produced Solar Heating"
+                "name": "Solární teplo topení"
             },
             "produced_solar_heating_total": {
-                "name": "Produced Solar Heating Total"
+                "name": "Solární teplo topení celkem"
             },
             "produced_solar_water_heating_total": {
-                "name": "Produced Solar Water Heating Total"
+                "name": "Solární teplo TUV celkem"
             },
             "produced_solar_water_heating": {
-                "name": "Produced Solar Water Heating"
+                "name": "Solární teplo TUV"
             },
             "produced_heating_today": {
-                "name": "Produced Heating Today"
+                "name": "Vyrobené teplo dnes"
             },
             "produced_water_heating_today": {
-                "name": "Produced Water Heating Today"
+                "name": "Vyrobené teplo TUV dnes"
             },
             "consumed_heating_today": {
-                "name": "Consumed Heating Today"
+                "name": "Spotřebovaná energie dnes"
             },
             "consumed_water_heating_today": {
-                "name": "Consumed Water Heating Today"
+                "name": "Spotřebovaná energie TUV dnes"
             },
             "produced_recovery_today": {
-                "name": "Produced Recovery Today"
+                "name": "Zisk rekuperace dnes"
             },
             "produced_solar_heating_today": {
-                "name": "Produced Solar Heating Today"
+                "name": "Solární teplo topení dnes"
             },
             "produced_solar_water_heating_today": {
-                "name": "Produced Solar Water Heating Today"
+                "name": "Solární teplo TUV dnes"
             },
             "compressor_starts": {
-                "name": "Compressor Starts"
+                "name": "Starty kompresoru"
             },
             "compressor_heating": {
-                "name": "Compressor Heating"
+                "name": "Kompresor topení"
             },
             "compressor_heating_water": {
-                "name": "Compressor Heating Water"
+                "name": "Kompresor TUV"
             },
             "electrical_booster_heating": {
-                "name": "Electrical Booster Heating"
+                "name": "Elektrický dohřev topení"
             },
             "electrical_booster_heating_water": {
-                "name": "Electrical Booster Heating Water"
+                "name": "Elektrický dohřev TUV"
             },
             "ventilation_air_actual_fan_speed": {
-                "name": "Ventilation Air Actual Fan Speed"
+                "name": "Přiváděný vzduch skutečné otáčky"
             },
             "ventilation_air_target_flow_rate": {
-                "name": "Ventilation Air Target Flow Rate"
+                "name": "Přiváděný vzduch požadovaný průtok"
             },
             "extract_air_actual_fan_speed": {
-                "name": "Extract Air Actual Fan Speed"
+                "name": "Odváděný vzduch skutečné otáčky"
             },
             "extract_air_target_flow_rate": {
-                "name": "Extract Air Target Flow Rate"
+                "name": "Odváděný vzduch požadovaný průtok"
             },
             "extract_air_dew_point": {
-                "name": "Extract Air Dew Point"
+                "name": "Rosný bod odváděného vzduchu"
             },
             "extract_air_humidity": {
-                "name": "Extract Air Humidity"
+                "name": "Vlhkost odváděného vzduchu"
             },
             "extract_air_temperature": {
-                "name": "Extract Air Temperature"
+                "name": "Teplota odváděného vzduchu"
             }
         },
         "binary_sensor": {
             "pump_on_hk1": {
-                "name": "Pump HK1"
+                "name": "Čerpadlo TO 1"
             },
             "pump_on_hk2": {
-                "name": "Pump HK2"
+                "name": "Čerpadlo TO 2"
             },
             "heat_up_program": {
-                "name": "Heat-up Program"
+                "name": "Program ohřevu"
             },
             "nhz_stages_running": {
-                "name": "NHZ Stages Running"
+                "name": "NHZ stupně aktivní"
             },
             "is_heating": {
-                "name": "Is Heating"
+                "name": "Topný provoz"
             },
             "is_heating_water": {
-                "name": "Is Heating Boiler"
+                "name": "Provoz ohřevu vody"
             },
             "compressor_on": {
-                "name": "Compressor"
+                "name": "Kompresor"
             },
             "is_summer_mode": {
-                "name": "Is in Summer Mode"
+                "name": "Letní provoz"
             },
             "is_cooling": {
-                "name": "Is Cooling"
+                "name": "Chladicí provoz"
             },
             "evaporator_defrost": {
-                "name": "Evaporator Defrost"
+                "name": "Odmrazování výparníku"
             },
             "power_off": {
-                "name": "Power Off (EVU)"
+                "name": "Blokace (EVU)"
             },
             "error_status": {
-                "name": "Error Status"
+                "name": "Stav chyby"
             },
             "cooling_mode": {
-                "name": "Cooling Active"
+                "name": "Chlazení aktivní"
             },
             "heating_circuit_1_pump": {
-                "name": "Heating Circuit 1 Pump"
+                "name": "Čerpadlo topného okruhu 1"
             },
             "heating_circuit_2_pump": {
-                "name": "Heating Circuit 2 Pump"
+                "name": "Čerpadlo topného okruhu 2"
             },
             "heating_circuit_3_pump": {
-                "name": "Heating Circuit 3 Pump"
+                "name": "Čerpadlo topného okruhu 3"
             },
             "heating_circuit_4_pump": {
-                "name": "Heating Circuit 4 Pump"
+                "name": "Čerpadlo topného okruhu 4"
             },
             "heating_circuit_5_pump": {
-                "name": "Heating Circuit 5 Pump"
+                "name": "Čerpadlo topného okruhu 5"
             },
             "buffer_1_charging_pump": {
-                "name": "Buffer 1 Charging Pump"
+                "name": "Nabíjecí čerpadlo zásobníku 1"
             },
             "buffer_2_charging_pump": {
-                "name": "Buffer 2 Charging Pump"
+                "name": "Nabíjecí čerpadlo zásobníku 2"
             },
             "buffer_3_charging_pump": {
-                "name": "Buffer 3 Charging Pump"
+                "name": "Nabíjecí čerpadlo zásobníku 3"
             },
             "buffer_4_charging_pump": {
-                "name": "Buffer 4 Charging Pump"
+                "name": "Nabíjecí čerpadlo zásobníku 4"
             },
             "buffer_5_charging_pump": {
-                "name": "Buffer 5 Charging Pump"
+                "name": "Nabíjecí čerpadlo zásobníku 5"
             },
             "buffer_6_charging_pump": {
-                "name": "Buffer 6 Charging Pump"
+                "name": "Nabíjecí čerpadlo zásobníku 6"
             },
             "dhw_charging_pump": {
-                "name": "DHW Charging Pump"
+                "name": "Nabíjecí čerpadlo TUV"
             },
             "source_pump": {
-                "name": "Source Pump"
+                "name": "Zdrojové čerpadlo"
             },
             "diff_controller_1_pump": {
-                "name": "Diff. Controller 1 Pump"
+                "name": "Čerpadlo diferenčního regulátoru 1"
             },
             "diff_controller_2_pump": {
-                "name": "Diff. Controller 2 Pump"
+                "name": "Čerpadlo diferenčního regulátoru 2"
             },
             "pool_primary_pump": {
-                "name": "Pool Primary Pump"
+                "name": "Primární čerpadlo bazénu"
             },
             "pool_secondary_pump": {
-                "name": "Pool Secondary Pump"
+                "name": "Sekundární čerpadlo bazénu"
             },
             "heat_pump_1_on": {
-                "name": "Heat Pump 1 ON"
+                "name": "Tepelné čerpadlo 1 ZAP"
             },
             "heat_pump_2_on": {
-                "name": "Heat Pump 2 ON"
+                "name": "Tepelné čerpadlo 2 ZAP"
             },
             "heat_pump_3_on": {
-                "name": "Heat Pump 3 ON"
+                "name": "Tepelné čerpadlo 3 ZAP"
             },
             "heat_pump_4_on": {
-                "name": "Heat Pump 4 ON"
+                "name": "Tepelné čerpadlo 4 ZAP"
             },
             "heat_pump_5_on": {
-                "name": "Heat Pump 5 ON"
+                "name": "Tepelné čerpadlo 5 ZAP"
             },
             "heat_pump_6_on": {
-                "name": "Heat Pump 6 ON"
+                "name": "Tepelné čerpadlo 6 ZAP"
             },
             "second_generator_dhw": {
-                "name": "Second Generator for DHW"
+                "name": "2. zdroj tepla TUV"
             },
             "second_generator_heating": {
-                "name": "Second Generator for Heating"
+                "name": "2. zdroj tepla topení"
             },
             "mixer_open_htg_circuit_2": {
-                "name": "Mixer Opening Heating Circuit 2"
+                "name": "Směšovač otevírá TO 2"
             },
             "mixer_open_htg_circuit_3": {
-                "name": "Mixer Opening Heating Circuit 3"
+                "name": "Směšovač otevírá TO 3"
             },
             "mixer_open_htg_circuit_4": {
-                "name": "Mixer Opening Heating Circuit 4"
+                "name": "Směšovač otevírá TO 4"
             },
             "mixer_open_htg_circuit_5": {
-                "name": "Mixer Opening Heating Circuit 5"
+                "name": "Směšovač otevírá TO 5"
             },
             "mixer_close_htg_circuit_2": {
-                "name": "Mixer Closing Heating Circuit 2"
+                "name": "Směšovač zavírá TO 2"
             },
             "mixer_close_htg_circuit_3": {
-                "name": "Mixer Closing Heating Circuit 3"
+                "name": "Směšovač zavírá TO 3"
             },
             "mixer_close_htg_circuit_4": {
-                "name": "Mixer Closing Heating Circuit 4"
+                "name": "Směšovač zavírá TO 4"
             },
             "mixer_close_htg_circuit_5": {
-                "name": "Mixer Closing Heating Circuit 5"
+                "name": "Směšovač zavírá TO 5"
             },
             "emergency_heating_1": {
-                "name": "Emergency Heating 1"
+                "name": "Nouzové topení 1"
             },
             "emergency_heating_2": {
-                "name": "Emergency Heating 2"
+                "name": "Nouzové topení 2"
             },
             "emergency_heating_1_2": {
-                "name": "Emergency Heating 1 & 2"
+                "name": "Nouzové topení 1 & 2"
             },
             "switching_program_enabled": {
-                "name": "Switching Program Enabled"
+                "name": "Spínací program aktivní"
             },
             "electric_reheating": {
-                "name": "Electric Heating"
+                "name": "Elektrické přitápění"
             },
             "service": {
-                "name": "Service"
+                "name": "Servis"
             },
             "filter": {
-                "name": "Filter"
+                "name": "Filtr"
             },
             "ventilation": {
-                "name": "Ventilation"
+                "name": "Větrání"
             },
             "filter_extract_air": {
-                "name": "Filter Extract Air"
+                "name": "Filtr odváděného vzduchu"
             },
             "filter_ventilation_air": {
-                "name": "Filter Ventilation Air"
+                "name": "Filtr přiváděného vzduchu"
             }
         },
         "number": {
             "comfort_temperature_target_hk1": {
-                "name": "Comfort Temperature Target HK1"
+                "name": "Denní teplota Soll TO 1"
             },
             "eco_temperature_target_hk1": {
-                "name": "Eco Temperature Target HK1"
+                "name": "Noční teplota Soll TO 1"
             },
             "comfort_temperature_target_hk2": {
-                "name": "Comfort Temperature Target HK2"
+                "name": "Denní teplota Soll TO 2"
             },
             "eco_temperature_target_hk2": {
-                "name": "Eco Temperature Target HK2"
+                "name": "Noční teplota Soll TO 2"
             },
             "comfort_temperature_target_hk3": {
-                "name": "Comfort Temperature Target HK3"
+                "name": "Denní teplota Soll TO 3"
             },
             "eco_temperature_target_hk3": {
-                "name": "Eco Temperature Target HK3"
+                "name": "Noční teplota Soll TO 3"
             },
             "dualmode_temperature_hzg": {
-                "name": "Dual Mode Temperature HZG"
+                "name": "Bivalentní teplota topení"
             },
             "comfort_water_temperature_target": {
-                "name": "Comfort Water Temperature Target"
+                "name": "Denní teplota TUV Soll"
             },
             "eco_water_temperature_target": {
-                "name": "Eco Water Temperature Target"
+                "name": "Noční teplota TUV Soll"
             },
             "dualmode_temperature_ww": {
-                "name": "Dual Mode Temperature WW"
+                "name": "Bivalentní teplota TUV"
             },
             "area_cooling_target_room_temperature": {
-                "name": "Area Cooling Room Temperature Target"
+                "name": "Pokojová teplota Soll plošné chlazení"
             },
             "area_cooling_target_flow_temperature": {
-                "name": "Area Cooling Flow Temperature Target"
+                "name": "Výstupní teplota Soll plošné chlazení"
             },
             "fan_cooling_target_room_temperature": {
-                "name": "Fan Cooling Room Temperature Target"
+                "name": "Pokojová teplota Soll fancoil chlazení"
             },
             "fan_cooling_target_flow_temperature": {
-                "name": "Fan Cooling Flow Temperature Target"
+                "name": "Výstupní teplota Soll fancoil chlazení"
             },
             "heating_curve_rise_hk1": {
-                "name": "Heating Curve Rise HK1"
+                "name": "Sklon topné křivky TO 1"
             },
             "heating_curve_rise_hk2": {
-                "name": "Heating Curve Rise HK2"
+                "name": "Sklon topné křivky TO 2"
             },
             "heating_curve_rise_hk3": {
-                "name": "Heating Curve Rise HK3"
+                "name": "Sklon topné křivky TO 3"
             },
             "fan_level_day": {
-                "name": "Fan Level Day"
+                "name": "Stupeň ventilátoru den"
             },
             "fan_level_night": {
-                "name": "Fan Level Night"
+                "name": "Stupeň ventilátoru noc"
             },
             "comfort_cooling_temperature_target_hk1": {
-                "name": "Comfort Cooling Temperature Target HK1"
+                "name": "Denní teplota chlazení Soll TO 1"
             },
             "eco_cooling_temperature_target_hk1": {
-                "name": "Eco Cooling Temperature Target HK1"
+                "name": "Noční teplota chlazení Soll TO 1"
             },
             "comfort_cooling_temperature_target_hk2": {
-                "name": "Comfort Cooling Temperature Target HK2"
+                "name": "Denní teplota chlazení Soll TO 2"
             },
             "eco_cooling_temperature_target_hk2": {
-                "name": "Eco Cooling Temperature Target HK2"
+                "name": "Noční teplota chlazení Soll TO 2"
             },
             "heating_curve_low_end_hk1": {
-                "name": "Heating Curve Low End HK1"
+                "name": "Dolní bod topné křivky TO 1"
             },
             "heating_curve_low_end_hk2": {
-                "name": "Heating Curve Low End HK2"
+                "name": "Dolní bod topné křivky TO 2"
             }
         },
         "switch": {
             "sg_ready_active": {
-                "name": "SG Ready Active"
+                "name": "SG Ready aktivní"
             },
             "sg_ready_input_1": {
-                "name": "SG Ready Input 1"
+                "name": "SG Ready vstup 1"
             },
             "sg_ready_input_2": {
-                "name": "SG Ready Input 2"
+                "name": "SG Ready vstup 2"
             },
             "circulation_pump": {
-                "name": "Circulation Pump"
+                "name": "Cirkulační čerpadlo"
             }
         },
         "button": {
             "reset_heatpump": {
-                "name": "Reset Heatpump"
+                "name": "Restartovat tepelné čerpadlo"
             }
         },
         "select": {
             "operation_mode": {
-                "name": "Operation Mode",
+                "name": "Provozní režim",
                 "state": {
                     "water_heating": "Ohřev vody",
                     "emergency": "Nouzový stav",
@@ -625,7 +625,7 @@
         },
         "climate": {
             "climate_hk_1": {
-                "name": "Heat Circuit 1",
+                "name": "Topný okruh 1",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
@@ -640,7 +640,7 @@
                 }
             },
             "climate_hk_2": {
-                "name": "Heat Circuit 2",
+                "name": "Topný okruh 2",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
@@ -655,7 +655,7 @@
                 }
             },
             "climate_hk_3": {
-                "name": "Heat Circuit 3",
+                "name": "Topný okruh 3",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
