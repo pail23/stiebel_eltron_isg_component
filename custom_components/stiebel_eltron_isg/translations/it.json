@@ -12,7 +12,8 @@
         },
         "error": {
             "already_configured": "Il dispositivo è già configurato",
-            "invalid_host_IP": "Indirizzo IP host non valido"
+            "invalid_host_IP": "Indirizzo IP host non valido",
+            "cannot_connect": "Impossibile connettersi al dispositivo. Controllare host e porta."
         },
         "abort": {
             "already_configured": "Il dispositivo è già configurato"
@@ -32,6 +33,20 @@
                             "manual": "Manuale"
                         }
                     }
+                }
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "state": {
+                    "water_heating": "Riscaldamento dell'acqua",
+                    "emergency": "Emergenza",
+                    "program": "Programma",
+                    "ready": "Pronto",
+                    "automatic": "Automatico",
+                    "manual": "Manuale",
+                    "comfort": "Comfort",
+                    "eco": "Eco"
                 }
             }
         }

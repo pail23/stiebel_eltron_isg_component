@@ -6,10 +6,11 @@
   ],
   "config_flow": true,
   "documentation": "https://github.com/pail23/stiebel_eltron_isg_component",
+  "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pail23/stiebel_eltron_isg_component/issues",
   "requirements": [
-    "pystiebeleltron>=0.3.0"
+    "pystiebeleltron==0.3.0"
   ],
-  "version": "0.3.0"
+  "version": "2025.1.0"
 }

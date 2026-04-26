@@ -12,7 +12,8 @@
         },
         "error": {
             "already_configured": "Périphérique déjà configuré",
-            "invalid_host_IP": "IP hôte invalide"
+            "invalid_host_IP": "IP hôte invalide",
+            "cannot_connect": "Impossible de se connecter au périphérique. Veuillez vérifier l'hôte et le port."
         },
         "abort": {
             "already_configured": "Périphérique déjà configuré"
@@ -32,6 +33,20 @@
                             "manual": "Manuel"
                         }
                     }
+                }
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "state": {
+                    "water_heating": "Chauffage de l'eau",
+                    "emergency": "Urgence",
+                    "program": "Programme",
+                    "ready": "Prêt",
+                    "automatic": "Automatique",
+                    "manual": "Manuel",
+                    "comfort": "Confort",
+                    "eco": "Économie"
                 }
             }
         }

@@ -12,7 +12,8 @@
         },
         "error": {
             "already_configured": "Zariadenie je už nakonfigurované",
-            "invalid_host_IP": "Neplatná IP hostiteľa"
+            "invalid_host_IP": "Neplatná IP hostiteľa",
+            "cannot_connect": "Nie je možné pripojiť sa k zariadeniu. Skontrolujte prosím host a port."
         },
         "abort": {
             "already_configured": "Zariadenie je už nakonfigurované"
@@ -32,6 +33,20 @@
                             "manual": "Manuál"
                         }
                     }
+                }
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "state": {
+                    "water_heating": "Ohrev vody",
+                    "emergency": "Pohotovosť",
+                    "program": "Program",
+                    "ready": "Pripravený",
+                    "automatic": "Automatický",
+                    "manual": "Manuál",
+                    "comfort": "Komfort",
+                    "eco": "Eco"
                 }
             }
         }

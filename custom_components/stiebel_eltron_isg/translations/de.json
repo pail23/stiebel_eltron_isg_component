@@ -12,7 +12,8 @@
         },
         "error": {
             "already_configured": "Das Gerät ist bereits konfiguriert.",
-            "invalid_host_IP": "Ungültige Host Adresse"
+            "invalid_host_IP": "Ungültige Host Adresse",
+            "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port."
         },
         "abort": {
             "already_configured": "Das Gerät ist bereits konfiguriert."

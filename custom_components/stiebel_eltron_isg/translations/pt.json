@@ -11,11 +11,44 @@
             }
         },
         "error": {
-            "already_configured": "Equipamento já se encontra configurado-",
-            "invalid_host_IP": "IP Invalido"
+            "already_configured": "Equipamento já se encontra configurado.",
+            "invalid_host_IP": "IP Inválido",
+            "cannot_connect": "Não foi possível ligar ao dispositivo. Por favor verifique o host e a porta."
         },
         "abort": {
-            "already_configured": "Equipamento já se encontra configurado-"
+            "already_configured": "Equipamento já se encontra configurado."
+        }
+    },
+    "entity": {
+        "climate": {
+            "climate": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Aquecimento de água",
+                            "emergency": "Emergência",
+                            "program": "Programa",
+                            "ready": "Pronto",
+                            "auto": "Automático",
+                            "manual": "Manual"
+                        }
+                    }
+                }
+            }
+        },
+        "select": {
+            "operation_mode": {
+                "state": {
+                    "water_heating": "Aquecimento de água",
+                    "emergency": "Emergência",
+                    "program": "Programa",
+                    "ready": "Pronto",
+                    "automatic": "Automático",
+                    "manual": "Manual",
+                    "comfort": "Conforto",
+                    "eco": "Eco"
+                }
+            }
         }
     }
 }

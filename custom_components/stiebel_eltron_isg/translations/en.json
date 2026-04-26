@@ -12,7 +12,8 @@
         },
         "error": {
             "already_configured": "The device is already configured.",
-            "invalid_host_IP": "Invalid host address"
+            "invalid_host_IP": "Invalid host address",
+            "cannot_connect": "Cannot connect to the device. Please check the host and port."
         },
         "abort": {
             "already_configured": "The device is already configured."

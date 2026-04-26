@@ -6,9 +6,10 @@ import ipaddress
 import re
 
 import voluptuous as vol
-from homeassistant.config_entries import CONN_CLASS_LOCAL_POLL, ConfigFlow
+from homeassistant.config_entries import ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
+from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 
 from .const import (
     DEFAULT_HOST_NAME,
@@ -58,7 +59,6 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Stiebel Eltron ISG."""
 
     VERSION = 1
-    CONNECTION_CLASS = CONN_CLASS_LOCAL_POLL
 
     def __init__(self):
         """Initialize."""
@@ -87,12 +87,19 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
             elif not host_valid(user_input[CONF_HOST]):
                 self._errors[CONF_HOST] = "invalid_host_IP"
             else:
-                await self.async_set_unique_id(user_input[CONF_HOST])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=user_input[CONF_NAME],
-                    data=user_input,
-                )
+                try:
+                    await get_controller_model(host, user_input[CONF_PORT])
+                except StiebelEltronModbusError:
+                    self._errors[CONF_HOST] = "cannot_connect"
+                except Exception:  # pymodbus raises non-StiebelEltronModbusError on connection failures
+                    self._errors[CONF_HOST] = "cannot_connect"
+                else:
+                    await self.async_set_unique_id(user_input[CONF_HOST])
+                    self._abort_if_unique_id_configured()
+                    return self.async_create_entry(
+                        title=user_input[CONF_NAME],
+                        data=user_input,
+                    )
             return await self._show_config_form(user_input)
 
         user_input = {}
