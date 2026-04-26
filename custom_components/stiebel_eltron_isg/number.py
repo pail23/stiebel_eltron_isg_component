@@ -226,7 +226,6 @@ NUMBER_TYPES_WPM = [
         native_step=0.01,
         modbus_register=WpmSystemParametersRegisters.HEATING_CURVE_RISE_HK_3,
     ),
-
 ]
 
 NUMBER_TYPES_LWZ = [
@@ -387,7 +386,6 @@ NUMBER_TYPES_LWZ = [
         modbus_register=LwzSystemParametersRegisters.LOW_END_HK2,
     ),
 ]
-
 
 
 async def async_setup_entry(
