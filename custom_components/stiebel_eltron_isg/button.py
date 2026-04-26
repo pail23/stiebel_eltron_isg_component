@@ -37,7 +37,7 @@ class StiebelEltronISGButtonDescription(
 BUTTONS = [
     StiebelEltronISGButtonDescription(
         key=RESET_HEATPUMP,
-        name="Reset Heatpump",
+        translation_key=RESET_HEATPUMP,
         entity_category=EntityCategory.DIAGNOSTIC,
         press_action=lambda coordinator: coordinator.async_reset_heatpump(),
     ),

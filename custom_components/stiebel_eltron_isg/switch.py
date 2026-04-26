@@ -51,23 +51,20 @@ class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
 SWITCH_TYPES = [
     StiebelEltronSwitchEntityDescription(
         key=SG_READY_ACTIVE,
+        translation_key=SG_READY_ACTIVE,
         device_class=SwitchDeviceClass.SWITCH,
-        has_entity_name=True,
-        name="SG Ready Active",
         modbus_register=EnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
     ),
     StiebelEltronSwitchEntityDescription(
         key=SG_READY_INPUT_1,
+        translation_key=SG_READY_INPUT_1,
         device_class=SwitchDeviceClass.SWITCH,
-        has_entity_name=True,
-        name="SG Ready Input 1",
         modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
     ),
     StiebelEltronSwitchEntityDescription(
         key=SG_READY_INPUT_2,
+        translation_key=SG_READY_INPUT_2,
         device_class=SwitchDeviceClass.SWITCH,
-        has_entity_name=True,
-        name="SG Ready Input 2",
         modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
     ),
 ]
@@ -98,9 +95,8 @@ async def async_setup_entry(
                 entry,
                 StiebelEltronSwitchEntityDescription(
                     key=CIRCULATION_PUMP,
+                    translation_key=CIRCULATION_PUMP,
                     device_class=SwitchDeviceClass.SWITCH,
-                    has_entity_name=True,
-                    name="Circulation Pump",
                     modbus_register=WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
                 ),
             )

@@ -131,8 +131,7 @@ class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
 WPM_CLIMATE_TYPES = [
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_1,
-        has_entity_name=True,
-        name="Heat Circuit 1",
+        translation_key=CLIMATE_HK_1,
         humidity_modbus_register=[
             WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC1,
             WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
@@ -147,8 +146,7 @@ WPM_CLIMATE_TYPES = [
     ),
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_2,
-        has_entity_name=True,
-        name="Heat Circuit 2",
+        translation_key=CLIMATE_HK_2,
         humidity_modbus_register=[
             WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2
         ],
@@ -160,8 +158,7 @@ WPM_CLIMATE_TYPES = [
     ),
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_3,
-        has_entity_name=True,
-        name="Heat Circuit 3",
+        translation_key=CLIMATE_HK_3,
         humidity_modbus_register=[
             WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC3
         ],
@@ -176,8 +173,7 @@ WPM_CLIMATE_TYPES = [
 LWZ_CLIMATE_TYPES = [
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_1,
-        has_entity_name=True,
-        name="Heat Circuit 1",
+        translation_key=CLIMATE_HK_1,
         humidity_modbus_register=[LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1],
         actual_temperature_register=[LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1],
         eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK1,
@@ -185,8 +181,7 @@ LWZ_CLIMATE_TYPES = [
     ),
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_2,
-        has_entity_name=True,
-        name="Heat Circuit 2",
+        translation_key=CLIMATE_HK_2,
         humidity_modbus_register=[LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC2],
         actual_temperature_register=[LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2],
         eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK2,
@@ -249,7 +244,6 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         self._attr_target_temperature_low = 5
         self._attr_target_temperature_high = 30
         self._attr_target_temperature_step = 0.1
-        self._attr_translation_key = "climate"
 
         super().__init__(coordinator, config_entry)
 

@@ -56,22 +56,18 @@ class StiebelEltronSelectEntityDescription(SelectEntityDescription):
 WPM_SELECT_TYPES = [
     StiebelEltronSelectEntityDescription(
         key=OPERATION_MODE,
-        has_entity_name=True,
-        name="Operation Mode",
+        translation_key="operation_mode",
         modbus_register=WpmSystemParametersRegisters.OPERATING_MODE,
         operation_modes=OPERATION_MODE_WPM_OPTIONS,
-        translation_key="operation_mode",
     ),
 ]
 
 LWZ_SELECT_TYPES = [
     StiebelEltronSelectEntityDescription(
         key=OPERATION_MODE,
-        has_entity_name=True,
-        name="Operation Mode",
+        translation_key="operation_mode",
         modbus_register=LwzSystemParametersRegisters.OPERATING_MODE,
         operation_modes=OPERATION_MODE_LWZ_OPTIONS,
-        translation_key="operation_mode",
     ),
 ]
 

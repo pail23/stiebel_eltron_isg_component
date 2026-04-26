@@ -155,12 +155,11 @@ def create_temperature_entity_description(name, key, modbus_register: IsgRegiste
     """Create an entry description for a temperature sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
-        name=name,
+        translation_key=key,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        has_entity_name=True,
         modbus_register=modbus_register,
     )
 
@@ -174,10 +173,9 @@ def create_energy_entity_description(
     """Create an entry description for a energy sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
-        name=name,
+        translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         icon="mdi:meter-electric",
-        has_entity_name=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
@@ -194,10 +192,9 @@ def create_daily_energy_entity_description(
     """Create an entry description for a energy sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
-        name=name,
+        translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         icon="mdi:meter-electric",
-        has_entity_name=True,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
@@ -209,11 +206,10 @@ def create_humidity_entity_description(name, key, modbus_register: IsgRegisters)
     """Create an entry description for a humidity sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
-        name=name,
+        translation_key=key,
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         modbus_register=modbus_register,
     )
 
@@ -222,11 +218,10 @@ def create_pressure_entity_description(name, key, modbus_register: IsgRegisters)
     """Create an entry description for a pressure sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
-        name=name,
+        translation_key=key,
         native_unit_of_measurement=UnitOfPressure.BAR,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         modbus_register=modbus_register,
     )
 
@@ -235,11 +230,10 @@ def create_volume_stream_entity_description(name, key, modbus_register: IsgRegis
     """Create an entry description for a volume stream sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
-        name=name,
+        translation_key=key,
         native_unit_of_measurement="l/min",
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
-        has_entity_name=True,
         modbus_register=modbus_register,
     )
 
@@ -365,8 +359,7 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     ),
     StiebelEltronSensorEntityDescription(
         key=SOLAR_RUNTIME,
-        name="Solar Runtime",
-        has_entity_name=True,
+        translation_key=SOLAR_RUNTIME,
         icon="mdi:hours-24",
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
@@ -535,8 +528,7 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     ),
     StiebelEltronSensorEntityDescription(
         key=ACTIVE_ERROR,
-        name="Active Error",
-        has_entity_name=True,
+        translation_key=ACTIVE_ERROR,
         entity_category=EntityCategory.DIAGNOSTIC,
         icon="mdi:alert-circle",
         modbus_register=WpmSystemStateRegisters.ACTIVE_ERROR,
@@ -655,9 +647,8 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
 ENERGYMANAGEMENT_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=SG_READY_STATE,
-        name="SG Ready State",
+        translation_key=SG_READY_STATE,
         icon="mdi:solar-power",
-        has_entity_name=True,
         modbus_register=EnergySystemInformationRegisters.SG_READY_OPERATING_STATE,
     ),
 ]
@@ -853,43 +844,38 @@ LWZ_ENERGY_DAILY_SENSOR_TYPES = [
 LWZ_COMPRESSOR_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_STARTS,
-        name="Compressor starts",
+        translation_key=COMPRESSOR_STARTS,
         icon="mdi:restart",
-        has_entity_name=True,
         modbus_register=LwzSystemValuesRegisters.COMPRESSOR_STARTS,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_HEATING,
-        name="Compressor heating",
+        translation_key=COMPRESSOR_HEATING,
         icon="mdi:hours-24",
-        has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzEnergyDataRegisters.COMPRESSOR_HEATING,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_HEATING_WATER,
-        name="Compressor heating water",
+        translation_key=COMPRESSOR_HEATING_WATER,
         icon="mdi:hours-24",
-        has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzEnergyDataRegisters.COMPRESSOR_DHW,
     ),
     StiebelEltronSensorEntityDescription(
         key=ELECTRICAL_BOOSTER_HEATING,
-        name="Electrical booster heating",
+        translation_key=ELECTRICAL_BOOSTER_HEATING,
         icon="mdi:hours-24",
-        has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzEnergyDataRegisters.ELEC_BOOSTER_HEATING,
     ),
     StiebelEltronSensorEntityDescription(
         key=ELECTRICAL_BOOSTER_HEATING_WATER,
-        name="Electrical booster heating water",
+        translation_key=ELECTRICAL_BOOSTER_HEATING_WATER,
         icon="mdi:hours-24",
-        has_entity_name=True,
         native_unit_of_measurement="h",
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzEnergyDataRegisters.ELEC_BOOSTER_DHW,
@@ -899,9 +885,8 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
 LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
-        name="Ventilation air actual fan speed",
+        translation_key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
         icon="mdi:fan",
-        has_entity_name=True,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -909,18 +894,16 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     ),
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_TARGET_FLOW_RATE,
-        name="Ventilation air target flow rate",
+        translation_key=VENTILATION_AIR_TARGET_FLOW_RATE,
         icon="mdi:fan",
-        has_entity_name=True,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzSystemValuesRegisters.VENTILATION_AIR_SET_FLOW_RATE,
     ),
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
-        name="Extract air actual fan speed",
+        translation_key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
         icon="mdi:fan",
-        has_entity_name=True,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -928,9 +911,8 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     ),
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_TARGET_FLOW_RATE,
-        name="Extract air target flow rate",
+        translation_key=EXTRACT_AIR_TARGET_FLOW_RATE,
         icon="mdi:fan",
-        has_entity_name=True,
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=LwzSystemValuesRegisters.EXTRACT_AIR_SET_FLOW_RATE,

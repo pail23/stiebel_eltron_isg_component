@@ -61,8 +61,7 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
 NUMBER_TYPES_WPM = [
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK1,
-        has_entity_name=True,
-        name="Comfort Temperature Target HK1",
+        translation_key=COMFORT_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=5,
@@ -72,8 +71,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK1,
-        has_entity_name=True,
-        name="Eco Temperature Target HK1",
+        translation_key=ECO_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=5,
@@ -83,8 +81,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK2,
-        has_entity_name=True,
-        name="Comfort Temperature Target HK2",
+        translation_key=COMFORT_TEMPERATURE_TARGET_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=5,
@@ -94,8 +91,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK2,
-        has_entity_name=True,
-        name="Eco Temperature Target HK2",
+        translation_key=ECO_TEMPERATURE_TARGET_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=5,
@@ -105,8 +101,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK3,
-        has_entity_name=True,
-        name="Comfort Temperature Target HK3",
+        translation_key=COMFORT_TEMPERATURE_TARGET_HK3,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=5,
@@ -116,8 +111,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK3,
-        has_entity_name=True,
-        name="Eco Temperature Target HK3",
+        translation_key=ECO_TEMPERATURE_TARGET_HK3,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=5,
@@ -127,8 +121,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_HZG,
-        has_entity_name=True,
-        name="Dual Mode Temperature HZG",
+        translation_key=DUALMODE_TEMPERATURE_HZG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-off",
         native_min_value=-20,
@@ -138,8 +131,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_WATER_TEMPERATURE_TARGET,
-        has_entity_name=True,
-        name="Comfort Water Temperature Target",
+        translation_key=COMFORT_WATER_TEMPERATURE_TARGET,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=10,
@@ -149,8 +141,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_WATER_TEMPERATURE_TARGET,
-        has_entity_name=True,
-        name="Eco Water Temperature Target",
+        translation_key=ECO_WATER_TEMPERATURE_TARGET,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=10,
@@ -160,8 +151,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_WW,
-        has_entity_name=True,
-        name="Dual Mode Temperature WW",
+        translation_key=DUALMODE_TEMPERATURE_WW,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-off",
         native_min_value=-20,
@@ -171,8 +161,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=AREA_COOLING_TARGET_ROOM_TEMPERATURE,
-        has_entity_name=True,
-        name="Area Cooling Room Temperature Target",
+        translation_key=AREA_COOLING_TARGET_ROOM_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-check",
         native_min_value=20,
@@ -182,8 +171,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=AREA_COOLING_TARGET_FLOW_TEMPERATURE,
-        has_entity_name=True,
-        name="Area Cooling Flow Temperature Target",
+        translation_key=AREA_COOLING_TARGET_FLOW_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-check",
         native_min_value=7,
@@ -193,8 +181,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
-        has_entity_name=True,
-        name="Fan Cooling Room Temperature Target",
+        translation_key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-check",
         native_min_value=20,
@@ -204,8 +191,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_COOLING_TARGET_FLOW_TEMPERATURE,
-        has_entity_name=True,
-        name="Fan Cooling Flow Temperature Target",
+        translation_key=FAN_COOLING_TARGET_FLOW_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-check",
         native_min_value=7,
@@ -215,8 +201,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK1,
-        has_entity_name=True,
-        name="Heating Curve Rise HK1",
+        translation_key=HEATING_CURVE_RISE_HK1,
         icon="mdi:thermometer-chevron-up",
         native_min_value=0,
         native_max_value=3,
@@ -225,8 +210,7 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK2,
-        has_entity_name=True,
-        name="Heating Curve Rise HK2",
+        translation_key=HEATING_CURVE_RISE_HK2,
         icon="mdi:thermometer-chevron-up",
         native_min_value=0,
         native_max_value=3,
@@ -235,22 +219,20 @@ NUMBER_TYPES_WPM = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK3,
-        has_entity_name=True,
-        name="Heating Curve Rise HK3",
+        translation_key=HEATING_CURVE_RISE_HK3,
         icon="mdi:thermometer-chevron-up",
         native_min_value=0,
         native_max_value=3,
         native_step=0.01,
         modbus_register=WpmSystemParametersRegisters.HEATING_CURVE_RISE_HK_3,
     ),
-]
 
+]
 
 NUMBER_TYPES_LWZ = [
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK1,
-        has_entity_name=True,
-        name="Comfort Temperature Target HK1",
+        translation_key=COMFORT_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=5,
@@ -260,8 +242,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK1,
-        has_entity_name=True,
-        name="Eco Temperature Target HK1",
+        translation_key=ECO_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=5,
@@ -271,8 +252,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK2,
-        has_entity_name=True,
-        name="Comfort Temperature Target HK2",
+        translation_key=COMFORT_TEMPERATURE_TARGET_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=5,
@@ -282,8 +262,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK2,
-        has_entity_name=True,
-        name="Eco Temperature Target HK2",
+        translation_key=ECO_TEMPERATURE_TARGET_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=5,
@@ -293,8 +272,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_WATER_TEMPERATURE_TARGET,
-        has_entity_name=True,
-        name="Comfort Water Temperature Target",
+        translation_key=COMFORT_WATER_TEMPERATURE_TARGET,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-high",
         native_min_value=10,
@@ -304,8 +282,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_WATER_TEMPERATURE_TARGET,
-        has_entity_name=True,
-        name="Eco Water Temperature Target",
+        translation_key=ECO_WATER_TEMPERATURE_TARGET,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:thermometer-low",
         native_min_value=10,
@@ -315,8 +292,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_LEVEL_DAY,
-        has_entity_name=True,
-        name="Fan Level Day",
+        translation_key=FAN_LEVEL_DAY,
         icon="mdi:fan",
         native_min_value=0,
         native_max_value=3,
@@ -325,8 +301,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_LEVEL_NIGHT,
-        has_entity_name=True,
-        name="Fan Level Night",
+        translation_key=FAN_LEVEL_NIGHT,
         icon="mdi:fan",
         native_min_value=0,
         native_max_value=3,
@@ -335,8 +310,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
-        has_entity_name=True,
-        name="Comfort Cooling Temperature Target HK1",
+        translation_key=COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:snowflake-thermometer",
         native_min_value=10,
@@ -346,8 +320,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_COOLING_TEMPERATURE_TARGET_HK1,
-        has_entity_name=True,
-        name="Eco Cooling Temperature Target HK1",
+        translation_key=ECO_COOLING_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:snowflake-thermometer",
         native_min_value=10,
@@ -357,8 +330,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
-        has_entity_name=True,
-        name="Comfort Cooling Temperature Target HK2",
+        translation_key=COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:snowflake-thermometer",
         native_min_value=10,
@@ -368,8 +340,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_COOLING_TEMPERATURE_TARGET_HK2,
-        has_entity_name=True,
-        name="Eco Cooling Temperature Target HK2",
+        translation_key=ECO_COOLING_TEMPERATURE_TARGET_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:snowflake-thermometer",
         native_min_value=10,
@@ -379,8 +350,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK1,
-        has_entity_name=True,
-        name="Heating Curve Rise HK1",
+        translation_key=HEATING_CURVE_RISE_HK1,
         icon="mdi:chart-bell-curve-cumulative",
         native_min_value=0,
         native_max_value=5,
@@ -389,8 +359,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK2,
-        has_entity_name=True,
-        name="Heating Curve Rise HK2",
+        translation_key=HEATING_CURVE_RISE_HK2,
         icon="mdi:chart-bell-curve-cumulative",
         native_min_value=0,
         native_max_value=5,
@@ -399,8 +368,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_LOW_END_HK1,
-        has_entity_name=True,
-        name="Heating Curve Low End HK1",
+        translation_key=HEATING_CURVE_LOW_END_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:chart-sankey",
         native_min_value=0,
@@ -410,8 +378,7 @@ NUMBER_TYPES_LWZ = [
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_LOW_END_HK2,
-        has_entity_name=True,
-        name="Heating Curve Low End HK2",
+        translation_key=HEATING_CURVE_LOW_END_HK2,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         icon="mdi:chart-sankey",
         native_min_value=0,
@@ -420,6 +387,7 @@ NUMBER_TYPES_LWZ = [
         modbus_register=LwzSystemParametersRegisters.LOW_END_HK2,
     ),
 ]
+
 
 
 async def async_setup_entry(

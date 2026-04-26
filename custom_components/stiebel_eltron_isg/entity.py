@@ -51,14 +51,6 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinato
         )
 
     @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added.
-
-        This only applies when fist added to the entity registry.
-        """
-        return self.available
-
-    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.has_register_value(self.modbus_register)
