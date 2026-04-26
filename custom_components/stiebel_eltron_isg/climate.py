@@ -39,6 +39,8 @@ from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 CLIMATE_HK_1 = "climate_hk_1"
 CLIMATE_HK_2 = "climate_hk_2"
 CLIMATE_HK_3 = "climate_hk_3"

@@ -37,6 +37,8 @@ from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 class WpmCirculationPumpRegisters(IsgRegisters):
     """Registers related to the circulation pump in the WPM system."""

@@ -13,6 +13,17 @@
                     "host": "L'indirizzo IP o il nome host del server web ISG Stiebel Eltron.",
                     "port": "La porta TCP Modbus dell'ISG (predefinita: 502)."
                 }
+            },
+            "reconfigure": {
+                "description": "Aggiornare i dettagli di connessione per la pompa di calore Stiebel Eltron ISG.",
+                "data": {
+                    "host": "L'indirizzo IP del tuo ISG",
+                    "port": "La porta TCP a cui connettersi all'ISG"
+                },
+                "data_description": {
+                    "host": "L'indirizzo IP o il nome host del server web ISG Stiebel Eltron.",
+                    "port": "La porta TCP Modbus dell'ISG (predefinita: 502)."
+                }
             }
         },
         "error": {
@@ -21,7 +32,8 @@
             "cannot_connect": "Impossibile connettersi al dispositivo. Controllare host e porta."
         },
         "abort": {
-            "already_configured": "Il dispositivo è già configurato"
+            "already_configured": "Il dispositivo è già configurato",
+            "reconfigure_successful": "Dettagli di connessione aggiornati correttamente."
         }
     },
     "options": {

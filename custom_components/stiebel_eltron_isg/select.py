@@ -29,6 +29,8 @@ from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+
 
 OPERATION_MODE_WPM_OPTIONS = {
     0: "emergency",

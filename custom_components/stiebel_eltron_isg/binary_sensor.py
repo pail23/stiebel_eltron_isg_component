@@ -79,6 +79,8 @@ from .const import (
 from .data import StiebelEltronIsgIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronBinarySensorEntityDescription(BinarySensorEntityDescription):

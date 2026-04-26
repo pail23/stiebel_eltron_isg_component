@@ -58,6 +58,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for Stiebel Eltron ISG."""
 
     VERSION = 1
+    SUPPORTS_RECONFIGURE = True
 
     def __init__(self):
         """Initialize."""
@@ -113,6 +114,62 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input[CONF_HOST] = DEFAULT_HOST_NAME
         user_input[CONF_PORT] = DEFAULT_PORT
         return await self._show_config_form(user_input)
+
+    async def async_step_reconfigure(self, user_input=None):
+        """Handle a reconfigure flow."""
+        config_entry = self.hass.config_entries.async_get_entry(
+            self.context["entry_id"]
+        )
+
+        self._errors = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST]
+            port = user_input[CONF_PORT]
+
+            # Check if host changed and is already configured elsewhere
+            if host != config_entry.data[
+                CONF_HOST
+            ] and self._host_in_configuration_exists(host):
+                self._errors[CONF_HOST] = "already_configured"
+
+            if not self._errors and not host_valid(host):
+                self._errors[CONF_HOST] = "invalid_host_IP"
+
+            if not self._errors:
+                try:
+                    await get_controller_model(host, port)
+                except StiebelEltronModbusError:
+                    self._errors[CONF_HOST] = "cannot_connect"
+                except Exception:  # pymodbus raises non-StiebelEltronModbusError on connection failures
+                    self._errors[CONF_HOST] = "cannot_connect"
+
+            if not self._errors:
+                self.hass.config_entries.async_update_entry(
+                    config_entry,
+                    data={
+                        **config_entry.data,
+                        CONF_HOST: host,
+                        CONF_PORT: port,
+                    },
+                )
+                await self.hass.config_entries.async_reload(config_entry.entry_id)
+                return self.async_abort(reason="reconfigure_successful")
+
+            user_input = dict(config_entry.data)
+        else:
+            user_input = dict(config_entry.data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+                }
+            ),
+            errors=self._errors,
+        )
 
     async def _show_config_form(self, user_input):
         """Show the configuration form to edit location data."""

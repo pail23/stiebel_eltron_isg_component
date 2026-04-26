@@ -13,6 +13,17 @@
                     "host": "IP adresa nebo název hostitele webového serveru Stiebel Eltron ISG.",
                     "port": "Modbus TCP port ISG (výchozí: 502)."
                 }
+            },
+            "reconfigure": {
+                "description": "Aktualizujte přihlašovací údaje pro vaše tepelné čerpadlo Stiebel Eltron ISG.",
+                "data": {
+                    "host": "IP adresa Vašeho Stiebel Eltron ISG",
+                    "port": "TCP port Vašeho Stiebel Eltron ISG (např. 502)"
+                },
+                "data_description": {
+                    "host": "IP adresa nebo název hostitele webového serveru Stiebel Eltron ISG.",
+                    "port": "Modbus TCP port ISG (výchozí: 502)."
+                }
             }
         },
         "error": {
@@ -21,7 +32,8 @@
             "cannot_connect": "Nelze se připojit k zařízení. Zkontrolujte prosím host a port."
         },
         "abort": {
-            "already_configured": "Zařízení je už nakonfigurované."
+            "already_configured": "Zařízení je už nakonfigurované.",
+            "reconfigure_successful": "Připojovací údaje byly úspěšně aktualizovány."
         }
     },
     "options": {

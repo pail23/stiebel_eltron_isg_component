@@ -13,6 +13,17 @@
                     "host": "The IP address or hostname of the Stiebel Eltron ISG web server.",
                     "port": "The Modbus TCP port of the ISG (default: 502)."
                 }
+            },
+            "reconfigure": {
+                "description": "Update the connection details for your Stiebel Eltron ISG heat pump.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
+                    "host": "The IP address or hostname of the Stiebel Eltron ISG web server.",
+                    "port": "The Modbus TCP port of the ISG (default: 502)."
+                }
             }
         },
         "error": {
@@ -21,7 +32,8 @@
             "cannot_connect": "Cannot connect to the device. Please check the host and port."
         },
         "abort": {
-            "already_configured": "Device is already configured"
+            "already_configured": "Device is already configured",
+            "reconfigure_successful": "Connection details updated successfully."
         }
     },
     "options": {

@@ -13,6 +13,17 @@
                     "host": "O endereço IP ou nome de host do servidor web ISG Stiebel Eltron.",
                     "port": "A porta TCP Modbus do ISG (predefinição: 502)."
                 }
+            },
+            "reconfigure": {
+                "description": "Atualize os dados de ligação para a sua bomba de calor Stiebel Eltron ISG.",
+                "data": {
+                    "host": "O endereço IP do ISG",
+                    "port": "Porta TCP para ligação ao ISG"
+                },
+                "data_description": {
+                    "host": "O endereço IP ou nome de host do servidor web ISG Stiebel Eltron.",
+                    "port": "A porta TCP Modbus do ISG (predefinição: 502)."
+                }
             }
         },
         "error": {
@@ -21,7 +32,8 @@
             "cannot_connect": "Não foi possível ligar ao dispositivo. Por favor verifique o host e a porta."
         },
         "abort": {
-            "already_configured": "Equipamento já se encontra configurado."
+            "already_configured": "Equipamento já se encontra configurado.",
+            "reconfigure_successful": "Detalhes de conexão atualizados com sucesso."
         }
     },
     "options": {

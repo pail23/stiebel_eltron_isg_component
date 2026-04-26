@@ -21,7 +21,8 @@
             "cannot_connect": "Cannot connect to the device. Please check the host and port."
         },
         "abort": {
-            "already_configured": "The device is already configured."
+            "already_configured": "The device is already configured.",
+            "reconfigure_successful": "Connection details updated successfully."
         }
     },
     "options": {
