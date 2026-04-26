@@ -531,7 +531,7 @@ LWZ_BINARY_SENSOR_TYPES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,  # Unused function argument: `hass`
+    _hass: HomeAssistant,
     entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:

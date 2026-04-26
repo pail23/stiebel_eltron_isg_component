@@ -10,6 +10,12 @@ DEFAULT_HOST_NAME = ""
 DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_PORT = 502
 
+# Config flow error keys
+ERROR_ALREADY_CONFIGURED = "already_configured"
+ERROR_INVALID_HOST = "invalid_host_IP"
+ERROR_CANNOT_CONNECT = "cannot_connect"
+ERROR_RECONFIGURE_FAILED = "reconfigure_failed"
+
 # Platforms
 PLATFORMS: list[Platform] = [
     Platform.BUTTON,

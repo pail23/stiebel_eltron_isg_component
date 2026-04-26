@@ -23,6 +23,10 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
+    ERROR_ALREADY_CONFIGURED,
+    ERROR_CANNOT_CONNECT,
+    ERROR_INVALID_HOST,
+    ERROR_RECONFIGURE_FAILED,
 )
 
 DATA_SCHEMA = vol.Schema(
@@ -98,18 +102,18 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
             name = user_input[CONF_NAME]
 
             if self._host_in_configuration_exists(host):
-                self._errors[CONF_HOST] = "already_configured"
+                self._errors[CONF_HOST] = ERROR_ALREADY_CONFIGURED
             elif self._name_in_configuration_exists(name):
-                self._errors[CONF_NAME] = "already_configured"
+                self._errors[CONF_NAME] = ERROR_ALREADY_CONFIGURED
             elif not host_valid(user_input[CONF_HOST]):
-                self._errors[CONF_HOST] = "invalid_host_IP"
+                self._errors[CONF_HOST] = ERROR_INVALID_HOST
             else:
                 try:
                     await get_controller_model(host, user_input[CONF_PORT])
                 except StiebelEltronModbusError:
-                    self._errors[CONF_HOST] = "cannot_connect"
+                    self._errors[CONF_HOST] = ERROR_CANNOT_CONNECT
                 except Exception:  # noqa: BLE001  # pymodbus raises non-StiebelEltronModbusError
-                    self._errors[CONF_HOST] = "cannot_connect"
+                    self._errors[CONF_HOST] = ERROR_CANNOT_CONNECT
                 else:
                     await self.async_set_unique_id(user_input[CONF_HOST])
                     self._abort_if_unique_id_configured()
@@ -135,7 +139,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
         )
 
         if config_entry is None:
-            return self.async_abort(reason="reconfigure_failed")
+            return self.async_abort(reason=ERROR_RECONFIGURE_FAILED)
 
         self._errors = {}
 
@@ -147,18 +151,18 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
             if host != config_entry.data[
                 CONF_HOST
             ] and self._host_in_configuration_exists(host):
-                self._errors[CONF_HOST] = "already_configured"
+                self._errors[CONF_HOST] = ERROR_ALREADY_CONFIGURED
 
             if not self._errors and not host_valid(host):
-                self._errors[CONF_HOST] = "invalid_host_IP"
+                self._errors[CONF_HOST] = ERROR_INVALID_HOST
 
             if not self._errors:
                 try:
                     await get_controller_model(host, port)
                 except StiebelEltronModbusError:
-                    self._errors[CONF_HOST] = "cannot_connect"
+                    self._errors[CONF_HOST] = ERROR_CANNOT_CONNECT
                 except Exception:  # noqa: BLE001  # pymodbus raises non-StiebelEltronModbusError
-                    self._errors[CONF_HOST] = "cannot_connect"
+                    self._errors[CONF_HOST] = ERROR_CANNOT_CONNECT
 
             if not self._errors:
                 self.hass.config_entries.async_update_entry(
@@ -172,9 +176,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
                 await self.hass.config_entries.async_reload(config_entry.entry_id)
                 return self.async_abort(reason="reconfigure_successful")
 
-            user_input = dict(config_entry.data)
-        else:
-            user_input = dict(config_entry.data)
+        user_input = dict(config_entry.data)
 
         return self.async_show_form(
             step_id="reconfigure",

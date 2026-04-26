@@ -6,7 +6,6 @@ https://github.com/pail23/stiebel_eltron_isg
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -84,7 +83,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Check if heat pump controller is a wpm model."""
         return self._model_id >= 390
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[IsgRegisters, float | int | None]:
         """Time to update."""
         try:
             if not self._api_client.is_connected:
@@ -94,6 +93,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 self.get_register_value(
                     EnergySystemInformationRegisters.CONTROLLER_IDENTIFICATION
                 )
+                or 0
             )
         except Exception as exception:
             raise UpdateFailed(exception) from exception
@@ -101,7 +101,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             return self._api_client._data  # noqa: SLF001
 
     @property
-    def raw_data(self) -> dict[str, Any]:
+    def raw_data(self) -> dict[IsgRegisters, float | int | None]:
         """Return the raw register data from the API client."""
         return self._api_client._data  # noqa: SLF001
 
@@ -109,7 +109,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Check if a value for the registers has been read. The async_udpate needs to be called first."""
         return self._api_client.has_register_value(register)
 
-    def get_register_value(self, register: IsgRegisters) -> float:
+    def get_register_value(self, register: IsgRegisters) -> float | int | None:
         """Get a value form the registers. The async_udpate needs to be called first."""
         return self._api_client.get_register_value(register)
 
