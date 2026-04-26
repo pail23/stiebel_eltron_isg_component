@@ -151,7 +151,9 @@ class StiebelEltronSensorEntityDescription(SensorEntityDescription):
     modbus_register: IsgRegisters
 
 
-def create_temperature_entity_description(name, key, modbus_register: IsgRegisters):
+def create_temperature_entity_description(
+    name: str, key: str, modbus_register: IsgRegisters
+) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a temperature sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
@@ -165,11 +167,11 @@ def create_temperature_entity_description(name, key, modbus_register: IsgRegiste
 
 
 def create_energy_entity_description(
-    name,
-    key,
+    name: str,
+    key: str,
     modbus_register: IsgRegisters,
-    visible_default=True,
-):
+    visible_default: bool = True,
+) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a energy sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
@@ -184,11 +186,11 @@ def create_energy_entity_description(
 
 
 def create_daily_energy_entity_description(
-    name,
-    key,
+    name: str,
+    key: str,
     modbus_register: IsgRegisters,
-    visible_default=True,
-):
+    visible_default: bool = True,
+) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a energy sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
@@ -202,7 +204,9 @@ def create_daily_energy_entity_description(
     )
 
 
-def create_humidity_entity_description(name, key, modbus_register: IsgRegisters):
+def create_humidity_entity_description(
+    name: str, key: str, modbus_register: IsgRegisters
+) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a humidity sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
@@ -214,7 +218,9 @@ def create_humidity_entity_description(name, key, modbus_register: IsgRegisters)
     )
 
 
-def create_pressure_entity_description(name, key, modbus_register: IsgRegisters):
+def create_pressure_entity_description(
+    name: str, key: str, modbus_register: IsgRegisters
+) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a pressure sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
@@ -226,7 +232,9 @@ def create_pressure_entity_description(name, key, modbus_register: IsgRegisters)
     )
 
 
-def create_volume_stream_entity_description(name, key, modbus_register: IsgRegisters):
+def create_volume_stream_entity_description(
+    name: str, key: str, modbus_register: IsgRegisters
+) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a volume stream sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
@@ -1015,7 +1023,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | float | None:
         """Return the state of the sensor."""
         if self.modbus_register == WpmSystemStateRegisters.ACTIVE_ERROR:
             error = int(self.coordinator.get_register_value(self.modbus_register))

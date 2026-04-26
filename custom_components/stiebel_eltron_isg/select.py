@@ -50,7 +50,7 @@ class StiebelEltronSelectEntityDescription(SelectEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     modbus_register: IsgRegisters
-    operation_modes: dict
+    operation_modes: dict[int, str]
 
 
 WPM_SELECT_TYPES = [
@@ -103,7 +103,7 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-def get_key_from_value(d, val) -> int | None:
+def get_key_from_value(d: dict[int, str], val: str) -> int | None:
     """Return the value for a given key from a dictionary."""
     keys = [k for k, v in d.items() if v == val]
     if keys:
@@ -132,12 +132,12 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
-    def options(self):
+    def options(self) -> list[str]:
         """Return the available options."""
         return list(self._options.values())
 
     @property
-    def current_option(self):
+    def current_option(self) -> str | None:
         """Return current option."""
         key = int(self.coordinator.get_register_value(self.modbus_register))
         return self._options.get(key)

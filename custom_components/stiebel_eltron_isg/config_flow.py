@@ -4,8 +4,14 @@ from __future__ import annotations
 
 import ipaddress
 import re
+from typing import Any
 
-from homeassistant.config_entries import ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
@@ -28,7 +34,7 @@ DATA_SCHEMA = vol.Schema(
 )
 
 
-def host_valid(host):
+def host_valid(host: str) -> bool:
     """Return True if hostname or IP address is valid."""
     try:
         if ipaddress.ip_address(host).version in (4, 6):
@@ -36,10 +42,11 @@ def host_valid(host):
     except ValueError:
         disallowed = re.compile(r"[^a-zA-Z\d\-]")
         return all(x and not disallowed.search(x) for x in host.split("."))
+    return False
 
 
 @callback
-def stiebeleltron_modbus_entries(hass: HomeAssistant):
+def stiebeleltron_modbus_entries(hass: HomeAssistant) -> set[Any]:
     """Return the hosts already configured."""
     return {
         entry.data[CONF_HOST] for entry in hass.config_entries.async_entries(DOMAIN)
@@ -47,38 +54,42 @@ def stiebeleltron_modbus_entries(hass: HomeAssistant):
 
 
 @callback
-def stiebeleltron_entries(hass: HomeAssistant):
+def stiebeleltron_entries(hass: HomeAssistant) -> set[Any]:
     """Return the hosts already configured."""
     return {
         entry.data[CONF_NAME] for entry in hass.config_entries.async_entries(DOMAIN)
     }
 
 
-class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
+class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[call-arg]
     """Config flow for Stiebel Eltron ISG."""
 
     VERSION = 1
     SUPPORTS_RECONFIGURE = True
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize."""
-        self._errors = {}
+        self._errors: dict[str, str] = {}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry):
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> StiebelEltronISGOptionsFlowHandler:
         """Return the options flow handler."""
         return StiebelEltronISGOptionsFlowHandler()
 
-    def _host_in_configuration_exists(self, host) -> bool:
+    def _host_in_configuration_exists(self, host: str) -> bool:
         """Return True if host exists in configuration."""
         return host in stiebeleltron_modbus_entries(self.hass)
 
-    def _name_in_configuration_exists(self, name) -> bool:
+    def _name_in_configuration_exists(self, name: str) -> bool:
         """Return True if name exists in configuration."""
         return name in stiebeleltron_entries(self.hass)
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         self._errors = {}
 
@@ -115,11 +126,16 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input[CONF_PORT] = DEFAULT_PORT
         return await self._show_config_form(user_input)
 
-    async def async_step_reconfigure(self, user_input=None):
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a reconfigure flow."""
         config_entry = self.hass.config_entries.async_get_entry(
             self.context["entry_id"]
         )
+
+        if config_entry is None:
+            return self.async_abort(reason="reconfigure_failed")
 
         self._errors = {}
 
@@ -171,7 +187,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def _show_config_form(self, user_input):
+    async def _show_config_form(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
@@ -189,7 +205,9 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
 class StiebelEltronISGOptionsFlowHandler(OptionsFlow):
     """Options flow for Stiebel Eltron ISG."""
 
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the options flow."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

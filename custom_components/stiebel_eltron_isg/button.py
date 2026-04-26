@@ -48,7 +48,7 @@ async def async_setup_entry(
     hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
-):
+) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data.coordinator
 
@@ -62,7 +62,12 @@ async def async_setup_entry(
 class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
     """stiebel_eltron_isg button class."""
 
-    def __init__(self, coordinator, config_entry, description):
+    def __init__(
+        self,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        description: StiebelEltronISGButtonDescription,
+    ) -> None:
         """Initialize the button."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
@@ -74,7 +79,7 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the button action."""
-        await self.entity_description.press_action(self.coordinator)
+        await self.entity_description.press_action(self.coordinator)  # type: ignore[attr-defined]
 
     @property
     def entity_registry_enabled_default(self) -> bool:

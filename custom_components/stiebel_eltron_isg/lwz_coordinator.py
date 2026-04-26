@@ -6,6 +6,7 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
+from homeassistant.core import HomeAssistant
 from pystiebeleltron.lwz import LwzStiebelEltronAPI, LwzSystemParametersRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
@@ -20,12 +21,12 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         name: str,
         host: str,
         port: int,
-        scan_interval,
-    ):
+        scan_interval: int,
+    ) -> None:
         """Initialize the Modbus hub."""
 
         super().__init__(

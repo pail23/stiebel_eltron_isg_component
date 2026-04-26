@@ -13,6 +13,13 @@ from pystiebeleltron import IsgRegisters
 from pystiebeleltron.lwz import LwzSystemStateRegisters
 from pystiebeleltron.wpm import WpmSystemStateRegisters
 
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.data import (
+    StiebelEltronIsgIntegrationConfigEntry,
+)
+
 from .const import (
     BUFFER_1_CHARGING_PUMP,
     BUFFER_2_CHARGING_PUMP,
@@ -72,7 +79,6 @@ from .const import (
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
 )
-from .data import StiebelEltronIsgIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
 PARALLEL_UPDATES = 1
@@ -528,7 +534,7 @@ async def async_setup_entry(
     hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
-):
+) -> None:
     """Set up the binary_sensor platform."""
     coordinator = entry.runtime_data.coordinator
 
@@ -558,10 +564,10 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator,
-        config_entry,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronBinarySensorEntityDescription,
-    ):
+    ) -> None:
         """Initialize the binary sensor."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
@@ -574,7 +580,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the binary_sensor is on."""
         return (
             int(self.coordinator.get_register_value(self.modbus_register))

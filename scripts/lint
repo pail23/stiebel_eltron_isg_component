@@ -7,3 +7,4 @@ cd "$(dirname "$0")/.."
 
 uvx ruff format .
 uvx ruff check . --fix
+uvx mypy custom_components

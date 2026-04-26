@@ -6,7 +6,9 @@ https://github.com/pail23/stiebel_eltron_isg
 
 from datetime import timedelta
 import logging
+from typing import Any
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pystiebeleltron import (
     EnergySystemInformationRegisters,
@@ -27,16 +29,16 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
 
     def __init__(
         self,
-        hass,
+        hass: HomeAssistant,
         api_client: StiebelEltronAPI,
         name: str,
         scan_interval: int,
-    ):
+    ) -> None:
         """Initialize the Modbus hub."""
         self._model_id: int = 0
         self._api_client = api_client
         self._scan_interval = timedelta(seconds=scan_interval)
-        self.platforms: list = []
+        self.platforms: list[str] = []
 
         super().__init__(hass, _LOGGER, name=name, update_interval=self._scan_interval)
 
@@ -82,7 +84,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Check if heat pump controller is a wpm model."""
         return self._model_id >= 390
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Time to update."""
         try:
             if not self._api_client.is_connected:
@@ -99,7 +101,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
             return self._api_client._data  # noqa: SLF001
 
     @property
-    def raw_data(self) -> dict:
+    def raw_data(self) -> dict[str, Any]:
         """Return the raw register data from the API client."""
         return self._api_client._data  # noqa: SLF001
 

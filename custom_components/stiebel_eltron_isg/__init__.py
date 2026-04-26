@@ -36,7 +36,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: StiebelEltronIsgIntegrationConfigEntry,
-):
+) -> bool:
     """Set up this integration using UI."""
 
     name = str(entry.data.get(CONF_NAME, entry.title))

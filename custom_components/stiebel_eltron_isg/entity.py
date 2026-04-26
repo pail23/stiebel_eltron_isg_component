@@ -40,7 +40,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinato
         self.modbus_register: IsgRegisters = IsgRegistersNone.NONE
 
     @property
-    def device_info(self):
+    def device_info(self) -> DeviceInfo:
         """Return the device info of the entity."""
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.name)},

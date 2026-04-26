@@ -21,6 +21,9 @@ from pystiebeleltron import IsgRegisters
 from pystiebeleltron.lwz import LwzSystemParametersRegisters, LwzSystemValuesRegisters
 from pystiebeleltron.wpm import WpmSystemParametersRegisters, WpmSystemValuesRegisters
 
+from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronModbusDataCoordinator,
+)
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
@@ -194,12 +197,14 @@ async def async_setup_entry(
     hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
-):
+) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data.coordinator
 
     if coordinator.is_wpm:
-        entities = [
+        entities: list[
+            StiebelEltronWPMClimateEntity | StiebelEltronLWZClimateEntity
+        ] = [
             StiebelEltronWPMClimateEntity(
                 coordinator,
                 entry,
@@ -310,10 +315,10 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
 
     def __init__(
         self,
-        coordinator,
-        config_entry,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronClimateEntityDescription,
-    ):
+    ) -> None:
         """Initialize the climate entity."""
         self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
         self._attr_preset_modes = [
@@ -353,7 +358,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Return current preset mode."""
         return WPM_TO_HA_PRESET.get(self.operation_mode)
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
         if new_mode is not None:
@@ -367,12 +372,11 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
 
     def __init__(
         self,
-        coordinator,
-        config_entry,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronClimateEntityDescription,
-    ):
+    ) -> None:
         """Initialize the climate entity."""
-        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
         self._attr_preset_modes = [
             PRESET_READY,
             PRESET_AUTO,
@@ -415,7 +419,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Return current preset mode."""
         return LWZ_TO_HA_PRESET.get(self.operation_mode)
 
-    async def async_set_preset_mode(self, preset_mode):
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
         if new_mode is not None:

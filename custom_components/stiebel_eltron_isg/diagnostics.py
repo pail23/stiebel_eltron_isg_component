@@ -12,8 +12,8 @@ from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
 
-CONFIG_FIELDS_TO_REDACT: list = []
-DATA_FIELDS_TO_REDACT: list = []
+CONFIG_FIELDS_TO_REDACT: list[str] = []
+DATA_FIELDS_TO_REDACT: list[str] = []
 
 
 async def async_get_config_entry_diagnostics(
@@ -23,7 +23,11 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data.coordinator
 
-    data = {k.value: v for k, v in coordinator.raw_data.items() if v is not None}
+    data = {
+        str(k.value) if hasattr(k, "value") else str(k): v
+        for k, v in coordinator.raw_data.items()
+        if v is not None
+    }
 
     return {
         "config_entry": async_redact_data(entry.data, CONFIG_FIELDS_TO_REDACT),
@@ -43,7 +47,11 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     coordinator = config_entry.runtime_data.coordinator
 
-    data = {k.value: v for k, v in coordinator.raw_data.items() if v is not None}
+    data = {
+        str(k.value) if hasattr(k, "value") else str(k): v
+        for k, v in coordinator.raw_data.items()
+        if v is not None
+    }
 
     return {
         "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),

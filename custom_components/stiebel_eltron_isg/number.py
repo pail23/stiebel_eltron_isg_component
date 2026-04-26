@@ -392,7 +392,7 @@ async def async_setup_entry(
     _hass: HomeAssistant,  # Unused function argument: `hass`
     entry: StiebelEltronIsgIntegrationConfigEntry,
     async_add_devices: AddEntitiesCallback,
-):
+) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data.coordinator
 
@@ -442,6 +442,6 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         await self.coordinator.write_register(self.modbus_register, value)
 
     @property
-    def native_value(self):
+    def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.coordinator.get_register_value(self.modbus_register)
