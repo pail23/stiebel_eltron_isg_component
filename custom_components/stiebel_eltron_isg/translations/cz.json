@@ -2,11 +2,16 @@
     "config": {
         "step": {
             "user": {
-                "description": "Pokud potřebujete pomoc s nastavením, podívejte se sem: https://github.com/pail23/stiebel_eltron_isg",
+                "description": "Zadejte přihlašovací údaje pro vaše tepelné čerpadlo Stiebel Eltron ISG.",
                 "data": {
+                    "name": "Název",
                     "host": "IP adresa Vašeho Stiebel Eltron ISG",
-                    "port": "TCP port Vašeho Stiebel Eltron ISG (e.g. 502)",
-                    "scan_interval": "Interval dotazování registrů modbus v sekundách"
+                    "port": "TCP port Vašeho Stiebel Eltron ISG (např. 502)"
+                },
+                "data_description": {
+                    "name": "Název pro tuto instanci tepelného čerpadla.",
+                    "host": "IP adresa nebo název hostitele webového serveru Stiebel Eltron ISG.",
+                    "port": "Modbus TCP port ISG (výchozí: 502)."
                 }
             }
         },
@@ -17,6 +22,18 @@
         },
         "abort": {
             "already_configured": "Zařízení je už nakonfigurované."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Interval dotazování (sekundy)"
+                },
+                "data_description": {
+                    "scan_interval": "Jak často jsou dotazovány Modbus registry, v sekundách."
+                }
+            }
         }
     },
     "entity": {

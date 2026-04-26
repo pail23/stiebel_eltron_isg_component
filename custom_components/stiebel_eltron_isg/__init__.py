@@ -5,13 +5,9 @@ https://github.com/pail23/stiebel_eltron_isg
 """
 
 import logging
-from datetime import timedelta
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.core_config import Config
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.loader import async_get_loaded_integration
 from pystiebeleltron import (
@@ -31,33 +27,13 @@ from custom_components.stiebel_eltron_isg.wpm_coordinator import (
 
 from .const import (
     DEFAULT_SCAN_INTERVAL,
-    DOMAIN,
     PLATFORMS,
 )
-
-SCAN_INTERVAL = timedelta(seconds=30)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-STIEBEL_ELTRON_ISG_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_PORT): cv.string,
-        vol.Optional(
-            CONF_SCAN_INTERVAL,
-            default=DEFAULT_SCAN_INTERVAL,
-        ): cv.positive_int,
-    },
-)
-
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: vol.Schema({cv.slug: STIEBEL_ELTRON_ISG_SCHEMA})},
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: Config):
+async def async_setup(hass: HomeAssistant, config: dict):
     """Set up this integration using YAML is not supported."""
     return True
 
@@ -68,11 +44,16 @@ async def async_setup_entry(
 ):
     """Set up this integration using UI."""
 
-    name = str(entry.data.get(CONF_NAME))
+    name = str(entry.data.get(CONF_NAME, entry.title))
     host = str(entry.data.get(CONF_HOST))
     port_data = entry.data.get(CONF_PORT)
     port = int(port_data) if port_data is not None else 502
-    scan_interval = int(entry.data[CONF_SCAN_INTERVAL])
+    scan_interval = int(
+        entry.options.get(
+            CONF_SCAN_INTERVAL,
+            entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        )
+    )
 
     try:
         model = await get_controller_model(host, port)

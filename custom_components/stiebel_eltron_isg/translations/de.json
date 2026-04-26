@@ -4,9 +4,14 @@
             "user": {
                 "description": "Geben Sie die Verbindungsdaten für Ihre Stiebel Eltron ISG Wärmepumpe ein.",
                 "data": {
+                    "name": "Name",
                     "host": "Die IP-Adresse des Stiebel Eltron ISG",
-                    "port": "Der TCP Port des Stiebel Eltron ISG (z.B. 502)",
-                    "scan_interval": "Das Abfrageintervall der modbus Register in Sekunden"
+                    "port": "Der TCP Port des Stiebel Eltron ISG (z.B. 502)"
+                },
+                "data_description": {
+                    "name": "Ein Name für diese Wärmepumpen-Instanz.",
+                    "host": "Die IP-Adresse oder der Hostname des Stiebel Eltron ISG Webservers.",
+                    "port": "Der Modbus-TCP-Port des ISG (Standard: 502)."
                 }
             }
         },
@@ -17,6 +22,18 @@
         },
         "abort": {
             "already_configured": "Das Gerät ist bereits konfiguriert."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Abfrageintervall (Sekunden)"
+                },
+                "data_description": {
+                    "scan_interval": "Wie oft die Modbus-Register abgefragt werden, in Sekunden."
+                }
+            }
         }
     },
     "entity": {

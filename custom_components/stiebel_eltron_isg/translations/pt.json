@@ -2,11 +2,16 @@
     "config": {
         "step": {
             "user": {
-                "description": "Caso precise de ajuda na configuração por favor consulte: https://github.com/pail23/stiebel_eltron_isg",
+                "description": "Introduza os dados de ligação para a sua bomba de calor Stiebel Eltron ISG.",
                 "data": {
-                    "host": "O ip do ISG",
-                    "port": "Porta TCP para ligação ao ISG",
-                    "scan_interval": "Espaço entre pesquisas em segundos"
+                    "name": "Nome",
+                    "host": "O endereço IP do ISG",
+                    "port": "Porta TCP para ligação ao ISG"
+                },
+                "data_description": {
+                    "name": "Um nome para esta instância da bomba de calor.",
+                    "host": "O endereço IP ou nome de host do servidor web ISG Stiebel Eltron.",
+                    "port": "A porta TCP Modbus do ISG (predefinição: 502)."
                 }
             }
         },
@@ -17,6 +22,18 @@
         },
         "abort": {
             "already_configured": "Equipamento já se encontra configurado."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervalo de pesquisa (segundos)"
+                },
+                "data_description": {
+                    "scan_interval": "Com que frequência os registos Modbus são consultados, em segundos."
+                }
+            }
         }
     },
     "entity": {

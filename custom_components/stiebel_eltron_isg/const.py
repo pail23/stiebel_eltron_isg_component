@@ -4,12 +4,8 @@ from homeassistant.const import Platform
 
 # Base component constants
 DEFAULT_NAME = "Stiebel Eltron ISG"
-NAME = DEFAULT_NAME
 ATTR_MANUFACTURER = "Stiebel Eltron"
 DOMAIN = "stiebel_eltron_isg"
-DOMAIN_DATA = f"{DOMAIN}_data"
-VERSION = "2025.1.0"
-ISSUE_URL = "https://github.com/pail23/stiebel_eltron_isg/issues"
 DEFAULT_HOST_NAME = ""
 DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_PORT = 502

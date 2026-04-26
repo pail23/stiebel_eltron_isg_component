@@ -2,11 +2,16 @@
     "config": {
         "step": {
             "user": {
-                "description": "Se hai bisogno di aiuto con la configurazione, dai un'occhiata qui: https://github.com/pail23/stiebel_eltron_isg",
+                "description": "Inserire i dettagli di connessione per la pompa di calore Stiebel Eltron ISG.",
                 "data": {
+                    "name": "Nome",
                     "host": "L'indirizzo IP del tuo ISG",
-                    "port": "La porta TCP a cui connettersi all'ISG",
-                    "scan_interval": "La frequenza di scansione dei registri Modbus in secondi"
+                    "port": "La porta TCP a cui connettersi all'ISG"
+                },
+                "data_description": {
+                    "name": "Un nome per questa istanza della pompa di calore.",
+                    "host": "L'indirizzo IP o il nome host del server web ISG Stiebel Eltron.",
+                    "port": "La porta TCP Modbus dell'ISG (predefinita: 502)."
                 }
             }
         },
@@ -17,6 +22,18 @@
         },
         "abort": {
             "already_configured": "Il dispositivo è già configurato"
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Intervallo di polling (secondi)"
+                },
+                "data_description": {
+                    "scan_interval": "La frequenza con cui vengono interrogati i registri Modbus, in secondi."
+                }
+            }
         }
     },
     "entity": {

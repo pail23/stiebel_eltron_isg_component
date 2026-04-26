@@ -4,9 +4,14 @@
             "user": {
                 "description": "Enter the connection details for your Stiebel Eltron ISG heat pump.",
                 "data": {
+                    "name": "Name",
                     "host": "The IP address of the Stiebel Eltron ISG",
-                    "port": "The TCP port of the Stiebel Eltron ISG (e.g. 502)",
-                    "scan_interval": "The polling interval of the modbus registers in seconds"
+                    "port": "The TCP port of the Stiebel Eltron ISG (e.g. 502)"
+                },
+                "data_description": {
+                    "name": "A name for this heat pump instance.",
+                    "host": "The IP address or hostname of the Stiebel Eltron ISG web server.",
+                    "port": "The Modbus TCP port of the ISG (default: 502)."
                 }
             }
         },
@@ -17,6 +22,18 @@
         },
         "abort": {
             "already_configured": "The device is already configured."
+        }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "data": {
+                    "scan_interval": "Polling interval (seconds)"
+                },
+                "data_description": {
+                    "scan_interval": "How often the Modbus registers are polled, in seconds."
+                }
+            }
         }
     },
     "entity": {

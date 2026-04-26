@@ -65,9 +65,15 @@ def skip_connect_fixture():
 @pytest.fixture(name="bypass_get_data")
 def bypass_get_data_fixture():
     """Skip calls to get data from API."""
-    with patch(
-        "custom_components.stiebel_eltron_isg.coordinator.StiebelEltronModbusDataCoordinator._async_update_data",
-        return_value={},
+    with (
+        patch(
+            "custom_components.stiebel_eltron_isg.coordinator.StiebelEltronModbusDataCoordinator._async_update_data",
+            return_value={},
+        ),
+        patch(
+            "custom_components.stiebel_eltron_isg.config_flow.get_controller_model",
+            return_value=ControllerModel.WPM_3i,
+        ),
     ):
         yield
 

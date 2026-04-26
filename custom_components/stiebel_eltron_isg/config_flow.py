@@ -6,7 +6,7 @@ import ipaddress
 import re
 
 import voluptuous as vol
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
@@ -24,7 +24,6 @@ DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_NAME): str,
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): int,
     },
 )
 
@@ -64,12 +63,18 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize."""
         self._errors = {}
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry):
+        """Return the options flow handler."""
+        return StiebelEltronISGOptionsFlowHandler()
+
     def _host_in_configuration_exists(self, host) -> bool:
         """Return True if host exists in configuration."""
         return host in stiebeleltron_modbus_entries(self.hass)
 
     def _name_in_configuration_exists(self, name) -> bool:
-        """Return True if host exists in configuration."""
+        """Return True if name exists in configuration."""
         return name in stiebeleltron_entries(self.hass)
 
     async def async_step_user(self, user_input=None):
@@ -107,10 +112,9 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input[CONF_NAME] = DEFAULT_NAME
         user_input[CONF_HOST] = DEFAULT_HOST_NAME
         user_input[CONF_PORT] = DEFAULT_PORT
-        user_input[CONF_SCAN_INTERVAL] = DEFAULT_SCAN_INTERVAL
         return await self._show_config_form(user_input)
 
-    async def _show_config_form(self, user_input):  # pylint: disable=unused-argument
+    async def _show_config_form(self, user_input):
         """Show the configuration form to edit location data."""
         return self.async_show_form(
             step_id="user",
@@ -119,11 +123,32 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_NAME, default=user_input[CONF_NAME]): str,
                     vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
                     vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=user_input[CONF_SCAN_INTERVAL],
-                    ): int,
                 },
             ),
             errors=self._errors,
+        )
+
+
+class StiebelEltronISGOptionsFlowHandler(OptionsFlow):
+    """Options flow for Stiebel Eltron ISG."""
+
+    async def async_step_init(self, user_input=None):
+        """Handle the options flow."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        scan_interval = self.config_entry.options.get(
+            CONF_SCAN_INTERVAL,
+            self.config_entry.data.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL),
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_SCAN_INTERVAL,
+                        default=scan_interval,
+                    ): int,
+                },
+            ),
         )
