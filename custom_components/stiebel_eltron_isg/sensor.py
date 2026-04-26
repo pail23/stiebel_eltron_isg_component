@@ -1,10 +1,9 @@
 """Sensor platform for stiebel_eltron_isg."""
 
+from dataclasses import dataclass
 import datetime
 import logging
-from dataclasses import dataclass
 
-import homeassistant.util.dt as dt_util
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -22,14 +21,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import (
-    EnergySystemInformationRegisters,
-    IsgRegisters,
-)
-from pystiebeleltron.lwz import (
-    LwzEnergyDataRegisters,
-    LwzSystemValuesRegisters,
-)
+import homeassistant.util.dt as dt_util
+from pystiebeleltron import EnergySystemInformationRegisters, IsgRegisters
+from pystiebeleltron.lwz import LwzEnergyDataRegisters, LwzSystemValuesRegisters
 from pystiebeleltron.wpm import (
     WpmEnergyDataRegisters,
     WpmSystemStateRegisters,

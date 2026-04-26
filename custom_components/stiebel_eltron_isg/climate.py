@@ -1,7 +1,7 @@
 """Climate platform for stiebel_eltron_isg."""
 
-import logging
 from dataclasses import dataclass
+import logging
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
@@ -18,23 +18,14 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import (
-    LwzSystemParametersRegisters,
-    LwzSystemValuesRegisters,
-)
-from pystiebeleltron.wpm import (
-    WpmSystemParametersRegisters,
-    WpmSystemValuesRegisters,
-)
+from pystiebeleltron.lwz import LwzSystemParametersRegisters, LwzSystemValuesRegisters
+from pystiebeleltron.wpm import WpmSystemParametersRegisters, WpmSystemValuesRegisters
 
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
 
-from .const import (
-    DOMAIN,
-    OPERATION_MODE,
-)
+from .const import DOMAIN, OPERATION_MODE
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -275,7 +266,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        raise NotImplementedError()
+        raise NotImplementedError
 
     @property
     def unique_id(self) -> str | None:

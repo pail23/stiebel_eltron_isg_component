@@ -6,10 +6,7 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
-from pystiebeleltron.lwz import (
-    LwzStiebelEltronAPI,
-    LwzSystemParametersRegisters,
-)
+from pystiebeleltron.lwz import LwzStiebelEltronAPI, LwzSystemParametersRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,

@@ -5,10 +5,7 @@ from dataclasses import dataclass
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from pystiebeleltron import (
-    IsgRegisters,
-    IsgRegistersNone,
-)
+from pystiebeleltron import IsgRegisters, IsgRegistersNone
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,

@@ -17,12 +17,12 @@
 # pytest includes fixtures OOB which you can use as defined on this page)
 from unittest.mock import patch
 
-import pytest
 from pymodbus.pdu.register_message import (
     ReadHoldingRegistersResponse,
     ReadInputRegistersResponse,
 )
 from pystiebeleltron import ControllerModel
+import pytest
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 

@@ -1,13 +1,10 @@
 """Button platform for stiebel_eltron_isg."""
 
-import logging
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+import logging
 
-from homeassistant.components.button import (
-    ButtonEntity,
-    ButtonEntityDescription,
-)
+from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback

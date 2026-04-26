@@ -2,14 +2,12 @@
 
 from unittest.mock import patch
 
-import pytest
 from homeassistant import config_entries
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.data_entry_flow import FlowResultType
+import pytest
 
-from custom_components.stiebel_eltron_isg.const import (
-    DOMAIN,
-)
+from custom_components.stiebel_eltron_isg.const import DOMAIN
 
 from .const import MOCK_CONFIG, MOCK_INVALID_IP_CONFIG
 
@@ -40,7 +38,7 @@ def bypass_setup_fixture():
 # Here we simiulate a successful config flow from the backend.
 # Note that we use the `bypass_get_data` fixture here because
 # we want the config flow validation to succeed during the test.
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_successful_config_flow(hass, bypass_get_data):
     """Test a successful config flow."""
     # Initialize a config flow
@@ -72,7 +70,7 @@ async def test_successful_config_flow(hass, bypass_get_data):
 # We use the `error_on_get_data` mock instead of `bypass_get_data`
 # (note the function parameters) to raise an Exception during
 # validation of the input config.
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_failed_config_flow(hass, error_on_get_data):
     """Test a failed config flow due to credential validation failure."""
     result = await hass.config_entries.flow.async_init(
@@ -92,7 +90,7 @@ async def test_failed_config_flow(hass, error_on_get_data):
     assert result["errors"] == {CONF_HOST: "invalid_host_IP"}
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_successful_reconfigure_flow(hass, bypass_get_data):
     """Test a successful reconfigure flow."""
     # First, create a config entry
@@ -138,7 +136,7 @@ async def test_successful_reconfigure_flow(hass, bypass_get_data):
     assert result["reason"] == "reconfigure_successful"
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_reconfigure_invalid_host(hass, bypass_get_data):
     """Test reconfigure flow with invalid host IP."""
     # Create a config entry
@@ -172,7 +170,7 @@ async def test_reconfigure_invalid_host(hass, bypass_get_data):
     assert result["errors"] == {CONF_HOST: "invalid_host_IP"}
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_reconfigure_cannot_connect(hass, bypass_get_data):
     """Test reconfigure flow with connection failure."""
     # Create a config entry
@@ -213,7 +211,7 @@ async def test_reconfigure_cannot_connect(hass, bypass_get_data):
     assert result["errors"] == {CONF_HOST: "cannot_connect"}
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_reconfigure_already_configured_host(hass, bypass_get_data):
     """Test reconfigure flow when trying to use an already configured host."""
     # Create first config entry

@@ -5,11 +5,11 @@ from __future__ import annotations
 import ipaddress
 import re
 
-import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
+import voluptuous as vol
 
 from .const import (
     DEFAULT_HOST_NAME,
@@ -97,7 +97,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
                     await get_controller_model(host, user_input[CONF_PORT])
                 except StiebelEltronModbusError:
                     self._errors[CONF_HOST] = "cannot_connect"
-                except Exception:  # pymodbus raises non-StiebelEltronModbusError on connection failures
+                except Exception:  # noqa: BLE001  # pymodbus raises non-StiebelEltronModbusError
                     self._errors[CONF_HOST] = "cannot_connect"
                 else:
                     await self.async_set_unique_id(user_input[CONF_HOST])
@@ -141,7 +141,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):
                     await get_controller_model(host, port)
                 except StiebelEltronModbusError:
                     self._errors[CONF_HOST] = "cannot_connect"
-                except Exception:  # pymodbus raises non-StiebelEltronModbusError on connection failures
+                except Exception:  # noqa: BLE001  # pymodbus raises non-StiebelEltronModbusError
                     self._errors[CONF_HOST] = "cannot_connect"
 
             if not self._errors:

@@ -10,12 +10,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import (
-    LwzSystemStateRegisters,
-)
-from pystiebeleltron.wpm import (
-    WpmSystemStateRegisters,
-)
+from pystiebeleltron.lwz import LwzSystemStateRegisters
+from pystiebeleltron.wpm import WpmSystemStateRegisters
 
 from .const import (
     BUFFER_1_CHARGING_PUMP,

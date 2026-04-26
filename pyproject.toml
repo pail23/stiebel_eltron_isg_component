@@ -29,62 +29,121 @@ addopts = "--disable-socket --allow-unix-socket"
 
 
 [tool.ruff]
-
-target-version = "py312"
+target-version = "py313"
 exclude = ["custom_components/stiebel_eltron_isg/python_stiebel_eltron"]
 
 [tool.ruff.lint]
-extend-select = [
-    "ASYNC",   # async
-    "B",       # Bug Bear
-    "C",       # complexity
-    "D",       # docstrings
-    "E",       # pycodestyle
-    "F",       # pyflakes/autoflake
-    "FLY",
-    "I",       # isort
-    "N",       # pep8-naming
-    "RUF",     # ruff rules
-    "ICN",     # import concentions
-    "PGH",     # Use specific rule codes when using noqa
-    "PL",
-    "PLC",     # Useless import alias.
-    "PLE",     # pylint error
-    "RET",
-    "SIM",     # simplify
-    "T20",     # flake8-print
-    "TRY",     # tryceratops
-    "UP",      # pyupgrade
-    "W",       # pycodestyle
-    "YTT",
+select = [
+  "A001",   # Variable is shadowing a Python builtin
+  "ASYNC",  # flake8-async
+  "B002",   # Python does not support the unary prefix increment
+  "B005",   # Using .strip() with multi-character strings is misleading
+  "B007",   # Loop control variable not used within loop body
+  "B009",   # Do not call getattr with a constant attribute value
+  "B014",   # Exception handler with duplicate exception
+  "B015",   # Pointless comparison
+  "B017",   # pytest.raises(BaseException) should be considered evil
+  "B018",   # Found useless attribute access
+  "B023",   # Function definition does not bind loop variable
+  "B024",   # Abstract base class with no abstract methods
+  "B026",   # Star-arg unpacking after a keyword argument
+  "B904",   # Use raise from to specify exception cause
+  "B905",   # zip() without an explicit strict= parameter
+  "BLE",
+  "C",      # complexity
+  "COM818", # Trailing comma on bare tuple prohibited
+  "D",      # docstrings
+  "E",      # pycodestyle
+  "F",      # pyflakes/autoflake
+  "FLY",    # flynt
+  "G",      # flake8-logging-format
+  "I",      # isort
+  "ICN001", # import conventions
+  "ISC",    # flake8-implicit-str-concat
+  "LOG",    # flake8-logging
+  "N804",   # First argument of a class method should be named cls
+  "N805",   # First argument of a method should be named self
+  "N815",   # Variable in class scope should not be mixedCase
+  "PERF",   # Perflint
+  "PGH",    # pygrep-hooks
+  "PIE",    # flake8-pie
+  "PL",     # pylint
+  "PT",     # flake8-pytest-style
+  "RET",    # flake8-return
+  "RSE",    # flake8-raise
+  "RUF005", # Consider iterable unpacking instead of concatenation
+  "RUF006", # Store a reference to the return value of asyncio.create_task
+  "RUF010", # Use explicit conversion flag
+  "RUF013", # PEP 484 prohibits implicit Optional
+  "RUF018", # Avoid assignment expressions in assert statements
+  "RUF019", # Unnecessary key check before dictionary access
+  "RUF100", # Unused noqa directive
+  "S102",   # Use of exec detected
+  "S307",   # suspicious-eval-usage
+  "S608",   # hardcoded-sql-expression
+  "SIM",    # flake8-simplify
+  "SLF",    # flake8-self
+  "T20",    # flake8-print
+  "TRY",    # tryceratops
+  "UP",     # pyupgrade
+  "W",      # pycodestyle
 ]
 
 ignore = [
-    "D202", # No blank lines allowed after function docstring
-    "D203", # 1 blank line required before class docstring
-    "D213", # Multi-line docstring summary should start at the second line
-    "D404", # First word of the docstring should not be This
-    "D406", # Section name should end with a newline
-    "D407", # Section name underlining
-    "D411", # Missing blank line before section
-    "E501", # line too long
-    "E731", # do not assign a lambda expression, use a def
-    "PLR2004",
-    "PLR0912",
-    "PLR0913",
-    "PLR0915",
+  "D202",    # No blank lines allowed after function docstring
+  "D203",    # 1 blank line required before class docstring
+  "D213",    # Multi-line docstring summary should start at the second line
+  "D406",    # Section name should end with a newline
+  "D407",    # Section name underlining
+  "D417",    # Missing argument descriptions in docstring
+  "E501",    # line too long
+  "PLC1901", # can be simplified to empty string; too many false positives
+  "PLR0911", # Too many return statements
+  "PLR0912", # Too many branches
+  "PLR0913", # Too many arguments to function call
+  "PLR0915", # Too many statements
+  "PLR2004", # Magic value used in comparison
+  "PLW2901", # Outer variable overwritten by inner target
+  "PT011",   # pytest.raises() is too broad
+  "PT018",   # Assertion should be broken down into multiple parts
+  "SIM102",  # Use a single if statement instead of nested if statements
+  "SIM103",  # Return the condition directly
+  "SIM108",  # Use ternary operator instead of if-else-block
+  "SIM115",  # Use context handler for opening files
+  "TC001",   # Move application import into a type-checking block
+  "TC002",   # Move third-party import into a type-checking block
+  "TC003",   # Move standard library import into a type-checking block
+  "TRY003",  # Avoid specifying long messages outside the exception class
+  "TRY400",  # Use logging.exception instead of logging.error
+  # May conflict with the formatter
+  "W191",
+  "E111",
+  "E114",
+  "E117",
+  "D206",
+  "D300",
+  "Q",
+  "COM812",
+  "COM819",
 ]
 
 [tool.ruff.lint.flake8-pytest-style]
 fixture-parentheses = false
-
-[tool.ruff.lint.pyupgrade]
-keep-runtime-typing = true
-
+mark-parentheses = false
 
 [tool.ruff.lint.mccabe]
 max-complexity = 25
 
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+combine-as-imports = true
+split-on-trailing-comma = false
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["D", "SLF001"]
+
 [tool.mypy]
 ignore_missing_imports = true
-

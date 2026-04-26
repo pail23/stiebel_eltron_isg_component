@@ -1,8 +1,8 @@
 """Test stiebel_eltron_isg setup process."""
 
-import pytest
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
@@ -18,7 +18,7 @@ from .const import MOCK_CONFIG
 # Home Assistant using the pytest_homeassistant_custom_component plugin.
 # Assertions allow you to verify that the return value of whatever is on the left
 # side of the assertion matches with the right side.
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_setup_unload_and_reload_entry(
     hass: HomeAssistant,
     bypass_get_data,
@@ -47,7 +47,7 @@ async def test_setup_unload_and_reload_entry(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     """Test creating a data coordinator for wpm models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
@@ -66,7 +66,7 @@ async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm) -> Non
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_energy_data_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
@@ -106,7 +106,7 @@ async def test_energy_data_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_climate_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
@@ -143,7 +143,7 @@ async def test_climate_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
@@ -167,7 +167,7 @@ async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz) -> Non
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.asyncio()
+@pytest.mark.asyncio
 async def test_energy_data_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")

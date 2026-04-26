@@ -10,9 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.loader import async_get_loaded_integration
-from pystiebeleltron import (
-    get_controller_model,
-)
+from pystiebeleltron import get_controller_model
 
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
@@ -25,10 +23,7 @@ from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
 )
 
-from .const import (
-    DEFAULT_SCAN_INTERVAL,
-    PLATFORMS,
-)
+from .const import DEFAULT_SCAN_INTERVAL, PLATFORMS
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

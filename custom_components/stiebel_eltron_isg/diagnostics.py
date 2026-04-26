@@ -23,9 +23,7 @@ async def async_get_config_entry_diagnostics(
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data.coordinator
 
-    data = {
-        k.value: v for k, v in coordinator._api_client._data.items() if v is not None
-    }
+    data = {k.value: v for k, v in coordinator.raw_data.items() if v is not None}
 
     return {
         "config_entry": async_redact_data(entry.data, CONFIG_FIELDS_TO_REDACT),
@@ -45,9 +43,7 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     coordinator = config_entry.runtime_data.coordinator
 
-    data = {
-        k.value: v for k, v in coordinator._api_client._data.items() if v is not None
-    }
+    data = {k.value: v for k, v in coordinator.raw_data.items() if v is not None}
 
     return {
         "config_entry": async_redact_data(config_entry.data, CONFIG_FIELDS_TO_REDACT),

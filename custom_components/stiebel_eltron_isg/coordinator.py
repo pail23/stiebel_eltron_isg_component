@@ -4,8 +4,8 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-import logging
 from datetime import timedelta
+import logging
 
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from pystiebeleltron import (
@@ -96,7 +96,12 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         except Exception as exception:
             raise UpdateFailed(exception) from exception
         else:
-            return self._api_client._data
+            return self._api_client._data  # noqa: SLF001
+
+    @property
+    def raw_data(self) -> dict:
+        """Return the raw register data from the API client."""
+        return self._api_client._data  # noqa: SLF001
 
     def has_register_value(self, register: IsgRegisters) -> bool:
         """Check if a value for the registers has been read. The async_udpate needs to be called first."""

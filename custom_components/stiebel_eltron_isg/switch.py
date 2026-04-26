@@ -1,7 +1,7 @@
 """Switch platform for stiebel_eltron_isg."""
 
-import logging
 from dataclasses import dataclass
+import logging
 from typing import Any
 
 from homeassistant.components.switch import (
@@ -11,13 +11,8 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import (
-    EnergyManagementSettingsRegisters,
-    IsgRegisters,
-)
-from pystiebeleltron.wpm import (
-    WpmSystemStateRegisters,
-)
+from pystiebeleltron import EnergyManagementSettingsRegisters, IsgRegisters
+from pystiebeleltron.wpm import WpmSystemStateRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,

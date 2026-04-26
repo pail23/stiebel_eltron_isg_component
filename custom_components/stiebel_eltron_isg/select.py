@@ -1,21 +1,14 @@
 """Select platform for stiebel_eltron_isg."""
 
-import logging
 from dataclasses import dataclass
+import logging
 
-from homeassistant.components.select import (
-    SelectEntity,
-    SelectEntityDescription,
-)
+from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import (
-    LwzSystemParametersRegisters,
-)
-from pystiebeleltron.wpm import (
-    WpmSystemParametersRegisters,
-)
+from pystiebeleltron.lwz import LwzSystemParametersRegisters
+from pystiebeleltron.wpm import WpmSystemParametersRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,

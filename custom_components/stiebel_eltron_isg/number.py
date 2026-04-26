@@ -1,24 +1,15 @@
 """Sensor number for stiebel_eltron_isg."""
 
-import logging
 from dataclasses import dataclass
+import logging
 
-from homeassistant.components.number import (
-    NumberEntity,
-    NumberEntityDescription,
-)
-from homeassistant.const import (
-    UnitOfTemperature,
-)
+from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import (
-    LwzSystemParametersRegisters,
-)
-from pystiebeleltron.wpm import (
-    WpmSystemParametersRegisters,
-)
+from pystiebeleltron.lwz import LwzSystemParametersRegisters
+from pystiebeleltron.wpm import WpmSystemParametersRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
