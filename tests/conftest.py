@@ -98,6 +98,19 @@ async def read_input_registers_wpm(
     system_info = [2, 390]
     if address >= 5000:
         return read_input_register(address, system_info, address - 5000, count)
+    if address == 3699:
+        power_consumption = [0] * 26
+        power_consumption[8] = 8
+        power_consumption[10] = 244
+        power_consumption[11] = 7
+        power_consumption[14] = 904
+        power_consumption[15] = 1
+        power_consumption[16] = 7
+        power_consumption[20] = 574
+        power_consumption[21] = 19
+        power_consumption[22] = 777
+        power_consumption[23] = 1
+        return read_input_register(address, power_consumption, 0, count)
     return ReadInputRegistersResponse(
         address=address, count=count, registers=list(range(count))
     )

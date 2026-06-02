@@ -285,6 +285,24 @@
             "consumed_water_heating_today": {
                 "name": "Consumed Water Heating Today"
             },
+            "consumed_heating_last_24h": {
+                "name": "Consumed Heating Last 24 Hours"
+            },
+            "consumed_heating_total_12m": {
+                "name": "Consumed Heating Total 12 Months"
+            },
+            "consumed_cooling_last_24h": {
+                "name": "Consumed Cooling Last 24 Hours"
+            },
+            "consumed_cooling_total_12m": {
+                "name": "Consumed Cooling Total 12 Months"
+            },
+            "consumed_water_heating_last_24h": {
+                "name": "Consumed Water Heating Last 24 Hours"
+            },
+            "consumed_water_heating_total_12m": {
+                "name": "Consumed Water Heating Total 12 Months"
+            },
             "produced_recovery_today": {
                 "name": "Produced Recovery Today"
             },

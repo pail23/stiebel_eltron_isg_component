@@ -7,11 +7,12 @@ https://github.com/pail23/stiebel_eltron_isg
 import logging
 
 from homeassistant.core import HomeAssistant
-from pystiebeleltron.wpm import WpmStiebelEltronAPI, WpmSystemParametersRegisters
+from pystiebeleltron.wpm import WpmSystemParametersRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
 )
+from custom_components.stiebel_eltron_isg.wpm_api import ExtendedWpmStiebelEltronAPI
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -30,7 +31,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
         """Initialize the Modbus hub."""
 
         super().__init__(
-            hass, WpmStiebelEltronAPI(host=host, port=port), name, scan_interval
+            hass, ExtendedWpmStiebelEltronAPI(host=host, port=port), name, scan_interval
         )
 
     async def async_reset_heatpump(self) -> None:
