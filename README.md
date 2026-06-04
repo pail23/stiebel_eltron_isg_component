@@ -59,11 +59,11 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 
 ***
 
-[stiebel_eltron_isg]: https://github.com/pail23/stiebel_eltron_isg
+[stiebel_eltron_isg]: https://github.com/pail23/stiebel_eltron_isg_component
 [buymecoffee]: https://www.buymeacoffee.com/pail23
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg
 [commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/stiebel_eltron_isg_component
-[commits]: https://github.com/pail23/stiebel_eltron_isg/commits/master
+[commits]: https://github.com/pail23/stiebel_eltron_isg_component/commits/master
 [hacs]: https://github.com/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen
@@ -71,5 +71,5 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [license-shield]: https://img.shields.io/github/license/pail23/stiebel_eltron_isg_component
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Paul%20Frank-green
 [releases-shield]: https://img.shields.io/github/v/release/pail23/stiebel_eltron_isg_component
-[releases]: https://github.com/pail23/stiebel_eltron_isg/releases
+[releases]: https://github.com/pail23/stiebel_eltron_isg_component/releases
 
