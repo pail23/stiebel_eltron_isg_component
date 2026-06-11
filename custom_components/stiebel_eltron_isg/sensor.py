@@ -26,6 +26,7 @@ from pystiebeleltron import EnergySystemInformationRegisters, IsgRegisters
 from pystiebeleltron.lwz import LwzEnergyDataRegisters, LwzSystemValuesRegisters
 from pystiebeleltron.wpm import (
     WpmEnergyDataRegisters,
+    WpmPowerConsumptionRegisters,
     WpmSystemStateRegisters,
     WpmSystemValuesRegisters,
 )
@@ -146,7 +147,6 @@ from .const import (
 from .entity import StiebelEltronISGEntity
 from .power_consumption import (
     PowerConsumptionSensorEntityDescription,
-    WpmPowerConsumptionRegisters,
     decode_power_consumption_value,
 )
 

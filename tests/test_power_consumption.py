@@ -4,9 +4,9 @@ from unittest.mock import Mock
 
 from custom_components.stiebel_eltron_isg.power_consumption import (
     PowerConsumptionSensorEntityDescription,
-    WpmPowerConsumptionRegisters,
     decode_power_consumption_value,
 )
+from pystiebeleltron.wpm import WpmPowerConsumptionRegisters
 
 
 def _coordinator(values: dict) -> Mock:
