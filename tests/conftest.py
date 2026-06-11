@@ -98,6 +98,20 @@ async def read_input_registers_wpm(
     system_info = [2, 390]
     if address >= 5000:
         return read_input_register(address, system_info, address - 5000, count)
+    if address == 3707:
+        # pystiebeleltron Power Consumption block: base 3707, count 16
+        power_consumption = [0] * 16
+        power_consumption[0] = 8
+        power_consumption[2] = 244
+        power_consumption[3] = 7
+        power_consumption[6] = 904
+        power_consumption[7] = 1
+        power_consumption[8] = 7
+        power_consumption[12] = 574
+        power_consumption[13] = 19
+        power_consumption[14] = 777
+        power_consumption[15] = 1
+        return read_input_register(address, power_consumption, 0, count)
     return ReadInputRegistersResponse(
         address=address, count=count, registers=list(range(count))
     )

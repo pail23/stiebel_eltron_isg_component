@@ -26,6 +26,7 @@ from pystiebeleltron import EnergySystemInformationRegisters, IsgRegisters
 from pystiebeleltron.lwz import LwzEnergyDataRegisters, LwzSystemValuesRegisters
 from pystiebeleltron.wpm import (
     WpmEnergyDataRegisters,
+    WpmPowerConsumptionRegisters,
     WpmSystemStateRegisters,
     WpmSystemValuesRegisters,
 )
@@ -59,11 +60,17 @@ from .const import (
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_STARTS,
     CONSUMED_HEATING,
+    CONSUMED_HEATING_LAST_24H,
     CONSUMED_HEATING_TODAY,
     CONSUMED_HEATING_TOTAL,
+    CONSUMED_HEATING_TOTAL_12M,
+    CONSUMED_COOLING_LAST_24H,
+    CONSUMED_COOLING_TOTAL_12M,
     CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING_TOTAL_12M,
     DEWPOINT_TEMPERATURE,
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
@@ -138,6 +145,10 @@ from .const import (
     VOLUME_STREAM_WP2,
 )
 from .entity import StiebelEltronISGEntity
+from .power_consumption import (
+    PowerConsumptionSensorEntityDescription,
+    decode_power_consumption_value,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -810,6 +821,67 @@ ENERGY_DAILY_SENSOR_TYPES = [
     ),
 ]
 
+POWER_CONSUMPTION_SENSOR_TYPES = [
+    PowerConsumptionSensorEntityDescription(
+        key=CONSUMED_HEATING_LAST_24H,
+        translation_key=CONSUMED_HEATING_LAST_24H,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:meter-electric",
+        fraction_register=WpmPowerConsumptionRegisters.HEATING_24H,
+    ),
+    PowerConsumptionSensorEntityDescription(
+        key=CONSUMED_HEATING_TOTAL_12M,
+        translation_key=CONSUMED_HEATING_TOTAL_12M,
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:meter-electric",
+        fraction_register=WpmPowerConsumptionRegisters.HEATING_12M_FRACTION,
+        whole_register=WpmPowerConsumptionRegisters.HEATING_12M_WHOLE,
+    ),
+    PowerConsumptionSensorEntityDescription(
+        key=CONSUMED_COOLING_LAST_24H,
+        translation_key=CONSUMED_COOLING_LAST_24H,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:snowflake",
+        fraction_register=WpmPowerConsumptionRegisters.COOLING_24H_FRACTION,
+        whole_register=WpmPowerConsumptionRegisters.COOLING_24H_WHOLE,
+    ),
+    PowerConsumptionSensorEntityDescription(
+        key=CONSUMED_COOLING_TOTAL_12M,
+        translation_key=CONSUMED_COOLING_TOTAL_12M,
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:snowflake",
+        fraction_register=WpmPowerConsumptionRegisters.COOLING_12M,
+    ),
+    PowerConsumptionSensorEntityDescription(
+        key=CONSUMED_WATER_HEATING_LAST_24H,
+        translation_key=CONSUMED_WATER_HEATING_LAST_24H,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        icon="mdi:water-boiler",
+        fraction_register=WpmPowerConsumptionRegisters.DHW_24H_FRACTION,
+        whole_register=WpmPowerConsumptionRegisters.DHW_24H_WHOLE,
+    ),
+    PowerConsumptionSensorEntityDescription(
+        key=CONSUMED_WATER_HEATING_TOTAL_12M,
+        translation_key=CONSUMED_WATER_HEATING_TOTAL_12M,
+        native_unit_of_measurement=UnitOfEnergy.MEGA_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        icon="mdi:water-boiler",
+        fraction_register=WpmPowerConsumptionRegisters.DHW_12M_FRACTION,
+        whole_register=WpmPowerConsumptionRegisters.DHW_12M_WHOLE,
+    ),
+]
+
 LWZ_ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
         "Produced Heating Today",
@@ -981,7 +1053,16 @@ async def async_setup_entry(
             )
             for description in ENERGY_DAILY_SENSOR_TYPES
         ]
+        power_consumption_entities = [
+            StiebelEltronISGPowerConsumptionSensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in POWER_CONSUMPTION_SENSOR_TYPES
+        ]
         entities.extend(daily_energy_entities)
+        entities.extend(power_consumption_entities)
     else:
         entities = [
             StiebelEltronISGSensor(
@@ -1054,3 +1135,29 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):
         ):
             return dt_util.utcnow()
         return None
+
+
+class StiebelEltronISGPowerConsumptionSensor(StiebelEltronISGEntity, SensorEntity):
+    """Decoded WPM power consumption statistic from Modbus block 3700-3725."""
+
+    entity_description: PowerConsumptionSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: StiebelEltronModbusDataCoordinator,
+        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        description: PowerConsumptionSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        self.entity_description = description
+        super().__init__(coordinator, config_entry)
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id of the sensor."""
+        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
+
+    @property
+    def native_value(self) -> float | None:
+        """Return the decoded power consumption value."""
+        return decode_power_consumption_value(self.coordinator, self.entity_description)

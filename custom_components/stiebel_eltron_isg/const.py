@@ -134,6 +134,13 @@ CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
 PREVIOUS_CONSUMED_WATER_HEATING_TOTAL = "previous_consumed_water_heating_total"
 CONSUMED_WATER_HEATING = "consumed_water_heating"
 
+CONSUMED_HEATING_LAST_24H = "consumed_heating_last_24h"
+CONSUMED_HEATING_TOTAL_12M = "consumed_heating_total_12m"
+CONSUMED_COOLING_LAST_24H = "consumed_cooling_last_24h"
+CONSUMED_COOLING_TOTAL_12M = "consumed_cooling_total_12m"
+CONSUMED_WATER_HEATING_LAST_24H = "consumed_water_heating_last_24h"
+CONSUMED_WATER_HEATING_TOTAL_12M = "consumed_water_heating_total_12m"
+
 CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 
 COMPRESSOR_STARTS = "compressor_starts"
