@@ -233,21 +233,23 @@ async def test_cooling_hysteresis_number_wpm(
         assert state.attributes["max"] == 5
         assert state.attributes["step"] == 0.1
 
-    # Setting the value must write to the matching hysteresis holding register.
-    with patch(
-        "custom_components.stiebel_eltron_isg.coordinator."
-        "StiebelEltronModbusDataCoordinator.write_register",
-        new=AsyncMock(),
-    ) as write_register:
-        await hass.services.async_call(
-            "number",
-            "set_value",
-            {"entity_id": area, "value": 3.0},
-            blocking=True,
-        )
-        write_register.assert_awaited_once_with(
-            WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_AREA, 3.0
-        )
+    # Setting a value must write to the matching hysteresis holding register.
+    for entity_id, register in (
+        (area, WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_AREA),
+        (fan, WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_FAN),
+    ):
+        with patch(
+            "custom_components.stiebel_eltron_isg.coordinator."
+            "StiebelEltronModbusDataCoordinator.write_register",
+            new=AsyncMock(),
+        ) as write_register:
+            await hass.services.async_call(
+                "number",
+                "set_value",
+                {"entity_id": entity_id, "value": 3.0},
+                blocking=True,
+            )
+            write_register.assert_awaited_once_with(register, 3.0)
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
