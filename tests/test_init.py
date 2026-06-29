@@ -1,7 +1,10 @@
 """Test stiebel_eltron_isg setup process."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from pystiebeleltron.wpm import WpmSystemParametersRegisters
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -201,6 +204,52 @@ async def test_energy_data_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
     state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating")
     assert state is not None
     assert state.state == "23043"
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.asyncio
+async def test_cooling_hysteresis_number_wpm(
+    hass: HomeAssistant, mock_modbus_wpm
+) -> None:
+    """Test the wpm cooling flow-temperature hysteresis number entities."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    area = "number.stiebel_eltron_isg_area_cooling_flow_temperature_hysteresis"
+    fan = "number.stiebel_eltron_isg_fan_cooling_flow_temperature_hysteresis"
+    for entity_id in (area, fan):
+        state = hass.states.get(entity_id)
+        assert state is not None, f"{entity_id} not created"
+        assert state.attributes["unit_of_measurement"] == "K"
+        assert state.attributes["min"] == 1
+        assert state.attributes["max"] == 5
+        assert state.attributes["step"] == 0.1
+
+    # Setting a value must write to the matching hysteresis holding register.
+    for entity_id, register in (
+        (area, WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_AREA),
+        (fan, WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_FAN),
+    ):
+        with patch(
+            "custom_components.stiebel_eltron_isg.coordinator."
+            "StiebelEltronModbusDataCoordinator.write_register",
+            new=AsyncMock(),
+        ) as write_register:
+            await hass.services.async_call(
+                "number",
+                "set_value",
+                {"entity_id": entity_id, "value": 3.0},
+                blocking=True,
+            )
+            write_register.assert_awaited_once_with(register, 3.0)
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

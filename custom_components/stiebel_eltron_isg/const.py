@@ -233,8 +233,10 @@ DUALMODE_TEMPERATURE_WW = "dualmode_temperature_ww"
 
 AREA_COOLING_TARGET_ROOM_TEMPERATURE = "area_cooling_target_room_temperature"
 AREA_COOLING_TARGET_FLOW_TEMPERATURE = "area_cooling_target_flow_temperature"
+AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS = "area_cooling_flow_temperature_hysteresis"
 FAN_COOLING_TARGET_ROOM_TEMPERATURE = "fan_cooling_target_room_temperature"
 FAN_COOLING_TARGET_FLOW_TEMPERATURE = "fan_cooling_target_flow_temperature"
+FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS = "fan_cooling_flow_temperature_hysteresis"
 
 FAN_LEVEL_DAY = "fan_level_comfort"
 FAN_LEVEL_NIGHT = "fan_level_eco"

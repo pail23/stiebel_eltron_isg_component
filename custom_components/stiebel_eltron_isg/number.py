@@ -16,6 +16,7 @@ from custom_components.stiebel_eltron_isg.coordinator import (
 )
 
 from .const import (
+    AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     AREA_COOLING_TARGET_FLOW_TEMPERATURE,
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
@@ -33,6 +34,7 @@ from .const import (
     ECO_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK3,
     ECO_WATER_TEMPERATURE_TARGET,
+    FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_LEVEL_DAY,
@@ -180,6 +182,16 @@ NUMBER_TYPES_WPM = [
         modbus_register=WpmSystemParametersRegisters.SET_FLOW_TEMPERATURE_AREA,
     ),
     StiebelEltronNumberEntityDescription(
+        key=AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        translation_key=AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        icon="mdi:thermometer-lines",
+        native_min_value=1,
+        native_max_value=5,
+        native_step=0.1,
+        modbus_register=WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_AREA,
+    ),
+    StiebelEltronNumberEntityDescription(
         key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
         translation_key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -198,6 +210,16 @@ NUMBER_TYPES_WPM = [
         native_max_value=25,
         native_step=0.1,
         modbus_register=WpmSystemParametersRegisters.SET_FLOW_TEMPERATURE_FAN,
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        translation_key=FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        icon="mdi:thermometer-lines",
+        native_min_value=1,
+        native_max_value=5,
+        native_step=0.1,
+        modbus_register=WpmSystemParametersRegisters.FLOW_TEMP_HYSTERESIS_FAN,
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK1,

@@ -549,11 +549,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Consigne température départ refroidissement surfacique"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Hystérésis température départ refroidissement surfacique"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Consigne température ambiante refroidissement ventilo"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Consigne température départ refroidissement ventilo"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Hystérésis température départ refroidissement ventilo"
             },
             "heating_curve_rise_hk1": {
                 "name": "Pente courbe de chauffe CC 1"
