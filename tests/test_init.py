@@ -128,6 +128,7 @@ async def test_compressor_runtime_wpm(hass: HomeAssistant, mock_modbus_wpm) -> N
         state = hass.states.get(entity_id)
         assert state is not None, f"{entity_id} not created"
         assert state.attributes["unit_of_measurement"] == "h"
+        assert state.attributes["state_class"] == "measurement"
         assert state.state == expected
 
     await hass.config_entries.async_unload(config_entry.entry_id)
