@@ -438,7 +438,15 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
+        """Set new value.
+
+        Skip the modbus write when the value is unchanged. These registers are
+        stored in the controller's EEPROM, so avoiding redundant writes (e.g.
+        an automation repeatedly setting the same value) protects its limited
+        write endurance.
+        """
+        if self.coordinator.get_register_value(self.modbus_register) == value:
+            return
         await self.coordinator.write_register(self.modbus_register, value)
 
     @property

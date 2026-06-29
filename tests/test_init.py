@@ -1,7 +1,10 @@
 """Test stiebel_eltron_isg setup process."""
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from pystiebeleltron.wpm import WpmSystemParametersRegisters
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -11,6 +14,8 @@ from custom_components.stiebel_eltron_isg.wpm_coordinator import (
 )
 
 from .const import MOCK_CONFIG
+
+_COORDINATOR = "custom_components.stiebel_eltron_isg.coordinator.StiebelEltronModbusDataCoordinator"
 
 
 # We can pass fixtures as defined in conftest.py to tell pytest to use the fixture
@@ -201,6 +206,50 @@ async def test_energy_data_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
     state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating")
     assert state is not None
     assert state.state == "23043"
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.asyncio
+async def test_number_skips_write_when_value_unchanged(
+    hass: HomeAssistant, mock_modbus_wpm
+) -> None:
+    """A number must not write to the register when the value is unchanged."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    entity_id = "number.stiebel_eltron_isg_area_cooling_flow_temperature_target"
+
+    # Pin the current register value to a known, in-range value.
+    with (
+        patch(f"{_COORDINATOR}.get_register_value", return_value=10.0),
+        patch(f"{_COORDINATOR}.write_register", new=AsyncMock()) as write_register,
+    ):
+        # Setting the same value must NOT write.
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": entity_id, "value": 10.0},
+            blocking=True,
+        )
+        write_register.assert_not_awaited()
+
+        # Setting a different value must write once.
+        await hass.services.async_call(
+            "number",
+            "set_value",
+            {"entity_id": entity_id, "value": 12.0},
+            blocking=True,
+        )
+        write_register.assert_awaited_once_with(
+            WpmSystemParametersRegisters.SET_FLOW_TEMPERATURE_AREA, 12.0
+        )
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
