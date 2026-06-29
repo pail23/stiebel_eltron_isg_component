@@ -549,11 +549,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Temperatura saída alvo arrefecimento superficial"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Temperatura saída histerese arrefecimento superficial"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Temperatura ambiente alvo arrefecimento fancoil"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Temperatura saída alvo arrefecimento fancoil"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Temperatura saída histerese arrefecimento fancoil"
             },
             "heating_curve_rise_hk1": {
                 "name": "Inclinação curva de aquecimento CC 1"

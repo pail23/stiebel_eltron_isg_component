@@ -549,11 +549,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Výstupná teplota Soll plošné chladenie"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Výstupná teplota hysterézia plošné chladenie"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Izbová teplota Soll fancoil chladenie"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Výstupná teplota Soll fancoil chladenie"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Výstupná teplota hysterézia fancoil chladenie"
             },
             "heating_curve_rise_hk1": {
                 "name": "Sklon vykurovacej krivky TO 1"

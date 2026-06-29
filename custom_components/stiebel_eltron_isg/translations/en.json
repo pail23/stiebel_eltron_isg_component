@@ -538,11 +538,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Area Cooling Flow Temperature Target"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Area Cooling Flow Temperature Hysteresis"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Fan Cooling Room Temperature Target"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Fan Cooling Flow Temperature Target"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Fan Cooling Flow Temperature Hysteresis"
             },
             "heating_curve_rise_hk1": {
                 "name": "Heating Curve Rise HK1"

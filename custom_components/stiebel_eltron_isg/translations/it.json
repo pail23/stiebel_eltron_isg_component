@@ -549,11 +549,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Temperatura mandata target raffreddamento superficiale"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Temperatura mandata isteresi raffreddamento superficiale"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Temperatura ambiente target raffreddamento fancoil"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Temperatura mandata target raffreddamento fancoil"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Temperatura mandata isteresi raffreddamento fancoil"
             },
             "heating_curve_rise_hk1": {
                 "name": "Pendenza curva climatica CC 1"

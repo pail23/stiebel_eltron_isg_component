@@ -549,11 +549,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Flächenkühlung Vorlauftemperatur Soll"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Flächenkühlung Vorlauftemperatur Hysterese"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Gebläsekühlung Raumtemperatur Soll"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Gebläsekühlung Vorlauftemperatur Soll"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Gebläsekühlung Vorlauftemperatur Hysterese"
             },
             "heating_curve_rise_hk1": {
                 "name": "Heizkurve Steilheit HK 1"
