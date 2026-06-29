@@ -314,6 +314,9 @@
             "compressor_heating_water": {
                 "name": "Compressor AQS"
             },
+            "compressor_cooling": {
+                "name": "Compressor Arrefecimento"
+            },
             "electrical_booster_heating": {
                 "name": "Resistência eléctrica aquecimento"
             },

@@ -314,6 +314,9 @@
             "compressor_heating_water": {
                 "name": "Verdichter Warmwasser"
             },
+            "compressor_cooling": {
+                "name": "Verdichter Kühlung"
+            },
             "electrical_booster_heating": {
                 "name": "Elektroheizung Heizung"
             },

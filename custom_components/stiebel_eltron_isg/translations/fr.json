@@ -314,6 +314,9 @@
             "compressor_heating_water": {
                 "name": "Compresseur eau chaude"
             },
+            "compressor_cooling": {
+                "name": "Compresseur refroidissement"
+            },
             "electrical_booster_heating": {
                 "name": "Appoint électrique chauffage"
             },

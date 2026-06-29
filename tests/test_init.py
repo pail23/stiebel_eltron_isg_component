@@ -107,6 +107,36 @@ async def test_energy_data_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
 
 
 @pytest.mark.asyncio
+async def test_compressor_runtime_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
+    """Test the wpm compressor runtime-hour sensors are exposed."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    # Mock input registers return their offset from the block start (3501),
+    # so VD_HEATING (3517) -> 16, VD_DHW (3518) -> 17, VD_COOLING (3519) -> 18.
+    # Pinning the exact values guards against mis-wiring to a different register.
+    for entity_id, expected in (
+        ("sensor.stiebel_eltron_isg_compressor_heating", "16"),
+        ("sensor.stiebel_eltron_isg_compressor_heating_water", "17"),
+        ("sensor.stiebel_eltron_isg_compressor_cooling", "18"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state is not None, f"{entity_id} not created"
+        assert state.attributes["unit_of_measurement"] == "h"
+        assert state.attributes["state_class"] == "measurement"
+        assert state.state == expected
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.asyncio
 async def test_climate_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     """Test creating a data coordinator for lwz models."""
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
