@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+import math
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import UnitOfTemperature
@@ -438,7 +439,20 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     async def async_set_native_value(self, value: float) -> None:
-        """Set new value."""
+        """Set new value.
+
+        Skip the modbus write when the value is unchanged. These registers are
+        stored in the controller's EEPROM, so avoiding redundant writes (e.g.
+        an automation repeatedly setting the same value) protects its limited
+        write endurance.
+
+        The comparison tolerates float imprecision: the library decodes scaled
+        registers as ``raw * 0.1``, which is not exactly equal to the decimal
+        value the user sets (e.g. ``71 * 0.1 != 7.1``).
+        """
+        current = self.coordinator.get_register_value(self.modbus_register)
+        if current is not None and math.isclose(current, value, abs_tol=1e-9):
+            return
         await self.coordinator.write_register(self.modbus_register, value)
 
     @property
