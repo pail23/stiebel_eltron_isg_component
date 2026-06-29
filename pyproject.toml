@@ -13,7 +13,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=8.3.5",
-    "ruff>=0.15.18",
+    "ruff>=0.15.20",
 ]
 
 [tool.pytest.ini_options]
