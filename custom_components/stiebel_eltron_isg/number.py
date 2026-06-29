@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+import math
 from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
@@ -490,11 +491,16 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         stored in the controller's EEPROM, so avoiding redundant writes (e.g.
         an automation repeatedly setting the same value) protects its limited
         write endurance.
+
+        The comparison tolerates float imprecision: the library decodes scaled
+        registers as ``raw * 0.1``, which is not exactly equal to the decimal
+        value the user sets (e.g. ``71 * 0.1 != 7.1``).
         """
         if self.write_field is None:
             return
 
-        if self.coordinator.get_value(self.modbus_register) == value:
+        current = self.coordinator.get_value(self.modbus_register)
+        if current is not None and math.isclose(current, value, abs_tol=1e-9):
             return
 
         await self.coordinator.write_component_value(
