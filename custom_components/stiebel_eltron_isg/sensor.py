@@ -55,6 +55,7 @@ from .const import (
     ACTUAL_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_HK3,
     ACTUAL_TEMPERATURE_WATER,
+    COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_STARTS,
@@ -241,6 +242,20 @@ def create_volume_stream_entity_description(
         translation_key=key,
         native_unit_of_measurement="l/min",
         icon="mdi:gauge",
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=modbus_register,
+    )
+
+
+def create_runtime_entity_description(
+    name: str, key: str, modbus_register: IsgRegisters
+) -> StiebelEltronSensorEntityDescription:
+    """Create an entry description for a runtime hours sensor."""
+    return StiebelEltronSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        native_unit_of_measurement="h",
+        icon="mdi:hours-24",
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=modbus_register,
     )
@@ -704,6 +719,24 @@ ENERGY_SENSOR_TYPES = [
     ),
 ]
 
+WPM_COMPRESSOR_SENSOR_TYPES = [
+    create_runtime_entity_description(
+        "Compressor Heating",
+        COMPRESSOR_HEATING,
+        WpmEnergyDataRegisters.VD_HEATING,
+    ),
+    create_runtime_entity_description(
+        "Compressor Heating Water",
+        COMPRESSOR_HEATING_WATER,
+        WpmEnergyDataRegisters.VD_DHW,
+    ),
+    create_runtime_entity_description(
+        "Compressor Cooling",
+        COMPRESSOR_COOLING,
+        WpmEnergyDataRegisters.VD_COOLING,
+    ),
+]
+
 LWZ_ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         "Produced Heating Total",
@@ -944,7 +977,10 @@ LWZ_VENTILATION_SENSOR_TYPES = [
 
 
 WPM_SENSOR_TYPES = (
-    SYSTEM_VALUES_SENSOR_TYPES + ENERGYMANAGEMENT_SENSOR_TYPES + ENERGY_SENSOR_TYPES
+    SYSTEM_VALUES_SENSOR_TYPES
+    + ENERGYMANAGEMENT_SENSOR_TYPES
+    + ENERGY_SENSOR_TYPES
+    + WPM_COMPRESSOR_SENSOR_TYPES
 )
 
 LWZ_SENSOR_TYPES = (

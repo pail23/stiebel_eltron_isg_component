@@ -314,6 +314,9 @@
             "compressor_heating_water": {
                 "name": "Kompresor TUV"
             },
+            "compressor_cooling": {
+                "name": "Kompresor chlazení"
+            },
             "electrical_booster_heating": {
                 "name": "Elektrický dohřev topení"
             },
