@@ -226,16 +226,20 @@ async def test_number_skips_write_when_value_unchanged(
 
     entity_id = "number.stiebel_eltron_isg_area_cooling_flow_temperature_target"
 
-    # Pin the current register value to a known, in-range value.
+    # The library decodes data_type 2 registers as float(raw) * 0.1, which is
+    # not exactly equal to the decimal the user sets (e.g. 71 * 0.1 != 7.1).
+    # The unchanged check must tolerate that float imprecision.
+    current = 71 * 0.1  # the value the coordinator would report for 7.1
+    assert current != 7.1
     with (
-        patch(f"{_COORDINATOR}.get_register_value", return_value=10.0),
+        patch(f"{_COORDINATOR}.get_register_value", return_value=current),
         patch(f"{_COORDINATOR}.write_register", new=AsyncMock()) as write_register,
     ):
-        # Setting the same value must NOT write.
+        # Setting the same value (within float tolerance) must NOT write.
         await hass.services.async_call(
             "number",
             "set_value",
-            {"entity_id": entity_id, "value": 10.0},
+            {"entity_id": entity_id, "value": 7.1},
             blocking=True,
         )
         write_register.assert_not_awaited()
