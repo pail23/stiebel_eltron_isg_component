@@ -12,6 +12,8 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 
+_COORDINATOR = "custom_components.stiebel_eltron_isg.coordinator.StiebelEltronModbusDataCoordinator"
+
 
 async def test_async_setup_entry_success(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
