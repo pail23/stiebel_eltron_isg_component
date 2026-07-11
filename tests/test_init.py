@@ -21,7 +21,7 @@ from .const import MOCK_CONFIG
 @pytest.mark.asyncio
 async def test_setup_unload_and_reload_entry(
     hass: HomeAssistant,
-    bypass_get_data,
+    mock_modbus_wpm,
     get_model_wpm,
 ):
     """Test entry setup and unload."""
