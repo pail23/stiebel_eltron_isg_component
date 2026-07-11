@@ -129,10 +129,17 @@ Recommended order:
 
 ## Phase C: clean-up
 
-- remove compatibility adapter
-- remove any enum-based types/imports
-- simplify coordinator to pure 0.5.1 API usage
-- update docs and diagnostics accordingly
+- [x] remove compatibility adapter for old constructor/probe signatures
+- [ ] remove any enum-based types/imports from platforms
+- [x] simplify coordinator setup path to pure 0.5.1 API usage
+- [~] update docs and diagnostics accordingly
+
+Current state:
+
+- `probe.py` now uses only the 0.5.1 unit-based probe (`connect_tcp(...).for_unit(1)`).
+- `client_bridge.py` is now a pure 0.5.1 API wrapper (no legacy host/port constructor path).
+- `lwz_coordinator.py` / `wpm_coordinator.py` no longer use enum fallback for heat pump reset writes.
+- Platform descriptions have been migrated to callable accessors, but several files still keep enum/shim compatibility imports that should be removed in a final pass.
 
 ## Dependency and packaging updates
 

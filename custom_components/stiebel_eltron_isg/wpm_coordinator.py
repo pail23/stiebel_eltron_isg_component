@@ -5,28 +5,16 @@ https://github.com/pail23/stiebel_eltron_isg
 """
 
 import logging
-from typing import Any
 
 from homeassistant.core import HomeAssistant
 from pystiebeleltron import wpm as wpm_module
 
-from custom_components.stiebel_eltron_isg.client_bridge import StiebelEltronApiBridge
+from custom_components.stiebel_eltron_isg.client_bridge import StiebelEltronApiClient
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
 )
 
-
-class _RegisterShim:
-    def __getattr__(self, name: str) -> str:
-        return name
-
-
 WpmStiebelEltronAPI = wpm_module.WpmStiebelEltronAPI
-WpmSystemParametersRegisters: Any = getattr(
-    wpm_module,
-    "WpmSystemParametersRegisters",
-    _RegisterShim(),
-)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -46,7 +34,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
 
         super().__init__(
             hass,
-            StiebelEltronApiBridge(WpmStiebelEltronAPI, host=host, port=port),
+            StiebelEltronApiClient(WpmStiebelEltronAPI, host=host, port=port),
             name,
             scan_interval,
         )
@@ -58,5 +46,4 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
             "system_parameters",
             "reset",
             3,
-            getattr(WpmSystemParametersRegisters, "RESET", None),
         )

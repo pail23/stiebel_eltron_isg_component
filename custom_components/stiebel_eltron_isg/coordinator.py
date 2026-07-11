@@ -4,25 +4,13 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
+from collections.abc import Callable
 from datetime import timedelta
 import logging
 from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from pystiebeleltron import __dict__ as pystiebeleltron_symbols
-
-IsgRegisters = pystiebeleltron_symbols.get("IsgRegisters", Any)
-
-
-class _EnergySystemInfoRegisters:
-    CONTROLLER_IDENTIFICATION = None
-
-
-EnergySystemInformationRegisters = pystiebeleltron_symbols.get(
-    "EnergySystemInformationRegisters",
-    _EnergySystemInfoRegisters(),
-)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -57,23 +45,10 @@ class StiebelEltronApiClient(Protocol):
         """Refresh values."""
         ...
 
-    def has_register_value(self, register: Any) -> bool:
-        """Return whether register has known value."""
-        ...
-
-    def get_register_value(self, register: Any) -> float | int | None:
-        """Return register value."""
-        ...
-
-    async def write_register_value(self, register: Any, value: int | float) -> None:
-        """Write register value."""
-        ...
-
     def get_component_value(
         self,
         component: str,
         field: str,
-        legacy_register: Any | None = None,
     ) -> float | int | None:
         """Return value for a component field."""
         ...
@@ -83,7 +58,6 @@ class StiebelEltronApiClient(Protocol):
         component: str,
         field: str,
         value: int | float,
-        legacy_register: Any | None = None,
     ) -> None:
         """Write a component field."""
         ...
@@ -161,11 +135,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 await self._api_client.connect()
             await self._api_client.async_update()
             self._model_id = int(
-                self.get_component_value(
-                    "energy_system_information",
-                    "controller_identification",
-                    EnergySystemInformationRegisters.CONTROLLER_IDENTIFICATION,
-                )
+                self.get_component_value("energy_system_information", "controller_identification")
                 or 0
             )
         except Exception as exception:
@@ -178,41 +148,49 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         """Return the raw register data from the API client."""
         return self._api_client.raw_data
 
-    def has_register_value(self, register: Any) -> bool:
-        """Check if a value for the registers has been read. The async_udpate needs to be called first."""
-        return self._api_client.has_register_value(register)
+    @property
+    def api_client(self) -> StiebelEltronApiClient:
+        """Return the wrapped API client/bridge instance."""
+        return self._api_client
 
-    def get_register_value(self, register: Any) -> float | int | None:
-        """Get a value form the registers. The async_udpate needs to be called first."""
-        return self._api_client.get_register_value(register)
+    def get_value(
+        self,
+        value_reference: Any | Callable[[StiebelEltronApiClient], float | int | None],
+    ) -> float | int | None:
+        """Return a value from a callable accessor."""
+        if not callable(value_reference):
+            return None
 
-    async def write_register(self, register: Any, value: int | float) -> None:
-        """Write a modbus register."""
-        await self._api_client.write_register_value(register, value)
+        api = getattr(self._api_client, "api", self._api_client)
+        try:
+            value = value_reference(api)
+        except Exception:
+            return None
+        return value if isinstance(value, (int, float)) else None
+
+    def has_value(
+        self,
+        value_reference: Any | Callable[[StiebelEltronApiClient], float | int | None],
+    ) -> bool:
+        """Check if a callable accessor has a value."""
+        return self.get_value(value_reference) is not None
 
     def get_component_value(
         self,
         component: str,
         field: str,
-        legacy_register: Any | None = None,
     ) -> float | int | None:
-        """Read a value from a component field with optional legacy fallback."""
-        return self._api_client.get_component_value(component, field, legacy_register)
+        """Read a value from a component field."""
+        return self._api_client.get_component_value(component, field)
 
     async def write_component_value(
         self,
         component: str,
         field: str,
         value: int | float,
-        legacy_register: Any | None = None,
     ) -> None:
-        """Write a value to a component field with optional legacy fallback."""
-        await self._api_client.write_component_value(
-            component,
-            field,
-            value,
-            legacy_register,
-        )
+        """Write a value to a component field."""
+        await self._api_client.write_component_value(component, field, value)
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""

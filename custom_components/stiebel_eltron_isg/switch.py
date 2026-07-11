@@ -11,7 +11,6 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import __dict__ as pystiebeleltron_symbols, wpm as wpm_module
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -34,43 +33,20 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-class _RegisterRef:
-    def __init__(self, owner: str, name: str) -> None:
-        self._owner = owner
-        self.name = name
-
-
-class _RegisterShim:
-    def __init__(self, owner: str) -> None:
-        self._owner = owner
-
-    def __getattr__(self, name: str) -> Any:
-        return _RegisterRef(self._owner, name)
-
-
-IsgRegisters = pystiebeleltron_symbols.get("IsgRegisters", Any)
-EnergyManagementSettingsRegisters = pystiebeleltron_symbols.get(
-    "EnergyManagementSettingsRegisters",
-    _RegisterShim("EnergyManagementSettingsRegisters"),
-)
-WpmSystemStateRegisters = getattr(
-    wpm_module,
-    "WpmSystemStateRegisters",
-    _RegisterShim("WpmSystemStateRegisters"),
-)
-
-
-class WpmCirculationPumpRegisters:
-    """Registers related to the circulation pump in the WPM system."""
-
-    DHW_CIRCULATION_PUMP = 47012
-
-
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     modbus_register: Any
+    write_component: str | None = None
+    write_field: str | None = None
+
+    def __post_init__(self) -> None:
+        """Ensure value references are lambda-based."""
+        if callable(self.modbus_register):
+            return
+
+        raise TypeError("modbus_register must be a lambda expression")
 
 
 SWITCH_TYPES = [
@@ -78,19 +54,25 @@ SWITCH_TYPES = [
         key=SG_READY_ACTIVE,
         translation_key=SG_READY_ACTIVE,
         device_class=SwitchDeviceClass.SWITCH,
-        modbus_register=EnergyManagementSettingsRegisters.SWITCH_SG_READY_ON_AND_OFF,
+        modbus_register=lambda api: api.energy_management_settings.switch_sg_ready_on_and_off,
+        write_component="energy_management_settings",
+        write_field="switch_sg_ready_on_and_off",
     ),
     StiebelEltronSwitchEntityDescription(
         key=SG_READY_INPUT_1,
         translation_key=SG_READY_INPUT_1,
         device_class=SwitchDeviceClass.SWITCH,
-        modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
+        modbus_register=lambda api: api.energy_management_settings.sg_ready_input_1,
+        write_component="energy_management_settings",
+        write_field="sg_ready_input_1",
     ),
     StiebelEltronSwitchEntityDescription(
         key=SG_READY_INPUT_2,
         translation_key=SG_READY_INPUT_2,
         device_class=SwitchDeviceClass.SWITCH,
-        modbus_register=EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
+        modbus_register=lambda api: api.energy_management_settings.sg_ready_input_2,
+        write_component="energy_management_settings",
+        write_field="sg_ready_input_2",
     ),
 ]
 
@@ -122,7 +104,9 @@ async def async_setup_entry(
                     key=CIRCULATION_PUMP,
                     translation_key=CIRCULATION_PUMP,
                     device_class=SwitchDeviceClass.SWITCH,
-                    modbus_register=WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
+                    modbus_register=lambda api: api.system_state.dhw_circulation_pump,
+                    write_component="system_state",
+                    write_field="dhw_circulation_pump",
                 ),
             )
         )
@@ -143,6 +127,8 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         self.entity_description = description
         super().__init__(coordinator, config_entry)
         self.modbus_register = description.modbus_register
+        self.write_component = description.write_component
+        self.write_field = description.write_field
 
     @property
     def unique_id(self) -> str | None:
@@ -152,95 +138,50 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        value = self.coordinator.get_component_value(
-            _component_name(self.modbus_register),
-            _to_field_name(self.modbus_register),
-            self.modbus_register,
-        )
+        value = self.coordinator.get_value(self.modbus_register)
         if value is not None:
             return value != 0
         return False
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if self.modbus_register == WpmSystemStateRegisters.DHW_CIRCULATION_PUMP:
-            # For the circulation pump, we need to set the value to 1 to turn it on
-            await self.coordinator.write_component_value(
-                _component_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
-                _to_field_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
-                1,
-                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
-            )
-        else:
-            await self.coordinator.write_component_value(
-                _component_name(self.modbus_register),
-                _to_field_name(self.modbus_register),
-                1,
-                self.modbus_register,
-            )
+        if self.write_component is None or self.write_field is None:
+            return
+
+        await self.coordinator.write_component_value(
+            self.write_component,
+            self.write_field,
+            1,
+        )
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.modbus_register == WpmSystemStateRegisters.DHW_CIRCULATION_PUMP:
-            # For the circulation pump, we need to set the value to 1 to turn it on
-            await self.coordinator.write_component_value(
-                _component_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
-                _to_field_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
-                0,
-                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
-            )
-        else:
-            await self.coordinator.write_component_value(
-                _component_name(self.modbus_register),
-                _to_field_name(self.modbus_register),
-                0,
-                self.modbus_register,
-            )
+        if self.write_component is None or self.write_field is None:
+            return
+
+        await self.coordinator.write_component_value(
+            self.write_component,
+            self.write_field,
+            0,
+        )
         await self.async_update()
 
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.modbus_register in (
-            WpmSystemStateRegisters.DHW_CIRCULATION_PUMP,
-            EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
-            EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
+        if self.entity_description.key in (
+            CIRCULATION_PUMP,
+            SG_READY_INPUT_1,
+            SG_READY_INPUT_2,
         ):
-            try:
-                has_value = self.coordinator.has_register_value(self.modbus_register)
-            except NotImplementedError:
-                has_value = (
-                    self.coordinator.get_component_value(
-                        _component_name(self.modbus_register),
-                        _to_field_name(self.modbus_register),
-                        self.modbus_register,
-                    )
-                    is not None
-                )
+            has_value = self.coordinator.has_value(self.modbus_register)
 
             if not has_value:
                 _LOGGER.debug(
                     "Switch %s should not be available because register %s is not available",
                     self.entity_description.key,
-                    self.modbus_register,
+                    self.entity_description.key,
                 )
             return True
         return super().available
-
-
-def _to_field_name(register: Any) -> str:
-    """Convert old enum-style register names to component field names."""
-    register_name = getattr(register, "name", str(register))
-    return register_name.lower()
-
-
-def _component_name(register: Any) -> str:
-    """Resolve component name from register type name."""
-    register_type_name = getattr(register, "_owner", type(register).__name__)
-
-    if "EnergyManagementSettings" in register_type_name:
-        return "energy_management_settings"
-    if "SystemState" in register_type_name:
-        return "system_state"
-    return "system_parameters"

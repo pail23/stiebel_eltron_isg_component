@@ -9,20 +9,6 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-try:
-    from pystiebeleltron import IsgRegisters
-    from pystiebeleltron.lwz import LwzSystemParametersRegisters
-    from pystiebeleltron.wpm import WpmSystemParametersRegisters
-except ImportError:
-    IsgRegisters = object
-
-    class _RegisterShim:
-        def __getattr__(self, name: str) -> str:
-            return name
-
-    LwzSystemParametersRegisters = _RegisterShim()
-    WpmSystemParametersRegisters = _RegisterShim()
-
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
 )
@@ -68,6 +54,15 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     modbus_register: Any
+    write_component: str = "system_parameters"
+    write_field: str | None = None
+
+    def __post_init__(self) -> None:
+        """Ensure value references are lambda-based."""
+        if callable(self.modbus_register):
+            return
+
+        raise TypeError("modbus_register must be a lambda expression")
 
 
 NUMBER_TYPES_WPM = [
@@ -79,7 +74,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_1,
+        modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_1,
+        write_field="comfort_temperature_hk_1",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK1,
@@ -89,7 +85,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_1,
+        modbus_register=lambda api: api.system_parameters.eco_temperature_hk_1,
+        write_field="eco_temperature_hk_1",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK2,
@@ -99,7 +96,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_2,
+        modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_2,
+        write_field="comfort_temperature_hk_2",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK2,
@@ -109,7 +107,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_2,
+        modbus_register=lambda api: api.system_parameters.eco_temperature_hk_2,
+        write_field="eco_temperature_hk_2",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK3,
@@ -119,7 +118,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_3,
+        modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_3,
+        write_field="comfort_temperature_hk_3",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK3,
@@ -129,7 +129,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_3,
+        modbus_register=lambda api: api.system_parameters.eco_temperature_hk_3,
+        write_field="eco_temperature_hk_3",
     ),
     StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_HZG,
@@ -139,7 +140,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=-20,
         native_max_value=40,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.DUAL_MODE_TEMP_HZG,
+        modbus_register=lambda api: api.system_parameters.dual_mode_temp_hzg,
+        write_field="dual_mode_temp_hzg",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_WATER_TEMPERATURE_TARGET,
@@ -149,7 +151,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE,
+        modbus_register=lambda api: api.system_parameters.comfort_temperature,
+        write_field="comfort_temperature",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_WATER_TEMPERATURE_TARGET,
@@ -159,7 +162,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.ECO_TEMPERATURE,
+        modbus_register=lambda api: api.system_parameters.eco_temperature,
+        write_field="eco_temperature",
     ),
     StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_WW,
@@ -169,7 +173,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=-20,
         native_max_value=40,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.DUAL_MODE_TEMP_WW,
+        modbus_register=lambda api: api.system_parameters.dual_mode_temp_ww,
+        write_field="dual_mode_temp_ww",
     ),
     StiebelEltronNumberEntityDescription(
         key=AREA_COOLING_TARGET_ROOM_TEMPERATURE,
@@ -179,7 +184,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=20,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.SET_ROOM_TEMPERATURE_AREA,
+        modbus_register=lambda api: api.system_parameters.set_room_temperature_area,
+        write_field="set_room_temperature_area",
     ),
     StiebelEltronNumberEntityDescription(
         key=AREA_COOLING_TARGET_FLOW_TEMPERATURE,
@@ -189,7 +195,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=7,
         native_max_value=25,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.SET_FLOW_TEMPERATURE_AREA,
+        modbus_register=lambda api: api.system_parameters.set_flow_temperature_area,
+        write_field="set_flow_temperature_area",
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
@@ -199,7 +206,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=20,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.SET_ROOM_TEMPERATURE_FAN,
+        modbus_register=lambda api: api.system_parameters.set_room_temperature_fan,
+        write_field="set_room_temperature_fan",
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_COOLING_TARGET_FLOW_TEMPERATURE,
@@ -209,7 +217,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=7,
         native_max_value=25,
         native_step=0.1,
-        modbus_register=WpmSystemParametersRegisters.SET_FLOW_TEMPERATURE_FAN,
+        modbus_register=lambda api: api.system_parameters.set_flow_temperature_fan,
+        write_field="set_flow_temperature_fan",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK1,
@@ -218,7 +227,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=0,
         native_max_value=3,
         native_step=0.01,
-        modbus_register=WpmSystemParametersRegisters.HEATING_CURVE_RISE_HK_1,
+        modbus_register=lambda api: api.system_parameters.heating_curve_rise_hk_1,
+        write_field="heating_curve_rise_hk_1",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK2,
@@ -227,7 +237,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=0,
         native_max_value=3,
         native_step=0.01,
-        modbus_register=WpmSystemParametersRegisters.HEATING_CURVE_RISE_HK_2,
+        modbus_register=lambda api: api.system_parameters.heating_curve_rise_hk_2,
+        write_field="heating_curve_rise_hk_2",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK3,
@@ -236,7 +247,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=0,
         native_max_value=3,
         native_step=0.01,
-        modbus_register=WpmSystemParametersRegisters.HEATING_CURVE_RISE_HK_3,
+        modbus_register=lambda api: api.system_parameters.heating_curve_rise_hk_3,
+        write_field="heating_curve_rise_hk_3",
     ),
 ]
 
@@ -249,7 +261,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1,
+        modbus_register=lambda api: api.system_parameters.room_temperature_day_hk1,
+        write_field="room_temperature_day_hk1",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK1,
@@ -259,7 +272,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK1,
+        modbus_register=lambda api: api.system_parameters.room_temperature_night_hk1,
+        write_field="room_temperature_night_hk1",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK2,
@@ -269,7 +283,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK2,
+        modbus_register=lambda api: api.system_parameters.room_temperature_day_hk2,
+        write_field="room_temperature_day_hk2",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_TEMPERATURE_TARGET_HK2,
@@ -279,7 +294,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=5,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK2,
+        modbus_register=lambda api: api.system_parameters.room_temperature_night_hk2,
+        write_field="room_temperature_night_hk2",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_WATER_TEMPERATURE_TARGET,
@@ -289,7 +305,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.DHW_SET_DAY,
+        modbus_register=lambda api: api.system_parameters.dhw_set_day,
+        write_field="dhw_set_day",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_WATER_TEMPERATURE_TARGET,
@@ -299,7 +316,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.DHW_SET_NIGHT,
+        modbus_register=lambda api: api.system_parameters.dhw_set_night,
+        write_field="dhw_set_night",
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_LEVEL_DAY,
@@ -308,7 +326,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=3,
         native_step=1,
-        modbus_register=LwzSystemParametersRegisters.DAY_STAGE,
+        modbus_register=lambda api: api.system_parameters.day_stage,
+        write_field="day_stage",
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_LEVEL_NIGHT,
@@ -317,7 +336,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=3,
         native_step=1,
-        modbus_register=LwzSystemParametersRegisters.NIGHT_STAGE,
+        modbus_register=lambda api: api.system_parameters.night_stage,
+        write_field="night_stage",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
@@ -327,7 +347,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1_COOLING,
+        modbus_register=lambda api: api.system_parameters.room_temperature_day_hk1_cooling,
+        write_field="room_temperature_day_hk1_cooling",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_COOLING_TEMPERATURE_TARGET_HK1,
@@ -337,7 +358,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK1_COOLING,
+        modbus_register=lambda api: api.system_parameters.room_temperature_night_hk1_cooling,
+        write_field="room_temperature_night_hk1_cooling",
     ),
     StiebelEltronNumberEntityDescription(
         key=COMFORT_COOLING_TEMPERATURE_TARGET_HK2,
@@ -347,7 +369,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK2_COOLING,
+        modbus_register=lambda api: api.system_parameters.room_temperature_day_hk2_cooling,
+        write_field="room_temperature_day_hk2_cooling",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_COOLING_TEMPERATURE_TARGET_HK2,
@@ -357,7 +380,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK2_COOLING,
+        modbus_register=lambda api: api.system_parameters.room_temperature_night_hk2_cooling,
+        write_field="room_temperature_night_hk2_cooling",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK1,
@@ -366,7 +390,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=5,
         native_step=0.01,
-        modbus_register=LwzSystemParametersRegisters.GRADIENT_HK1,
+        modbus_register=lambda api: api.system_parameters.gradient_hk1,
+        write_field="gradient_hk1",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK2,
@@ -375,7 +400,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=5,
         native_step=0.01,
-        modbus_register=LwzSystemParametersRegisters.GRADIENT_HK2,
+        modbus_register=lambda api: api.system_parameters.gradient_hk2,
+        write_field="gradient_hk2",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_LOW_END_HK1,
@@ -385,7 +411,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=20,
         native_step=0.5,
-        modbus_register=LwzSystemParametersRegisters.LOW_END_HK1,
+        modbus_register=lambda api: api.system_parameters.low_end_hk1,
+        write_field="low_end_hk1",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_LOW_END_HK2,
@@ -395,7 +422,8 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=20,
         native_step=0.5,
-        modbus_register=LwzSystemParametersRegisters.LOW_END_HK2,
+        modbus_register=lambda api: api.system_parameters.low_end_hk2,
+        write_field="low_end_hk2",
     ),
 ]
 
@@ -443,6 +471,8 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         self.entity_description = description
         super().__init__(coordinator, config_entry)
         self.modbus_register = description.modbus_register
+        self.write_component = description.write_component
+        self.write_field = description.write_field
 
     @property
     def unique_id(self) -> str | None:
@@ -451,24 +481,16 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
+        if self.write_field is None:
+            return
+
         await self.coordinator.write_component_value(
-            "system_parameters",
-            _to_field_name(self.modbus_register),
+            self.write_component,
+            self.write_field,
             value,
-            self.modbus_register,
         )
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.coordinator.get_component_value(
-            "system_parameters",
-            _to_field_name(self.modbus_register),
-            self.modbus_register,
-        )
-
-
-def _to_field_name(register: Any) -> str:
-    """Convert old enum-style register names to component field names."""
-    register_name = getattr(register, "name", str(register))
-    return register_name.lower()
+        return self.coordinator.get_value(self.modbus_register)
