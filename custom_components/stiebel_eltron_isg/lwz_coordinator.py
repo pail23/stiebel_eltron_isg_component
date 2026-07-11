@@ -8,11 +8,11 @@ import logging
 
 from homeassistant.core import HomeAssistant
 from pystiebeleltron import lwz as lwz_module
+
 from custom_components.stiebel_eltron_isg.client_bridge import StiebelEltronApiClient
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
 )
-
 
 LwzStiebelEltronAPI = lwz_module.LwzStiebelEltronAPI
 

@@ -11,6 +11,7 @@ from typing import Any, Protocol
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from pystiebeleltron import StiebelEltronModbusError
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -166,7 +167,7 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         api = getattr(self._api_client, "api", self._api_client)
         try:
             value = value_reference(api)
-        except Exception:
+        except StiebelEltronModbusError:
             return None
         return value if isinstance(value, (int, float)) else None
 

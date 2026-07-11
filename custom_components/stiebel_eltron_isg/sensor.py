@@ -1,5 +1,6 @@
 """Sensor platform for stiebel_eltron_isg."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
@@ -137,12 +138,14 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
+type StiebelEltronModbusRegister = Callable[[Any], int | float | None]
+
 
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronSensorEntityDescription(SensorEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: Any
+    modbus_register: StiebelEltronModbusRegister
 
     def __post_init__(self) -> None:
         """Ensure value references are lambda-based."""
@@ -153,7 +156,7 @@ class StiebelEltronSensorEntityDescription(SensorEntityDescription):
 
 
 def create_temperature_entity_description(
-    name: str, key: str, modbus_register: Any
+    name: str, key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a temperature sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -170,7 +173,7 @@ def create_temperature_entity_description(
 def create_energy_entity_description(
     name: str,
     key: str,
-    modbus_register: Any,
+    modbus_register: StiebelEltronModbusRegister,
     visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a energy sensor."""
@@ -189,7 +192,7 @@ def create_energy_entity_description(
 def create_daily_energy_entity_description(
     name: str,
     key: str,
-    modbus_register: Any,
+    modbus_register: StiebelEltronModbusRegister,
     visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a energy sensor."""
@@ -206,7 +209,7 @@ def create_daily_energy_entity_description(
 
 
 def create_humidity_entity_description(
-    name: str, key: str, modbus_register: Any
+    name: str, key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a humidity sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -220,7 +223,7 @@ def create_humidity_entity_description(
 
 
 def create_pressure_entity_description(
-    name: str, key: str, modbus_register: Any
+    name: str, key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a pressure sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -234,7 +237,7 @@ def create_pressure_entity_description(
 
 
 def create_volume_stream_entity_description(
-    name: str, key: str, modbus_register: Any
+    name: str, key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a volume stream sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -274,17 +277,17 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_humidity_entity_description(
         "Humidity HK 1",
         ACTUAL_HUMIDITY_HK1,
-        lambda api: api.system_values.relative_humidity_room_temp_hc1,
+        lambda api: api.system_values.room_temperatures[0].relative_humidity,
     ),
     create_humidity_entity_description(
         "Humidity HK 2",
         ACTUAL_HUMIDITY_HK2,
-        lambda api: api.system_values.relative_humidity_room_temp_hc2,
+        lambda api: api.system_values.room_temperatures[1].relative_humidity,
     ),
     create_humidity_entity_description(
         "Humidity HK 3",
         ACTUAL_HUMIDITY_HK3,
-        lambda api: api.system_values.relative_humidity_room_temp_hc3,
+        lambda api: api.system_values.room_temperatures[2].relative_humidity,
     ),
     create_temperature_entity_description(
         "Dew Point Temperature",
@@ -294,17 +297,17 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Dew Point Temperature HK 1",
         DEWPOINT_TEMPERATURE_HK1,
-        lambda api: api.system_values.dew_point_temperature_room_temp_hc1,
+        lambda api: api.system_values.room_temperatures[0].dew_point_temperature,
     ),
     create_temperature_entity_description(
         "Dew Point Temperature HK 2",
         DEWPOINT_TEMPERATURE_HK2,
-        lambda api: api.system_values.dew_point_temperature_room_temp_hc2,
+        lambda api: api.system_values.room_temperatures[1].dew_point_temperature,
     ),
     create_temperature_entity_description(
         "Dew Point Temperature HK 3",
         DEWPOINT_TEMPERATURE_HK3,
-        lambda api: api.system_values.dew_point_temperature_room_temp_hc3,
+        lambda api: api.system_values.room_temperatures[2].dew_point_temperature,
     ),
     create_temperature_entity_description(
         "Outdoor Temperature",
@@ -377,32 +380,32 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Actual Room Temperature HK 1",
         ACTUAL_ROOM_TEMPERATURE_HK1,
-        lambda api: api.system_values.actual_temperature_room_temp_hc1,
+        lambda api: api.system_values.room_temperatures[0].actual_temperature,
     ),
     create_temperature_entity_description(
         "Target Room Temperature HK 1",
         TARGET_ROOM_TEMPERATURE_HK1,
-        lambda api: api.system_values.set_temperature_room_temp_hc1,
+        lambda api: api.system_values.room_temperatures[0].set_temperature,
     ),
     create_temperature_entity_description(
         "Actual Room Temperature HK 2",
         ACTUAL_ROOM_TEMPERATURE_HK2,
-        lambda api: api.system_values.actual_temperature_room_temp_hc2,
+        lambda api: api.system_values.room_temperatures[1].actual_temperature,
     ),
     create_temperature_entity_description(
         "Target Room Temperature HK 2",
         TARGET_ROOM_TEMPERATURE_HK2,
-        lambda api: api.system_values.set_temperature_room_temp_hc2,
+        lambda api: api.system_values.room_temperatures[1].set_temperature,
     ),
     create_temperature_entity_description(
         "Actual Room Temperature HK 3",
         ACTUAL_ROOM_TEMPERATURE_HK3,
-        lambda api: api.system_values.actual_temperature_room_temp_hc3,
+        lambda api: api.system_values.room_temperatures[2].actual_temperature,
     ),
     create_temperature_entity_description(
         "Target Room Temperature HK 3",
         TARGET_ROOM_TEMPERATURE_HK3,
-        lambda api: api.system_values.set_temperature_room_temp_hc3,
+        lambda api: api.system_values.room_temperatures[2].set_temperature,
     ),
     create_temperature_entity_description(
         "Flow Temperature WP",
@@ -486,62 +489,62 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         "Return Temperature WP1",
         RETURN_TEMPERATURE_WP1,
-        lambda api: api.system_values.return_temperature_hp1,
+        lambda api: api.system_values.heat_pumps[0].return_temperature,
     ),
     create_temperature_entity_description(
         "Flow Temperature WP1",
         FLOW_TEMPERATURE_WP1,
-        lambda api: api.system_values.flow_temperature_hp1,
+        lambda api: api.system_values.heat_pumps[0].flow_temperature,
     ),
     create_temperature_entity_description(
         "Hot Gas Temperature WP1",
         HOT_GAS_TEMPERATURE_WP1,
-        lambda api: api.system_values.hot_gas_temperature_hp1,
+        lambda api: api.system_values.heat_pumps[0].hot_gas_temperature,
     ),
     create_pressure_entity_description(
         "Low Pressure WP1",
         LOW_PRESSURE_WP1,
-        lambda api: api.system_values.low_pressure_hp1,
+        lambda api: api.system_values.heat_pumps[0].low_pressure,
     ),
     create_pressure_entity_description(
         "High Pressure WP1",
         HIGH_PRESSURE_WP1,
-        lambda api: api.system_values.high_pressure_hp1,
+        lambda api: api.system_values.heat_pumps[0].high_pressure,
     ),
     create_volume_stream_entity_description(
         "Volume Stream WP1",
         VOLUME_STREAM_WP1,
-        lambda api: api.system_values.wp_water_flow_rate_hp1,
+        lambda api: api.system_values.heat_pumps[0].wp_water_flow_rate,
     ),
     create_temperature_entity_description(
         "Return Temperature WP2",
         RETURN_TEMPERATURE_WP2,
-        lambda api: api.system_values.return_temperature_hp2,
+        lambda api: api.system_values.heat_pumps[1].return_temperature,
     ),
     create_temperature_entity_description(
         "Flow Temperature WP2",
         FLOW_TEMPERATURE_WP2,
-        lambda api: api.system_values.flow_temperature_hp2,
+        lambda api: api.system_values.heat_pumps[1].flow_temperature,
     ),
     create_temperature_entity_description(
         "Hot Gas Temperature WP2",
         HOT_GAS_TEMPERATURE_WP2,
-        lambda api: api.system_values.hot_gas_temperature_hp2,
+        lambda api: api.system_values.heat_pumps[1].hot_gas_temperature,
     ),
     create_pressure_entity_description(
         "Low Pressure WP2",
         LOW_PRESSURE_WP2,
-        lambda api: api.system_values.low_pressure_hp2,
+        lambda api: api.system_values.heat_pumps[1].low_pressure,
     ),
     create_pressure_entity_description(
         "High Pressure WP2",
         HIGH_PRESSURE_WP2,
-        lambda api: api.system_values.high_pressure_hp2,
+        lambda api: api.system_values.heat_pumps[1].high_pressure,
     ),
     create_volume_stream_entity_description(
         "Volume Stream WP2",
         VOLUME_STREAM_WP2,
-        lambda api: api.system_values.wp_water_flow_rate_hp2,
+        lambda api: api.system_values.heat_pumps[1].wp_water_flow_rate,
     ),
     StiebelEltronSensorEntityDescription(
         key=ACTIVE_ERROR,

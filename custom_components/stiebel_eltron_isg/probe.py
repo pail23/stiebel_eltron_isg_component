@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from pystiebeleltron import (
-    ControllerModel,
-    get_controller_model,
-)
 from modbus_connection.pymodbus import connect_tcp
+from pystiebeleltron import ControllerModel, get_controller_model
 
 
 async def async_get_controller_model(host: str, port: int) -> ControllerModel:

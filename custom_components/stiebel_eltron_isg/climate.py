@@ -164,11 +164,11 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_1,
         translation_key=CLIMATE_HK_1,
         humidity_modbus_register=[
-            lambda api: api.system_values.relative_humidity_room_temp_hc1,
+            lambda api: api.system_values.room_temperatures[0].relative_humidity,
             lambda api: api.system_values.relative_humidity,
         ],
         actual_temperature_register=[
-            lambda api: api.system_values.actual_temperature_room_temp_hc1,
+            lambda api: api.system_values.room_temperatures[0].actual_temperature,
             lambda api: api.system_values.actual_temperature_fe7,
             lambda api: api.system_values.actual_temperature_fek,
         ],
@@ -183,10 +183,10 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_2,
         translation_key=CLIMATE_HK_2,
         humidity_modbus_register=[
-            lambda api: api.system_values.relative_humidity_room_temp_hc2
+            lambda api: api.system_values.room_temperatures[1].relative_humidity
         ],
         actual_temperature_register=[
-            lambda api: api.system_values.actual_temperature_room_temp_hc2
+            lambda api: api.system_values.room_temperatures[1].actual_temperature
         ],
         eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_2,
         comfort_target_temp_register=lambda api: (
@@ -199,10 +199,10 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_3,
         translation_key=CLIMATE_HK_3,
         humidity_modbus_register=[
-            lambda api: api.system_values.relative_humidity_room_temp_hc3
+            lambda api: api.system_values.room_temperatures[2].relative_humidity
         ],
         actual_temperature_register=[
-            lambda api: api.system_values.actual_temperature_room_temp_hc3
+            lambda api: api.system_values.room_temperatures[2].actual_temperature
         ],
         eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_3,
         comfort_target_temp_register=lambda api: (

@@ -18,10 +18,10 @@ from custom_components.stiebel_eltron_isg.data import (
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
 )
+from custom_components.stiebel_eltron_isg.probe import async_get_controller_model
 from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
 )
-from custom_components.stiebel_eltron_isg.probe import async_get_controller_model
 
 from .const import DEFAULT_SCAN_INTERVAL, PLATFORMS
 
