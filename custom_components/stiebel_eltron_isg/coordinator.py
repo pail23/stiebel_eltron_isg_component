@@ -167,7 +167,12 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
         api = getattr(self._api_client, "api", self._api_client)
         try:
             value = value_reference(api)
-        except StiebelEltronModbusError:
+        except StiebelEltronModbusError as err:
+            _LOGGER.warning(
+                "Failed to get value from accessor %r: %s",
+                value_reference,
+                err,
+            )
             return None
         return value if isinstance(value, (int, float)) else None
 

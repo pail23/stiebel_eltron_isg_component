@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from modbus_connection.pymodbus import connect_tcp
+from modbus_connection.pymodbus import PymodbusConnection, connect_tcp
 
 
 class StiebelEltronApiClient:
@@ -17,7 +17,7 @@ class StiebelEltronApiClient:
         self._port = port
 
         self._api: Any | None = None
-        self._connection: Any | None = None
+        self._connection: PymodbusConnection | None = None
 
     async def close(self) -> None:
         """Disconnect and release transport resources."""
@@ -36,9 +36,7 @@ class StiebelEltronApiClient:
         """Return true when a backing transport is connected."""
         if self._connection is None:
             return False
-
-        connected = getattr(self._connection, "is_connected", True)
-        return bool(connected() if callable(connected) else connected)
+        return self._connection.connected
 
     @property
     def host(self) -> str:

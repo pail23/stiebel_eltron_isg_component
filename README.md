@@ -14,14 +14,14 @@
 ## Preliminary Remark
 Although this integration has been created for Stiebel Eltron devices, it can successfully be used for Tecalor devices as well.
 
-## Prerequisite
+## Prerequisites
 In order to use this Integration you need:
 
-1. ISG device connected to the heatpump and your local network
+1. ISG device connected to the heat pump and your local network
 2. IP address of the ISG device on your local network
 
-For connecting the ISG device to your heatpump refer to the corresponding Stiebel Eltron documentation or ask your installer.
-There is no need to get the "STIEBEL ELTRON Web-Monitoring" subscription, this is for Stiebel Eltron itself monitoring your Heatpump and NOT needed for this integration to work.
+For connecting the ISG device to your heat pump refer to the corresponding Stiebel Eltron documentation or ask your installer.
+There is no need to get the "STIEBEL ELTRON Web-Monitoring" subscription, this is for Stiebel Eltron itself monitoring your heat pump and NOT needed for this integration to work.
 
 If you are using the ISG with the [STIEBEL ELTRON EMI extension](https://www.stiebel-eltron.de/de/home/service/smart-home/energy-management-interface-emi.html) make sure that your ISG Firmware is current because this Integration is using Modbus, older versions of ISG Software are not able to do Modbus and EMI at the same time. (ISG Software Version `v12.1.2` was tested by [@northalpha](https://github.com/northalpha) using this integration to be working).
 An update may be triggered via Stiebel Eltron Support (Kundendienst).
