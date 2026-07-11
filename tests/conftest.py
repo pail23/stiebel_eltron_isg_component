@@ -15,7 +15,7 @@
 #
 # See here for more info: https://docs.pytest.org/en/latest/fixture.html (note that
 # pytest includes fixtures OOB which you can use as defined on this page)
-from unittest.mock import patch
+from unittest.mock import patch, PropertyMock
 
 from pymodbus.pdu.register_message import (
     ReadHoldingRegistersResponse,
@@ -71,7 +71,7 @@ def bypass_get_data_fixture():
             return_value={},
         ),
         patch(
-            "custom_components.stiebel_eltron_isg.config_flow.get_controller_model",
+            "custom_components.stiebel_eltron_isg.config_flow.async_get_controller_model",
             return_value=ControllerModel.WPM_3i,
         ),
     ):
@@ -146,7 +146,16 @@ def modbus_wpm_fixture():
             "pymodbus.client.AsyncModbusTcpClient.read_holding_registers",
             side_effect=read_holding_registers,
         ),
-        patch("pymodbus.client.AsyncModbusTcpClient.connect"),
+        patch("pymodbus.client.AsyncModbusTcpClient.connect", return_value=True),
+        patch(
+            "pymodbus.client.AsyncModbusTcpClient.connected",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+        patch(
+            "custom_components.stiebel_eltron_isg.async_get_controller_model",
+            return_value=ControllerModel.WPM_3i,
+        ),
     ):
         yield
 
@@ -165,7 +174,16 @@ def modbus_lwz_fixture():
             "pymodbus.client.AsyncModbusTcpClient.read_holding_registers",
             side_effect=read_holding_registers,
         ),
-        patch("pymodbus.client.AsyncModbusTcpClient.connect"),
+        patch("pymodbus.client.AsyncModbusTcpClient.connect", return_value=True),
+        patch(
+            "pymodbus.client.AsyncModbusTcpClient.connected",
+            new_callable=PropertyMock,
+            return_value=True,
+        ),
+        patch(
+            "custom_components.stiebel_eltron_isg.async_get_controller_model",
+            return_value=ControllerModel.LWZ,
+        ),
     ):
         yield
 
@@ -188,7 +206,7 @@ def error_get_data_fixture():
 def get_model_wpm_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.get_controller_model",
+        "custom_components.stiebel_eltron_isg.async_get_controller_model",
         return_value=ControllerModel.WPM_3i,
     ):
         yield
@@ -200,7 +218,7 @@ def get_model_wpm_fixture():
 def get_model_lwz_fixture():
     """Skip calls to get data from API."""
     with patch(
-        "custom_components.stiebel_eltron_isg.get_controller_model",
+        "custom_components.stiebel_eltron_isg.async_get_controller_model",
         return_value=ControllerModel.LWZ,
     ):
         yield

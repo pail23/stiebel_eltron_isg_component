@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -22,12 +23,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
-from pystiebeleltron import EnergySystemInformationRegisters, IsgRegisters
-from pystiebeleltron.lwz import LwzEnergyDataRegisters, LwzSystemValuesRegisters
-from pystiebeleltron.wpm import (
-    WpmEnergyDataRegisters,
-    WpmSystemStateRegisters,
-    WpmSystemValuesRegisters,
+from pystiebeleltron import (
+    __dict__ as pystiebeleltron_symbols,
+    lwz as lwz_module,
+    wpm as wpm_module,
 )
 
 from custom_components.stiebel_eltron_isg.coordinator import (
@@ -144,15 +143,61 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
+class _RegisterRef:
+    def __init__(self, owner: str, name: str) -> None:
+        self._owner = owner
+        self.name = name
+
+
+class _RegisterShim:
+    def __init__(self, owner: str) -> None:
+        self._owner = owner
+
+    def __getattr__(self, name: str) -> Any:
+        return _RegisterRef(self._owner, name)
+
+
+IsgRegisters = pystiebeleltron_symbols.get("IsgRegisters", Any)
+EnergySystemInformationRegisters = pystiebeleltron_symbols.get(
+    "EnergySystemInformationRegisters",
+    _RegisterShim("EnergySystemInformationRegisters"),
+)
+LwzEnergyDataRegisters = getattr(
+    lwz_module,
+    "LwzEnergyDataRegisters",
+    _RegisterShim("LwzEnergyDataRegisters"),
+)
+LwzSystemValuesRegisters = getattr(
+    lwz_module,
+    "LwzSystemValuesRegisters",
+    _RegisterShim("LwzSystemValuesRegisters"),
+)
+WpmEnergyDataRegisters = getattr(
+    wpm_module,
+    "WpmEnergyDataRegisters",
+    _RegisterShim("WpmEnergyDataRegisters"),
+)
+WpmSystemStateRegisters = getattr(
+    wpm_module,
+    "WpmSystemStateRegisters",
+    _RegisterShim("WpmSystemStateRegisters"),
+)
+WpmSystemValuesRegisters = getattr(
+    wpm_module,
+    "WpmSystemValuesRegisters",
+    _RegisterShim("WpmSystemValuesRegisters"),
+)
+
+
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronSensorEntityDescription(SensorEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: IsgRegisters
+    modbus_register: Any
 
 
 def create_temperature_entity_description(
-    name: str, key: str, modbus_register: IsgRegisters
+    name: str, key: str, modbus_register: Any
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a temperature sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -169,7 +214,7 @@ def create_temperature_entity_description(
 def create_energy_entity_description(
     name: str,
     key: str,
-    modbus_register: IsgRegisters,
+    modbus_register: Any,
     visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a energy sensor."""
@@ -188,7 +233,7 @@ def create_energy_entity_description(
 def create_daily_energy_entity_description(
     name: str,
     key: str,
-    modbus_register: IsgRegisters,
+    modbus_register: Any,
     visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a energy sensor."""
@@ -205,7 +250,7 @@ def create_daily_energy_entity_description(
 
 
 def create_humidity_entity_description(
-    name: str, key: str, modbus_register: IsgRegisters
+    name: str, key: str, modbus_register: Any
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a humidity sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -219,7 +264,7 @@ def create_humidity_entity_description(
 
 
 def create_pressure_entity_description(
-    name: str, key: str, modbus_register: IsgRegisters
+    name: str, key: str, modbus_register: Any
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a pressure sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -233,7 +278,7 @@ def create_pressure_entity_description(
 
 
 def create_volume_stream_entity_description(
-    name: str, key: str, modbus_register: IsgRegisters
+    name: str, key: str, modbus_register: Any
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a volume stream sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -1026,7 +1071,10 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     def native_value(self) -> str | float | None:
         """Return the state of the sensor."""
         if self.modbus_register == WpmSystemStateRegisters.ACTIVE_ERROR:
-            error = int(self.coordinator.get_register_value(self.modbus_register))
+            error_raw = self.coordinator.get_register_value(self.modbus_register)
+            if error_raw is None:
+                return None
+            error = int(error_raw)
             if error in (32768, 0):
                 return "no error"
             return f"error {error}"

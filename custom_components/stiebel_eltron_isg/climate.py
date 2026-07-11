@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
@@ -17,9 +18,30 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import LwzSystemParametersRegisters, LwzSystemValuesRegisters
-from pystiebeleltron.wpm import WpmSystemParametersRegisters, WpmSystemValuesRegisters
+
+try:
+    from pystiebeleltron import IsgRegisters
+    from pystiebeleltron.lwz import LwzSystemParametersRegisters, LwzSystemValuesRegisters
+    from pystiebeleltron.wpm import WpmSystemParametersRegisters, WpmSystemValuesRegisters
+except ImportError:
+    IsgRegisters = object
+
+    class _RegisterRef:
+        def __init__(self, owner: str, name: str) -> None:
+            self._owner = owner
+            self.name = name
+
+    class _RegisterShim:
+        def __init__(self, owner: str) -> None:
+            self._owner = owner
+
+        def __getattr__(self, name: str) -> str:
+            return _RegisterRef(self._owner, name)
+
+    LwzSystemParametersRegisters = _RegisterShim("LwzSystemParametersRegisters")
+    LwzSystemValuesRegisters = _RegisterShim("LwzSystemValuesRegisters")
+    WpmSystemParametersRegisters = _RegisterShim("WpmSystemParametersRegisters")
+    WpmSystemValuesRegisters = _RegisterShim("WpmSystemValuesRegisters")
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -125,10 +147,10 @@ HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    humidity_modbus_register: list[IsgRegisters]
-    actual_temperature_register: list[IsgRegisters]
-    eco_target_temp_register: IsgRegisters
-    comfort_target_temp_register: IsgRegisters
+    humidity_modbus_register: list[Any]
+    actual_temperature_register: list[Any]
+    eco_target_temp_register: Any
+    comfort_target_temp_register: Any
 
 
 WPM_CLIMATE_TYPES = [
@@ -276,38 +298,55 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         for register in self.humidity_modbus_register:
-            if self.coordinator.get_register_value(register) is not None:
-                return int(self.coordinator.get_register_value(register))
+            value = self._read_register(register)
+            if value == 0:
+                continue
+            if value is not None:
+                return int(value)
         return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         for register in self.actual_temperature_register:
-            if self.coordinator.get_register_value(register) is not None:
-                return self.coordinator.get_register_value(register)
+            value = self._read_register(register)
+            if value == 0:
+                continue
+            if value is not None:
+                return value
         return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.operation_mode == ECO_MODE:
-            return self.coordinator.get_register_value(self.eco_target_temp_register)
-        return self.coordinator.get_register_value(self.comfort_target_temp_register)
+            return self._read_register(self.eco_target_temp_register)
+        return self._read_register(self.comfort_target_temp_register)
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
         if self.operation_mode == ECO_MODE:
-            await self.coordinator.write_register(
-                self.eco_target_temp_register,
-                value,
-            )
+            await self._write_register(self.eco_target_temp_register, value)
         else:
-            await self.coordinator.write_register(
-                self.comfort_target_temp_register,
-                value,
-            )
+            await self._write_register(self.comfort_target_temp_register, value)
+
+    def _read_register(self, register: Any) -> float | int | None:
+        """Read a register using component API with legacy fallback."""
+        return self.coordinator.get_component_value(
+            _component_name(register),
+            _to_field_name(register),
+            register,
+        )
+
+    async def _write_register(self, register: Any, value: float | int) -> None:
+        """Write a register using component API with legacy fallback."""
+        await self.coordinator.write_component_value(
+            _component_name(register),
+            _to_field_name(register),
+            value,
+            register,
+        )
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
@@ -334,11 +373,8 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        return int(
-            self.coordinator.get_register_value(
-                WpmSystemParametersRegisters.OPERATING_MODE
-            )
-        )
+        value = self._read_register(WpmSystemParametersRegisters.OPERATING_MODE)
+        return int(value) if value is not None else 0
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -349,9 +385,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                WpmSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_register(WpmSystemParametersRegisters.OPERATING_MODE, new_mode)
 
     @property
     def preset_mode(self) -> str | None:
@@ -362,9 +396,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                WpmSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_register(WpmSystemParametersRegisters.OPERATING_MODE, new_mode)
 
 
 class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
@@ -395,11 +427,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        return int(
-            self.coordinator.get_register_value(
-                LwzSystemParametersRegisters.OPERATING_MODE
-            )
-        )
+        value = self._read_register(LwzSystemParametersRegisters.OPERATING_MODE)
+        return int(value) if value is not None else 0
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -410,9 +439,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                LwzSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_register(LwzSystemParametersRegisters.OPERATING_MODE, new_mode)
 
     @property
     def preset_mode(self) -> str | None:
@@ -423,27 +450,23 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                LwzSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_register(LwzSystemParametersRegisters.OPERATING_MODE, new_mode)
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+            value = self._read_register(LwzSystemParametersRegisters.NIGHT_STAGE)
+            if value is None:
+                return None
             return LWZ_TO_HA_FAN.get(
-                int(
-                    self.coordinator.get_register_value(
-                        LwzSystemParametersRegisters.NIGHT_STAGE
-                    )
-                )
+                int(value)
             )
+        value = self._read_register(LwzSystemParametersRegisters.DAY_STAGE)
+        if value is None:
+            return None
         return LWZ_TO_HA_FAN.get(
-            int(
-                self.coordinator.get_register_value(
-                    LwzSystemParametersRegisters.DAY_STAGE
-                )
-            )
+            int(value)
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
@@ -451,10 +474,23 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
         if new_mode is not None:
             if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-                await self.coordinator.write_register(
-                    LwzSystemParametersRegisters.NIGHT_STAGE, new_mode
-                )
+                await self._write_register(LwzSystemParametersRegisters.NIGHT_STAGE, new_mode)
             else:
-                await self.coordinator.write_register(
-                    LwzSystemParametersRegisters.DAY_STAGE, new_mode
-                )
+                await self._write_register(LwzSystemParametersRegisters.DAY_STAGE, new_mode)
+
+
+def _to_field_name(register: Any) -> str:
+    """Convert old enum-style register names to component field names."""
+    register_name = getattr(register, "name", str(register))
+    return register_name.lower()
+
+
+def _component_name(register: Any) -> str:
+    """Resolve component name from register type name."""
+    register_type_name = getattr(register, "_owner", type(register).__name__)
+
+    if "SystemValues" in register_type_name:
+        return "system_values"
+    if "SystemState" in register_type_name:
+        return "system_state"
+    return "system_parameters"

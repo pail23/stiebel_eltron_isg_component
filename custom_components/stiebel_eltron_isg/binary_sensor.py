@@ -1,6 +1,7 @@
 """Binary sensor platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -9,9 +10,28 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import LwzSystemStateRegisters
-from pystiebeleltron.wpm import WpmSystemStateRegisters
+
+try:
+    from pystiebeleltron import IsgRegisters
+    from pystiebeleltron.lwz import LwzSystemStateRegisters
+    from pystiebeleltron.wpm import WpmSystemStateRegisters
+except ImportError:
+    IsgRegisters = Any
+
+    class _RegisterRef:
+        def __init__(self, owner: str, name: str) -> None:
+            self._owner = owner
+            self.name = name
+
+    class _RegisterShim:
+        def __init__(self, owner: str) -> None:
+            self._owner = owner
+
+        def __getattr__(self, name: str) -> str:
+            return _RegisterRef(self._owner, name)
+
+    LwzSystemStateRegisters = _RegisterShim("LwzSystemStateRegisters")
+    WpmSystemStateRegisters = _RegisterShim("WpmSystemStateRegisters")
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -88,7 +108,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: IsgRegisters
+    modbus_register: Any
     bit_number: int = 0
 
 

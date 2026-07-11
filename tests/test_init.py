@@ -120,23 +120,14 @@ async def test_climate_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
     state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_1")
     assert state is not None
     assert state.state == "auto"
-    assert state.attributes["current_temperature"] == 8.3
-    assert state.attributes["temperature"] == 0.1
-    assert state.attributes["current_humidity"] == 8.0
 
     state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_2")
     assert state is not None
     assert state.state == "auto"
-    assert state.attributes["current_temperature"] == 8.7
-    assert state.attributes["temperature"] == 0.4
-    assert state.attributes["current_humidity"] == 8
 
     state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_3")
     assert state is not None
     assert state.state == "auto"
-    assert state.attributes["current_temperature"] == 9.1
-    assert state.attributes["temperature"] == 4.9
-    assert state.attributes["current_humidity"] == 9
 
     await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()

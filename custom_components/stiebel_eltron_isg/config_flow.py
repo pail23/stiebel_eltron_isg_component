@@ -14,7 +14,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant, callback
-from pystiebeleltron import StiebelEltronModbusError, get_controller_model
+from pystiebeleltron import StiebelEltronModbusError
 import voluptuous as vol
 
 from .const import (
@@ -28,6 +28,7 @@ from .const import (
     ERROR_INVALID_HOST,
     ERROR_RECONFIGURE_FAILED,
 )
+from .probe import async_get_controller_model
 
 DATA_SCHEMA = vol.Schema(
     {
@@ -109,7 +110,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
                 self._errors[CONF_HOST] = ERROR_INVALID_HOST
             else:
                 try:
-                    await get_controller_model(host, user_input[CONF_PORT])
+                    await async_get_controller_model(host, user_input[CONF_PORT])
                 except StiebelEltronModbusError:
                     self._errors[CONF_HOST] = ERROR_CANNOT_CONNECT
                 except Exception:  # noqa: BLE001  # pymodbus raises non-StiebelEltronModbusError
@@ -158,7 +159,7 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
 
             if not self._errors:
                 try:
-                    await get_controller_model(host, port)
+                    await async_get_controller_model(host, port)
                 except StiebelEltronModbusError:
                     self._errors[CONF_HOST] = ERROR_CANNOT_CONNECT
                 except Exception:  # noqa: BLE001  # pymodbus raises non-StiebelEltronModbusError

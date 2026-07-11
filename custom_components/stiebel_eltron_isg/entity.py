@@ -1,11 +1,21 @@
 """StiebelEltronISGEntity class."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from pystiebeleltron import IsgRegisters, IsgRegistersNone
+
+try:
+    from pystiebeleltron import IsgRegisters, IsgRegistersNone
+except ImportError:
+    IsgRegisters = Any
+
+    class _IsgRegistersNone:
+        NONE = "NONE"
+
+    IsgRegistersNone = _IsgRegistersNone
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -21,7 +31,7 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 class StiebelEltronEntityDescription(EntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: IsgRegisters
+    modbus_register: Any
 
 
 class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinator]):
@@ -37,7 +47,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinato
         """Initialize the entity base class."""
         super().__init__(coordinator)
         self.config_entry = config_entry
-        self.modbus_register: IsgRegisters = IsgRegistersNone.NONE
+        self.modbus_register: Any = IsgRegistersNone.NONE
 
     @property
     def device_info(self) -> DeviceInfo:

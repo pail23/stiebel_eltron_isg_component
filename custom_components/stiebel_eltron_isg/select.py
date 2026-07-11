@@ -6,9 +6,20 @@ import logging
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import LwzSystemParametersRegisters
-from pystiebeleltron.wpm import WpmSystemParametersRegisters
+
+try:
+    from pystiebeleltron import IsgRegisters
+    from pystiebeleltron.lwz import LwzSystemParametersRegisters
+    from pystiebeleltron.wpm import WpmSystemParametersRegisters
+except ImportError:
+    IsgRegisters = object
+
+    class _RegisterShim:
+        def __getattr__(self, name: str) -> str:
+            return name
+
+    LwzSystemParametersRegisters = _RegisterShim()
+    WpmSystemParametersRegisters = _RegisterShim()
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -139,11 +150,29 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        key = int(self.coordinator.get_register_value(self.modbus_register))
+        value = self.coordinator.get_component_value(
+            "system_parameters",
+            _to_field_name(self.modbus_register),
+            self.modbus_register,
+        )
+        key = int(value) if value is not None else None
+        if key is None:
+            return None
         return self._options.get(key)
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
         if key is not None:
-            await self.coordinator.write_register(self.modbus_register, key)
+            await self.coordinator.write_component_value(
+                "system_parameters",
+                _to_field_name(self.modbus_register),
+                key,
+                self.modbus_register,
+            )
+
+
+def _to_field_name(register: IsgRegisters) -> str:
+    """Convert old enum-style register names to component field names."""
+    register_name = getattr(register, "name", str(register))
+    return register_name.lower()

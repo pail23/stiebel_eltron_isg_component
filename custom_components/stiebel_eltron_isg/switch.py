@@ -11,8 +11,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import EnergyManagementSettingsRegisters, IsgRegisters
-from pystiebeleltron.wpm import WpmSystemStateRegisters
+from pystiebeleltron import __dict__ as pystiebeleltron_symbols, wpm as wpm_module
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -35,7 +34,33 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-class WpmCirculationPumpRegisters(IsgRegisters):
+class _RegisterRef:
+    def __init__(self, owner: str, name: str) -> None:
+        self._owner = owner
+        self.name = name
+
+
+class _RegisterShim:
+    def __init__(self, owner: str) -> None:
+        self._owner = owner
+
+    def __getattr__(self, name: str) -> Any:
+        return _RegisterRef(self._owner, name)
+
+
+IsgRegisters = pystiebeleltron_symbols.get("IsgRegisters", Any)
+EnergyManagementSettingsRegisters = pystiebeleltron_symbols.get(
+    "EnergyManagementSettingsRegisters",
+    _RegisterShim("EnergyManagementSettingsRegisters"),
+)
+WpmSystemStateRegisters = getattr(
+    wpm_module,
+    "WpmSystemStateRegisters",
+    _RegisterShim("WpmSystemStateRegisters"),
+)
+
+
+class WpmCirculationPumpRegisters:
     """Registers related to the circulation pump in the WPM system."""
 
     DHW_CIRCULATION_PUMP = 47012
@@ -45,7 +70,7 @@ class WpmCirculationPumpRegisters(IsgRegisters):
 class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: IsgRegisters
+    modbus_register: Any
 
 
 SWITCH_TYPES = [
@@ -127,7 +152,11 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return the state of the switch."""
-        value = self.coordinator.get_register_value(self.modbus_register)
+        value = self.coordinator.get_component_value(
+            _component_name(self.modbus_register),
+            _to_field_name(self.modbus_register),
+            self.modbus_register,
+        )
         if value is not None:
             return value != 0
         return False
@@ -136,22 +165,38 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         """Turn the switch on."""
         if self.modbus_register == WpmSystemStateRegisters.DHW_CIRCULATION_PUMP:
             # For the circulation pump, we need to set the value to 1 to turn it on
-            await self.coordinator.write_register(
-                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP, 1
+            await self.coordinator.write_component_value(
+                _component_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
+                _to_field_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
+                1,
+                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
             )
         else:
-            await self.coordinator.write_register(self.modbus_register, 1)
+            await self.coordinator.write_component_value(
+                _component_name(self.modbus_register),
+                _to_field_name(self.modbus_register),
+                1,
+                self.modbus_register,
+            )
         await self.async_update()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.modbus_register == WpmSystemStateRegisters.DHW_CIRCULATION_PUMP:
             # For the circulation pump, we need to set the value to 1 to turn it on
-            await self.coordinator.write_register(
-                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP, 0
+            await self.coordinator.write_component_value(
+                _component_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
+                _to_field_name(WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP),
+                0,
+                WpmCirculationPumpRegisters.DHW_CIRCULATION_PUMP,
             )
         else:
-            await self.coordinator.write_register(self.modbus_register, 0)
+            await self.coordinator.write_component_value(
+                _component_name(self.modbus_register),
+                _to_field_name(self.modbus_register),
+                0,
+                self.modbus_register,
+            )
         await self.async_update()
 
     @property
@@ -162,7 +207,19 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
             EnergyManagementSettingsRegisters.SG_READY_INPUT_1,
             EnergyManagementSettingsRegisters.SG_READY_INPUT_2,
         ):
-            if not self.coordinator.has_register_value(self.modbus_register):
+            try:
+                has_value = self.coordinator.has_register_value(self.modbus_register)
+            except NotImplementedError:
+                has_value = (
+                    self.coordinator.get_component_value(
+                        _component_name(self.modbus_register),
+                        _to_field_name(self.modbus_register),
+                        self.modbus_register,
+                    )
+                    is not None
+                )
+
+            if not has_value:
                 _LOGGER.debug(
                     "Switch %s should not be available because register %s is not available",
                     self.entity_description.key,
@@ -170,3 +227,20 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
                 )
             return True
         return super().available
+
+
+def _to_field_name(register: Any) -> str:
+    """Convert old enum-style register names to component field names."""
+    register_name = getattr(register, "name", str(register))
+    return register_name.lower()
+
+
+def _component_name(register: Any) -> str:
+    """Resolve component name from register type name."""
+    register_type_name = getattr(register, "_owner", type(register).__name__)
+
+    if "EnergyManagementSettings" in register_type_name:
+        return "energy_management_settings"
+    if "SystemState" in register_type_name:
+        return "system_state"
+    return "system_parameters"

@@ -2,14 +2,26 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import LwzSystemParametersRegisters
-from pystiebeleltron.wpm import WpmSystemParametersRegisters
+
+try:
+    from pystiebeleltron import IsgRegisters
+    from pystiebeleltron.lwz import LwzSystemParametersRegisters
+    from pystiebeleltron.wpm import WpmSystemParametersRegisters
+except ImportError:
+    IsgRegisters = object
+
+    class _RegisterShim:
+        def __getattr__(self, name: str) -> str:
+            return name
+
+    LwzSystemParametersRegisters = _RegisterShim()
+    WpmSystemParametersRegisters = _RegisterShim()
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -55,7 +67,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: IsgRegisters
+    modbus_register: Any
 
 
 NUMBER_TYPES_WPM = [
@@ -439,9 +451,24 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.coordinator.write_register(self.modbus_register, value)
+        await self.coordinator.write_component_value(
+            "system_parameters",
+            _to_field_name(self.modbus_register),
+            value,
+            self.modbus_register,
+        )
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        return self.coordinator.get_register_value(self.modbus_register)
+        return self.coordinator.get_component_value(
+            "system_parameters",
+            _to_field_name(self.modbus_register),
+            self.modbus_register,
+        )
+
+
+def _to_field_name(register: Any) -> str:
+    """Convert old enum-style register names to component field names."""
+    register_name = getattr(register, "name", str(register))
+    return register_name.lower()

@@ -53,6 +53,24 @@ This is the preferred installation option. If you are using HACS:
 
 <!---->
 
+## Migration Notes (`pystiebeleltron` `0.5.1`)
+
+This integration now targets `pystiebeleltron` `0.5.1`, which introduced API changes in the upstream library.
+
+For users, no manual migration step is required in Home Assistant:
+
+1. Update the integration to the latest release.
+2. Restart Home Assistant.
+3. If entities show as unavailable, reload the integration once from the UI.
+
+For contributors, the integration now includes compatibility helpers so both legacy register-based access and newer component/field access can be supported during transition:
+
+1. Controller probing goes through `custom_components/stiebel_eltron_isg/probe.py`.
+2. API/client compatibility and register-to-component fallback live in `custom_components/stiebel_eltron_isg/client_bridge.py`.
+3. Platform code should prefer coordinator helpers (`get_component_value` / `write_component_value`) for new writable behavior.
+
+If you are adding a new entity and an upstream register enum no longer exists in `0.5.1`, use module attribute lookups and the existing compatibility shim pattern instead of hard imports.
+
 ## Contributions are welcome!
 
 If you want to contribute to this please read the [Contribution guidelines](CONTRIBUTING.md)
