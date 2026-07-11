@@ -181,12 +181,10 @@ class StiebelEltronISGFlowHandler(ConfigFlow, domain=DOMAIN):  # type: ignore[ca
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
-                    vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
-                }
-            ),
+            data_schema=vol.Schema({
+                vol.Required(CONF_HOST, default=user_input[CONF_HOST]): str,
+                vol.Required(CONF_PORT, default=user_input[CONF_PORT]): int,
+            }),
             errors=self._errors,
         )
 
