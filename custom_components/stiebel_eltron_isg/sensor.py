@@ -435,7 +435,9 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.set_buffer_temperature,
     ),
     create_pressure_entity_description(
-        "Heater Pressure", HEATER_PRESSURE, lambda api: api.system_values.heating_pressure
+        "Heater Pressure",
+        HEATER_PRESSURE,
+        lambda api: api.system_values.heating_pressure,
     ),
     create_volume_stream_entity_description(
         "Volume Stream", VOLUME_STREAM, lambda api: api.system_values.flow_rate
@@ -466,7 +468,9 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.min_source_temperature,
     ),
     create_pressure_entity_description(
-        "Source Pressure", SOURCE_PRESSURE, lambda api: api.system_values.source_pressure
+        "Source Pressure",
+        SOURCE_PRESSURE,
+        lambda api: api.system_values.source_pressure,
     ),
     create_temperature_entity_description(
         "Hot Gas Temperature",
@@ -495,7 +499,9 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.hot_gas_temperature_hp1,
     ),
     create_pressure_entity_description(
-        "Low Pressure WP1", LOW_PRESSURE_WP1, lambda api: api.system_values.low_pressure_hp1
+        "Low Pressure WP1",
+        LOW_PRESSURE_WP1,
+        lambda api: api.system_values.low_pressure_hp1,
     ),
     create_pressure_entity_description(
         "High Pressure WP1",
@@ -523,7 +529,9 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.hot_gas_temperature_hp2,
     ),
     create_pressure_entity_description(
-        "Low Pressure WP2", LOW_PRESSURE_WP2, lambda api: api.system_values.low_pressure_hp2
+        "Low Pressure WP2",
+        LOW_PRESSURE_WP2,
+        lambda api: api.system_values.low_pressure_hp2,
     ),
     create_pressure_entity_description(
         "High Pressure WP2",
@@ -566,7 +574,9 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.set_room_temperature_hc2,
     ),
     create_humidity_entity_description(
-        "Humidity HK 1", ACTUAL_HUMIDITY, lambda api: api.system_values.relative_humidity_hc1
+        "Humidity HK 1",
+        ACTUAL_HUMIDITY,
+        lambda api: api.system_values.relative_humidity_hc1,
     ),
     create_humidity_entity_description(
         "Humidity HK 2",
@@ -622,7 +632,9 @@ LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
         "Volume Stream", VOLUME_STREAM, lambda api: api.system_values.flow_rate
     ),
     create_pressure_entity_description(
-        "Heater Pressure", HEATER_PRESSURE, lambda api: api.system_values.pressure_htg_circ
+        "Heater Pressure",
+        HEATER_PRESSURE,
+        lambda api: api.system_values.pressure_htg_circ,
     ),
     create_temperature_entity_description(
         "Actual Temperature Water",
@@ -658,7 +670,9 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
         key=SG_READY_STATE,
         translation_key=SG_READY_STATE,
         icon="mdi:solar-power",
-        modbus_register=lambda api: api.energy_system_information.sg_ready_operating_state,
+        modbus_register=lambda api: (
+            api.energy_system_information.sg_ready_operating_state
+        ),
     ),
 ]
 

@@ -135,7 +135,9 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
                 await self._api_client.connect()
             await self._api_client.async_update()
             self._model_id = int(
-                self.get_component_value("energy_system_information", "controller_identification")
+                self.get_component_value(
+                    "energy_system_information", "controller_identification"
+                )
                 or 0
             )
         except Exception as exception:

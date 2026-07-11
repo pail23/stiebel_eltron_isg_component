@@ -153,14 +153,10 @@ class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
         )
 
         if not callable(self.eco_target_temp_register):
-            raise TypeError(
-                "eco_target_temp_register must be a lambda expression"
-            )
+            raise TypeError("eco_target_temp_register must be a lambda expression")
 
         if not callable(self.comfort_target_temp_register):
-            raise TypeError(
-                "comfort_target_temp_register must be a lambda expression"
-            )
+            raise TypeError("comfort_target_temp_register must be a lambda expression")
 
 
 WPM_CLIMATE_TYPES = [
@@ -177,7 +173,9 @@ WPM_CLIMATE_TYPES = [
             lambda api: api.system_values.actual_temperature_fek,
         ],
         eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_1,
-        comfort_target_temp_register=lambda api: api.system_parameters.comfort_temperature_hk_1,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_1
+        ),
         eco_target_temp_write_field="eco_temperature_hk_1",
         comfort_target_temp_write_field="comfort_temperature_hk_1",
     ),
@@ -191,7 +189,9 @@ WPM_CLIMATE_TYPES = [
             lambda api: api.system_values.actual_temperature_room_temp_hc2
         ],
         eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_2,
-        comfort_target_temp_register=lambda api: api.system_parameters.comfort_temperature_hk_2,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_2
+        ),
         eco_target_temp_write_field="eco_temperature_hk_2",
         comfort_target_temp_write_field="comfort_temperature_hk_2",
     ),
@@ -205,7 +205,9 @@ WPM_CLIMATE_TYPES = [
             lambda api: api.system_values.actual_temperature_room_temp_hc3
         ],
         eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_3,
-        comfort_target_temp_register=lambda api: api.system_parameters.comfort_temperature_hk_3,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_3
+        ),
         eco_target_temp_write_field="eco_temperature_hk_3",
         comfort_target_temp_write_field="comfort_temperature_hk_3",
     ),
@@ -217,8 +219,12 @@ LWZ_CLIMATE_TYPES = [
         translation_key=CLIMATE_HK_1,
         humidity_modbus_register=[lambda api: api.system_values.relative_humidity_hc1],
         actual_temperature_register=[lambda api: api.system_values.actual_room_t_hc1],
-        eco_target_temp_register=lambda api: api.system_parameters.room_temperature_night_hk1,
-        comfort_target_temp_register=lambda api: api.system_parameters.room_temperature_day_hk1,
+        eco_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_night_hk1
+        ),
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_day_hk1
+        ),
         eco_target_temp_write_field="room_temperature_night_hk1",
         comfort_target_temp_write_field="room_temperature_day_hk1",
     ),
@@ -227,8 +233,12 @@ LWZ_CLIMATE_TYPES = [
         translation_key=CLIMATE_HK_2,
         humidity_modbus_register=[lambda api: api.system_values.relative_humidity_hc2],
         actual_temperature_register=[lambda api: api.system_values.actual_room_t_hc2],
-        eco_target_temp_register=lambda api: api.system_parameters.room_temperature_night_hk2,
-        comfort_target_temp_register=lambda api: api.system_parameters.room_temperature_day_hk2,
+        eco_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_night_hk2
+        ),
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_day_hk2
+        ),
         eco_target_temp_write_field="room_temperature_night_hk2",
         comfort_target_temp_write_field="room_temperature_day_hk2",
     ),
@@ -300,7 +310,9 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         self.comfort_target_temp_register = description.comfort_target_temp_register
         self.write_component = description.write_component
         self.eco_target_temp_write_field = description.eco_target_temp_write_field
-        self.comfort_target_temp_write_field = description.comfort_target_temp_write_field
+        self.comfort_target_temp_write_field = (
+            description.comfort_target_temp_write_field
+        )
 
     @property
     def available(self) -> bool:
@@ -499,5 +511,3 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
                 await self._write_field("night_stage", new_mode)
             else:
                 await self._write_field("day_stage", new_mode)
-
-

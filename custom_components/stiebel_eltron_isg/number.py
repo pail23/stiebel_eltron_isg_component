@@ -347,7 +347,9 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.room_temperature_day_hk1_cooling,
+        modbus_register=lambda api: (
+            api.system_parameters.room_temperature_day_hk1_cooling
+        ),
         write_field="room_temperature_day_hk1_cooling",
     ),
     StiebelEltronNumberEntityDescription(
@@ -358,7 +360,9 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.room_temperature_night_hk1_cooling,
+        modbus_register=lambda api: (
+            api.system_parameters.room_temperature_night_hk1_cooling
+        ),
         write_field="room_temperature_night_hk1_cooling",
     ),
     StiebelEltronNumberEntityDescription(
@@ -369,7 +373,9 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.room_temperature_day_hk2_cooling,
+        modbus_register=lambda api: (
+            api.system_parameters.room_temperature_day_hk2_cooling
+        ),
         write_field="room_temperature_day_hk2_cooling",
     ),
     StiebelEltronNumberEntityDescription(
@@ -380,7 +386,9 @@ NUMBER_TYPES_LWZ = [
         native_min_value=10,
         native_max_value=30,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.room_temperature_night_hk2_cooling,
+        modbus_register=lambda api: (
+            api.system_parameters.room_temperature_night_hk2_cooling
+        ),
         write_field="room_temperature_night_hk2_cooling",
     ),
     StiebelEltronNumberEntityDescription(

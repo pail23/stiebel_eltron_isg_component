@@ -54,7 +54,9 @@ SWITCH_TYPES = [
         key=SG_READY_ACTIVE,
         translation_key=SG_READY_ACTIVE,
         device_class=SwitchDeviceClass.SWITCH,
-        modbus_register=lambda api: api.energy_management_settings.switch_sg_ready_on_and_off,
+        modbus_register=lambda api: (
+            api.energy_management_settings.switch_sg_ready_on_and_off
+        ),
         write_component="energy_management_settings",
         write_field="switch_sg_ready_on_and_off",
     ),

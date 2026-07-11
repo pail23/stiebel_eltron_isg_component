@@ -584,6 +584,4 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
         if value is None:
             return False
 
-        return (
-            int(value) & (1 << self.bit_number) != 0
-        )
+        return int(value) & (1 << self.bit_number) != 0
