@@ -5,20 +5,20 @@ https://github.com/pail23/stiebel_eltron_isg
 """
 
 from collections.abc import Callable
-from datetime import timedelta
 import logging
 from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from modbus_connection.pymodbus import PymodbusConnection, connect_tcp
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from pystiebeleltron import StiebelEltronModbusError
 from pystiebeleltron.wpm import WpmStiebelEltronAPI
+
+from .coordinator import StiebelEltronModbusDataCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class StiebelEltronModbusWPMDataCoordinator(DataUpdateCoordinator):
+class StiebelEltronModbusWPMDataCoordinator(StiebelEltronModbusDataCoordinator):
     """Communicates with WPM Controllers."""
 
     def __init__(
@@ -30,60 +30,21 @@ class StiebelEltronModbusWPMDataCoordinator(DataUpdateCoordinator):
         scan_interval: int,
     ) -> None:
         """Initialize the Modbus hub."""
-        self._model_id: int = 0
-        self._host = host
-        self._port = port
-        self._scan_interval = timedelta(seconds=scan_interval)
-        self._connection: PymodbusConnection | None = None
         self._api: WpmStiebelEltronAPI | None = None
 
-        super().__init__(hass, _LOGGER, name=name, update_interval=self._scan_interval)
+        super().__init__(
+            hass, name=name, host=host, port=port, scan_interval=scan_interval
+        )
 
     async def connect(self) -> None:
         """Connect client."""
-        _LOGGER.debug("Connecting to %s", self._host)
-        self._connection = await connect_tcp(self._host, port=self._port)
-        self._api = WpmStiebelEltronAPI(self._connection.for_unit(1))
+        await super().connect()
+        self._api = WpmStiebelEltronAPI(self._for_unit(1))
 
     async def close(self) -> None:
         """Disconnect client."""
-        _LOGGER.debug("Closing connection to %s", self._host)
-        if self._connection is not None:
-            await self._connection.close()
-            self._connection = None
-            self._api = None
-
-    @property
-    def is_connected(self) -> bool:
-        """Check modbus client connection status."""
-        if self._connection is None:
-            return False
-        return self._connection.connected
-
-    @property
-    def host(self) -> str:
-        """Return the host address of the Stiebel Eltron ISG."""
-        return self._host
-
-    @property
-    def model(self) -> str:
-        """Return the controller model of the Stiebel Eltron ISG."""
-        if self._model_id == 103:
-            return "LWA/LWZ"
-        if self._model_id == 104:
-            return "LWZ"
-        if self._model_id == 390:
-            return "WPM 3"
-        if self._model_id == 391:
-            return "WPM 3i"
-        if self._model_id == 449:
-            return "WPMsystem"
-        return f"other model ({self._model_id})"
-
-    @property
-    def is_wpm(self) -> bool:
-        """Check if heat pump controller is a wpm model."""
-        return self._model_id >= 390
+        await super().close()
+        self._api = None
 
     async def _async_update_data(self) -> dict[Any, float | int | None]:
         """Time to update."""
