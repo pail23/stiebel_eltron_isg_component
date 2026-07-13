@@ -12,18 +12,18 @@
 [![Community Forum][forum-shield]][forum]
 
 ## Preliminary Remark
-Although this integration has been created for Stiebel Eltron devices, it can successfully be used for Tecalor devices as well. 
+Although this integration has been created for Stiebel Eltron devices, it can successfully be used for Tecalor devices as well.
 
-## Prerequisite
+## Prerequisites
 In order to use this Integration you need:
 
-1. ISG device connected to the heatpump and your local network
+1. ISG device connected to the heat pump and your local network
 2. IP address of the ISG device on your local network
 
-For connecting the ISG device to your heatpump refer to the corresponding Stiebel Eltron documentation or ask your installer.
-There is no need to get the "STIEBEL ELTRON Web-Monitoring" subscription, this is for Stiebel Eltron itself monitoring your Heatpump and NOT needed for this integration to work.
+For connecting the ISG device to your heat pump refer to the corresponding Stiebel Eltron documentation or ask your installer.
+There is no need to get the "STIEBEL ELTRON Web-Monitoring" subscription, this is for Stiebel Eltron itself monitoring your heat pump and NOT needed for this integration to work.
 
-If you are using the ISG with the [STIEBEL ELTRON EMI extension](https://www.stiebel-eltron.de/de/home/service/smart-home/energy-management-interface-emi.html) make sure that your ISG Firmware is current because this Integration is using Modbus, older versions of ISG Software are not able to do Modbus and EMI at the same time. (ISG Software Version `v12.1.2` was tested by [@northalpha](https://github.com/northalpha) using this integration to be working). 
+If you are using the ISG with the [STIEBEL ELTRON EMI extension](https://www.stiebel-eltron.de/de/home/service/smart-home/energy-management-interface-emi.html) make sure that your ISG Firmware is current because this Integration is using Modbus, older versions of ISG Software are not able to do Modbus and EMI at the same time. (ISG Software Version `v12.1.2` was tested by [@northalpha](https://github.com/northalpha) using this integration to be working).
 An update may be triggered via Stiebel Eltron Support (Kundendienst).
 
 ## Installation
@@ -52,6 +52,24 @@ This is the preferred installation option. If you are using HACS:
 ## Configuration is done in the UI
 
 <!---->
+
+## Migration Notes (`pystiebeleltron` `0.5.1`)
+
+This integration now targets `pystiebeleltron` `0.5.1`, which introduced API changes in the upstream library.
+
+For users, no manual migration step is required in Home Assistant:
+
+1. Update the integration to the latest release.
+2. Restart Home Assistant.
+3. If entities show as unavailable, reload the integration once from the UI.
+
+For contributors, the integration now includes compatibility helpers so both legacy register-based access and newer component/field access can be supported during transition:
+
+1. Controller probing goes through `custom_components/stiebel_eltron_isg/probe.py`.
+2. API/client compatibility and register-to-component fallback live in `custom_components/stiebel_eltron_isg/client_bridge.py`.
+3. Platform code should prefer coordinator helpers (`get_component_value` / `write_component_value`) for new writable behavior.
+
+If you are adding a new entity and an upstream register enum no longer exists in `0.5.1`, use module attribute lookups and the existing compatibility shim pattern instead of hard imports.
 
 ## Contributions are welcome!
 

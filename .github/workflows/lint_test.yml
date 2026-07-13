@@ -43,7 +43,7 @@ jobs:
         - name: Install uv
           uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v6
           with:
-            python-version: 3.13
+            python-version: 3.14
             activate-environment: true
 
         - name: Install the project
@@ -63,7 +63,7 @@ jobs:
       - name: Install uv
         uses: astral-sh/setup-uv@d31148d669074a8d0a63714ba94f3201e7020bc3 # v6
         with:
-          python-version: 3.13
+          python-version: 3.14
           activate-environment: true
 
       - name: Install the project

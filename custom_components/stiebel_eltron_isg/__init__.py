@@ -10,7 +10,6 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_SCAN_INTER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.loader import async_get_loaded_integration
-from pystiebeleltron import get_controller_model
 
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
@@ -19,6 +18,7 @@ from custom_components.stiebel_eltron_isg.data import (
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
 )
+from custom_components.stiebel_eltron_isg.probe import async_get_controller_model
 from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
 )
@@ -51,7 +51,7 @@ async def async_setup_entry(
     )
 
     try:
-        model = await get_controller_model(host, port)
+        model = await async_get_controller_model(host, port)
     except Exception as exception:
         raise ConfigEntryNotReady(exception) from exception
 

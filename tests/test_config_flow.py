@@ -195,7 +195,7 @@ async def test_reconfigure_cannot_connect(hass, bypass_get_data):
 
     # Mock a connection failure
     with patch(
-        "custom_components.stiebel_eltron_isg.config_flow.get_controller_model",
+        "custom_components.stiebel_eltron_isg.config_flow.async_get_controller_model",
         side_effect=Exception("Connection failed"),
     ):
         result = await hass.config_entries.flow.async_configure(

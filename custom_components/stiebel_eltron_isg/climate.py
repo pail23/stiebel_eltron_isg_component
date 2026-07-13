@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
@@ -17,9 +18,6 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import LwzSystemParametersRegisters, LwzSystemValuesRegisters
-from pystiebeleltron.wpm import WpmSystemParametersRegisters, WpmSystemValuesRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -121,14 +119,44 @@ LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
 HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 
 
+def _as_accessor(register_or_accessor: Any) -> Any:
+    """Return an API value accessor callable for descriptor inputs."""
+    if callable(register_or_accessor):
+        return register_or_accessor
+
+    raise TypeError("climate field reference must be a lambda expression")
+
+
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    humidity_modbus_register: list[IsgRegisters]
-    actual_temperature_register: list[IsgRegisters]
-    eco_target_temp_register: IsgRegisters
-    comfort_target_temp_register: IsgRegisters
+    humidity_modbus_register: list[Any]
+    actual_temperature_register: list[Any]
+    eco_target_temp_register: Any
+    comfort_target_temp_register: Any
+    write_component: str = "system_parameters"
+    eco_target_temp_write_field: str | None = None
+    comfort_target_temp_write_field: str | None = None
+
+    def __post_init__(self) -> None:
+        """Convert legacy register tokens into API value accessor lambdas."""
+        object.__setattr__(
+            self,
+            "humidity_modbus_register",
+            [_as_accessor(ref) for ref in self.humidity_modbus_register],
+        )
+        object.__setattr__(
+            self,
+            "actual_temperature_register",
+            [_as_accessor(ref) for ref in self.actual_temperature_register],
+        )
+
+        if not callable(self.eco_target_temp_register):
+            raise TypeError("eco_target_temp_register must be a lambda expression")
+
+        if not callable(self.comfort_target_temp_register):
+            raise TypeError("comfort_target_temp_register must be a lambda expression")
 
 
 WPM_CLIMATE_TYPES = [
@@ -136,40 +164,52 @@ WPM_CLIMATE_TYPES = [
         key=CLIMATE_HK_1,
         translation_key=CLIMATE_HK_1,
         humidity_modbus_register=[
-            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC1,
-            WpmSystemValuesRegisters.RELATIVE_HUMIDITY,
+            lambda api: api.system_values.room_temperatures[0].relative_humidity,
+            lambda api: api.system_values.relative_humidity,
         ],
         actual_temperature_register=[
-            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC1,
-            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FE7,
-            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_FEK,
+            lambda api: api.system_values.room_temperatures[0].actual_temperature,
+            lambda api: api.system_values.actual_temperature_fe7,
+            lambda api: api.system_values.actual_temperature_fek,
         ],
-        eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_1,
-        comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_1,
+        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_1,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_1
+        ),
+        eco_target_temp_write_field="eco_temperature_hk_1",
+        comfort_target_temp_write_field="comfort_temperature_hk_1",
     ),
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_2,
         translation_key=CLIMATE_HK_2,
         humidity_modbus_register=[
-            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC2
+            lambda api: api.system_values.room_temperatures[1].relative_humidity
         ],
         actual_temperature_register=[
-            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC2
+            lambda api: api.system_values.room_temperatures[1].actual_temperature
         ],
-        eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_2,
-        comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_2,
+        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_2,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_2
+        ),
+        eco_target_temp_write_field="eco_temperature_hk_2",
+        comfort_target_temp_write_field="comfort_temperature_hk_2",
     ),
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_3,
         translation_key=CLIMATE_HK_3,
         humidity_modbus_register=[
-            WpmSystemValuesRegisters.RELATIVE_HUMIDITY_ROOM_TEMP_HC3
+            lambda api: api.system_values.room_temperatures[2].relative_humidity
         ],
         actual_temperature_register=[
-            WpmSystemValuesRegisters.ACTUAL_TEMPERATURE_ROOM_TEMP_HC3
+            lambda api: api.system_values.room_temperatures[2].actual_temperature
         ],
-        eco_target_temp_register=WpmSystemParametersRegisters.ECO_TEMPERATURE_HK_3,
-        comfort_target_temp_register=WpmSystemParametersRegisters.COMFORT_TEMPERATURE_HK_3,
+        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_3,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_3
+        ),
+        eco_target_temp_write_field="eco_temperature_hk_3",
+        comfort_target_temp_write_field="comfort_temperature_hk_3",
     ),
 ]
 
@@ -177,18 +217,30 @@ LWZ_CLIMATE_TYPES = [
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_1,
         translation_key=CLIMATE_HK_1,
-        humidity_modbus_register=[LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC1],
-        actual_temperature_register=[LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC1],
-        eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK1,
-        comfort_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK1,
+        humidity_modbus_register=[lambda api: api.system_values.relative_humidity_hc1],
+        actual_temperature_register=[lambda api: api.system_values.actual_room_t_hc1],
+        eco_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_night_hk1
+        ),
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_day_hk1
+        ),
+        eco_target_temp_write_field="room_temperature_night_hk1",
+        comfort_target_temp_write_field="room_temperature_day_hk1",
     ),
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_2,
         translation_key=CLIMATE_HK_2,
-        humidity_modbus_register=[LwzSystemValuesRegisters.RELATIVE_HUMIDITY_HC2],
-        actual_temperature_register=[LwzSystemValuesRegisters.ACTUAL_ROOM_T_HC2],
-        eco_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_NIGHT_HK2,
-        comfort_target_temp_register=LwzSystemParametersRegisters.ROOM_TEMPERATURE_DAY_HK2,
+        humidity_modbus_register=[lambda api: api.system_values.relative_humidity_hc2],
+        actual_temperature_register=[lambda api: api.system_values.actual_room_t_hc2],
+        eco_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_night_hk2
+        ),
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.room_temperature_day_hk2
+        ),
+        eco_target_temp_write_field="room_temperature_night_hk2",
+        comfort_target_temp_write_field="room_temperature_day_hk2",
     ),
 ]
 
@@ -256,6 +308,11 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         self.actual_temperature_register = description.actual_temperature_register
         self.eco_target_temp_register = description.eco_target_temp_register
         self.comfort_target_temp_register = description.comfort_target_temp_register
+        self.write_component = description.write_component
+        self.eco_target_temp_write_field = description.eco_target_temp_write_field
+        self.comfort_target_temp_write_field = (
+            description.comfort_target_temp_write_field
+        )
 
     @property
     def available(self) -> bool:
@@ -275,39 +332,58 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
-        for register in self.humidity_modbus_register:
-            if self.coordinator.get_register_value(register) is not None:
-                return int(self.coordinator.get_register_value(register))
+        for accessor in self.humidity_modbus_register:
+            value = self._read_accessor(accessor)
+            if value == 0:
+                continue
+            if value is not None:
+                return int(value)
         return None
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        for register in self.actual_temperature_register:
-            if self.coordinator.get_register_value(register) is not None:
-                return self.coordinator.get_register_value(register)
+        for accessor in self.actual_temperature_register:
+            value = self._read_accessor(accessor)
+            if value == 0:
+                continue
+            if value is not None:
+                return value
         return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         if self.operation_mode == ECO_MODE:
-            return self.coordinator.get_register_value(self.eco_target_temp_register)
-        return self.coordinator.get_register_value(self.comfort_target_temp_register)
+            return self._read_accessor(self.eco_target_temp_register)
+        return self._read_accessor(self.comfort_target_temp_register)
 
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
-        if self.operation_mode == ECO_MODE:
-            await self.coordinator.write_register(
-                self.eco_target_temp_register,
-                value,
-            )
-        else:
-            await self.coordinator.write_register(
-                self.comfort_target_temp_register,
-                value,
-            )
+        field = (
+            self.eco_target_temp_write_field
+            if self.operation_mode == ECO_MODE
+            else self.comfort_target_temp_write_field
+        )
+        if field is not None:
+            await self._write_field(field, value)
+
+    def _read_accessor(self, accessor: Any) -> float | int | None:
+        """Read a value via accessor callable."""
+        return self.coordinator.get_value(accessor)
+
+    def _read_register(self, register: Any) -> float | int | None:
+        """Read a register reference."""
+        return self.coordinator.get_value(register)
+
+    async def _write_field(self, field: str, value: float | int) -> None:
+        """Write a component field reference."""
+        await self.coordinator.write_component_value(
+            self.write_component,
+            field,
+            value,
+        )
 
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
@@ -334,11 +410,8 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        return int(
-            self.coordinator.get_register_value(
-                WpmSystemParametersRegisters.OPERATING_MODE
-            )
-        )
+        value = self._read_register(lambda api: api.system_parameters.operating_mode)
+        return int(value) if value is not None else 0
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -349,9 +422,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                WpmSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_field("operating_mode", new_mode)
 
     @property
     def preset_mode(self) -> str | None:
@@ -362,9 +433,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                WpmSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_field("operating_mode", new_mode)
 
 
 class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
@@ -377,6 +446,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
         """Initialize the climate entity."""
+        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
         self._attr_preset_modes = [
             PRESET_READY,
             PRESET_AUTO,
@@ -395,11 +465,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        return int(
-            self.coordinator.get_register_value(
-                LwzSystemParametersRegisters.OPERATING_MODE
-            )
-        )
+        value = self._read_register(lambda api: api.system_parameters.operating_mode)
+        return int(value) if value is not None else 0
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -410,9 +477,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                LwzSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_field("operating_mode", new_mode)
 
     @property
     def preset_mode(self) -> str | None:
@@ -423,38 +488,26 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
         if new_mode is not None:
-            await self.coordinator.write_register(
-                LwzSystemParametersRegisters.OPERATING_MODE, new_mode
-            )
+            await self._write_field("operating_mode", new_mode)
 
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
         if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-            return LWZ_TO_HA_FAN.get(
-                int(
-                    self.coordinator.get_register_value(
-                        LwzSystemParametersRegisters.NIGHT_STAGE
-                    )
-                )
-            )
-        return LWZ_TO_HA_FAN.get(
-            int(
-                self.coordinator.get_register_value(
-                    LwzSystemParametersRegisters.DAY_STAGE
-                )
-            )
-        )
+            value = self._read_register(lambda api: api.system_parameters.night_stage)
+            if value is None:
+                return None
+            return LWZ_TO_HA_FAN.get(int(value))
+        value = self._read_register(lambda api: api.system_parameters.day_stage)
+        if value is None:
+            return None
+        return LWZ_TO_HA_FAN.get(int(value))
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
         if new_mode is not None:
             if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
-                await self.coordinator.write_register(
-                    LwzSystemParametersRegisters.NIGHT_STAGE, new_mode
-                )
+                await self._write_field("night_stage", new_mode)
             else:
-                await self.coordinator.write_register(
-                    LwzSystemParametersRegisters.DAY_STAGE, new_mode
-                )
+                await self._write_field("day_stage", new_mode)

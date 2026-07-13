@@ -2,13 +2,11 @@
 
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import IsgRegisters
-from pystiebeleltron.lwz import LwzSystemParametersRegisters
-from pystiebeleltron.wpm import WpmSystemParametersRegisters
 
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronModbusDataCoordinator,
@@ -49,15 +47,25 @@ OPERATION_MODE_LWZ_OPTIONS = {
 class StiebelEltronSelectEntityDescription(SelectEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: IsgRegisters
+    modbus_register: Any
+    write_component: str = "system_parameters"
+    write_field: str | None = None
     operation_modes: dict[int, str]
+
+    def __post_init__(self) -> None:
+        """Ensure value references are lambda-based."""
+        if callable(self.modbus_register):
+            return
+
+        raise TypeError("modbus_register must be a lambda expression")
 
 
 WPM_SELECT_TYPES = [
     StiebelEltronSelectEntityDescription(
         key=OPERATION_MODE,
         translation_key="operation_mode",
-        modbus_register=WpmSystemParametersRegisters.OPERATING_MODE,
+        modbus_register=lambda api: api.system_parameters.operating_mode,
+        write_field="operating_mode",
         operation_modes=OPERATION_MODE_WPM_OPTIONS,
     ),
 ]
@@ -66,7 +74,8 @@ LWZ_SELECT_TYPES = [
     StiebelEltronSelectEntityDescription(
         key=OPERATION_MODE,
         translation_key="operation_mode",
-        modbus_register=LwzSystemParametersRegisters.OPERATING_MODE,
+        modbus_register=lambda api: api.system_parameters.operating_mode,
+        write_field="operating_mode",
         operation_modes=OPERATION_MODE_LWZ_OPTIONS,
     ),
 ]
@@ -125,6 +134,8 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
         self._options = description.operation_modes
         super().__init__(coordinator, config_entry)
         self.modbus_register = description.modbus_register
+        self.write_component = description.write_component
+        self.write_field = description.write_field
 
     @property
     def unique_id(self) -> str | None:
@@ -139,11 +150,18 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        key = int(self.coordinator.get_register_value(self.modbus_register))
+        value = self.coordinator.get_value(self.modbus_register)
+        key = int(value) if value is not None else None
+        if key is None:
+            return None
         return self._options.get(key)
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
-        if key is not None:
-            await self.coordinator.write_register(self.modbus_register, key)
+        if key is not None and self.write_field is not None:
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                key,
+            )

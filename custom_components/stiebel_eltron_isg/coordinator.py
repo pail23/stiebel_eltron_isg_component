@@ -8,19 +8,11 @@ from datetime import timedelta
 import logging
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from pystiebeleltron import (
-    EnergySystemInformationRegisters,
-    IsgRegisters,
-    StiebelEltronAPI,
-)
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from modbus_connection import ModbusUnit
+from modbus_connection.pymodbus import PymodbusConnection, connect_tcp
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
-
-
-def get_isg_scaled_value(value: float, factor: float = 10) -> float | None:
-    """Calculate the value out of a modbus register by scaling it."""
-    return value / factor if value != -32768 else None
 
 
 class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
@@ -29,13 +21,16 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
-        api_client: StiebelEltronAPI,
         name: str,
+        host: str,
+        port: int,
         scan_interval: int,
     ) -> None:
         """Initialize the Modbus hub."""
         self._model_id: int = 0
-        self._api_client = api_client
+        self._host = host
+        self._port = port
+        self._connection: PymodbusConnection | None = None
         self._scan_interval = timedelta(seconds=scan_interval)
         self.platforms: list[str] = []
 
@@ -44,24 +39,32 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     async def close(self) -> None:
         """Disconnect client."""
         _LOGGER.debug("Closing connection to %s", self.host)
-        await self._api_client.close()
+        if self._connection is not None:
+            await self._connection.close()
+            self._connection = None
 
     async def connect(self) -> None:
         """Connect client."""
         _LOGGER.debug("Connecting to %s", self.host)
-        await self._api_client.connect()
+        self._connection = await connect_tcp(self._host, port=self._port)
+
+    def _for_unit(self, unit: int) -> ModbusUnit:
+        """Return a connection for a specific unit."""
+        if self._connection is None:
+            raise RuntimeError("Connection not established")
+        return self._connection.for_unit(unit)
 
     @property
     def is_connected(self) -> bool:
         """Check modbus client connection status."""
-        if self._api_client is None:
+        if self._connection is None:
             return False
-        return self._api_client.is_connected
+        return self._connection.connected
 
     @property
     def host(self) -> str:
         """Return the host address of the Stiebel Eltron ISG."""
-        return self._api_client.host
+        return self._host
 
     @property
     def model(self) -> str:
@@ -82,40 +85,6 @@ class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
     def is_wpm(self) -> bool:
         """Check if heat pump controller is a wpm model."""
         return self._model_id >= 390
-
-    async def _async_update_data(self) -> dict[IsgRegisters, float | int | None]:
-        """Time to update."""
-        try:
-            if not self._api_client.is_connected:
-                await self._api_client.connect()
-            await self._api_client.async_update()
-            self._model_id = int(
-                self.get_register_value(
-                    EnergySystemInformationRegisters.CONTROLLER_IDENTIFICATION
-                )
-                or 0
-            )
-        except Exception as exception:
-            raise UpdateFailed(exception) from exception
-        else:
-            return self._api_client._data  # noqa: SLF001
-
-    @property
-    def raw_data(self) -> dict[IsgRegisters, float | int | None]:
-        """Return the raw register data from the API client."""
-        return self._api_client._data  # noqa: SLF001
-
-    def has_register_value(self, register: IsgRegisters) -> bool:
-        """Check if a value for the registers has been read. The async_udpate needs to be called first."""
-        return self._api_client.has_register_value(register)
-
-    def get_register_value(self, register: IsgRegisters) -> float | int | None:
-        """Get a value form the registers. The async_udpate needs to be called first."""
-        return self._api_client.get_register_value(register)
-
-    async def write_register(self, register: IsgRegisters, value: int | float) -> None:
-        """Write a modbus register."""
-        await self._api_client.write_register_value(register, value)
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
