@@ -14,7 +14,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pytest>=9.0.1",
-    "ruff>=0.15.20",
+    "ruff>=0.15.21",
 ]
 
 [tool.pytest]
