@@ -3,11 +3,12 @@ name = "stiebel-eltron-isg-component"
 version = "2025.1.0"
 description = "Home assistant component for the Stiebel Eltron ISG"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14.2"
 dependencies = [
     "colorlog>=6.9.0",
     "pytest-homeassistant-custom-component>=0.13.233",
-  "pystiebeleltron>=0.5.1",
+    "pystiebeleltron>=0.5.1",
+    "pymodbus>=3.11.0",
 ]
 
 [dependency-groups]
@@ -29,7 +30,7 @@ addopts = "--disable-socket --allow-unix-socket"
 
 
 [tool.ruff]
-target-version = "py313"
+target-version = "py314"
 exclude = ["custom_components/stiebel_eltron_isg/python_stiebel_eltron"]
 format.preview = true
 
