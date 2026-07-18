@@ -8,14 +8,8 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
-
 from .const import DOMAIN, OPERATION_MODE
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -83,11 +77,11 @@ LWZ_SELECT_TYPES = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the select platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     entities = []
     if coordinator.is_wpm:
@@ -126,7 +120,7 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSelectEntityDescription,
     ):
         """Initialize the select entity."""

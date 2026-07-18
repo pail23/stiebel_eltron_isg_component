@@ -9,23 +9,14 @@ import logging
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.loader import async_get_loaded_integration
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-    StiebEltronISGIntegrationData,
-)
-from custom_components.stiebel_eltron_isg.lwz_coordinator import (
-    StiebelEltronModbusLWZDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.wpm_coordinator import (
-    StiebelEltronModbusWPMDataCoordinator,
-)
-
 from .const import DEFAULT_PORT, UNIT_ID
+from .coordinator import StiebelEltronConfigEntry
+from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
+from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -47,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: dict):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
 ) -> bool:
     """Set up this integration using UI."""
 
@@ -59,7 +50,6 @@ async def async_setup_entry(
     except ModbusError as exception:
         raise ConfigEntryNotReady("Could not connect to device") from exception
     entry.async_on_unload(connection.close)
-
     try:
         model = await get_controller_model(connection.for_unit(UNIT_ID))
     except StiebelEltronModbusError as exception:
@@ -76,11 +66,7 @@ async def async_setup_entry(
             host,
         )
     )
-
-    entry.runtime_data = StiebEltronISGIntegrationData(
-        coordinator=coordinator,
-        integration=async_get_loaded_integration(hass, entry.domain),
-    )
+    entry.runtime_data = coordinator
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -97,7 +83,7 @@ async def async_setup_entry(
 
 async def async_unload_entry(
     hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
 ) -> bool:
     """Handle removal of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

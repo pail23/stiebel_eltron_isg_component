@@ -1,263 +1,299 @@
-"""Test stiebel_eltron_isg config flow."""
+"""Test the STIEBEL ELTRON config flow."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock
 
-from homeassistant import config_entries
-from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from modbus_connection import ModbusError
+from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 
-from .const import MOCK_CONFIG, MOCK_INVALID_IP_CONFIG
+USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
+RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="1.1.1.2",
+    hostname="servicewelt",
+    macaddress="000000000001",
+)
 
 
-# This fixture bypasses the actual setup of the integration
-# since we only want to test the config flow. We test the
-# actual functionality of the integration in other test modules.
-@pytest.fixture(autouse=True)
-def bypass_setup_fixture():
-    """Prevent setup."""
-    with (
-        patch(
-            "custom_components.stiebel_eltron_isg.async_setup",
-            return_value=True,
-        ),
-        patch(
-            "custom_components.stiebel_eltron_isg.async_setup_entry",
-            return_value=True,
-        ),
-        patch(
-            "custom_components.stiebel_eltron_isg.async_unload_entry",
-            return_value=True,
-        ),
-    ):
-        yield
-
-
-# Here we simiulate a successful config flow from the backend.
-# Note that we use the `bypass_get_data` fixture here because
-# we want the config flow validation to succeed during the test.
-@pytest.mark.asyncio
-async def test_successful_config_flow(hass, bypass_get_data):
-    """Test a successful config flow."""
-    # Initialize a config flow
+async def test_full_flow(hass: HomeAssistant) -> None:
+    """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": SOURCE_USER}
     )
-
-    # Check that the config flow shows the user form as the first step
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # If a user were to enter `test_username` for username and `test_password`
-    # for password, it would result in this function call
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_CONFIG,
-    )
-
-    # Check that the config flow is complete and a new entry is created with
-    # the input data
-    assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Stiebel Eltron ISG"
-    assert result["data"] == MOCK_CONFIG
-    assert result["result"]
-
-
-# In this case, we want to simulate a failure during the config flow.
-# We use the `error_on_get_data` mock instead of `bypass_get_data`
-# (note the function parameters) to raise an Exception during
-# validation of the input config.
-@pytest.mark.asyncio
-async def test_failed_config_flow(hass, error_on_get_data):
-    """Test a failed config flow due to credential validation failure."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_INVALID_IP_CONFIG,
+        USER_INPUT,
     )
 
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "invalid_host_IP"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Stiebel Eltron"
+    assert result["data"] == USER_INPUT
 
 
-@pytest.mark.asyncio
-async def test_successful_reconfigure_flow(hass, bypass_get_data):
-    """Test a successful reconfigure flow."""
-    # First, create a config entry
-    config_entry = hass.config_entries.async_entries(DOMAIN)
-    if not config_entry:
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
-        )
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=MOCK_CONFIG,
-        )
-        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    else:
-        config_entry = config_entry[0]
+@pytest.mark.parametrize(
+    ("failing_fixture", "side_effect"),
+    [
+        pytest.param(
+            "mock_get_controller_model", StiebelEltronModbusError, id="model_read"
+        ),
+        pytest.param("mock_connect_tcp", ModbusError, id="connect"),
+    ],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    failing_fixture: str,
+    side_effect: type[Exception],
+) -> None:
+    """Test we handle a cannot connect error while opening or reading the device."""
+    failing_mock = request.getfixturevalue(failing_fixture)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
 
-    # Initialize a reconfigure flow
+    failing_mock.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+    failing_mock.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_unknown_exception(
+    hass: HomeAssistant,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Test we handle unknown exception."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    mock_get_controller_model.side_effect = Exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+
+    mock_get_controller_model.side_effect = None
+    mock_get_controller_model.return_value = ControllerModel.LWZ  # Valid model (LWZ)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
-
-    # Check that the reconfigure flow shows the reconfigure form as the first step
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    # Configure with new host and port
-    new_host_config = {
-        CONF_HOST: "192.168.1.100",
-        CONF_PORT: 502,
-    }
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=new_host_config,
+        RECONFIGURE_INPUT,
     )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "2.2.2.2"
 
-    # Check that the reconfigure flow is complete
-    assert result["type"] == FlowResultType.ABORT
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        pytest.param(StiebelEltronModbusError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_reconfigure_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+    side_effect: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test error handling in reconfiguration flow."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    mock_get_controller_model.side_effect = side_effect
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        RECONFIGURE_INPUT,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_get_controller_model.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        RECONFIGURE_INPUT,
+    )
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
 
-@pytest.mark.asyncio
-async def test_reconfigure_invalid_host(hass, bypass_get_data):
-    """Test reconfigure flow with invalid host IP."""
-    # Create a config entry
+async def test_reconfigure_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure aborts if another entry already uses the given host/port."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data=RECONFIGURE_INPUT,
+        entry_id="stiebel_eltron_002",
+    )
+
+    mock_config_entry.add_to_hass(hass)
+    other_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
     )
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_CONFIG,
+        RECONFIGURE_INPUT,
     )
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    # Initialize a reconfigure flow
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test we handle already configured."""
+    mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
+        DOMAIN, context={"source": SOURCE_USER}
     )
 
-    # Configure with invalid host
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input=MOCK_INVALID_IP_CONFIG,
+        USER_INPUT,
     )
 
-    # Check that the reconfigure flow shows an error
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "invalid_host_IP"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
-@pytest.mark.asyncio
-async def test_reconfigure_cannot_connect(hass, bypass_get_data):
-    """Test reconfigure flow with connection failure."""
-    # Create a config entry
+async def test_dhcp_discovery_flow(hass: HomeAssistant) -> None:
+    """Test the full DHCP discovery flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Stiebel Eltron"
+    assert result["data"] == {CONF_HOST: "1.1.1.2", CONF_PORT: 502}
+    assert result["result"].unique_id == "00:00:00:00:00:01"
+
+
+async def test_dhcp_discovery_updates_host(hass: HomeAssistant) -> None:
+    """Test DHCP discovery updates the host of an entry with a matching MAC."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 502},
+        unique_id="00:00:00:00:00:01",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data[CONF_HOST] == "1.1.1.2"
+
+
+async def test_dhcp_discovery_already_configured(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test DHCP discovery aborts for an already configured host."""
+    mock_config_entry.add_to_hass(hass)
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context={"source": SOURCE_DHCP},
+        data=DhcpServiceInfo(
+            ip="1.1.1.1",
+            hostname="servicewelt",
+            macaddress="000000000001",
+        ),
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_CONFIG,
-    )
-    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    # Initialize a reconfigure flow
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_reason"),
+    [
+        pytest.param(StiebelEltronModbusError, "cannot_connect", id="cannot_connect"),
+        pytest.param(Exception, "unknown", id="unknown"),
+    ],
+)
+async def test_dhcp_discovery_errors(
+    hass: HomeAssistant,
+    mock_get_controller_model: MagicMock,
+    side_effect: type[Exception],
+    expected_reason: str,
+) -> None:
+    """Test DHCP discovery aborts when the device cannot be validated."""
+    mock_get_controller_model.side_effect = side_effect
+
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry.entry_id,
-        },
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
     )
 
-    # Mock a connection failure
-    with patch(
-        "custom_components.stiebel_eltron_isg.config_flow.async_get_controller_model",
-        side_effect=Exception("Connection failed"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_HOST: "192.168.1.50",
-                CONF_PORT: 502,
-            },
-        )
-
-    # Check that the reconfigure flow shows an error
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "cannot_connect"}
-
-
-@pytest.mark.asyncio
-async def test_reconfigure_already_configured_host(hass, bypass_get_data):
-    """Test reconfigure flow when trying to use an already configured host."""
-    # Create first config entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=MOCK_CONFIG,
-    )
-
-    # Create second config entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
-    )
-    new_config = {
-        CONF_NAME: "Another ISG",
-        CONF_HOST: "192.168.1.200",
-        CONF_PORT: 502,
-    }
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=new_config,
-    )
-    config_entry_2 = hass.config_entries.async_entries(DOMAIN)[1]
-
-    # Initialize a reconfigure flow for the second entry
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_RECONFIGURE,
-            "entry_id": config_entry_2.entry_id,
-        },
-    )
-
-    # Try to configure with the first entry's host
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_HOST: MOCK_CONFIG[CONF_HOST],
-            CONF_PORT: MOCK_CONFIG[CONF_PORT],
-        },
-    )
-
-    # Check that the reconfigure flow shows an already_configured error
-    assert result["type"] == FlowResultType.FORM
-    assert result["errors"] == {CONF_HOST: "already_configured"}
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason

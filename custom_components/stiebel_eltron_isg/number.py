@@ -9,10 +9,6 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-
 from .const import (
     AREA_COOLING_TARGET_FLOW_TEMPERATURE,
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
@@ -41,7 +37,7 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     HEATING_CURVE_RISE_HK3,
 )
-from .data import StiebelEltronIsgIntegrationConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -438,11 +434,11 @@ NUMBER_TYPES_LWZ = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,  # Unused function argument: `hass`
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the select platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     entities = []
     if coordinator.is_wpm:
@@ -472,7 +468,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronNumberEntityDescription,
     ):
         """Initialize the sensor."""

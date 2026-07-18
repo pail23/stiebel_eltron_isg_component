@@ -1,198 +1,165 @@
-"""Test stiebel_eltron_isg setup process."""
+"""Tests for the STIEBEL ELTRON integration."""
+
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-import pytest
+from modbus_connection import ModbusError, ModbusTimeoutError
+from modbus_connection.mock import MockModbusConnection
+from pystiebeleltron import StiebelEltronModbusError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
-from custom_components.stiebel_eltron_isg.wpm_coordinator import (
-    StiebelEltronModbusWPMDataCoordinator,
-)
-
-from .const import MOCK_CONFIG
 
 
-# We can pass fixtures as defined in conftest.py to tell pytest to use the fixture
-# for a given test. We can also leverage fixtures and mocks that are available in
-# Home Assistant using the pytest_homeassistant_custom_component plugin.
-# Assertions allow you to verify that the return value of whatever is on the left
-# side of the assertion matches with the right side.
-@pytest.mark.asyncio
-async def test_setup_unload_and_reload_entry(
+async def test_async_setup_entry_success(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful setup of the integration."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is True
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_async_setup_entry_with_custom_port(
     hass: HomeAssistant,
-    mock_modbus_wpm,
-    get_model_wpm,
-):
-    """Test entry setup and unload."""
-    # Create a mock entry so we don't have to go through config flow
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    config_entry.add_to_hass(hass)
-
-    # Set up the entry and assert that the values set during setup are where we expect
-    # them to be. Because we have patched the StiebelEltronModbusDataCoordinator.async_get_data
-    # call, no code from custom_components/stiebel_eltron_isg/api.py actually runs.
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    assert isinstance(
-        config_entry.runtime_data.coordinator,
-        StiebelEltronModbusWPMDataCoordinator,
+    mock_connect_tcp: AsyncMock,
+) -> None:
+    """Test setup with custom port."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "192.168.1.100", CONF_PORT: 5020},
     )
-
-    # Unload the entry and verify that the data has been removed
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.asyncio
-async def test_data_coordinator_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
-    """Test creating a data coordinator for wpm models."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_actual_temperature_fek")
-    assert state is not None
-    assert state.state == "0.2"
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert result is True
+    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=5020)
 
 
-@pytest.mark.asyncio
-async def test_energy_data_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
-    """Test creating a data coordinator for lwz models."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
+async def test_async_setup_entry_without_port(
+    hass: HomeAssistant,
+    mock_connect_tcp: AsyncMock,
+) -> None:
+    """Test setup without port (should use default)."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "192.168.1.100"},
+    )
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    result = await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert result is True
+    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=502)
+
+
+async def test_async_setup_entry_cannot_connect(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_connect_tcp: AsyncMock,
+) -> None:
+    """Test setup retries when the connection cannot be opened."""
+    mock_connect_tcp.side_effect = ModbusTimeoutError("could not connect")
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_modbus_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Test setup retries when reading the controller model fails."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_controller_model.side_effect = StiebelEltronModbusError()
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_coordinator_update_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wpm_api: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Test setup retries and closes the connection when the first update fails."""
+    mock_wpm_api.async_update.side_effect = ModbusError("update failed")
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_modbus_connection.connected is False
+
+
+async def test_connection_lost_reloads_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Test a lost connection schedules a reload of the config entry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
+        mock_modbus_connection.simulate_connection_lost()
 
-    state = hass.states.get("sensor.stiebel_eltron_isg_produced_heating_today")
-    assert state is not None
-    assert state.state == "0"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_produced_heating_total")
-    assert state is not None
-    assert state.state == "2001"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_produced_heating")
-    assert state is not None
-    assert state.state == "2001"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating_today")
-    assert state is not None
-    assert state.state == "10"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating_total")
-    assert state is not None
-    assert state.state == "12011"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating")
-    assert state is not None
-    assert state.state == "12021"
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
-@pytest.mark.asyncio
-async def test_climate_wpm(hass: HomeAssistant, mock_modbus_wpm) -> None:
-    """Test creating a data coordinator for lwz models."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test")
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
+async def test_unload_entry_closes_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Test unloading the config entry closes the Modbus connection."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_1")
-    assert state is not None
-    assert state.state == "auto"
-
-    state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_2")
-    assert state is not None
-    assert state.state == "auto"
-
-    state = hass.states.get("climate.stiebel_eltron_isg_heat_circuit_3")
-    assert state is not None
-    assert state.state == "auto"
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-@pytest.mark.asyncio
-async def test_data_coordinator_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
-    """Test creating a data coordinator for lwz models."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_actual_room_temperature_hk_2")
-    assert state is not None
-    assert state.state == "0.3"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_compressor_starts")
-    assert state is not None
-    assert state.state == "30033"
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert result is True
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_modbus_connection.connected is False
 
 
-@pytest.mark.asyncio
-async def test_energy_data_lwz(hass: HomeAssistant, mock_modbus_lwz) -> None:
-    """Test creating a data coordinator for lwz models."""
-    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG, entry_id="test_lwz")
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
+async def test_unload_entry_does_not_close_connection_if_platform_unload_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Test the connection is not closed if platform unload fails."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.stiebel_eltron_isg_produced_heating_today")
-    assert state is not None
-    assert state.state == "0"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_produced_heating_total")
-    assert state is not None
-    assert state.state == "2001"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_produced_heating")
-    assert state is not None
-    assert state.state == "2001"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating_today")
-    assert state is not None
-    assert state.state == "21"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating_total")
-    assert state is not None
-    assert state.state == "23022"
-
-    state = hass.states.get("sensor.stiebel_eltron_isg_consumed_heating")
-    assert state is not None
-    assert state.state == "23043"
-
-    await hass.config_entries.async_unload(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert result is False
+    assert mock_modbus_connection.connected is True

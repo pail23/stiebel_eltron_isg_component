@@ -10,8 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RESET_HEATPUMP
-from .coordinator import StiebelEltronDataCoordinator
-from .data import StiebelEltronIsgIntegrationConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,11 +45,11 @@ BUTTONS = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the select platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     if coordinator.is_wpm:
         async_add_devices(
@@ -65,7 +64,7 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronISGButtonDescription,
     ) -> None:
         """Initialize the button."""

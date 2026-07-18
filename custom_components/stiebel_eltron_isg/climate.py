@@ -19,14 +19,8 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
-
 from .const import DOMAIN, OPERATION_MODE
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -247,11 +241,11 @@ LWZ_CLIMATE_TYPES = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the select platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     if coordinator.is_wpm:
         entities: list[
@@ -392,7 +386,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
         """Initialize the climate entity."""
@@ -442,7 +436,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
         """Initialize the climate entity."""

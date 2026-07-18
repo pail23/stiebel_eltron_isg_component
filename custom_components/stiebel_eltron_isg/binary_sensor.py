@@ -11,13 +11,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
-
 from .const import (
     BUFFER_1_CHARGING_PUMP,
     BUFFER_2_CHARGING_PUMP,
@@ -77,6 +70,7 @@ from .const import (
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
 )
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 PARALLEL_UPDATES = 1
@@ -530,11 +524,11 @@ LWZ_BINARY_SENSOR_TYPES = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the binary_sensor platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     if coordinator.is_wpm:
         entities = [
@@ -563,7 +557,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronBinarySensorEntityDescription,
     ) -> None:
         """Initialize the binary sensor."""

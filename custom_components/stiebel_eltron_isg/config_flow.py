@@ -18,7 +18,7 @@ from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 import voluptuous as vol
 
-from .const import DEFAULT_PORT, UNIT_ID
+from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ async def check_controller_model(host: str, port: int) -> str | None:
     return None
 
 
-class StiebelEltronConfigFlow(ConfigFlow):
+class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for STIEBEL ELTRON."""
 
     VERSION = 1

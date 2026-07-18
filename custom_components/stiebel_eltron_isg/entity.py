@@ -6,22 +6,7 @@ from typing import Any
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-try:
-    from pystiebeleltron import IsgRegisters, IsgRegistersNone
-except ImportError:
-    IsgRegisters = Any
-
-    class _IsgRegistersNone:
-        NONE = "NONE"
-
-    IsgRegistersNone = _IsgRegistersNone
-
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,7 +24,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
     ):
         """Initialize the entity base class."""
         super().__init__(coordinator)

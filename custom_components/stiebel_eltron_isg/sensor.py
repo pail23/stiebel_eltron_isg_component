@@ -25,13 +25,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
-
 from .const import (
     ACTIVE_ERROR,
     ACTUAL_HUMIDITY,
@@ -132,6 +125,7 @@ from .const import (
     VOLUME_STREAM_WP1,
     VOLUME_STREAM_WP2,
 )
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -976,11 +970,11 @@ LWZ_SENSOR_TYPES = (
 
 async def async_setup_entry(
     _hass: HomeAssistant,  # Unused function argument: `hass`
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     if coordinator.is_wpm:
         entities = [
@@ -1027,7 +1021,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSensorEntityDescription,
     ):
         """Initialize the sensor."""
@@ -1060,7 +1054,7 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSensorEntityDescription,
     ):
         """Initialize the sensor."""

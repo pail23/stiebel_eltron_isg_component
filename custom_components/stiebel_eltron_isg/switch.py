@@ -12,13 +12,6 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronDataCoordinator,
-)
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronIsgIntegrationConfigEntry,
-)
-
 from .const import (
     CIRCULATION_PUMP,
     DOMAIN,
@@ -26,6 +19,7 @@ from .const import (
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
 )
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,11 +75,11 @@ SWITCH_TYPES = [
 
 async def async_setup_entry(
     _hass: HomeAssistant,
-    entry: StiebelEltronIsgIntegrationConfigEntry,
+    entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
-    coordinator = entry.runtime_data.coordinator
+    coordinator = entry.runtime_data
 
     entities = [
         StiebelEltronISGSwitch(
@@ -122,7 +116,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     def __init__(
         self,
         coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronIsgIntegrationConfigEntry,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSwitchEntityDescription,
     ):
         """Initialize the sensor."""
