@@ -26,7 +26,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
 
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
+    StiebelEltronDataCoordinator,
 )
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
@@ -1026,7 +1026,7 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronSensorEntityDescription,
     ):
@@ -1059,7 +1059,7 @@ class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronSensorEntityDescription,
     ):

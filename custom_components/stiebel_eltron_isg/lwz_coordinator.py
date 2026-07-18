@@ -10,53 +10,40 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from pystiebeleltron import StiebelEltronModbusError
+from modbus_connection import ModbusConnection, ModbusError
+from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 
-from .coordinator import StiebelEltronModbusDataCoordinator
+from .const import UNIT_ID
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class StiebelEltronModbusLWZDataCoordinator(StiebelEltronModbusDataCoordinator):
+class StiebelEltronModbusLWZDataCoordinator(StiebelEltronDataCoordinator):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        entry: StiebelEltronConfigEntry,
+        model: ControllerModel,
+        connection: ModbusConnection,
         host: str,
-        port: int,
-        scan_interval: int,
     ) -> None:
         """Initialize the Modbus hub."""
-        self._api: LwzStiebelEltronAPI | None = None
-        super().__init__(
-            hass, name=name, host=host, port=port, scan_interval=scan_interval
-        )
-
-    async def connect(self) -> None:
-        """Connect client."""
-        await super().connect()
-        self._api = LwzStiebelEltronAPI(self._for_unit(1))
-
-    async def close(self) -> None:
-        """Disconnect client."""
-        await super().close()
-        self._api = None
+        self._api = LwzStiebelEltronAPI(connection.for_unit(UNIT_ID))
+        super().__init__(hass, entry, model, connection, host)
 
     async def _async_update_data(self) -> dict[Any, float | int | None]:
         """Time to update."""
         try:
-            if not self.is_connected:
-                await self.connect()
-            if self._api is not None:
-                await self._api.async_update()
-                self._model_id = (
-                    self._api.energy_system_information.controller_identification
-                ) or 0
+            await self._api.async_update()
+            self._model_id = (
+                self._api.energy_system_information.controller_identification
+            ) or 0
 
-        except Exception as exception:
+        except ModbusError as exception:
             raise UpdateFailed(exception) from exception
         else:
             return {}

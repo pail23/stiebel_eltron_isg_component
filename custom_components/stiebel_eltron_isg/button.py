@@ -10,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN, RESET_HEATPUMP
-from .coordinator import StiebelEltronModbusDataCoordinator
+from .coordinator import StiebelEltronDataCoordinator
 from .data import StiebelEltronIsgIntegrationConfigEntry
 from .entity import StiebelEltronISGEntity
 
@@ -23,7 +23,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronISGButtonDescriptionMixin:
     """Mixin to describe aStiebel Eltron ISG button."""
 
-    press_action: Callable[[StiebelEltronModbusDataCoordinator], Coroutine]
+    press_action: Callable[[StiebelEltronDataCoordinator], Coroutine]
 
 
 @dataclass(frozen=True)
@@ -64,7 +64,7 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronISGButtonDescription,
     ) -> None:

@@ -7,14 +7,14 @@ from dataclasses import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.loader import Integration
 
-from .coordinator import StiebelEltronModbusDataCoordinator
+from .coordinator import StiebelEltronDataCoordinator
 
 
 @dataclass
 class StiebEltronISGIntegrationData:
     """Data for the Stiebel Eltron ISG integration."""
 
-    coordinator: StiebelEltronModbusDataCoordinator
+    coordinator: StiebelEltronDataCoordinator
     integration: Integration
 
 

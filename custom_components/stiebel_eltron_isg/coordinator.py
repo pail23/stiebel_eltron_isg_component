@@ -7,46 +7,59 @@ https://github.com/pail23/stiebel_eltron_isg
 from datetime import timedelta
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-from modbus_connection import ModbusUnit
-from modbus_connection.pymodbus import PymodbusConnection, connect_tcp
+from modbus_connection import ModbusConnection, ModbusUnit
+from pystiebeleltron import ControllerModel
+
+from custom_components.stiebel_eltron_isg.const import (
+    ATTR_MANUFACTURER,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
+type StiebelEltronConfigEntry = ConfigEntry[StiebelEltronDataCoordinator]
 
-class StiebelEltronModbusDataCoordinator(DataUpdateCoordinator):
+
+class StiebelEltronDataCoordinator(DataUpdateCoordinator):
     """Data coordinator base class for stiebel eltron isg."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        name: str,
+        entry: StiebelEltronConfigEntry,
+        model: ControllerModel,
+        connection: ModbusConnection,
         host: str,
-        port: int,
-        scan_interval: int,
     ) -> None:
         """Initialize the Modbus hub."""
         self._model_id: int = 0
         self._host = host
-        self._port = port
-        self._connection: PymodbusConnection | None = None
-        self._scan_interval = timedelta(seconds=scan_interval)
-        self.platforms: list[str] = []
+        self._connection = connection
 
-        super().__init__(hass, _LOGGER, name=name, update_interval=self._scan_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"Stiebel Eltron {model.name}",
+            config_entry=entry,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            # The coordinator holds no data of its own (the API client caches
+            # the register values), so there is nothing to diff against.
+            always_update=True,
+        )
 
-    async def close(self) -> None:
-        """Disconnect client."""
-        _LOGGER.debug("Closing connection to %s", self.host)
-        if self._connection is not None:
-            await self._connection.close()
-            self._connection = None
-
-    async def connect(self) -> None:
-        """Connect client."""
-        _LOGGER.debug("Connecting to %s", self.host)
-        self._connection = await connect_tcp(self._host, port=self._port)
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            configuration_url=f"http://{host}",
+            name=self.name,
+            model=model.name,
+            model_id=str(model.value),
+            manufacturer=ATTR_MANUFACTURER,
+        )
 
     def _for_unit(self, unit: int) -> ModbusUnit:
         """Return a connection for a specific unit."""

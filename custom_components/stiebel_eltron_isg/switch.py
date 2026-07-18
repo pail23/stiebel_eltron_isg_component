@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
+    StiebelEltronDataCoordinator,
 )
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
@@ -121,7 +121,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronIsgIntegrationConfigEntry,
         description: StiebelEltronSwitchEntityDescription,
     ):

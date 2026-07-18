@@ -18,7 +18,7 @@ except ImportError:
     IsgRegistersNone = _IsgRegistersNone
 
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronModbusDataCoordinator,
+    StiebelEltronDataCoordinator,
 )
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
@@ -34,31 +34,20 @@ class StiebelEltronEntityDescription(EntityDescription):
     modbus_register: Any
 
 
-class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronModbusDataCoordinator]):
+class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
     """stiebel_eltron_isg entity base class."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: StiebelEltronModbusDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronIsgIntegrationConfigEntry,
     ):
         """Initialize the entity base class."""
         super().__init__(coordinator)
         self.config_entry = config_entry
-        self.modbus_register: Any = IsgRegistersNone.NONE
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return the device info of the entity."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.coordinator.name)},
-            configuration_url=f"http://{self.coordinator.host}",
-            name=self.coordinator.name,
-            model=self.coordinator.model,
-            manufacturer=ATTR_MANUFACTURER,
-        )
+        self._attr_device_info = coordinator.device_info
 
     @property
     def available(self) -> bool:
