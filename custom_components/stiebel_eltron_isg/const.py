@@ -1,7 +1,5 @@
 """Constants for stiebel_eltron_isg."""
 
-from homeassistant.const import Platform
-
 # Base component constants
 DEFAULT_NAME = "Stiebel Eltron ISG"
 ATTR_MANUFACTURER = "Stiebel Eltron"

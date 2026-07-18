@@ -102,3 +102,7 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator):
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
+
+    def get_raw_data(self) -> dict:
+        """Return the raw data from the heat pump."""
+        raise NotImplementedError("get_raw_data must be implemented by subclasses")

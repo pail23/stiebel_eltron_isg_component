@@ -25,7 +25,7 @@ from custom_components.stiebel_eltron_isg.wpm_coordinator import (
     StiebelEltronModbusWPMDataCoordinator,
 )
 
-from .const import DEFAULT_PORT, PLATFORMS, UNIT_ID
+from .const import DEFAULT_PORT, UNIT_ID
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

@@ -11,6 +11,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusConnection
+from modbus_connection.cli_helper import field_rows
 from pystiebeleltron import ControllerModel, ModbusError, StiebelEltronModbusError
 from pystiebeleltron.wpm import WpmStiebelEltronAPI
 
@@ -94,3 +95,11 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronDataCoordinator):
                 "reset",
                 3,
             )
+
+    def get_raw_data(self) -> dict:
+        """Return the raw data from the heat pump."""
+        result: dict = {}
+        for component in vars(self._api).values():
+            component_result = dict(field_rows(component))
+            result = {**result, **component_result}
+        return result

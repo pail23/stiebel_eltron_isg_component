@@ -3,7 +3,6 @@
 from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,8 +22,6 @@ from custom_components.stiebel_eltron_isg.coordinator import (
 from custom_components.stiebel_eltron_isg.data import (
     StiebelEltronIsgIntegrationConfigEntry,
 )
-
-from .const import ATTR_MANUFACTURER, DOMAIN
 
 
 @dataclass(frozen=True, kw_only=True)
