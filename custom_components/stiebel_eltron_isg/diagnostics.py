@@ -8,9 +8,7 @@ from homeassistant.components.diagnostics.util import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from custom_components.stiebel_eltron_isg.data import (
-    StiebelEltronConfigEntry,
-)
+from custom_components.stiebel_eltron_isg.data import StiebelEltronConfigEntry
 
 CONFIG_FIELDS_TO_REDACT: list[str] = []
 DATA_FIELDS_TO_REDACT: list[str] = []

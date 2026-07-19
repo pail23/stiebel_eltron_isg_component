@@ -152,3 +152,6 @@ split-on-trailing-comma = false
 
 [tool.mypy]
 ignore_missing_imports = true
+python_version = 3.14
+native_parser = true
+exclude = "custom_components/stiebel_eltron_isg/config_flow.py"
