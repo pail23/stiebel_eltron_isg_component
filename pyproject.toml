@@ -7,7 +7,7 @@ requires-python = ">=3.14.2"
 dependencies = [
     "colorlog>=6.10.1",
     "pytest-homeassistant-custom-component>=0.13.346",
-    "pystiebeleltron>=0.5.1",
+    "pystiebeleltron>=0.6.0",
     "pymodbus>=3.11.0",
 ]
 
