@@ -4,7 +4,7 @@
   "configurations": [
     {
       "name": "Home Assistant",
-      "type": "python",
+      "type": "debugpy",
       "request": "launch",
       "module": "homeassistant",
       "justMyCode": false,
@@ -17,7 +17,7 @@
     {
       // Example of attaching to local debug server
       "name": "Python: Attach Local",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
       "port": 5678,
       "host": "localhost",
@@ -31,7 +31,7 @@
     {
       // Example of attaching to my production server
       "name": "Python: Attach Remote",
-      "type": "python",
+      "type": "debugpy",
       "request": "attach",
       "port": 5678,
       "host": "homeassistant.local",
