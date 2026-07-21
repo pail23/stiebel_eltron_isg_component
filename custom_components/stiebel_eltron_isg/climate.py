@@ -19,7 +19,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, OPERATION_MODE
+from .const import DOMAIN
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -489,7 +489,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
-        if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+        if self.operation_mode == ECO_MODE:
             value = self._read_register(lambda api: api.system_parameters.night_stage)
             if value is None:
                 return None
@@ -503,7 +503,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
         if new_mode is not None:
-            if self.coordinator.data.get(OPERATION_MODE) == ECO_MODE:
+            if self.operation_mode == ECO_MODE:
                 await self._write_field("night_stage", new_mode)
             else:
                 await self._write_field("day_stage", new_mode)
