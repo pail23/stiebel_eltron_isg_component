@@ -238,5 +238,3 @@ EXTRACT_AIR_HUMIDITY = "extract_air_humidity"
 RESET_HEATPUMP = "reset_heatpump"
 ACTIVE_ERROR = "active_error"
 ERROR_STATUS = "error_status"
-
-MODEL_ID = "model_id"

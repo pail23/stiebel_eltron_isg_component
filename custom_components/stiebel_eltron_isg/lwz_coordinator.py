@@ -40,10 +40,6 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronDataCoordinator):
         """Time to update."""
         try:
             await self._api.async_update()
-            self._model_id = (
-                self._api.energy_system_information.controller_identification
-            ) or 0
-
         except ModbusError as exception:
             raise UpdateFailed(exception) from exception
         else:

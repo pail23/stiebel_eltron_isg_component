@@ -104,7 +104,15 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator):
     @property
     def is_wpm(self) -> bool:
         """Check if heat pump controller is a wpm model."""
-        return self._model_id >= 390
+        return (
+            self._model
+            in {
+                ControllerModel.WPM_3,
+                ControllerModel.WPM_3i,
+                ControllerModel.WPMsystem,
+                ControllerModel.LWZ_R290,  # Although this is a LWZ model, it uses the WPM protocol, so treat it as a WPM model.
+            }
+        )
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
