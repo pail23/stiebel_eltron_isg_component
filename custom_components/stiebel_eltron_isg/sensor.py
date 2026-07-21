@@ -24,6 +24,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 import homeassistant.util.dt as dt_util
+from pystiebeleltron import ControllerModel
 
 from .const import (
     ACTIVE_ERROR,
@@ -243,6 +244,131 @@ def create_volume_stream_entity_description(
         modbus_register=modbus_register,
     )
 
+
+WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
+    create_temperature_entity_description(
+        "Actual Temperature",
+        ACTUAL_TEMPERATURE,
+        lambda api: api.system_values.actual_temperature_fe7,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature",
+        TARGET_TEMPERATURE,
+        lambda api: api.system_values.set_temperature_fe7,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature FEK",
+        ACTUAL_TEMPERATURE_FEK,
+        lambda api: api.system_values.actual_temperature_fek,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature FEK",
+        TARGET_TEMPERATURE_FEK,
+        lambda api: api.system_values.set_temperature_fek,
+    ),
+    create_humidity_entity_description(
+        "Humidity", ACTUAL_HUMIDITY, lambda api: api.system_values.relative_humidity
+    ),
+    create_temperature_entity_description(
+        "Dew Point Temperature",
+        DEWPOINT_TEMPERATURE,
+        lambda api: api.system_values.dew_point_temperature,
+    ),
+    create_temperature_entity_description(
+        "Outdoor Temperature",
+        OUTDOOR_TEMPERATURE,
+        lambda api: api.system_values.outside_temperature,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 1",
+        TARGET_TEMPERATURE_HK1,
+        lambda api: api.system_values.set_temperature_hk_1,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature HK 2",
+        ACTUAL_TEMPERATURE_HK2,
+        lambda api: api.system_values.actual_temperature_hk_2,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature HK 2",
+        TARGET_TEMPERATURE_HK2,
+        lambda api: api.system_values.set_temperature_hk_2,
+    ),
+    create_temperature_entity_description(
+        "Flow Temperature WP",
+        FLOW_TEMPERATURE_WP,
+        lambda api: api.system_values.actual_flow_temperature_wp,
+    ),
+    create_temperature_entity_description(
+        "Flow Temperature NHZ",
+        FLOW_TEMPERATURE_NHZ,
+        lambda api: api.system_values.actual_flow_temperature_nhz,
+    ),
+    create_temperature_entity_description(
+        "Flow Temperature",
+        FLOW_TEMPERATURE,
+        lambda api: api.system_values.actual_flow_temperature,
+    ),
+    create_temperature_entity_description(
+        "Return Temperature",
+        RETURN_TEMPERATURE,
+        lambda api: api.system_values.actual_return_temperature,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Buffer",
+        ACTUAL_TEMPERATURE_BUFFER,
+        lambda api: api.system_values.actual_buffer_temperature,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Buffer",
+        TARGET_TEMPERATURE_BUFFER,
+        lambda api: api.system_values.set_buffer_temperature,
+    ),
+    create_pressure_entity_description(
+        "Heater Pressure",
+        HEATER_PRESSURE,
+        lambda api: api.system_values.heating_pressure,
+    ),
+    create_volume_stream_entity_description(
+        "Volume Stream", VOLUME_STREAM, lambda api: api.system_values.flow_rate
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Water",
+        ACTUAL_TEMPERATURE_WATER,
+        lambda api: api.system_values.actual_temperature_dhw,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Water",
+        TARGET_TEMPERATURE_WATER,
+        lambda api: api.system_values.set_temperature_dhw,
+    ),
+    create_temperature_entity_description(
+        "Source Temperature",
+        SOURCE_TEMPERATURE,
+        lambda api: api.system_values.source_temperature,
+    ),
+    create_temperature_entity_description(
+        "Min Source Temperature",
+        MIN_SOURCE_TEMPERATURE,
+        lambda api: api.system_values.min_source_temperature,
+    ),
+    create_pressure_entity_description(
+        "Source Pressure",
+        SOURCE_PRESSURE,
+        lambda api: api.system_values.source_pressure,
+    ),
+    create_temperature_entity_description(
+        "Hot Gas Temperature",
+        HOT_GAS_TEMPERATURE,
+        lambda api: api.system_values.hot_gas_temperature,
+    ),
+    create_pressure_entity_description(
+        "High Pressure", HIGH_PRESSURE, lambda api: api.system_values.high_pressure
+    ),
+    create_pressure_entity_description(
+        "Low Pressure", LOW_PRESSURE, lambda api: api.system_values.low_pressure
+    ),
+]
 
 SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
@@ -955,6 +1081,12 @@ LWZ_VENTILATION_SENSOR_TYPES = [
 ]
 
 
+WPM_3I_SENSOR_TYPES = (
+    WPM_3I_SYSTEM_VALUES_SENSOR_TYPES
+    + ENERGYMANAGEMENT_SENSOR_TYPES
+    + ENERGY_SENSOR_TYPES
+)
+
 WPM_SENSOR_TYPES = (
     SYSTEM_VALUES_SENSOR_TYPES + ENERGYMANAGEMENT_SENSOR_TYPES + ENERGY_SENSOR_TYPES
 )
@@ -976,7 +1108,25 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     coordinator = entry.runtime_data
 
-    if coordinator.is_wpm:
+    if coordinator.model == ControllerModel.WPM_3i:
+        entities = [
+            StiebelEltronISGSensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in WPM_3I_SENSOR_TYPES
+        ]
+        daily_energy_entities = [
+            StiebelEltronISGEnergySensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in ENERGY_DAILY_SENSOR_TYPES
+        ]
+        entities.extend(daily_energy_entities)
+    elif coordinator.is_wpm:
         entities = [
             StiebelEltronISGSensor(
                 coordinator,
