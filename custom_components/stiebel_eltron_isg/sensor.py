@@ -213,6 +213,7 @@ def create_humidity_entity_description(
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.HUMIDITY,
         modbus_register=modbus_register,
     )
 
