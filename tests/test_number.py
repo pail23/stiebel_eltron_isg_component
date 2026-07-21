@@ -1,6 +1,15 @@
 """Tests for the number platform."""
 
-from custom_components.stiebel_eltron_isg.number import StiebelEltronISGNumberEntity
+from types import SimpleNamespace
+
+from custom_components.stiebel_eltron_isg.const import (
+    AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+    FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+)
+from custom_components.stiebel_eltron_isg.number import (
+    NUMBER_TYPES_WPM,
+    StiebelEltronISGNumberEntity,
+)
 
 
 class _StubCoordinator:
@@ -80,3 +89,31 @@ async def test_number_without_write_field_does_not_write() -> None:
     await entity.async_set_native_value(12.0)
 
     assert entity.coordinator.writes == []
+
+
+def _description(key: str):
+    return next(d for d in NUMBER_TYPES_WPM if d.key == key)
+
+
+def test_area_cooling_hysteresis_number_is_wired() -> None:
+    """The area cooling flow-temperature hysteresis number reads/writes 1514."""
+    description = _description(AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS)
+
+    api = SimpleNamespace(
+        system_parameters=SimpleNamespace(flow_temp_hysteresis_area=3.0)
+    )
+    assert description.modbus_register(api) == 3.0
+    assert description.write_field == "flow_temp_hysteresis_area"
+    assert (description.native_min_value, description.native_max_value) == (1, 5)
+
+
+def test_fan_cooling_hysteresis_number_is_wired() -> None:
+    """The fan cooling flow-temperature hysteresis number reads/writes 1517."""
+    description = _description(FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS)
+
+    api = SimpleNamespace(
+        system_parameters=SimpleNamespace(flow_temp_hysteresis_fan=2.5)
+    )
+    assert description.modbus_register(api) == 2.5
+    assert description.write_field == "flow_temp_hysteresis_fan"
+    assert (description.native_min_value, description.native_max_value) == (1, 5)

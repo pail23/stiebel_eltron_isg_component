@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
+    AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     AREA_COOLING_TARGET_FLOW_TEMPERATURE,
     AREA_COOLING_TARGET_ROOM_TEMPERATURE,
     COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
@@ -28,6 +29,7 @@ from .const import (
     ECO_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK3,
     ECO_WATER_TEMPERATURE_TARGET,
+    FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_LEVEL_DAY,
@@ -196,6 +198,17 @@ NUMBER_TYPES_WPM = [
         write_field="set_flow_temperature_area",
     ),
     StiebelEltronNumberEntityDescription(
+        key=AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        translation_key=AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        icon="mdi:thermometer-lines",
+        native_min_value=1,
+        native_max_value=5,
+        native_step=0.1,
+        modbus_register=lambda api: api.system_parameters.flow_temp_hysteresis_area,
+        write_field="flow_temp_hysteresis_area",
+    ),
+    StiebelEltronNumberEntityDescription(
         key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
         translation_key=FAN_COOLING_TARGET_ROOM_TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -216,6 +229,17 @@ NUMBER_TYPES_WPM = [
         native_step=0.1,
         modbus_register=lambda api: api.system_parameters.set_flow_temperature_fan,
         write_field="set_flow_temperature_fan",
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        translation_key=FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+        native_unit_of_measurement=UnitOfTemperature.KELVIN,
+        icon="mdi:thermometer-lines",
+        native_min_value=1,
+        native_max_value=5,
+        native_step=0.1,
+        modbus_register=lambda api: api.system_parameters.flow_temp_hysteresis_fan,
+        write_field="flow_temp_hysteresis_fan",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK1,
