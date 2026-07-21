@@ -57,8 +57,7 @@ class StiebelEltronModbusWPM3iDataCoordinator(StiebelEltronDataCoordinator):
     ) -> float | int | None:
         """Return a value from a callable accessor."""
         try:
-            if self._api is not None:
-                value = value_reference(self._api)
+            value = value_reference(self._api)
         except StiebelEltronModbusError as err:
             _LOGGER.warning(
                 "Failed to get value from accessor %r: %s",
@@ -82,19 +81,17 @@ class StiebelEltronModbusWPM3iDataCoordinator(StiebelEltronDataCoordinator):
         value: int | float,
     ) -> None:
         """Write a value to a component field."""
-        if self._api is not None:
-            component_obj = getattr(self._api, component, None)
-            if component_obj is not None and hasattr(component_obj, field):
-                await component_obj.write(field, value)
+        component_obj = getattr(self._api, component, None)
+        if component_obj is not None and hasattr(component_obj, field):
+            await component_obj.write(field, value)
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
-        if self._api is not None:
-            await self._api.system_parameters.write(
-                "reset",
-                3,
-            )
+        await self._api.system_parameters.write(
+            "reset",
+            3,
+        )
 
     def get_raw_data(self) -> dict:
         """Return the raw data from the heat pump."""
