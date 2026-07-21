@@ -311,7 +311,9 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self.target_temperature is not None
+        return (
+            self.coordinator.last_update_success and self.target_temperature is not None
+        )
 
     @property
     def operation_mode(self) -> int:

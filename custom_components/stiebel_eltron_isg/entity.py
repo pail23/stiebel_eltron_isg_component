@@ -33,5 +33,12 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.coordinator.has_value(self.modbus_register)
+        """Return True if entity is available.
+
+        An entity is only available when the most recent coordinator update
+        succeeded; otherwise a lost connection would keep reporting the last
+        cached register value as if it were current.
+        """
+        return self.coordinator.last_update_success and self.coordinator.has_value(
+            self.modbus_register
+        )

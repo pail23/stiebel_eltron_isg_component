@@ -171,13 +171,8 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
             SG_READY_INPUT_1,
             SG_READY_INPUT_2,
         ):
-            has_value = self.coordinator.has_value(self.modbus_register)
-
-            if not has_value:
-                _LOGGER.debug(
-                    "Switch %s should not be available because register %s is not available",
-                    self.entity_description.key,
-                    self.entity_description.key,
-                )
-            return True
+            # These writable switches stay operable even when the device does
+            # not report a read-back value, but must still go unavailable when
+            # the coordinator can no longer reach the device.
+            return self.coordinator.last_update_success
         return super().available
