@@ -280,6 +280,11 @@ WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.outside_temperature,
     ),
     create_temperature_entity_description(
+        "Actual Temperature HK 1",
+        ACTUAL_TEMPERATURE_HK1,
+        lambda api: api.system_values.actual_temperature_hk_1,
+    ),
+    create_temperature_entity_description(
         "Target Temperature HK 1",
         TARGET_TEMPERATURE_HK1,
         lambda api: api.system_values.set_temperature_hk_1_wpm3i,

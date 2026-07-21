@@ -74,7 +74,12 @@ async def async_setup_entry(
         if model == ControllerModel.WPM_3i
         else (
             StiebelEltronModbusWPMDataCoordinator(hass, entry, model, connection, host)
-            if model.value >= 390
+            if model
+            in (
+                ControllerModel.WPMsystem,
+                ControllerModel.WPM_3,
+                ControllerModel.LWZ_R290,
+            )
             else StiebelEltronModbusLWZDataCoordinator(
                 hass,
                 entry,
