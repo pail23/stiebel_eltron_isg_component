@@ -99,7 +99,8 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator):
             return "WPMsystem"
         if self._model == ControllerModel.LWZ_R290:
             return "LWZ R290"
-        return f"other model ({self._model})"
+        # Fall back to the enum name for a clear, readable representation
+        return f"other model ({self._model.name})"
 
     @property
     def is_wpm(self) -> bool:
