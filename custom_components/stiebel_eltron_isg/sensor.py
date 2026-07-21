@@ -348,6 +348,26 @@ WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
         lambda api: api.system_values.set_temperature_dhw,
     ),
     create_temperature_entity_description(
+        "Actual Temperature Cooling Fancoil",
+        ACTUAL_TEMPERATURE_COOLING_FANCOIL,
+        lambda api: api.system_values.actual_temperature_fan,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Cooling Fancoil",
+        TARGET_TEMPERATURE_COOLING_FANCOIL,
+        lambda api: api.system_values.set_temperature_fan,
+    ),
+    create_temperature_entity_description(
+        "Actual Temperature Cooling Surface",
+        ACTUAL_TEMPERATURE_COOLING_SURFACE,
+        lambda api: api.system_values.actual_temperature_area,
+    ),
+    create_temperature_entity_description(
+        "Target Temperature Cooling Surface",
+        TARGET_TEMPERATURE_COOLING_SURFACE,
+        lambda api: api.system_values.set_temperature_area,
+    ),
+    create_temperature_entity_description(
         "Source Temperature",
         SOURCE_TEMPERATURE,
         lambda api: api.system_values.source_temperature,
