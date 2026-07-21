@@ -7,7 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
-from pystiebeleltron import StiebelEltronModbusError
+from pystiebeleltron import StiebelEltronModbusError, UnknownControllerModelError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
@@ -89,6 +89,21 @@ async def test_async_setup_entry_modbus_error(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_setup_entry_unknown_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Setup fails cleanly (no retry) when the controller model is unknown."""
+    mock_config_entry.add_to_hass(hass)
+    mock_get_controller_model.side_effect = UnknownControllerModelError(165)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 async def test_async_setup_entry_coordinator_update_fails(

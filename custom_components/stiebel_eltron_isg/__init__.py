@@ -8,10 +8,14 @@ import logging
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
-from pystiebeleltron import StiebelEltronModbusError, get_controller_model
+from pystiebeleltron import (
+    StiebelEltronModbusError,
+    UnknownControllerModelError,
+    get_controller_model,
+)
 
 from .const import DEFAULT_PORT, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry
@@ -54,6 +58,14 @@ async def async_setup_entry(
         model = await get_controller_model(connection.for_unit(UNIT_ID))
     except StiebelEltronModbusError as exception:
         raise ConfigEntryNotReady("Could not read controller model") from exception
+    except UnknownControllerModelError as exception:
+        # An unrecognised controller id is a permanent condition, not a
+        # transient modbus glitch: fail cleanly instead of retrying forever.
+        # Adding support requires a pystiebeleltron update, which reloads the
+        # entry anyway.
+        raise ConfigEntryError(
+            f"Unsupported controller model: {exception}"
+        ) from exception
 
     coordinator = (
         StiebelEltronModbusWPMDataCoordinator(hass, entry, model, connection, host)
