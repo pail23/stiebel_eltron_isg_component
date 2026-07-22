@@ -13,16 +13,16 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusConnection
 from modbus_connection.cli_helper import field_rows
 from pystiebeleltron import ControllerModel, ModbusError, StiebelEltronModbusError
-from pystiebeleltron.wpm import WpmStiebelEltronAPI
 
 from custom_components.stiebel_eltron_isg.const import UNIT_ID
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .wpm3i import Wpm3iStiebelEltronAPI
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class StiebelEltronModbusWPMDataCoordinator(StiebelEltronDataCoordinator):
+class StiebelEltronModbusWPM3iDataCoordinator(StiebelEltronDataCoordinator):
     """Communicates with WPM Controllers."""
 
     def __init__(
@@ -34,7 +34,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronDataCoordinator):
         host: str,
     ) -> None:
         """Initialize the Modbus hub."""
-        self._api = WpmStiebelEltronAPI(connection.for_unit(UNIT_ID))
+        self._api = Wpm3iStiebelEltronAPI(connection.for_unit(UNIT_ID))
 
         super().__init__(hass, entry, model, connection, host)
 
@@ -49,7 +49,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronDataCoordinator):
 
     def get_value(
         self,
-        value_reference: Callable[[WpmStiebelEltronAPI], float | int | None],
+        value_reference: Callable[[Wpm3iStiebelEltronAPI], float | int | None],
     ) -> float | int | None:
         """Return a value from a callable accessor."""
         try:
@@ -65,7 +65,7 @@ class StiebelEltronModbusWPMDataCoordinator(StiebelEltronDataCoordinator):
 
     def has_value(
         self,
-        value_reference: Callable[[WpmStiebelEltronAPI], float | int | None],
+        value_reference: Callable[[Wpm3iStiebelEltronAPI], float | int | None],
     ) -> bool:
         """Check if a callable accessor has a value."""
         return self.get_value(value_reference) is not None

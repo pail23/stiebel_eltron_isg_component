@@ -9,6 +9,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pystiebeleltron import ControllerModel
 
 from .const import (
     AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
@@ -64,7 +65,7 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
         raise TypeError("modbus_register must be a lambda expression")
 
 
-NUMBER_TYPES_WPM = [
+NUMBER_TYPES_WPM_3I = [
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK1,
         translation_key=COMFORT_TEMPERATURE_TARGET_HK1,
@@ -110,28 +111,6 @@ NUMBER_TYPES_WPM = [
         write_field="eco_temperature_hk_2",
     ),
     StiebelEltronNumberEntityDescription(
-        key=COMFORT_TEMPERATURE_TARGET_HK3,
-        translation_key=COMFORT_TEMPERATURE_TARGET_HK3,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer-high",
-        native_min_value=5,
-        native_max_value=30,
-        native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_3,
-        write_field="comfort_temperature_hk_3",
-    ),
-    StiebelEltronNumberEntityDescription(
-        key=ECO_TEMPERATURE_TARGET_HK3,
-        translation_key=ECO_TEMPERATURE_TARGET_HK3,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer-low",
-        native_min_value=5,
-        native_max_value=30,
-        native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.eco_temperature_hk_3,
-        write_field="eco_temperature_hk_3",
-    ),
-    StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_HZG,
         translation_key=DUALMODE_TEMPERATURE_HZG,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -150,8 +129,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.comfort_temperature,
-        write_field="comfort_temperature",
+        modbus_register=lambda api: api.system_parameters.comfort_temperature_dhw,
+        write_field="comfort_temperature_dhw",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_WATER_TEMPERATURE_TARGET,
@@ -161,8 +140,8 @@ NUMBER_TYPES_WPM = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.eco_temperature,
-        write_field="eco_temperature",
+        modbus_register=lambda api: api.system_parameters.eco_temperature_dhw,
+        write_field="eco_temperature_dhw",
     ),
     StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_WW,
@@ -260,6 +239,32 @@ NUMBER_TYPES_WPM = [
         native_step=0.01,
         modbus_register=lambda api: api.system_parameters.heating_curve_rise_hk_2,
         write_field="heating_curve_rise_hk_2",
+    ),
+]
+
+NUMBER_TYPES_WPM = [
+    *NUMBER_TYPES_WPM_3I,
+    StiebelEltronNumberEntityDescription(
+        key=COMFORT_TEMPERATURE_TARGET_HK3,
+        translation_key=COMFORT_TEMPERATURE_TARGET_HK3,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer-high",
+        native_min_value=5,
+        native_max_value=30,
+        native_step=0.1,
+        modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_3,
+        write_field="comfort_temperature_hk_3",
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=ECO_TEMPERATURE_TARGET_HK3,
+        translation_key=ECO_TEMPERATURE_TARGET_HK3,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        icon="mdi:thermometer-low",
+        native_min_value=5,
+        native_max_value=30,
+        native_step=0.1,
+        modbus_register=lambda api: api.system_parameters.eco_temperature_hk_3,
+        write_field="eco_temperature_hk_3",
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_RISE_HK3,
@@ -466,7 +471,16 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     entities = []
-    if coordinator.is_wpm:
+    if coordinator.model == ControllerModel.WPM_3i:
+        entities = [
+            StiebelEltronISGNumberEntity(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in NUMBER_TYPES_WPM_3I
+        ]
+    elif coordinator.is_wpm:
         entities = [
             StiebelEltronISGNumberEntity(
                 coordinator,

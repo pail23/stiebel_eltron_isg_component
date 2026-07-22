@@ -10,6 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pystiebeleltron import ControllerModel
 
 from .const import (
     BUFFER_1_CHARGING_PUMP,
@@ -84,7 +85,7 @@ class StiebelEltronBinarySensorEntityDescription(BinarySensorEntityDescription):
     bit_number: int = 0
 
 
-WPM_BINARY_SENSOR_TYPES = [
+WPM_3I_BINARY_SENSOR_TYPES = [
     StiebelEltronBinarySensorEntityDescription(
         translation_key=PUMP_ON_HK1,
         key=PUMP_ON_HK1,
@@ -170,6 +171,11 @@ WPM_BINARY_SENSOR_TYPES = [
         modbus_register=lambda api: api.system_state.fault_status,
         bit_number=0,
     ),
+]
+
+
+WPM_BINARY_SENSOR_TYPES = [
+    *WPM_3I_BINARY_SENSOR_TYPES,
     StiebelEltronBinarySensorEntityDescription(
         translation_key=COOLING_MODE,
         key=COOLING_MODE,
@@ -400,6 +406,7 @@ WPM_BINARY_SENSOR_TYPES = [
     ),
 ]
 
+
 LWZ_BINARY_SENSOR_TYPES = [
     StiebelEltronBinarySensorEntityDescription(
         translation_key=SWITCHING_PROGRAM_ENABLED,
@@ -530,7 +537,16 @@ async def async_setup_entry(
     """Set up the binary_sensor platform."""
     coordinator = entry.runtime_data
 
-    if coordinator.is_wpm:
+    if coordinator.model == ControllerModel.WPM_3i:
+        entities = [
+            StiebelEltronISGBinarySensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in WPM_3I_BINARY_SENSOR_TYPES
+        ]
+    elif coordinator.is_wpm:
         entities = [
             StiebelEltronISGBinarySensor(
                 coordinator,

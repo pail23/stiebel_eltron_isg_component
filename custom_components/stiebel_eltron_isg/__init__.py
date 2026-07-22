@@ -12,6 +12,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import (
+    ControllerModel,
     StiebelEltronModbusError,
     UnknownControllerModelError,
     get_controller_model,
@@ -20,6 +21,7 @@ from pystiebeleltron import (
 from .const import DEFAULT_PORT, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
+from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
@@ -68,14 +70,23 @@ async def async_setup_entry(
         ) from exception
 
     coordinator = (
-        StiebelEltronModbusWPMDataCoordinator(hass, entry, model, connection, host)
-        if model.value >= 390
-        else StiebelEltronModbusLWZDataCoordinator(
-            hass,
-            entry,
-            model,
-            connection,
-            host,
+        StiebelEltronModbusWPM3iDataCoordinator(hass, entry, model, connection, host)
+        if model == ControllerModel.WPM_3i
+        else (
+            StiebelEltronModbusWPMDataCoordinator(hass, entry, model, connection, host)
+            if model
+            in (
+                ControllerModel.WPMsystem,
+                ControllerModel.WPM_3,
+                ControllerModel.LWZ_R290,
+            )
+            else StiebelEltronModbusLWZDataCoordinator(
+                hass,
+                entry,
+                model,
+                connection,
+                host,
+            )
         )
     )
     entry.runtime_data = coordinator

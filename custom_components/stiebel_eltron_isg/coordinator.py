@@ -37,7 +37,7 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator):
         host: str,
     ) -> None:
         """Initialize the Modbus hub."""
-        self._model_id: int = 0
+        self._model: ControllerModel = model
         self._host = host
         self._connection = connection
 
@@ -80,24 +80,40 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator):
         return self._host
 
     @property
-    def model(self) -> str:
+    def model(self) -> ControllerModel:
         """Return the controller model of the Stiebel Eltron ISG."""
-        if self._model_id == 103:
+        return self._model
+
+    @property
+    def model_name(self) -> str:
+        """Return the name of the controller model of the Stiebel Eltron ISG."""
+        if self._model == ControllerModel.LWZ:
             return "LWA/LWZ"
-        if self._model_id == 104:
+        if self._model == ControllerModel.LWZ_x04_SOL:
             return "LWZ"
-        if self._model_id == 390:
+        if self._model == ControllerModel.WPM_3:
             return "WPM 3"
-        if self._model_id == 391:
+        if self._model == ControllerModel.WPM_3i:
             return "WPM 3i"
-        if self._model_id == 449:
+        if self._model == ControllerModel.WPMsystem:
             return "WPMsystem"
-        return f"other model ({self._model_id})"
+        if self._model == ControllerModel.LWZ_R290:
+            return "LWZ R290"
+        # Fall back to the enum name for a clear, readable representation
+        return f"other model ({self._model.name})"
 
     @property
     def is_wpm(self) -> bool:
         """Check if heat pump controller is a wpm model."""
-        return self._model_id >= 390
+        return (
+            self._model
+            in {
+                ControllerModel.WPM_3,
+                ControllerModel.WPM_3i,
+                ControllerModel.WPMsystem,
+                ControllerModel.LWZ_R290,  # Although this is a LWZ model, it uses the WPM protocol, so treat it as a WPM model.
+            }
+        )
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
