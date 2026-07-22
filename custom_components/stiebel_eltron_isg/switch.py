@@ -11,6 +11,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pystiebeleltron import ControllerModel
 
 from .const import (
     CIRCULATION_PUMP,
@@ -90,7 +91,7 @@ async def async_setup_entry(
         for description in SWITCH_TYPES
     ]
 
-    if coordinator.is_wpm:
+    if coordinator.model in (ControllerModel.LWZ_R290, ControllerModel.WPMsystem):
         # Add the circulation pump switch for WPM systems
         entities.append(
             StiebelEltronISGSwitch(

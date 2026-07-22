@@ -82,10 +82,10 @@ class Wpm3iSystemParameters(Component):
     dual_mode_temp_hzg = gauge(
         1508, 0.1, nan=UNAVAILABLE, unit="°C", writable=in_range(-40, 40)
     )
-    comfort_temperature = gauge(
+    comfort_temperature_dhw = gauge(
         1509, 0.1, nan=UNAVAILABLE, unit="°C", writable=in_range(10, 60)
     )
-    eco_temperature = gauge(
+    eco_temperature_dhw = gauge(
         1510, 0.1, nan=UNAVAILABLE, unit="°C", writable=in_range(10, 60)
     )
     dhw_stages = integer(1511, signed=False, nan=UNAVAILABLE, writable=in_range(0, 6))

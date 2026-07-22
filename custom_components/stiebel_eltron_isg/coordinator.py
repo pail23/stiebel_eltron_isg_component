@@ -93,9 +93,9 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator):
             return "LWZ"
         if self._model == ControllerModel.WPM_3:
             return "WPM 3"
-        if self._model == ControllerModel.WPM_3I:
+        if self._model == ControllerModel.WPM_3i:
             return "WPM 3i"
-        if self._model == ControllerModel.WPMSYSTEM:
+        if self._model == ControllerModel.WPMsystem:
             return "WPMsystem"
         if self._model == ControllerModel.LWZ_R290:
             return "LWZ R290"

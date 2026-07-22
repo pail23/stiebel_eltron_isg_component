@@ -18,6 +18,7 @@ from homeassistant.components.climate.const import (
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pystiebeleltron import ControllerModel
 
 from .const import DOMAIN, OPERATION_MODE
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
@@ -153,6 +154,26 @@ class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
             raise TypeError("comfort_target_temp_register must be a lambda expression")
 
 
+WPM_3I_CLIMATE_TYPES = [
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_1,
+        translation_key=CLIMATE_HK_1,
+        humidity_modbus_register=[
+            lambda api: api.system_values.relative_humidity,
+        ],
+        actual_temperature_register=[
+            lambda api: api.system_values.actual_temperature_fe7,
+            lambda api: api.system_values.actual_temperature_fek,
+        ],
+        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_1,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_1
+        ),
+        eco_target_temp_write_field="eco_temperature_hk_1",
+        comfort_target_temp_write_field="comfort_temperature_hk_1",
+    )
+]
+
 WPM_CLIMATE_TYPES = [
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_1,
@@ -246,11 +267,18 @@ async def async_setup_entry(
 ) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data
-
-    if coordinator.is_wpm:
-        entities: list[
-            StiebelEltronWPMClimateEntity | StiebelEltronLWZClimateEntity
-        ] = [
+    entities: list[StiebelEltronWPMClimateEntity | StiebelEltronLWZClimateEntity] = []
+    if coordinator.model == ControllerModel.WPM_3i:
+        entities = [
+            StiebelEltronWPMClimateEntity(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in WPM_3I_CLIMATE_TYPES
+        ]
+    elif coordinator.is_wpm:
+        entities = [
             StiebelEltronWPMClimateEntity(
                 coordinator,
                 entry,
