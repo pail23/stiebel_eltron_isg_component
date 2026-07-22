@@ -314,6 +314,9 @@
             "compressor_heating_water": {
                 "name": "Compressor Heating Water"
             },
+            "cooling_runtime": {
+                "name": "Cooling Runtime"
+            },
             "electrical_booster_heating": {
                 "name": "Electrical Booster Heating"
             },

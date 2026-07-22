@@ -314,6 +314,9 @@
             "compressor_heating_water": {
                 "name": "Verdichter Warmwasser"
             },
+            "cooling_runtime": {
+                "name": "Kühlbetrieb Laufzeit"
+            },
             "electrical_booster_heating": {
                 "name": "Elektroheizung Heizung"
             },
