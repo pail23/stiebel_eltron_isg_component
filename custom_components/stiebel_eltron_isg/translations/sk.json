@@ -308,6 +308,9 @@
             "compressor_starts": {
                 "name": "Štarty kompresora"
             },
+            "compressor_speed": {
+                "name": "Frekvencia kompresora"
+            },
             "compressor_heating": {
                 "name": "Kompresor vykurovanie"
             },

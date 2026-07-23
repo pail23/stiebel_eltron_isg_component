@@ -126,6 +126,7 @@ CONSUMED_WATER_HEATING = "consumed_water_heating"
 CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 
 COMPRESSOR_STARTS = "compressor_starts"
+COMPRESSOR_SPEED = "compressor_speed"
 COMPRESSOR_HEATING = "compressor_heating"
 COMPRESSOR_HEATING_WATER = "compressor_heating_water"
 COOLING_RUNTIME = "cooling_runtime"

@@ -308,6 +308,9 @@
             "compressor_starts": {
                 "name": "Démarrages compresseur"
             },
+            "compressor_speed": {
+                "name": "Fréquence compresseur"
+            },
             "compressor_heating": {
                 "name": "Compresseur chauffage"
             },

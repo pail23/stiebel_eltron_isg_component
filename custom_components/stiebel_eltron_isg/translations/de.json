@@ -308,6 +308,9 @@
             "compressor_starts": {
                 "name": "Verdichterstarts"
             },
+            "compressor_speed": {
+                "name": "Verdichterfrequenz"
+            },
             "compressor_heating": {
                 "name": "Verdichter Heizung"
             },
