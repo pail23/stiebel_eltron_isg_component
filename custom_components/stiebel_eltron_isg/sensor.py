@@ -47,10 +47,19 @@ from .const import (
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_STARTS,
+    CONSUMED_COOLING_12M,
+    CONSUMED_COOLING_LAST_24H,
+    CONSUMED_COOLING_PREV_12M,
     CONSUMED_HEATING,
+    CONSUMED_HEATING_12M,
+    CONSUMED_HEATING_LAST_24H,
+    CONSUMED_HEATING_PREV_12M,
     CONSUMED_HEATING_TODAY,
     CONSUMED_HEATING_TOTAL,
     CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_12M,
+    CONSUMED_WATER_HEATING_LAST_24H,
+    CONSUMED_WATER_HEATING_PREV_12M,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
@@ -181,6 +190,27 @@ def create_energy_entity_description(
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
+        modbus_register=modbus_register,
+    )
+
+
+def create_power_consumption_entity_description(
+    name: str,
+    key: str,
+    modbus_register: StiebelEltronModbusRegister,
+) -> StiebelEltronSensorEntityDescription:
+    """Create a power-consumption window sensor (rolling sum, resets over time).
+
+    These are the Servicewelt "POWER CONSUMPTION" statistics. Because the
+    windows reset, they use ``TOTAL`` rather than ``TOTAL_INCREASING``.
+    """
+    return StiebelEltronSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        icon="mdi:meter-electric",
+        state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
         modbus_register=modbus_register,
     )
 
@@ -1138,6 +1168,57 @@ WPM_COMPRESSOR_SENSOR_TYPES = [
     ),
 ]
 
+# Servicewelt "POWER CONSUMPTION" screen (Modbus registers 3707-3723). The
+# pystiebeleltron library already decodes each register pair into a kWh value,
+# so these read the plain energy_data fields.
+WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
+    create_power_consumption_entity_description(
+        "Consumed Heating Last 24h",
+        CONSUMED_HEATING_LAST_24H,
+        lambda api: api.energy_data.heating_24h,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Heating Last 12 Months",
+        CONSUMED_HEATING_12M,
+        lambda api: api.energy_data.heating_12m,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Heating Previous 12 Months",
+        CONSUMED_HEATING_PREV_12M,
+        lambda api: api.energy_data.heating_13_24,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Cooling Last 24h",
+        CONSUMED_COOLING_LAST_24H,
+        lambda api: api.energy_data.cooling_24h,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Cooling Last 12 Months",
+        CONSUMED_COOLING_12M,
+        lambda api: api.energy_data.cooling_12m,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Cooling Previous 12 Months",
+        CONSUMED_COOLING_PREV_12M,
+        lambda api: api.energy_data.cooling_13_24,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Water Heating Last 24h",
+        CONSUMED_WATER_HEATING_LAST_24H,
+        lambda api: api.energy_data.dhw_24h,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Water Heating Last 12 Months",
+        CONSUMED_WATER_HEATING_12M,
+        lambda api: api.energy_data.dhw_12m,
+    ),
+    create_power_consumption_entity_description(
+        "Consumed Water Heating Previous 12 Months",
+        CONSUMED_WATER_HEATING_PREV_12M,
+        lambda api: api.energy_data.dhw_13_24,
+    ),
+]
+
 
 WPM_3I_SENSOR_TYPES = (
     WPM_3I_SYSTEM_VALUES_SENSOR_TYPES
@@ -1151,6 +1232,7 @@ WPM_SENSOR_TYPES = (
     + ENERGYMANAGEMENT_SENSOR_TYPES
     + ENERGY_SENSOR_TYPES
     + WPM_COMPRESSOR_SENSOR_TYPES
+    + WPM_POWER_CONSUMPTION_SENSOR_TYPES
 )
 
 LWZ_SENSOR_TYPES = (
