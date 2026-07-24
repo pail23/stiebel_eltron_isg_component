@@ -8,6 +8,7 @@ from homeassistant.const import UnitOfEnergy
 from custom_components.stiebel_eltron_isg.const import (
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_SPEED,
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
@@ -20,6 +21,7 @@ from custom_components.stiebel_eltron_isg.const import (
     COOLING_RUNTIME,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
+    LWZ_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
 )
@@ -27,6 +29,10 @@ from custom_components.stiebel_eltron_isg.sensor import (
 
 def _wpm(key: str):
     return next(d for d in WPM_SENSOR_TYPES if d.key == key)
+
+
+def _lwz(key: str):
+    return next(d for d in LWZ_SENSOR_TYPES if d.key == key)
 
 
 def test_wpm_exposes_compressor_runtime_hours() -> None:
@@ -54,6 +60,14 @@ def test_wpm_3i_exposes_compressor_runtime_hours() -> None:
     assert {COMPRESSOR_HEATING, COMPRESSOR_HEATING_WATER, COOLING_RUNTIME} <= keys
 
 
+def test_lwz_exposes_compressor_frequency() -> None:
+    """LWZ compressor frequency reads system_values.compressor_speed (Hz)."""
+    api = SimpleNamespace(system_values=SimpleNamespace(compressor_speed=31.0))
+
+    speed = _lwz(COMPRESSOR_SPEED)
+    assert speed.modbus_register(api) == 31.0
+    assert speed.native_unit_of_measurement == UnitOfFrequency.HERTZ
+    assert speed.device_class == SensorDeviceClass.FREQUENCY
 def test_wpm_exposes_power_consumption_statistics() -> None:
     """WPM power-consumption windows read the 3707-3723 energy_data fields (kWh)."""
     api = SimpleNamespace(

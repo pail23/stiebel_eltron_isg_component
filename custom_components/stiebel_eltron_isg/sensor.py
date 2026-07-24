@@ -46,6 +46,7 @@ from .const import (
     ACTUAL_TEMPERATURE_WATER,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_SPEED,
     COMPRESSOR_STARTS,
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
@@ -1050,6 +1051,15 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
         translation_key=COMPRESSOR_STARTS,
         icon="mdi:restart",
         modbus_register=lambda api: api.system_values.compressor_starts,
+    ),
+    StiebelEltronSensorEntityDescription(
+        key=COMPRESSOR_SPEED,
+        translation_key=COMPRESSOR_SPEED,
+        icon="mdi:sine-wave",
+        native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        device_class=SensorDeviceClass.FREQUENCY,
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.system_values.compressor_speed,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_HEATING,

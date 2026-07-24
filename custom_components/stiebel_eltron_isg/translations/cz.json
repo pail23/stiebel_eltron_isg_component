@@ -308,6 +308,9 @@
             "compressor_starts": {
                 "name": "Starty kompresoru"
             },
+            "compressor_speed": {
+                "name": "Frekvence kompresoru"
+            },
             "compressor_heating": {
                 "name": "Kompresor topení"
             },
