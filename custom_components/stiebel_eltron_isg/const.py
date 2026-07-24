@@ -123,6 +123,19 @@ CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
 PREVIOUS_CONSUMED_WATER_HEATING_TOTAL = "previous_consumed_water_heating_total"
 CONSUMED_WATER_HEATING = "consumed_water_heating"
 
+# WPM power-consumption breakdown (Servicewelt "POWER CONSUMPTION" screen,
+# Modbus registers 3707-3723): rolling sums over the last 24 h, the last
+# 12 months and the previous 12 months.
+CONSUMED_HEATING_LAST_24H = "consumed_heating_last_24h"
+CONSUMED_HEATING_12M = "consumed_heating_12m"
+CONSUMED_HEATING_PREV_12M = "consumed_heating_prev_12m"
+CONSUMED_COOLING_LAST_24H = "consumed_cooling_last_24h"
+CONSUMED_COOLING_12M = "consumed_cooling_12m"
+CONSUMED_COOLING_PREV_12M = "consumed_cooling_prev_12m"
+CONSUMED_WATER_HEATING_LAST_24H = "consumed_water_heating_last_24h"
+CONSUMED_WATER_HEATING_12M = "consumed_water_heating_12m"
+CONSUMED_WATER_HEATING_PREV_12M = "consumed_water_heating_prev_12m"
+
 CURRENT_POWER_CONSUMPTION = "current_power_consumption"
 
 COMPRESSOR_STARTS = "compressor_starts"

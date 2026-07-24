@@ -260,6 +260,33 @@
             "consumed_water_heating": {
                 "name": "Consumed Water Heating"
             },
+            "consumed_heating_last_24h": {
+                "name": "Consumed Heating Last 24h"
+            },
+            "consumed_heating_12m": {
+                "name": "Consumed Heating Last 12 Months"
+            },
+            "consumed_heating_prev_12m": {
+                "name": "Consumed Heating Previous 12 Months"
+            },
+            "consumed_cooling_last_24h": {
+                "name": "Consumed Cooling Last 24h"
+            },
+            "consumed_cooling_12m": {
+                "name": "Consumed Cooling Last 12 Months"
+            },
+            "consumed_cooling_prev_12m": {
+                "name": "Consumed Cooling Previous 12 Months"
+            },
+            "consumed_water_heating_last_24h": {
+                "name": "Consumed Water Heating Last 24h"
+            },
+            "consumed_water_heating_12m": {
+                "name": "Consumed Water Heating Last 12 Months"
+            },
+            "consumed_water_heating_prev_12m": {
+                "name": "Consumed Water Heating Previous 12 Months"
+            },
             "produced_electrical_booster_heating_total": {
                 "name": "Produced Electrical Booster Heating Total"
             },
