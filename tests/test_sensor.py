@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy
+from homeassistant.const import UnitOfEnergy, UnitOfFrequency
 
 from custom_components.stiebel_eltron_isg.const import (
     COMPRESSOR_HEATING,
@@ -68,6 +68,8 @@ def test_lwz_exposes_compressor_frequency() -> None:
     assert speed.modbus_register(api) == 31.0
     assert speed.native_unit_of_measurement == UnitOfFrequency.HERTZ
     assert speed.device_class == SensorDeviceClass.FREQUENCY
+
+
 def test_wpm_exposes_power_consumption_statistics() -> None:
     """WPM power-consumption windows read the 3707-3723 energy_data fields (kWh)."""
     api = SimpleNamespace(
