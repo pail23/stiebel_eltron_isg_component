@@ -260,6 +260,33 @@
             "consumed_water_heating": {
                 "name": "Verbrauchte Warmwasserenergie"
             },
+            "consumed_heating_last_24h": {
+                "name": "Verbrauchte Heizenergie letzte 24 h"
+            },
+            "consumed_heating_12m": {
+                "name": "Verbrauchte Heizenergie letzte 12 Monate"
+            },
+            "consumed_heating_prev_12m": {
+                "name": "Verbrauchte Heizenergie vorherige 12 Monate"
+            },
+            "consumed_cooling_last_24h": {
+                "name": "Verbrauchte Kühlenergie letzte 24 h"
+            },
+            "consumed_cooling_12m": {
+                "name": "Verbrauchte Kühlenergie letzte 12 Monate"
+            },
+            "consumed_cooling_prev_12m": {
+                "name": "Verbrauchte Kühlenergie vorherige 12 Monate"
+            },
+            "consumed_water_heating_last_24h": {
+                "name": "Verbrauchte Warmwasserenergie letzte 24 h"
+            },
+            "consumed_water_heating_12m": {
+                "name": "Verbrauchte Warmwasserenergie letzte 12 Monate"
+            },
+            "consumed_water_heating_prev_12m": {
+                "name": "Verbrauchte Warmwasserenergie vorherige 12 Monate"
+            },
             "produced_electrical_booster_heating_total": {
                 "name": "Erzeugte Elektroheizung Heizung gesamt"
             },
