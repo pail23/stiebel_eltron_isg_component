@@ -53,6 +53,7 @@ from .const import (
     CONSUMED_WATER_HEATING,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    COOLING_RUNTIME,
     DEWPOINT_TEMPERATURE,
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
@@ -1107,14 +1108,49 @@ LWZ_VENTILATION_SENSOR_TYPES = [
 ]
 
 
+WPM_COMPRESSOR_SENSOR_TYPES = [
+    StiebelEltronSensorEntityDescription(
+        key=COMPRESSOR_HEATING,
+        translation_key=COMPRESSOR_HEATING,
+        icon="mdi:hours-24",
+        native_unit_of_measurement="h",
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.energy_data.vd_heating,
+    ),
+    StiebelEltronSensorEntityDescription(
+        key=COMPRESSOR_HEATING_WATER,
+        translation_key=COMPRESSOR_HEATING_WATER,
+        icon="mdi:hours-24",
+        native_unit_of_measurement="h",
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.energy_data.vd_dhw,
+    ),
+    StiebelEltronSensorEntityDescription(
+        # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling
+        # is passive (no compressor runs), so this counts cooling operation
+        # hours rather than compressor hours - hence the neutral name.
+        key=COOLING_RUNTIME,
+        translation_key=COOLING_RUNTIME,
+        icon="mdi:hours-24",
+        native_unit_of_measurement="h",
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.energy_data.vd_cooling,
+    ),
+]
+
+
 WPM_3I_SENSOR_TYPES = (
     WPM_3I_SYSTEM_VALUES_SENSOR_TYPES
     + ENERGYMANAGEMENT_SENSOR_TYPES
     + ENERGY_SENSOR_TYPES
+    + WPM_COMPRESSOR_SENSOR_TYPES
 )
 
 WPM_SENSOR_TYPES = (
-    SYSTEM_VALUES_SENSOR_TYPES + ENERGYMANAGEMENT_SENSOR_TYPES + ENERGY_SENSOR_TYPES
+    SYSTEM_VALUES_SENSOR_TYPES
+    + ENERGYMANAGEMENT_SENSOR_TYPES
+    + ENERGY_SENSOR_TYPES
+    + WPM_COMPRESSOR_SENSOR_TYPES
 )
 
 LWZ_SENSOR_TYPES = (
