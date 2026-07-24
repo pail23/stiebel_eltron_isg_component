@@ -162,7 +162,7 @@ class StiebelEltronSensorEntityDescription(SensorEntityDescription):
 
 
 def create_temperature_entity_description(
-    name: str, key: str, modbus_register: StiebelEltronModbusRegister
+    key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a temperature sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -177,7 +177,6 @@ def create_temperature_entity_description(
 
 
 def create_energy_entity_description(
-    name: str,
     key: str,
     modbus_register: StiebelEltronModbusRegister,
     visible_default: bool = True,
@@ -196,7 +195,6 @@ def create_energy_entity_description(
 
 
 def create_power_consumption_entity_description(
-    name: str,
     key: str,
     modbus_register: StiebelEltronModbusRegister,
 ) -> StiebelEltronSensorEntityDescription:
@@ -217,7 +215,6 @@ def create_power_consumption_entity_description(
 
 
 def create_daily_energy_entity_description(
-    name: str,
     key: str,
     modbus_register: StiebelEltronModbusRegister,
     visible_default: bool = True,
@@ -236,7 +233,7 @@ def create_daily_energy_entity_description(
 
 
 def create_humidity_entity_description(
-    name: str, key: str, modbus_register: StiebelEltronModbusRegister
+    key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a humidity sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -251,7 +248,7 @@ def create_humidity_entity_description(
 
 
 def create_pressure_entity_description(
-    name: str, key: str, modbus_register: StiebelEltronModbusRegister
+    key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a pressure sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -265,7 +262,7 @@ def create_pressure_entity_description(
 
 
 def create_volume_stream_entity_description(
-    name: str, key: str, modbus_register: StiebelEltronModbusRegister
+    key: str, modbus_register: StiebelEltronModbusRegister
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for a volume stream sensor."""
     return StiebelEltronSensorEntityDescription(
@@ -280,270 +277,220 @@ def create_volume_stream_entity_description(
 
 WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
-        "Actual Temperature",
         ACTUAL_TEMPERATURE,
         lambda api: api.system_values.actual_temperature_fe7,
     ),
     create_temperature_entity_description(
-        "Target Temperature",
         TARGET_TEMPERATURE,
         lambda api: api.system_values.set_temperature_fe7,
     ),
     create_temperature_entity_description(
-        "Actual Temperature FEK",
         ACTUAL_TEMPERATURE_FEK,
         lambda api: api.system_values.actual_temperature_fek,
     ),
     create_temperature_entity_description(
-        "Target Temperature FEK",
         TARGET_TEMPERATURE_FEK,
         lambda api: api.system_values.set_temperature_fek,
     ),
     create_humidity_entity_description(
-        "Humidity", ACTUAL_HUMIDITY, lambda api: api.system_values.relative_humidity
+        ACTUAL_HUMIDITY, lambda api: api.system_values.relative_humidity
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature",
         DEWPOINT_TEMPERATURE,
         lambda api: api.system_values.dew_point_temperature,
     ),
     create_temperature_entity_description(
-        "Outdoor Temperature",
         OUTDOOR_TEMPERATURE,
         lambda api: api.system_values.outside_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 1",
         ACTUAL_TEMPERATURE_HK1,
         lambda api: api.system_values.actual_temperature_hk_1,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 1",
         TARGET_TEMPERATURE_HK1,
         lambda api: api.system_values.set_temperature_hk_1_wpm3i,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 2",
         ACTUAL_TEMPERATURE_HK2,
         lambda api: api.system_values.actual_temperature_hk_2,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 2",
         TARGET_TEMPERATURE_HK2,
         lambda api: api.system_values.set_temperature_hk_2,
     ),
     create_temperature_entity_description(
-        "Flow Temperature WP",
         FLOW_TEMPERATURE_WP,
         lambda api: api.system_values.actual_flow_temperature_wp,
     ),
     create_temperature_entity_description(
-        "Flow Temperature NHZ",
         FLOW_TEMPERATURE_NHZ,
         lambda api: api.system_values.actual_flow_temperature_nhz,
     ),
     create_temperature_entity_description(
-        "Flow Temperature",
         FLOW_TEMPERATURE,
         lambda api: api.system_values.actual_flow_temperature,
     ),
     create_temperature_entity_description(
-        "Return Temperature",
         RETURN_TEMPERATURE,
         lambda api: api.system_values.actual_return_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Buffer",
         ACTUAL_TEMPERATURE_BUFFER,
         lambda api: api.system_values.actual_buffer_temperature,
     ),
     create_temperature_entity_description(
-        "Target Temperature Buffer",
         TARGET_TEMPERATURE_BUFFER,
         lambda api: api.system_values.set_buffer_temperature,
     ),
     create_pressure_entity_description(
-        "Heater Pressure",
         HEATER_PRESSURE,
         lambda api: api.system_values.heating_pressure,
     ),
     create_volume_stream_entity_description(
-        "Volume Stream", VOLUME_STREAM, lambda api: api.system_values.flow_rate
+        VOLUME_STREAM, lambda api: api.system_values.flow_rate
     ),
     create_temperature_entity_description(
-        "Actual Temperature Water",
         ACTUAL_TEMPERATURE_WATER,
         lambda api: api.system_values.actual_temperature_dhw,
     ),
     create_temperature_entity_description(
-        "Target Temperature Water",
         TARGET_TEMPERATURE_WATER,
         lambda api: api.system_values.set_temperature_dhw,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Cooling Fancoil",
         ACTUAL_TEMPERATURE_COOLING_FANCOIL,
         lambda api: api.system_values.actual_temperature_fan,
     ),
     create_temperature_entity_description(
-        "Target Temperature Cooling Fancoil",
         TARGET_TEMPERATURE_COOLING_FANCOIL,
         lambda api: api.system_values.set_temperature_fan,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Cooling Surface",
         ACTUAL_TEMPERATURE_COOLING_SURFACE,
         lambda api: api.system_values.actual_temperature_area,
     ),
     create_temperature_entity_description(
-        "Target Temperature Cooling Surface",
         TARGET_TEMPERATURE_COOLING_SURFACE,
         lambda api: api.system_values.set_temperature_area,
     ),
     create_temperature_entity_description(
-        "Source Temperature",
         SOURCE_TEMPERATURE,
         lambda api: api.system_values.source_temperature,
     ),
     create_temperature_entity_description(
-        "Min Source Temperature",
         MIN_SOURCE_TEMPERATURE,
         lambda api: api.system_values.min_source_temperature,
     ),
     create_pressure_entity_description(
-        "Source Pressure",
         SOURCE_PRESSURE,
         lambda api: api.system_values.source_pressure,
     ),
     create_temperature_entity_description(
-        "Hot Gas Temperature",
         HOT_GAS_TEMPERATURE,
         lambda api: api.system_values.hot_gas_temperature,
     ),
     create_pressure_entity_description(
-        "High Pressure", HIGH_PRESSURE, lambda api: api.system_values.high_pressure
+        HIGH_PRESSURE, lambda api: api.system_values.high_pressure
     ),
     create_pressure_entity_description(
-        "Low Pressure", LOW_PRESSURE, lambda api: api.system_values.low_pressure
+        LOW_PRESSURE, lambda api: api.system_values.low_pressure
     ),
 ]
 
 SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
-        "Actual Temperature",
         ACTUAL_TEMPERATURE,
         lambda api: api.system_values.actual_temperature_fe7,
     ),
     create_temperature_entity_description(
-        "Target Temperature",
         TARGET_TEMPERATURE,
         lambda api: api.system_values.set_temperature_fe7,
     ),
     create_temperature_entity_description(
-        "Actual Temperature FEK",
         ACTUAL_TEMPERATURE_FEK,
         lambda api: api.system_values.actual_temperature_fek,
     ),
     create_temperature_entity_description(
-        "Target Temperature FEK",
         TARGET_TEMPERATURE_FEK,
         lambda api: api.system_values.set_temperature_fek,
     ),
     create_humidity_entity_description(
-        "Humidity", ACTUAL_HUMIDITY, lambda api: api.system_values.relative_humidity
+        ACTUAL_HUMIDITY, lambda api: api.system_values.relative_humidity
     ),
     create_humidity_entity_description(
-        "Humidity HK 1",
         ACTUAL_HUMIDITY_HK1,
         lambda api: api.system_values.room_temperatures[0].relative_humidity,
     ),
     create_humidity_entity_description(
-        "Humidity HK 2",
         ACTUAL_HUMIDITY_HK2,
         lambda api: api.system_values.room_temperatures[1].relative_humidity,
     ),
     create_humidity_entity_description(
-        "Humidity HK 3",
         ACTUAL_HUMIDITY_HK3,
         lambda api: api.system_values.room_temperatures[2].relative_humidity,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature",
         DEWPOINT_TEMPERATURE,
         lambda api: api.system_values.dew_point_temperature,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 1",
         DEWPOINT_TEMPERATURE_HK1,
         lambda api: api.system_values.room_temperatures[0].dew_point_temperature,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 2",
         DEWPOINT_TEMPERATURE_HK2,
         lambda api: api.system_values.room_temperatures[1].dew_point_temperature,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 3",
         DEWPOINT_TEMPERATURE_HK3,
         lambda api: api.system_values.room_temperatures[2].dew_point_temperature,
     ),
     create_temperature_entity_description(
-        "Outdoor Temperature",
         OUTDOOR_TEMPERATURE,
         lambda api: api.system_values.outside_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 1",
         ACTUAL_TEMPERATURE_HK1,
         lambda api: api.system_values.actual_temperature_hk_1,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 1",
         TARGET_TEMPERATURE_HK1,
         lambda api: api.system_values.set_temperature_hk_1,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 2",
         ACTUAL_TEMPERATURE_HK2,
         lambda api: api.system_values.actual_temperature_hk_2,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 2",
         TARGET_TEMPERATURE_HK2,
         lambda api: api.system_values.set_temperature_hk_2,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 3",
         ACTUAL_TEMPERATURE_HK3,
         lambda api: api.system_values.actual_temperature_hk_3,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 3",
         TARGET_TEMPERATURE_HK3,
         lambda api: api.system_values.set_temperature_hk_3,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Cooling Fancoil",
         ACTUAL_TEMPERATURE_COOLING_FANCOIL,
         lambda api: api.system_values.actual_temperature_fan,
     ),
     create_temperature_entity_description(
-        "Target Temperature Cooling Fancoil",
         TARGET_TEMPERATURE_COOLING_FANCOIL,
         lambda api: api.system_values.set_temperature_fan,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Cooling Surface",
         ACTUAL_TEMPERATURE_COOLING_SURFACE,
         lambda api: api.system_values.actual_temperature_area,
     ),
     create_temperature_entity_description(
-        "Target Temperature Cooling Surface",
         TARGET_TEMPERATURE_COOLING_SURFACE,
         lambda api: api.system_values.set_temperature_area,
     ),
     create_temperature_entity_description(
-        "Solar Cylinder Temperature",
         SOLAR_CYLINDER_TEMPERATURE,
         lambda api: api.system_values.cylinder_temperature,
     ),
@@ -556,171 +503,139 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         modbus_register=lambda api: api.system_values.runtime,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 1",
         ACTUAL_ROOM_TEMPERATURE_HK1,
         lambda api: api.system_values.room_temperatures[0].actual_temperature,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 1",
         TARGET_ROOM_TEMPERATURE_HK1,
         lambda api: api.system_values.room_temperatures[0].set_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 2",
         ACTUAL_ROOM_TEMPERATURE_HK2,
         lambda api: api.system_values.room_temperatures[1].actual_temperature,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 2",
         TARGET_ROOM_TEMPERATURE_HK2,
         lambda api: api.system_values.room_temperatures[1].set_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 3",
         ACTUAL_ROOM_TEMPERATURE_HK3,
         lambda api: api.system_values.room_temperatures[2].actual_temperature,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 3",
         TARGET_ROOM_TEMPERATURE_HK3,
         lambda api: api.system_values.room_temperatures[2].set_temperature,
     ),
     create_temperature_entity_description(
-        "Flow Temperature WP",
         FLOW_TEMPERATURE_WP,
         lambda api: api.system_values.actual_flow_temperature_wp,
     ),
     create_temperature_entity_description(
-        "Flow Temperature NHZ",
         FLOW_TEMPERATURE_NHZ,
         lambda api: api.system_values.actual_flow_temperature_nhz,
     ),
     create_temperature_entity_description(
-        "Flow Temperature",
         FLOW_TEMPERATURE,
         lambda api: api.system_values.actual_flow_temperature,
     ),
     create_temperature_entity_description(
-        "Return Temperature",
         RETURN_TEMPERATURE,
         lambda api: api.system_values.actual_return_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Buffer",
         ACTUAL_TEMPERATURE_BUFFER,
         lambda api: api.system_values.actual_buffer_temperature,
     ),
     create_temperature_entity_description(
-        "Target Temperature Buffer",
         TARGET_TEMPERATURE_BUFFER,
         lambda api: api.system_values.set_buffer_temperature,
     ),
     create_pressure_entity_description(
-        "Heater Pressure",
         HEATER_PRESSURE,
         lambda api: api.system_values.heating_pressure,
     ),
     create_volume_stream_entity_description(
-        "Volume Stream", VOLUME_STREAM, lambda api: api.system_values.flow_rate
+        VOLUME_STREAM, lambda api: api.system_values.flow_rate
     ),
     create_temperature_entity_description(
-        "Actual Temperature Water",
         ACTUAL_TEMPERATURE_WATER,
         lambda api: api.system_values.actual_temperature_dhw,
     ),
     create_temperature_entity_description(
-        "Target Temperature Water",
         TARGET_TEMPERATURE_WATER,
         lambda api: api.system_values.set_temperature_dhw,
     ),
     create_temperature_entity_description(
-        "Solar Collector Temperature",
         SOLAR_COLLECTOR_TEMPERATURE,
         lambda api: api.system_values.collector_temperature,
     ),
     create_temperature_entity_description(
-        "Source Temperature",
         SOURCE_TEMPERATURE,
         lambda api: api.system_values.source_temperature,
     ),
     create_temperature_entity_description(
-        "Min Source Temperature",
         MIN_SOURCE_TEMPERATURE,
         lambda api: api.system_values.min_source_temperature,
     ),
     create_pressure_entity_description(
-        "Source Pressure",
         SOURCE_PRESSURE,
         lambda api: api.system_values.source_pressure,
     ),
     create_temperature_entity_description(
-        "Hot Gas Temperature",
         HOT_GAS_TEMPERATURE,
         lambda api: api.system_values.hot_gas_temperature,
     ),
     create_pressure_entity_description(
-        "High Pressure", HIGH_PRESSURE, lambda api: api.system_values.high_pressure
+        HIGH_PRESSURE, lambda api: api.system_values.high_pressure
     ),
     create_pressure_entity_description(
-        "Low Pressure", LOW_PRESSURE, lambda api: api.system_values.low_pressure
+        LOW_PRESSURE, lambda api: api.system_values.low_pressure
     ),
     create_temperature_entity_description(
-        "Return Temperature WP1",
         RETURN_TEMPERATURE_WP1,
         lambda api: api.system_values.heat_pumps[0].return_temperature,
     ),
     create_temperature_entity_description(
-        "Flow Temperature WP1",
         FLOW_TEMPERATURE_WP1,
         lambda api: api.system_values.heat_pumps[0].flow_temperature,
     ),
     create_temperature_entity_description(
-        "Hot Gas Temperature WP1",
         HOT_GAS_TEMPERATURE_WP1,
         lambda api: api.system_values.heat_pumps[0].hot_gas_temperature,
     ),
     create_pressure_entity_description(
-        "Low Pressure WP1",
         LOW_PRESSURE_WP1,
         lambda api: api.system_values.heat_pumps[0].low_pressure,
     ),
     create_pressure_entity_description(
-        "High Pressure WP1",
         HIGH_PRESSURE_WP1,
         lambda api: api.system_values.heat_pumps[0].high_pressure,
     ),
     create_volume_stream_entity_description(
-        "Volume Stream WP1",
         VOLUME_STREAM_WP1,
         lambda api: api.system_values.heat_pumps[0].wp_water_flow_rate,
     ),
     create_temperature_entity_description(
-        "Return Temperature WP2",
         RETURN_TEMPERATURE_WP2,
         lambda api: api.system_values.heat_pumps[1].return_temperature,
     ),
     create_temperature_entity_description(
-        "Flow Temperature WP2",
         FLOW_TEMPERATURE_WP2,
         lambda api: api.system_values.heat_pumps[1].flow_temperature,
     ),
     create_temperature_entity_description(
-        "Hot Gas Temperature WP2",
         HOT_GAS_TEMPERATURE_WP2,
         lambda api: api.system_values.heat_pumps[1].hot_gas_temperature,
     ),
     create_pressure_entity_description(
-        "Low Pressure WP2",
         LOW_PRESSURE_WP2,
         lambda api: api.system_values.heat_pumps[1].low_pressure,
     ),
     create_pressure_entity_description(
-        "High Pressure WP2",
         HIGH_PRESSURE_WP2,
         lambda api: api.system_values.heat_pumps[1].high_pressure,
     ),
     create_volume_stream_entity_description(
-        "Volume Stream WP2",
         VOLUME_STREAM_WP2,
         lambda api: api.system_values.heat_pumps[1].wp_water_flow_rate,
     ),
@@ -735,113 +650,93 @@ SYSTEM_VALUES_SENSOR_TYPES = [
 
 LWZ_SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
-        "Actual Room Temperature HK 1",
         ACTUAL_ROOM_TEMPERATURE_HK1,
         lambda api: api.system_values.actual_room_t_hc1,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 1",
         TARGET_ROOM_TEMPERATURE_HK1,
         lambda api: api.system_values.set_room_temperature_hc1,
     ),
     create_temperature_entity_description(
-        "Actual Room Temperature HK 2",
         ACTUAL_ROOM_TEMPERATURE_HK2,
         lambda api: api.system_values.actual_room_t_hc2,
     ),
     create_temperature_entity_description(
-        "Target Room Temperature HK 2",
         TARGET_ROOM_TEMPERATURE_HK2,
         lambda api: api.system_values.set_room_temperature_hc2,
     ),
     create_humidity_entity_description(
-        "Humidity HK 1",
         ACTUAL_HUMIDITY,
         lambda api: api.system_values.relative_humidity_hc1,
     ),
     create_humidity_entity_description(
-        "Humidity HK 2",
         ACTUAL_HUMIDITY_HK2,
         lambda api: api.system_values.relative_humidity_hc2,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 1",
         DEWPOINT_TEMPERATURE_HK1,
         lambda api: api.system_values.dew_point_temp_hc1,
     ),
     create_temperature_entity_description(
-        "Dew Point Temperature HK 2",
         DEWPOINT_TEMPERATURE_HK2,
         lambda api: api.system_values.dew_point_temp_hc2,
     ),
     create_temperature_entity_description(
-        "Outdoor Temperature",
         OUTDOOR_TEMPERATURE,
         lambda api: api.system_values.outside_temperature,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 1",
         ACTUAL_TEMPERATURE_HK1,
         lambda api: api.system_values.actual_value_hc1,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 1",
         TARGET_TEMPERATURE_HK1,
         lambda api: api.system_values.set_value_hc1,
     ),
     create_temperature_entity_description(
-        "Actual Temperature HK 2",
         ACTUAL_TEMPERATURE_HK2,
         lambda api: api.system_values.actual_value_hc2,
     ),
     create_temperature_entity_description(
-        "Target Temperature HK 2",
         TARGET_TEMPERATURE_HK2,
         lambda api: api.system_values.set_value_hc2,
     ),
     create_temperature_entity_description(
-        "Flow Temperature",
         FLOW_TEMPERATURE,
         lambda api: api.system_values.flow_temperature,
     ),
     create_temperature_entity_description(
-        "Return Temperature",
         RETURN_TEMPERATURE,
         lambda api: api.system_values.return_temperature,
     ),
     create_volume_stream_entity_description(
-        "Volume Stream", VOLUME_STREAM, lambda api: api.system_values.flow_rate
+        VOLUME_STREAM, lambda api: api.system_values.flow_rate
     ),
     create_pressure_entity_description(
-        "Heater Pressure",
         HEATER_PRESSURE,
         lambda api: api.system_values.pressure_htg_circ,
     ),
     create_temperature_entity_description(
-        "Actual Temperature Water",
         ACTUAL_TEMPERATURE_WATER,
         lambda api: api.system_values.actual_dhw_t,
     ),
     create_temperature_entity_description(
-        "Target Temperature Water",
         TARGET_TEMPERATURE_WATER,
         lambda api: api.system_values.dhw_set_temperature,
     ),
     create_temperature_entity_description(
-        "Solar Collector Temperature",
         SOLAR_COLLECTOR_TEMPERATURE,
         lambda api: api.system_values.collector_temperature,
     ),
     create_temperature_entity_description(
-        "Hot Gas Temperature",
         HOT_GAS_TEMPERATURE,
         lambda api: api.system_values.hot_gas_temperature,
     ),
     create_pressure_entity_description(
-        "High Pressure", HIGH_PRESSURE, lambda api: api.system_values.high_pressure
+        HIGH_PRESSURE, lambda api: api.system_values.high_pressure
     ),
     create_pressure_entity_description(
-        "Low Pressure", LOW_PRESSURE, lambda api: api.system_values.low_pressure
+        LOW_PRESSURE, lambda api: api.system_values.low_pressure
     ),
 ]
 
@@ -859,42 +754,34 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
 
 ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
-        "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
         lambda api: api.energy_data.vd_heating_total,
     ),
     create_energy_entity_description(
-        "Produced Heating",
         PRODUCED_HEATING,
         lambda api: api.energy_data.vd_heating_day_and_total,
     ),
     create_energy_entity_description(
-        "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
         lambda api: api.energy_data.vd_dhw_total,
     ),
     create_energy_entity_description(
-        "Produced Water Heating",
         PRODUCED_WATER_HEATING,
         lambda api: api.energy_data.vd_dhw_day_and_total,
     ),
     create_energy_entity_description(
-        "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
         lambda api: api.energy_data.vd_heating_total_consumed,
     ),
     create_energy_entity_description(
-        "Consumed Heating",
         CONSUMED_HEATING,
         lambda api: api.energy_data.vd_heating_day_and_total_consumed,
     ),
     create_energy_entity_description(
-        "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
         lambda api: api.energy_data.vd_dhw_total_consumed,
     ),
     create_energy_entity_description(
-        "Consumed Water Heating",
         CONSUMED_WATER_HEATING,
         lambda api: api.energy_data.vd_dhw_day_and_total_consumed,
     ),
@@ -902,82 +789,66 @@ ENERGY_SENSOR_TYPES = [
 
 LWZ_ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
-        "Produced Heating Total",
         PRODUCED_HEATING_TOTAL,
         lambda api: api.energy_data.heat_meter_htg_ttl,
     ),
     create_energy_entity_description(
-        "Produced Heating",
         PRODUCED_HEATING,
         lambda api: api.energy_data.heat_meter_htg_day_and_total,
     ),
     create_energy_entity_description(
-        "Produced Water Heating Total",
         PRODUCED_WATER_HEATING_TOTAL,
         lambda api: api.energy_data.heat_meter_dhw_ttl,
     ),
     create_energy_entity_description(
-        "Produced Water Heating",
         PRODUCED_WATER_HEATING,
         lambda api: api.energy_data.heat_meter_dhw_day_and_total,
     ),
     create_energy_entity_description(
-        "Consumed Heating Total",
         CONSUMED_HEATING_TOTAL,
         lambda api: api.energy_data.pwr_con_htg_ttl,
     ),
     create_energy_entity_description(
-        "Consumed Heating",
         CONSUMED_HEATING,
         lambda api: api.energy_data.pwr_con_htg_day_and_total,
     ),
     create_energy_entity_description(
-        "Consumed Water Heating Total",
         CONSUMED_WATER_HEATING_TOTAL,
         lambda api: api.energy_data.pwr_con_dhw_ttl,
     ),
     create_energy_entity_description(
-        "Consumed Water Heating",
         CONSUMED_WATER_HEATING,
         lambda api: api.energy_data.pwr_con_dhw_day_and_total,
     ),
     create_energy_entity_description(
-        "Produced Electrical Booster Heating Total",
         PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
         lambda api: api.energy_data.heat_m_boost_htg_ttl,
     ),
     create_energy_entity_description(
-        "Produced Electrical Booster Water Heating Total",
         PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
         lambda api: api.energy_data.heat_m_boost_dhw_ttl,
     ),
     create_energy_entity_description(
-        "Produced Recovery",
         PRODUCED_RECOVERY,
         lambda api: api.energy_data.heat_m_recovery_day_and_total,
     ),
     create_energy_entity_description(
-        "Produced Recovery Total",
         PRODUCED_RECOVERY_TOTAL,
         lambda api: api.energy_data.heat_m_recovery_ttl,
     ),
     create_energy_entity_description(
-        "Produced Solar Heating",
         PRODUCED_SOLAR_HEATING,
         lambda api: api.energy_data.hm_solar_htg_total,
     ),
     create_energy_entity_description(
-        "Produced Solar Heating Total",
         PRODUCED_SOLAR_HEATING_TOTAL,
         lambda api: api.energy_data.hm_solar_htg_total,
     ),
     create_energy_entity_description(
-        "Produced Solar Water Heating Total",
         PRODUCED_SOLAR_WATER_HEATING_TOTAL,
         lambda api: api.energy_data.hm_solar_dwh_total,
     ),
     create_energy_entity_description(
-        "Produced Solar Water Heating",
         PRODUCED_SOLAR_WATER_HEATING,
         lambda api: api.energy_data.hm_solar_dwh_total,
     ),
@@ -985,22 +856,18 @@ LWZ_ENERGY_SENSOR_TYPES = [
 
 ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
-        "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
         lambda api: api.energy_data.vd_heating_day,
     ),
     create_daily_energy_entity_description(
-        "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
         lambda api: api.energy_data.vd_dhw_day,
     ),
     create_daily_energy_entity_description(
-        "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
         lambda api: api.energy_data.vd_heating_day_consumed,
     ),
     create_daily_energy_entity_description(
-        "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
         lambda api: api.energy_data.vd_dhw_day_consumed,
     ),
@@ -1008,37 +875,30 @@ ENERGY_DAILY_SENSOR_TYPES = [
 
 LWZ_ENERGY_DAILY_SENSOR_TYPES = [
     create_daily_energy_entity_description(
-        "Produced Heating Today",
         PRODUCED_HEATING_TODAY,
         lambda api: api.energy_data.heat_meter_htg_day,
     ),
     create_daily_energy_entity_description(
-        "Produced Water Heating Today",
         PRODUCED_WATER_HEATING_TODAY,
         lambda api: api.energy_data.heat_meter_dhw_day,
     ),
     create_daily_energy_entity_description(
-        "Consumed Heating Today",
         CONSUMED_HEATING_TODAY,
         lambda api: api.energy_data.pwr_con_htg_day,
     ),
     create_daily_energy_entity_description(
-        "Consumed Water Heating Today",
         CONSUMED_WATER_HEATING_TODAY,
         lambda api: api.energy_data.pwr_con_dhw_day,
     ),
     create_daily_energy_entity_description(
-        "Produced Recovery Today",
         PRODUCED_RECOVERY_TODAY,
         lambda api: api.energy_data.heat_m_recovery_day,
     ),
     create_daily_energy_entity_description(
-        "Produced Solar Heating Today",
         PRODUCED_SOLAR_HEATING_TODAY,
         lambda api: api.energy_data.hm_solar_htg_day,
     ),
     create_daily_energy_entity_description(
-        "Produced Solar Water Heating Today",
         PRODUCED_SOLAR_WATER_HEATING_TODAY,
         lambda api: api.energy_data.hm_solar_dhw_day,
     ),
@@ -1131,17 +991,14 @@ LWZ_VENTILATION_SENSOR_TYPES = [
         modbus_register=lambda api: api.system_values.extract_air_set_flow_rate,
     ),
     create_temperature_entity_description(
-        "Extract air dew point",
         EXTRACT_AIR_DEW_POINT,
         lambda api: api.system_values.extract_air_dew_point,
     ),
     create_humidity_entity_description(
-        "Extract air humidity",
         EXTRACT_AIR_HUMIDITY,
         lambda api: api.system_values.extract_air_humidity,
     ),
     create_temperature_entity_description(
-        "Extract air temperature",
         EXTRACT_AIR_TEMPERATURE,
         lambda api: api.system_values.extract_air_temp,
     ),
@@ -1183,47 +1040,38 @@ WPM_COMPRESSOR_SENSOR_TYPES = [
 # so these read the plain energy_data fields.
 WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     create_power_consumption_entity_description(
-        "Consumed Heating Last 24h",
         CONSUMED_HEATING_LAST_24H,
         lambda api: api.energy_data.heating_24h,
     ),
     create_power_consumption_entity_description(
-        "Consumed Heating Last 12 Months",
         CONSUMED_HEATING_12M,
         lambda api: api.energy_data.heating_12m,
     ),
     create_power_consumption_entity_description(
-        "Consumed Heating Previous 12 Months",
         CONSUMED_HEATING_PREV_12M,
         lambda api: api.energy_data.heating_13_24,
     ),
     create_power_consumption_entity_description(
-        "Consumed Cooling Last 24h",
         CONSUMED_COOLING_LAST_24H,
         lambda api: api.energy_data.cooling_24h,
     ),
     create_power_consumption_entity_description(
-        "Consumed Cooling Last 12 Months",
         CONSUMED_COOLING_12M,
         lambda api: api.energy_data.cooling_12m,
     ),
     create_power_consumption_entity_description(
-        "Consumed Cooling Previous 12 Months",
         CONSUMED_COOLING_PREV_12M,
         lambda api: api.energy_data.cooling_13_24,
     ),
     create_power_consumption_entity_description(
-        "Consumed Water Heating Last 24h",
         CONSUMED_WATER_HEATING_LAST_24H,
         lambda api: api.energy_data.dhw_24h,
     ),
     create_power_consumption_entity_description(
-        "Consumed Water Heating Last 12 Months",
         CONSUMED_WATER_HEATING_12M,
         lambda api: api.energy_data.dhw_12m,
     ),
     create_power_consumption_entity_description(
-        "Consumed Water Heating Previous 12 Months",
         CONSUMED_WATER_HEATING_PREV_12M,
         lambda api: api.energy_data.dhw_13_24,
     ),
