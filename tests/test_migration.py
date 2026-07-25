@@ -353,34 +353,58 @@ async def test_setup_without_legacy_entities_changes_nothing(
 async def test_a_whole_installation_keeps_every_entity_id(
     hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:
-    """The complete set of entities of an installation survives the upgrade.
+    """A whole installation updating today comes through unchanged.
 
-    This is the reported symptom rather than a single entity: every entity of
-    every platform is rewritten to the legacy scheme, as an installation that
-    has not updated yet holds them, and the reload must not add a single new
-    registry entry.
+    This is the reported symptom rather than a single entity, so the whole
+    registry is put back into the shape an installation that has not updated
+    yet has: every entity of every platform on the legacy scheme, all of them
+    on the legacy device, and next to them entries whose key the current
+    release no longer produces at all, which is what a real installation
+    accumulates over the years. Not one new registry entry may appear.
     """
     config_entry_with_name.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
     registry = er.async_get(hass)
-    before = {
+    device_registry = dr.async_get(hass)
+    provided = {
         entry.entity_id: entry.unique_id
         for entry in er.async_entries_for_config_entry(
             registry, config_entry_with_name.entry_id
         )
     }
-    assert len(before) > 50
+    assert len(provided) > 50
 
     assert await hass.config_entries.async_unload(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
+
+    legacy_prefix = f"{DOMAIN}_My Heatpump_"
     target_prefix = f"{config_entry_with_name.entry_id}_"
-    for entity_id, unique_id in before.items():
+    for entity_id, unique_id in provided.items():
         registry.async_update_entity(
             entity_id,
-            new_unique_id=f"{DOMAIN}_My Heatpump_{unique_id.removeprefix(target_prefix)}",
+            new_unique_id=legacy_prefix + unique_id.removeprefix(target_prefix),
         )
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    )
+    device_registry.async_update_device(
+        device.id, new_identifiers={(DOMAIN, "My Heatpump")}
+    )
+
+    # Entities of an earlier release whose key no longer exists. They cannot
+    # become available again, but they must survive the migration untouched
+    # rather than break it or collide with anything.
+    stale = {
+        _register(
+            hass,
+            config_entry_with_name,
+            f"{legacy_prefix}{key}",
+            f"stiebel_eltron_isg_{key}",
+        ).entity_id: f"{target_prefix}{key}"
+        for key in ("retired_sensor", "sensor_of_another_model")
+    }
 
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
@@ -391,7 +415,21 @@ async def test_a_whole_installation_keeps_every_entity_id(
             registry, config_entry_with_name.entry_id
         )
     }
-    assert after == before
+    assert after == provided | stale
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+        ).id
+        == device.id
+    )
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_with_name.entry_id
+            )
+        )
+        == 1
+    )
 
 
 async def test_the_device_is_renamed_rather_than_replaced(
