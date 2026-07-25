@@ -9,6 +9,7 @@ import logging
 from homeassistant.core import HomeAssistant
 from modbus_connection import ModbusConnection
 from pystiebeleltron import ControllerModel
+from pystiebeleltron.wpm3i import Wpm3iStiebelEltronAPI
 
 from custom_components.stiebel_eltron_isg.const import UNIT_ID
 
@@ -17,7 +18,6 @@ from .coordinator import (
     StiebelEltronConnectionParams,
     StiebelEltronDataCoordinator,
 )
-from .wpm3i import Wpm3iStiebelEltronAPI
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 

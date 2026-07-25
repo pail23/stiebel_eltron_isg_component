@@ -7,21 +7,21 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
     ControllerModel,
-    EnergyManagementSettings,
-    EnergySystemInformation,
 )
-from pystiebeleltron.lwz import OperatingMode
+from pystiebeleltron.lwz import (
+    OperatingMode,
+    LwzEnergyManagementSettings,
+    LwzEnergySystemInformation,
+)
 from pystiebeleltron.wpm import (
     WpmEnergyData,
     WpmSystemParameters,
     WpmSystemState,
     WpmSystemValues,
+    WpmEnergyManagementSettings,
+    WpmEnergySystemInformation,
 )
-import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.stiebel_eltron_isg.const import DOMAIN
-from custom_components.stiebel_eltron_isg.wpm3i import (
+from pystiebeleltron.wpm3i import (
     Wpm3iEnergyData,
     Wpm3iEnergyManagementSettings,
     Wpm3iEnergySystemInformation,
@@ -29,6 +29,10 @@ from custom_components.stiebel_eltron_isg.wpm3i import (
     Wpm3iSystemState,
     Wpm3iSystemValues,
 )
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.stiebel_eltron_isg.const import DOMAIN
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -135,13 +139,13 @@ def mock_wpm_api() -> Generator[MagicMock]:
     ) as mock_api_cls:
         api_client = mock_api_cls.return_value
         type(api_client).energy_system_information = PropertyMock(
-            return_value=MagicMock(spec=EnergySystemInformation)
+            return_value=MagicMock(spec=WpmEnergySystemInformation)
         )
         type(api_client).system_parameters = PropertyMock(
             return_value=MagicMock(spec=WpmSystemParameters)
         )
         type(api_client).energy_management_settings = PropertyMock(
-            return_value=MagicMock(spec=EnergyManagementSettings)
+            return_value=MagicMock(spec=WpmEnergyManagementSettings)
         )
         type(api_client).energy_data = PropertyMock(
             return_value=MagicMock(spec=WpmEnergyData)
