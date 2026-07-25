@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfFrequency
+import pytest
 
 from custom_components.stiebel_eltron_isg.const import (
     COMPRESSOR_HEATING,
@@ -127,7 +128,11 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.state_class == SensorStateClass.TOTAL
 
 
-def test_wpm_exposes_electrical_booster_energy() -> None:
+test_wpm_exposes_electrical_booster_energy_test_data = [_wpm, _wpm_3i]
+
+
+@pytest.mark.parametrize("lookup", test_wpm_exposes_electrical_booster_energy_test_data)
+def test_wpm_exposes_electrical_booster_energy(lookup) -> None:
     """WPM and WPM_3i expose the NHZ booster heat meters (3506/3508, kWh).
 
     Without these the energy dashboard shows untracked consumption whenever
@@ -141,14 +146,15 @@ def test_wpm_exposes_electrical_booster_energy() -> None:
         PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL: 93,
     }
 
-    for lookup in (_wpm, _wpm_3i):
-        for key, value in expected.items():
-            desc = lookup(key)
-            assert desc.modbus_register(api) == value
-            assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
-            assert desc.device_class == SensorDeviceClass.ENERGY
-            # Lifetime counters, not rolling windows.
-            assert desc.state_class == SensorStateClass.TOTAL_INCREASING
+    for key, value in expected.items():
+        desc = lookup(key)
+        assert desc.modbus_register(api) == value
+        assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+        assert desc.device_class == SensorDeviceClass.ENERGY
+        # Lifetime counters, not rolling windows.
+        assert desc.state_class == SensorStateClass.TOTAL_INCREASING
+
+
 def test_lwz_solar_sensors_are_not_duplicates() -> None:
     """The plain LWZ solar keys track day+total, the Total keys the lifetime sum.
 
