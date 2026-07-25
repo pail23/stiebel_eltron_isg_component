@@ -19,6 +19,10 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
     COOLING_RUNTIME,
+    PRODUCED_SOLAR_HEATING,
+    PRODUCED_SOLAR_HEATING_TOTAL,
+    PRODUCED_SOLAR_WATER_HEATING,
+    PRODUCED_SOLAR_WATER_HEATING_TOTAL,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
     LWZ_SENSOR_TYPES,
@@ -104,3 +108,30 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.device_class == SensorDeviceClass.ENERGY
         # Rolling windows reset, so they must not be TOTAL_INCREASING.
         assert desc.state_class == SensorStateClass.TOTAL
+
+
+def test_lwz_solar_sensors_are_not_duplicates() -> None:
+    """The plain LWZ solar keys track day+total, the Total keys the lifetime sum.
+
+    Note the library's inconsistent spelling: the lifetime register is
+    ``hm_solar_dwh_total`` (dwh) while the day and day+total fields use dhw.
+    """
+    api = SimpleNamespace(
+        energy_data=SimpleNamespace(
+            hm_solar_htg_day_and_total=1101,
+            hm_solar_htg_total=1100,
+            hm_solar_dhw_day_and_total=2202,
+            hm_solar_dwh_total=2200,
+        )
+    )
+    expected = {
+        PRODUCED_SOLAR_HEATING: 1101,
+        PRODUCED_SOLAR_HEATING_TOTAL: 1100,
+        PRODUCED_SOLAR_WATER_HEATING: 2202,
+        PRODUCED_SOLAR_WATER_HEATING_TOTAL: 2200,
+    }
+
+    values = {key: _lwz(key).modbus_register(api) for key in expected}
+    assert values == expected
+    # A duplicated accessor would collapse two of the four sensors.
+    assert len(set(values.values())) == 4
