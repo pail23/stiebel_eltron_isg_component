@@ -838,7 +838,7 @@ LWZ_ENERGY_SENSOR_TYPES = [
     ),
     create_energy_entity_description(
         PRODUCED_SOLAR_HEATING,
-        lambda api: api.energy_data.hm_solar_htg_total,
+        lambda api: api.energy_data.hm_solar_htg_day_and_total,
     ),
     create_energy_entity_description(
         PRODUCED_SOLAR_HEATING_TOTAL,
@@ -850,7 +850,7 @@ LWZ_ENERGY_SENSOR_TYPES = [
     ),
     create_energy_entity_description(
         PRODUCED_SOLAR_WATER_HEATING,
-        lambda api: api.energy_data.hm_solar_dwh_total,
+        lambda api: api.energy_data.hm_solar_dhw_day_and_total,
     ),
 ]
 
