@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question, help or "is my heat pump supported?"
+    url: https://github.com/pail23/stiebel_eltron_isg_component/discussions
+    about: >
+      Anything that is not a defect or a concrete feature request belongs in
+      Discussions. Questions get answered there and stay findable for the next person.
+  - name: Home Assistant community forum
+    url: https://community.home-assistant.io/
+    about: For general Home Assistant questions that are not specific to this integration.
