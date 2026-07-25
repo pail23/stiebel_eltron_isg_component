@@ -3,7 +3,7 @@
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -392,6 +392,122 @@ async def test_a_whole_installation_keeps_every_entity_id(
         )
     }
     assert after == before
+
+
+async def test_the_device_is_renamed_rather_than_replaced(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """The device keeps its id, and with it its area and its automations.
+
+    The device identifier was built from the same display name as the unique
+    ids, so without migrating it the update leaves an empty predecessor behind
+    and everything that referred to the device id points at it.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    device_registry.async_update_device(legacy.id, name_by_user="Waermepumpe Keller")
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    )
+    assert migrated is not None
+    assert migrated.id == legacy.id
+    assert migrated.name_by_user == "Waermepumpe Keller"
+    # No second device is left behind.
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "My Heatpump")}) is None
+    )
+    assert (
+        len(
+            dr.async_entries_for_config_entry(
+                device_registry, config_entry_with_name.entry_id
+            )
+        )
+        == 1
+    )
+
+
+async def test_a_device_of_another_entry_with_the_same_name_is_left_alone(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """Device identifiers are global, so the owner has to be checked.
+
+    Two installations can carry the same configured name, and only one of them
+    can own the device that name produced. Home Assistant sets up every config
+    entry of the integration, so both migrations run, and the one that does not
+    own the device must not take it over.
+    """
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "2.2.2.2", CONF_PORT: 502, CONF_NAME: "My Heatpump"},
+        entry_id="stiebel_eltron_006",
+    )
+    other_entry.add_to_hass(hass)
+    config_entry_with_name.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    foreign = device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    still_theirs = device_registry.async_get(foreign.id)
+    assert still_theirs is not None
+    assert still_theirs.config_entries == {other_entry.entry_id}
+    assert (DOMAIN, config_entry_with_name.entry_id) not in still_theirs.identifiers
+    # Our own entry got a device of its own rather than adopting theirs.
+    ours = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    )
+    assert ours is not None
+    assert ours.id != foreign.id
+
+
+async def test_an_installation_that_already_updated_keeps_both_devices(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Two devices cannot share an identifier, so the older one stays put."""
+    config_entry_with_name.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    replacement = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        name="Stiebel Eltron WPM_3",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "My Heatpump")}).id
+        == legacy.id
+    )
+    assert (
+        device_registry.async_get_device(
+            identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+        ).id
+        == replacement.id
+    )
+    assert "cannot be migrated" in caplog.text
 
 
 async def test_migration_is_idempotent(

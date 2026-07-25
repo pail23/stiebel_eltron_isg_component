@@ -1,13 +1,14 @@
-"""Migration of legacy entity unique ids.
+"""Migration of legacy entity unique ids and device identifiers.
 
-Until 2026.7 the unique id of every entity embedded the display name of the
-coordinator, which was the name the user had configured. The 2026.7 refactoring
-replaced that name with the detected controller model, which silently changed
-every unique id: Home Assistant then orphaned the existing registry entries and
-created replacements under new entity ids (issue #597).
+Until 2026.7 both the unique id of every entity and the identifier of the device
+embedded the display name of the coordinator, which was the name the user had
+configured. The 2026.7 refactoring replaced that name with the detected
+controller model, which silently changed every one of them: Home Assistant then
+orphaned the existing registry entries and created replacements under new entity
+ids, next to a second device (issue #597).
 
-Both legacy schemes are migrated here to a unique id derived from the config
-entry id, which no rename can change again.
+Both are migrated here to identifiers derived from the config entry id, which no
+rename can change again.
 """
 
 import logging
@@ -15,7 +16,7 @@ from typing import Any
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pystiebeleltron import ControllerModel
 
 from .const import DOMAIN, HEATER_PRESSURE
@@ -32,6 +33,17 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 _RENAMED_KEYS = {"heating_pressure": HEATER_PRESSURE}
 
 
+def _legacy_name(entry: StiebelEltronConfigEntry) -> str:
+    """Return the display name an earlier release built its identifiers from.
+
+    The config flow dropped CONF_NAME in 2026.7, but nothing removes it from the
+    data of entries that were created earlier, so the old name can be rebuilt
+    instead of guessed. The title is the same fallback the setup code used for
+    an entry without a configured name.
+    """
+    return entry.data.get(CONF_NAME, entry.title)
+
+
 def _legacy_prefixes(
     entry: StiebelEltronConfigEntry, model: ControllerModel
 ) -> list[str]:
@@ -41,12 +53,7 @@ def _legacy_prefixes(
     been updated holds registry entries of both schemes, and the older entry is
     the one dashboards, automations and long term statistics refer to.
     """
-    # The config flow dropped CONF_NAME in 2026.7, but nothing removes it from
-    # the data of entries that were created earlier, so the old prefix can be
-    # rebuilt instead of guessed. The title is the same fallback the setup code
-    # used for an entry without a configured name.
-    legacy_name = entry.data.get(CONF_NAME, entry.title)
-    prefixes = [f"{DOMAIN}_{legacy_name}_"]
+    prefixes = [f"{DOMAIN}_{_legacy_name(entry)}_"]
     model_prefix = f"{DOMAIN}_{coordinator_display_name(model)}_"
     if model_prefix not in prefixes:
         prefixes.append(model_prefix)
@@ -123,6 +130,41 @@ def _plan_migration(
         for (_, key), (_, registry_entry) in winners.items()
     }
     return planned, losers
+
+
+@callback
+def async_migrate_device_identifier(
+    hass: HomeAssistant, entry: StiebelEltronConfigEntry
+) -> None:
+    """Migrate the legacy device identifier of this config entry in place.
+
+    The device identifier was built from the same display name, so without this
+    the update replaces the device rather than renaming it, and the area, the
+    name the user gave it and every automation that targets the device id are
+    left behind on an empty predecessor.
+    """
+    registry = dr.async_get(hass)
+    legacy = registry.async_get_device(identifiers={(DOMAIN, _legacy_name(entry))})
+    if legacy is None or entry.entry_id not in legacy.config_entries:
+        # Nothing to migrate, or the name belongs to a second installation that
+        # happens to be called the same. Identifiers are global, so that has to
+        # be checked rather than assumed.
+        return
+
+    if registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}) is not None:
+        # An installation that already updated has both devices, and two devices
+        # cannot share an identifier. The newer one carries the entities that
+        # work, so the older one is left as it is.
+        _LOGGER.warning(
+            "The device %s was replaced by a second device when this "
+            "installation was updated, so its identifier cannot be migrated. "
+            "It can be deleted once its remaining entities are no longer needed",
+            legacy.name,
+        )
+        return
+
+    registry.async_update_device(legacy.id, new_identifiers={(DOMAIN, entry.entry_id)})
+    _LOGGER.info("Migrated the device identifier of %s", legacy.name)
 
 
 async def async_migrate_unique_ids(
