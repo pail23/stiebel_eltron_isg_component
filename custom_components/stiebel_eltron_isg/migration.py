@@ -151,20 +151,53 @@ def async_migrate_device_identifier(
         # be checked rather than assumed.
         return
 
-    if registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)}) is not None:
-        # An installation that already updated has both devices, and two devices
-        # cannot share an identifier. The newer one carries the entities that
-        # work, so the older one is left as it is.
-        _LOGGER.warning(
-            "The device %s was replaced by a second device when this "
-            "installation was updated, so its identifier cannot be migrated. "
-            "It can be deleted once its remaining entities are no longer needed",
-            legacy.name,
-        )
-        return
+    replacement = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    if replacement is not None and replacement.id != legacy.id:
+        # An installation that already updated has both devices, and two of them
+        # cannot share an identifier. The replacement is at most as old as that
+        # update, while everything that refers to a device by id refers to the
+        # original, so the original is the one that is kept.
+        _adopt_replacement(hass, registry, legacy, replacement)
 
     registry.async_update_device(legacy.id, new_identifiers={(DOMAIN, entry.entry_id)})
     _LOGGER.info("Migrated the device identifier of %s", legacy.name)
+
+
+@callback
+def _adopt_replacement(
+    hass: HomeAssistant,
+    registry: dr.DeviceRegistry,
+    legacy: dr.DeviceEntry,
+    replacement: dr.DeviceEntry,
+) -> None:
+    """Move everything off the replacement device and remove it.
+
+    Its identifier has to become free before the original can take it, and its
+    entities have to be moved first, because removing a device takes its
+    entities with it.
+    """
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_device(
+        entity_registry, replacement.id, include_disabled_entities=True
+    ):
+        entity_registry.async_update_entity(entity.entity_id, device_id=legacy.id)
+
+    # Whatever the user set on the replacement is only worth keeping where the
+    # original has nothing, since the original is the one being restored.
+    carried_over = {
+        field: getattr(replacement, field)
+        for field in ("area_id", "name_by_user")
+        if getattr(legacy, field) is None and getattr(replacement, field) is not None
+    }
+    registry.async_remove_device(replacement.id)
+    if carried_over:
+        registry.async_update_device(legacy.id, **carried_over)
+
+    _LOGGER.info(
+        "Removed the device that replaced %s when this installation was "
+        "updated, and moved its entities back",
+        legacy.name,
+    )
 
 
 async def async_migrate_unique_ids(

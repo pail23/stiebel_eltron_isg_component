@@ -544,12 +544,55 @@ async def test_a_device_of_another_entry_with_the_same_name_is_left_alone(
     assert ours.id != foreign.id
 
 
-async def test_an_installation_that_already_updated_keeps_both_devices(
-    hass: HomeAssistant,
-    config_entry_with_name: MockConfigEntry,
-    caplog: pytest.LogCaptureFixture,
+async def test_an_installation_that_already_updated_gets_its_device_back(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:
-    """Two devices cannot share an identifier, so the older one stays put."""
+    """The replacement device is dissolved into the original one.
+
+    Leaving both would keep the original empty, so the area, the name the user
+    gave it and every automation that refers to it by device id stay broken
+    even though the entities were migrated.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    device_registry.async_update_device(legacy.id, name_by_user="Waermepumpe Keller")
+    replacement = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        name=MODEL_NAME,
+    )
+    on_replacement = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_{MODEL_NAME}_{KEY}",
+        "stiebel_eltron_wpm_3_aussentemperatur",
+    )
+    er.async_get(hass).async_update_entity(
+        on_replacement.entity_id, device_id=replacement.id
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, config_entry_with_name.entry_id
+    )
+    assert [device.id for device in devices] == [legacy.id]
+    assert devices[0].identifiers == {(DOMAIN, config_entry_with_name.entry_id)}
+    assert devices[0].name_by_user == "Waermepumpe Keller"
+    # The entity of the dissolved device came along rather than being deleted.
+    assert er.async_get(hass).async_get(on_replacement.entity_id).device_id == legacy.id
+
+
+async def test_an_area_set_after_the_update_is_carried_over(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """What the user set on the replacement is kept where the original is empty."""
     config_entry_with_name.add_to_hass(hass)
     device_registry = dr.async_get(hass)
     legacy = device_registry.async_get_or_create(
@@ -560,23 +603,21 @@ async def test_an_installation_that_already_updated_keeps_both_devices(
     replacement = device_registry.async_get_or_create(
         config_entry_id=config_entry_with_name.entry_id,
         identifiers={(DOMAIN, config_entry_with_name.entry_id)},
-        name="Stiebel Eltron WPM_3",
+        name=MODEL_NAME,
+    )
+    device_registry.async_update_device(
+        replacement.id, area_id="heizungskeller", name_by_user="Waermepumpe"
     )
 
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "My Heatpump")}).id
-        == legacy.id
+    restored = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
     )
-    assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, config_entry_with_name.entry_id)}
-        ).id
-        == replacement.id
-    )
-    assert "cannot be migrated" in caplog.text
+    assert restored.id == legacy.id
+    assert restored.area_id == "heizungskeller"
+    assert restored.name_by_user == "Waermepumpe"
 
 
 async def test_migration_is_idempotent(
