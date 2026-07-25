@@ -609,6 +609,12 @@
             "fan_level_night": {
                 "name": "Fan Level Night"
             },
+            "fan_level_party": {
+                "name": "Fan Level Party"
+            },
+            "fan_level_manual": {
+                "name": "Fan Level Manual"
+            },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Comfort Cooling Temperature Target HK1"
             },

@@ -609,6 +609,12 @@
             "fan_level_night": {
                 "name": "Lüfterstufe Nacht"
             },
+            "fan_level_party": {
+                "name": "Lüfterstufe Party"
+            },
+            "fan_level_manual": {
+                "name": "Lüfterstufe Handbetrieb"
+            },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Tagbetrieb Kühlung Temperatursoll HK 1"
             },

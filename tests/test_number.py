@@ -2,11 +2,16 @@
 
 from types import SimpleNamespace
 
+from pystiebeleltron.lwz import LwzSystemParameters
+
 from custom_components.stiebel_eltron_isg.const import (
     AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+    FAN_LEVEL_MANUAL,
+    FAN_LEVEL_PARTY,
 )
 from custom_components.stiebel_eltron_isg.number import (
+    NUMBER_TYPES_LWZ,
     NUMBER_TYPES_WPM,
     StiebelEltronISGNumberEntity,
 )
@@ -117,3 +122,25 @@ def test_fan_cooling_hysteresis_number_is_wired() -> None:
     assert description.modbus_register(api) == 2.5
     assert description.write_field == "flow_temp_hysteresis_fan"
     assert (description.native_min_value, description.native_max_value) == (1, 5)
+
+
+def test_lwz_fan_level_numbers_resolve_against_the_lwz_api() -> None:
+    """Party and manual fan level must exist on the LWZ system parameters.
+
+    The two entities were added because LWZ holding registers 1020 and 1021,
+    documented addresses, carry the party and the manual ventilation stage, and
+    only day and night were exposed before. Resolving the accessors against the
+    real library class guards against a renamed or missing field.
+    """
+    by_key = {description.key: description for description in NUMBER_TYPES_LWZ}
+    api = SimpleNamespace(system_parameters=LwzSystemParameters)
+
+    for key, field in (
+        (FAN_LEVEL_PARTY, "party_stage"),
+        (FAN_LEVEL_MANUAL, "manual_stage"),
+    ):
+        description = by_key[key]
+        assert description.modbus_register(api) is getattr(LwzSystemParameters, field)
+        assert description.write_field == field
+        assert (description.native_min_value, description.native_max_value) == (0, 3)
+        assert description.native_step == 1
