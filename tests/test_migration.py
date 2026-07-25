@@ -319,6 +319,50 @@ async def test_setup_without_legacy_entities_changes_nothing(
     )
 
 
+async def test_a_whole_installation_keeps_every_entity_id(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """The complete set of entities of an installation survives the upgrade.
+
+    This is the reported symptom rather than a single entity: every entity of
+    every platform is rewritten to the legacy scheme, as an installation that
+    has not updated yet holds them, and the reload must not add a single new
+    registry entry.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    before = {
+        entry.entity_id: entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            registry, config_entry_with_name.entry_id
+        )
+    }
+    assert len(before) > 50
+
+    assert await hass.config_entries.async_unload(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+    target_prefix = f"{config_entry_with_name.entry_id}_"
+    for entity_id, unique_id in before.items():
+        registry.async_update_entity(
+            entity_id,
+            new_unique_id=f"{DOMAIN}_My Heatpump_{unique_id.removeprefix(target_prefix)}",
+        )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    after = {
+        entry.entity_id: entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            registry, config_entry_with_name.entry_id
+        )
+    }
+    assert after == before
+
+
 async def test_migration_is_idempotent(
     hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:
