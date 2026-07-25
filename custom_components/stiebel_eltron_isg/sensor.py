@@ -197,16 +197,28 @@ def create_energy_entity_description(
 def create_power_consumption_entity_description(
     key: str,
     modbus_register: StiebelEltronModbusRegister,
+    native_unit: UnitOfEnergy = UnitOfEnergy.KILO_WATT_HOUR,
 ) -> StiebelEltronSensorEntityDescription:
-    """Create a power-consumption window sensor (rolling sum, resets over time).
+    """Create a sensor for one Servicewelt "POWER CONSUMPTION" window.
 
-    These are the Servicewelt "POWER CONSUMPTION" statistics. Because the
-    windows reset, they use ``TOTAL`` rather than ``TOTAL_INCREASING``.
+    The state class is a placeholder. Whether a window rolls continuously or
+    resets to zero is not established, and the two cases want different classes:
+    a reset-to-zero counter is what ``TOTAL_INCREASING`` is for, while a rolling
+    sum suits neither, since its long-term sum statistic would just drift. Until
+    someone samples a real machine over a day, ``TOTAL`` stays as the least bad
+    option. The presence of a "previous 12 months" register suggests these are
+    bucketed rolling sums rather than daily counters.
+
+    The unit is selected per window: the library sums each register pair as
+    ``low + high * 1000``, so the result carries the smaller of the two units
+    Servicewelt displays. The 24 h windows therefore come out in Wh and pass
+    ``native_unit`` explicitly, while the 12-month windows are kWh and use the
+    default.
     """
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=native_unit,
         icon="mdi:meter-electric",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
@@ -1035,13 +1047,19 @@ WPM_COMPRESSOR_SENSOR_TYPES = [
     ),
 ]
 
-# Servicewelt "POWER CONSUMPTION" screen (Modbus registers 3707-3723). The
-# pystiebeleltron library already decodes each register pair into a kWh value,
-# so these read the plain energy_data fields.
+# Servicewelt "POWER CONSUMPTION" screen: nine register pairs spanning 3707-3724,
+# followed immediately by the efficiency block at 3725, which confirms the
+# nine-times-two layout leaves no gap. The
+# pystiebeleltron library decodes each register pair as ``low + high * 1000``,
+# which lands in Wh for the 24 h windows and in kWh for the 12-month ones. The
+# library's own field metadata claims kWh throughout, which is wrong for the
+# 24 h windows; the neighbouring amount-of-heat block declares Wh for its 24 h
+# entry with the same arithmetic.
 WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     create_power_consumption_entity_description(
         CONSUMED_HEATING_LAST_24H,
         lambda api: api.energy_data.heating_24h,
+        UnitOfEnergy.WATT_HOUR,
     ),
     create_power_consumption_entity_description(
         CONSUMED_HEATING_12M,
@@ -1054,6 +1072,7 @@ WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     create_power_consumption_entity_description(
         CONSUMED_COOLING_LAST_24H,
         lambda api: api.energy_data.cooling_24h,
+        UnitOfEnergy.WATT_HOUR,
     ),
     create_power_consumption_entity_description(
         CONSUMED_COOLING_12M,
@@ -1066,6 +1085,7 @@ WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     create_power_consumption_entity_description(
         CONSUMED_WATER_HEATING_LAST_24H,
         lambda api: api.energy_data.dhw_24h,
+        UnitOfEnergy.WATT_HOUR,
     ),
     create_power_consumption_entity_description(
         CONSUMED_WATER_HEATING_12M,
