@@ -1,0 +1,68 @@
+name: Feature request
+description: Suggest a new value, setting or capability
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search the existing [issues](../issues?q=is%3Aissue) and
+        [discussions](../discussions) first.
+
+        Whether a value can be added at all depends on the controller: the LWZ and
+        the WPM controllers expose different Modbus registers, and some values that
+        the ISG web interface can change are simply not on the Modbus map. Naming
+        your controller and where the value appears in the ISG web interface is what
+        makes the request answerable.
+
+  - type: checkboxes
+    attributes:
+      label: Before requesting
+      options:
+        - label: I searched the existing issues and discussions
+          required: true
+
+  - type: dropdown
+    id: controller
+    attributes:
+      label: Detected controller
+      description: Shown on the device page as the model of the ISG controller
+      options:
+        - "WPM 3"
+        - "WPM 3i"
+        - "WPMsystem"
+        - "LWZ R290"
+        - "LWZ"
+        - "LWA/LWZ"
+        - "Other, the integration shows 'other model (...)'"
+        - "Not sure"
+    validations:
+      required: true
+
+  - type: input
+    id: value_name
+    attributes:
+      label: Which value or setting
+      description: >
+        The name as the ISG web interface or the heat pump display shows it, plus
+        where it sits in the menu. A screenshot of that page helps.
+      placeholder: "INFO > HEAT PUMP > ... / SETTINGS > COOLING > ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: use_case
+    attributes:
+      label: What would you do with it
+      description: >
+        Read it only, or also write it? What should the automation or dashboard be
+        able to do that it cannot do today?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Anything else
+      description: >
+        Register numbers if you already know them, a screenshot of the ISG page, or
+        alternatives you tried.

@@ -15,9 +15,23 @@ Pull requests are the best way to propose changes to the codebase.
 
 1. Fork the repo and create your branch from `main`.
 2. If you've changed something, update the documentation.
-3. Make sure your code lints (using black).
-4. Test you contribution.
-5. Issue that pull request!
+3. Make sure your code lints and is formatted, and that the tests pass.
+4. Issue that pull request!
+
+The project uses [uv](https://docs.astral.sh/uv/) and [ruff](https://docs.astral.sh/ruff/).
+These are the same commands CI runs, so running them locally first avoids a red pull request:
+
+```sh
+uv sync --all-extras --dev --prerelease=allow
+uv run --prerelease=allow ruff check .
+uv run --prerelease=allow ruff format . --check
+uv run --prerelease=allow pytest tests
+```
+
+If you add or rename an entity, its `translation_key` needs a matching entry in
+`custom_components/stiebel_eltron_isg/strings.json` as well as in the translation
+files. Hassfest validation fails on a translation that has no counterpart in
+`strings.json`.
 
 ## Any contributions you make will be under the MIT Software License
 
