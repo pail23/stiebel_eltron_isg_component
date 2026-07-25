@@ -1,14 +1,18 @@
-"""Guards on the integration manifest.
+"""Guard against the manifest drifting away from what the tests exercise.
 
-``manifest.json`` declares what Home Assistant installs at runtime. The test
-environment installs whatever ``pyproject.toml`` asks for. When the version the
-tests run against does not satisfy the manifest requirement, the whole suite can
-pass while the released integration is broken, which is how the WPM
-power-consumption sensors shipped against an API the pinned library did not have.
+``manifest.json`` declares what Home Assistant installs at runtime, while the
+test environment installs whatever ``pyproject.toml`` asks for. When those two
+diverge, the suite can pass against an API that a released installation does not
+have, which is how the WPM power-consumption sensors shipped reading
+``api.energy_data`` fields while the manifest still pinned a library that kept
+them on ``api.power_consumption``.
 
-The invariant asserted here is deliberately the weaker "what CI runs must be
-installable per the manifest" rather than "the two files agree exactly", so that
-a legitimate loosening of the manifest, for example to ``>=``, does not fail.
+Scope, deliberately narrow: this proves only that the one version present in CI
+is admitted by the manifest requirement. It is a drift guard, not a compatibility
+proof. With a range such as ``>=0.2.3`` every admitted version would have to be
+API-compatible for that to hold, and nothing here checks the other admitted
+versions. Guarding a range properly would mean testing its minimum, or asserting
+that known-incompatible versions are excluded.
 """
 
 import importlib.metadata
@@ -27,13 +31,18 @@ _MANIFEST = (
 
 
 def test_installed_versions_satisfy_manifest_requirements() -> None:
-    """Every manifest requirement must be met by the environment CI tests on."""
+    """Each active requirement is installed, at a version its specifier admits."""
     requirements = json.loads(_MANIFEST.read_text())["requirements"]
 
     assert requirements, "manifest declares no requirements"
 
     for entry in requirements:
         requirement = Requirement(entry)
+
+        # A requirement whose environment marker does not apply here is not
+        # expected to be installed, so it says nothing about this environment.
+        if requirement.marker is not None and not requirement.marker.evaluate():
+            continue
 
         try:
             installed = importlib.metadata.version(requirement.name)
