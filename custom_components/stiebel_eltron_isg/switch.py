@@ -73,6 +73,18 @@ SWITCH_TYPES = [
     ),
 ]
 
+# Only for controllers that expose a domestic hot water circulation pump.
+CIRCULATION_PUMP_SWITCH_TYPES = [
+    StiebelEltronSwitchEntityDescription(
+        key=CIRCULATION_PUMP,
+        translation_key=CIRCULATION_PUMP,
+        device_class=SwitchDeviceClass.SWITCH,
+        modbus_register=lambda api: api.system_state.dhw_circulation_pump,
+        write_component="system_state",
+        write_field="dhw_circulation_pump",
+    ),
+]
+
 
 async def async_setup_entry(
     _hass: HomeAssistant,
@@ -93,19 +105,13 @@ async def async_setup_entry(
 
     if coordinator.model in (ControllerModel.LWZ_R290, ControllerModel.WPMsystem):
         # Add the circulation pump switch for WPM systems
-        entities.append(
+        entities.extend(
             StiebelEltronISGSwitch(
                 coordinator,
                 entry,
-                StiebelEltronSwitchEntityDescription(
-                    key=CIRCULATION_PUMP,
-                    translation_key=CIRCULATION_PUMP,
-                    device_class=SwitchDeviceClass.SWITCH,
-                    modbus_register=lambda api: api.system_state.dhw_circulation_pump,
-                    write_component="system_state",
-                    write_field="dhw_circulation_pump",
-                ),
+                description,
             )
+            for description in CIRCULATION_PUMP_SWITCH_TYPES
         )
 
     async_add_devices(entities)
