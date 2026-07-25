@@ -785,6 +785,14 @@ ENERGY_SENSOR_TYPES = [
         CONSUMED_WATER_HEATING,
         lambda api: api.energy_data.vd_dhw_day_and_total_consumed,
     ),
+    create_energy_entity_description(
+        PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
+        lambda api: api.energy_data.nhz_heating_total,
+    ),
+    create_energy_entity_description(
+        PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
+        lambda api: api.energy_data.nhz_dhw_total,
+    ),
 ]
 
 LWZ_ENERGY_SENSOR_TYPES = [

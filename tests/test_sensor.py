@@ -19,6 +19,8 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
     COOLING_RUNTIME,
+    PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
+    PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
     LWZ_SENSOR_TYPES,
@@ -29,6 +31,10 @@ from custom_components.stiebel_eltron_isg.sensor import (
 
 def _wpm(key: str):
     return next(d for d in WPM_SENSOR_TYPES if d.key == key)
+
+
+def _wpm_3i(key: str):
+    return next(d for d in WPM_3I_SENSOR_TYPES if d.key == key)
 
 
 def _lwz(key: str):
@@ -104,3 +110,27 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.device_class == SensorDeviceClass.ENERGY
         # Rolling windows reset, so they must not be TOTAL_INCREASING.
         assert desc.state_class == SensorStateClass.TOTAL
+
+
+def test_wpm_exposes_electrical_booster_energy() -> None:
+    """WPM and WPM_3i expose the NHZ booster heat meters (3506/3508, kWh).
+
+    Without these the energy dashboard shows untracked consumption whenever
+    the immersion heater runs.
+    """
+    api = SimpleNamespace(
+        energy_data=SimpleNamespace(nhz_heating_total=417, nhz_dhw_total=93)
+    )
+    expected = {
+        PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL: 417,
+        PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL: 93,
+    }
+
+    for lookup in (_wpm, _wpm_3i):
+        for key, value in expected.items():
+            desc = lookup(key)
+            assert desc.modbus_register(api) == value
+            assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+            assert desc.device_class == SensorDeviceClass.ENERGY
+            # Lifetime counters, not rolling windows.
+            assert desc.state_class == SensorStateClass.TOTAL_INCREASING
