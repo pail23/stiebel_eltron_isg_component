@@ -53,23 +53,43 @@ This is the preferred installation option. If you are using HACS:
 
 <!---->
 
-## Migration Notes (`pystiebeleltron` `0.5.1`)
+## Upgrading to 2026.7
 
-This integration now targets `pystiebeleltron` `0.5.1`, which introduced API changes in the upstream library.
+Release 2026.7 is a significant refactoring of the integration.
 
-For users, no manual migration step is required in Home Assistant:
+For users:
 
-1. Update the integration to the latest release.
-2. Restart Home Assistant.
-3. If entities show as unavailable, reload the integration once from the UI.
+1. Update the integration and restart Home Assistant.
+2. If entities show as unavailable, reload the integration once from the UI.
+3. Some entities were renamed in the refactoring. If you end up with unavailable
+   leftovers, remove those entities individually, or delete the integration entry and
+   add it again for a completely clean set.
 
-For contributors, the integration now includes compatibility helpers so both legacy register-based access and newer component/field access can be supported during transition:
+A note on history, because it is easy to get wrong in both directions. Removing an
+entity does not delete its recorded history: the long term statistics stay behind
+under the old entity id and show up in Developer Tools, Statistics as no longer
+provided, where you can delete them deliberately. What does not happen
+automatically is linking them to a differently named replacement. Renaming an entity
+inside Home Assistant is the one path that carries its statistics along, because the
+recorder migrates the statistic id on a rename but has no hook for a removal.
 
-1. Controller probing goes through `custom_components/stiebel_eltron_isg/probe.py`.
-2. API/client compatibility and register-to-component fallback live in `custom_components/stiebel_eltron_isg/client_bridge.py`.
-3. Platform code should prefer coordinator helpers (`get_component_value` / `write_component_value`) for new writable behavior.
+To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
+menu of the integration entry. It leaves the entities untouched, so nothing has to be
+matched up afterwards.
 
-If you are adding a new entity and an upstream register enum no longer exists in `0.5.1`, use module attribute lookups and the existing compatibility shim pattern instead of hard imports.
+For contributors, the transition the earlier migration notes described is complete.
+The compatibility shims are gone, along with `probe.py` and `client_bridge.py`:
+
+1. Platform code reads through `coordinator.get_value` and writes through
+   `coordinator.write_component_value`.
+2. Entity descriptions address library fields directly, for example
+   `modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_1`.
+3. The pinned `pystiebeleltron` version is in
+   `custom_components/stiebel_eltron_isg/manifest.json`.
+
+Note that the library uses wire addresses, which are one below the addresses in the
+Stiebel Eltron Modbus documentation. Documented register 1514 is `1513` in the
+library.
 
 ## Contributions are welcome!
 
@@ -81,7 +101,7 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [buymecoffee]: https://www.buymeacoffee.com/pail23
 [buymecoffeebadge]: https://img.shields.io/badge/buy%20me%20a%20coffee-donate-yellow.svg
 [commits-shield]: https://img.shields.io/github/commit-activity/y/pail23/stiebel_eltron_isg_component
-[commits]: https://github.com/pail23/stiebel_eltron_isg_component/commits/master
+[commits]: https://github.com/pail23/stiebel_eltron_isg_component/commits/main
 [hacs]: https://github.com/hacs
 [hacsbadge]: https://img.shields.io/badge/HACS-Default-orange
 [forum-shield]: https://img.shields.io/badge/community-forum-brightgreen
