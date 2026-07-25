@@ -51,11 +51,10 @@ async def async_setup_entry(
     """Set up the select platform."""
     coordinator = entry.runtime_data
 
-    if coordinator.is_wpm:
-        async_add_devices(
-            StiebelEltronISGButtonEntity(coordinator, entry, description)
-            for description in BUTTONS
-        )
+    async_add_devices(
+        StiebelEltronISGButtonEntity(coordinator, entry, description)
+        for description in BUTTONS
+    )
 
 
 class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):

@@ -1128,7 +1128,11 @@ async def async_setup_entry(
             for description in ENERGY_DAILY_SENSOR_TYPES
         ]
         entities.extend(daily_energy_entities)
-    elif coordinator.is_wpm:
+    elif coordinator.model in (
+        ControllerModel.WPM_3,
+        ControllerModel.WPMsystem,
+        ControllerModel.LWZ_R290,
+    ):
         entities = [
             StiebelEltronISGSensor(
                 coordinator,

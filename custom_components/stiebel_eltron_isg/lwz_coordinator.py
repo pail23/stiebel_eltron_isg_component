@@ -4,24 +4,26 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-from collections.abc import Callable
 import logging
-from typing import Any
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import UpdateFailed
-from modbus_connection import ModbusConnection, ModbusError
-from modbus_connection.cli_helper import field_rows
-from pystiebeleltron import ControllerModel, StiebelEltronModbusError
+from modbus_connection import ModbusConnection
+from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 
 from .const import UNIT_ID
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import (
+    StiebelEltronConfigEntry,
+    StiebelEltronConnectionParams,
+    StiebelEltronDataCoordinator,
+)
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
-class StiebelEltronModbusLWZDataCoordinator(StiebelEltronDataCoordinator):
+class StiebelEltronModbusLWZDataCoordinator(
+    StiebelEltronDataCoordinator[LwzStiebelEltronAPI]
+):
     """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
 
     def __init__(
@@ -33,51 +35,17 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronDataCoordinator):
         host: str,
     ) -> None:
         """Initialize the Modbus hub."""
-        self._api = LwzStiebelEltronAPI(connection.for_unit(UNIT_ID))
-        super().__init__(hass, entry, model, connection, host)
 
-    async def _async_update_data(self) -> dict[Any, float | int | None]:
-        """Time to update."""
-        try:
-            await self._api.async_update()
-        except ModbusError as exception:
-            raise UpdateFailed(exception) from exception
-        else:
-            return {}
-
-    def get_value(
-        self,
-        value_reference: Callable[[LwzStiebelEltronAPI], float | int | None],
-    ) -> float | int | None:
-        """Return a value from a callable accessor."""
-        try:
-            value = value_reference(self._api)
-        except StiebelEltronModbusError as err:
-            _LOGGER.warning(
-                "Failed to get value from accessor %r: %s",
-                value_reference,
-                err,
-            )
-            return None
-        return value if isinstance(value, (int, float)) else None
-
-    def has_value(
-        self,
-        value_reference: Callable[[LwzStiebelEltronAPI], float | int | None],
-    ) -> bool:
-        """Check if a callable accessor has a value."""
-        return self.get_value(value_reference) is not None
-
-    async def write_component_value(
-        self,
-        component: str,
-        field: str,
-        value: int | float,
-    ) -> None:
-        """Write a value to a component field."""
-        component_obj = getattr(self._api, component, None)
-        if component_obj is not None and hasattr(component_obj, field):
-            await component_obj.write(field, value)
+        super().__init__(
+            hass,
+            entry,
+            LwzStiebelEltronAPI(connection.for_unit(UNIT_ID)),
+            StiebelEltronConnectionParams(
+                host=host,
+                model=model,
+                connection=connection,
+            ),
+        )
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
@@ -86,11 +54,3 @@ class StiebelEltronModbusLWZDataCoordinator(StiebelEltronDataCoordinator):
             "reset",
             1,
         )
-
-    def get_raw_data(self) -> dict:
-        """Return the raw data from the heat pump."""
-        result: dict = {}
-        for component in vars(self._api).values():
-            component_result = dict(field_rows(component))
-            result = {**result, **component_result}
-        return result

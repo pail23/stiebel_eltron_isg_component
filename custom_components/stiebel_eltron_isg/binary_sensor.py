@@ -546,7 +546,11 @@ async def async_setup_entry(
             )
             for description in WPM_3I_BINARY_SENSOR_TYPES
         ]
-    elif coordinator.is_wpm:
+    elif coordinator.model in (
+        ControllerModel.WPM_3,
+        ControllerModel.WPMsystem,
+        ControllerModel.LWZ_R290,
+    ):
         entities = [
             StiebelEltronISGBinarySensor(
                 coordinator,
