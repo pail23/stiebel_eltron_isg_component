@@ -18,11 +18,18 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
 
-from .const import DOMAIN
+from .const import DOMAIN, HEATER_PRESSURE
 from .coordinator import StiebelEltronConfigEntry, coordinator_display_name
 from .entity import build_unique_id
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+# 2026.7 renamed exactly one entity key, verified by diffing the key constants
+# of 2026.2 against the current ones. An id from an earlier release carries the
+# old key, so it has to be translated before the new id is built, otherwise the
+# entity would be migrated to an id that no entity description produces and stay
+# orphaned for the second time.
+_RENAMED_KEYS = {"heating_pressure": HEATER_PRESSURE}
 
 
 def _legacy_prefixes(
@@ -52,7 +59,9 @@ def _match_prefix(unique_id: str, prefixes: list[str]) -> tuple[int, str] | None
     A configured name can overlap the model name, "Stiebel Eltron WPM" with a
     WPM_3 for instance, and then both prefixes match. The longer one is the one
     the id was actually built from, so it yields the real key instead of a
-    remainder like "3_outdoor_temperature".
+    remainder like "3_outdoor_temperature". This assumes the configured name is
+    not the model name followed by the beginning of a key, which would be an
+    odd thing to call a heat pump.
     """
     matching = [
         (priority, prefix)
@@ -62,7 +71,8 @@ def _match_prefix(unique_id: str, prefixes: list[str]) -> tuple[int, str] | None
     if not matching:
         return None
     priority, prefix = max(matching, key=lambda match: len(match[1]))
-    return priority, unique_id.removeprefix(prefix)
+    key = unique_id.removeprefix(prefix)
+    return priority, _RENAMED_KEYS.get(key, key)
 
 
 def _plan_migration(

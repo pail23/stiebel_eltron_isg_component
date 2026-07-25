@@ -244,6 +244,37 @@ async def test_overlapping_names_do_not_cut_the_key_short(
     assert migrated.entity_id == "sensor.stiebel_eltron_outdoor_temperature"
 
 
+async def test_the_renamed_heater_pressure_key_is_translated(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """The one key 2026.7 renamed has to be translated on the way.
+
+    Keeping the old key would migrate the entity to an id that no entity
+    description produces, so it would be orphaned for the second time.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_heating_pressure",
+        "stiebel_eltron_isg_heating_pressure",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    migrated = registry.async_get(legacy.entity_id)
+    assert migrated.unique_id == f"{config_entry_with_name.entry_id}_heater_pressure"
+    # The entity keeps its original entity id rather than being replaced.
+    assert (
+        registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{config_entry_with_name.entry_id}_heater_pressure"
+        )
+        == legacy.entity_id
+    )
+
+
 async def test_same_key_in_two_domains_is_not_a_conflict(
     hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:
