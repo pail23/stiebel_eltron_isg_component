@@ -206,6 +206,44 @@ async def test_migrates_the_title_of_an_entry_without_a_configured_name(
     assert migrated.unique_id == f"{config_entry.entry_id}_{KEY}"
 
 
+@pytest.mark.parametrize(
+    ("configured_name", "legacy_unique_id"),
+    [
+        # The configured name is a prefix of the model name, so an id of the
+        # model scheme matches both and would lose the leading "3_" of its key.
+        ("Stiebel Eltron WPM", f"{DOMAIN}_{MODEL_NAME}_{KEY}"),
+        # The other way round: the model name is a prefix of the configured
+        # name, and an id of the configured name scheme matches both.
+        (f"{MODEL_NAME}_Haus", f"{DOMAIN}_{MODEL_NAME}_Haus_{KEY}"),
+    ],
+)
+async def test_overlapping_names_do_not_cut_the_key_short(
+    hass: HomeAssistant, configured_name: str, legacy_unique_id: str
+) -> None:
+    """The prefix the id was built from wins, not the first one that matches.
+
+    Otherwise the key is taken from the wrong prefix, the entity migrates to an
+    id no entity description produces, and it is orphaned all over again.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_NAME: configured_name},
+        entry_id="stiebel_eltron_005",
+    )
+    config_entry.add_to_hass(hass)
+    legacy = _register(
+        hass, config_entry, legacy_unique_id, "stiebel_eltron_outdoor_temperature"
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = er.async_get(hass).async_get(legacy.entity_id)
+    assert migrated.unique_id == f"{config_entry.entry_id}_{KEY}"
+    assert migrated.entity_id == "sensor.stiebel_eltron_outdoor_temperature"
+
+
 async def test_same_key_in_two_domains_is_not_a_conflict(
     hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:

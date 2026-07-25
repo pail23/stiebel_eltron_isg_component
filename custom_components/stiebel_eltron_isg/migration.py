@@ -46,6 +46,25 @@ def _legacy_prefixes(
     return prefixes
 
 
+def _match_prefix(unique_id: str, prefixes: list[str]) -> tuple[int, str] | None:
+    """Return the priority and the key of the prefix a unique id was built from.
+
+    A configured name can overlap the model name, "Stiebel Eltron WPM" with a
+    WPM_3 for instance, and then both prefixes match. The longer one is the one
+    the id was actually built from, so it yields the real key instead of a
+    remainder like "3_outdoor_temperature".
+    """
+    matching = [
+        (priority, prefix)
+        for priority, prefix in enumerate(prefixes)
+        if unique_id.startswith(prefix)
+    ]
+    if not matching:
+        return None
+    priority, prefix = max(matching, key=lambda match: len(match[1]))
+    return priority, unique_id.removeprefix(prefix)
+
+
 def _plan_migration(
     entries: list[er.RegistryEntry],
     prefixes: list[str],
@@ -70,25 +89,24 @@ def _plan_migration(
     }
 
     for registry_entry in entries:
-        for priority, prefix in enumerate(prefixes):
-            if not registry_entry.unique_id.startswith(prefix):
-                continue
-            key = registry_entry.unique_id.removeprefix(prefix)
-            # The unique id carries no platform, so the same key can legitimately
-            # appear in two entity domains; only a collision within one domain is
-            # a real conflict.
-            slot = (registry_entry.domain, key)
-            previous = winners.get(slot)
-            if slot in taken:
-                losers.append(registry_entry)
-            elif previous is None:
-                winners[slot] = (priority, registry_entry)
-            elif priority < previous[0]:
-                winners[slot] = (priority, registry_entry)
-                losers.append(previous[1])
-            else:
-                losers.append(registry_entry)
-            break
+        match = _match_prefix(registry_entry.unique_id, prefixes)
+        if match is None:
+            continue
+        priority, key = match
+        # The unique id carries no platform, so the same key can legitimately
+        # appear in two entity domains; only a collision within one domain is
+        # a real conflict.
+        slot = (registry_entry.domain, key)
+        previous = winners.get(slot)
+        if slot in taken:
+            losers.append(registry_entry)
+        elif previous is None:
+            winners[slot] = (priority, registry_entry)
+        elif priority < previous[0]:
+            winners[slot] = (priority, registry_entry)
+            losers.append(previous[1])
+        else:
+            losers.append(registry_entry)
 
     planned = {
         registry_entry.id: f"{target_prefix}{key}"
