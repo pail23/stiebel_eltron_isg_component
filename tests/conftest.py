@@ -10,26 +10,25 @@ from pystiebeleltron import (
     EnergyManagementSettings,
     EnergySystemInformation,
 )
+from pystiebeleltron.lwz import OperatingMode
 from pystiebeleltron.wpm import (
     WpmEnergyData,
     WpmSystemParameters,
     WpmSystemState,
     WpmSystemValues,
 )
-from pystiebeleltron.lwz import OperatingMode
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.wpm3i import (
     Wpm3iEnergyData,
+    Wpm3iEnergyManagementSettings,
     Wpm3iEnergySystemInformation,
     Wpm3iSystemParameters,
-    Wpm3iEnergyManagementSettings,
     Wpm3iSystemState,
     Wpm3iSystemValues,
 )
-
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
