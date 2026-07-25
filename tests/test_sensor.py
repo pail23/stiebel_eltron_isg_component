@@ -21,6 +21,10 @@ from custom_components.stiebel_eltron_isg.const import (
     COOLING_RUNTIME,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
+    PRODUCED_SOLAR_HEATING,
+    PRODUCED_SOLAR_HEATING_TOTAL,
+    PRODUCED_SOLAR_WATER_HEATING,
+    PRODUCED_SOLAR_WATER_HEATING_TOTAL,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
     LWZ_SENSOR_TYPES,
@@ -77,36 +81,47 @@ def test_lwz_exposes_compressor_frequency() -> None:
 
 
 def test_wpm_exposes_power_consumption_statistics() -> None:
-    """WPM power-consumption windows read the 3707-3723 energy_data fields (kWh)."""
+    """WPM power-consumption windows read the 3707-3723 energy_data fields.
+
+    Each window is a register pair that the library sums as
+    ``low + high * 1000``, which yields the smaller of the two units the
+    Servicewelt screen displays: the 24 h windows come out in Wh (Servicewelt
+    shows kWh) and the 12-month windows in kWh (Servicewelt shows MWh). The
+    values below are the readings bartveenstra measured against Servicewelt on
+    a real WPMsystem while reverse engineering this block, see pull request
+    #544.
+    """
     api = SimpleNamespace(
         energy_data=SimpleNamespace(
             heating_24h=12,
-            heating_12m=3456,
+            heating_12m=7244,  # Servicewelt: 7.244 MWh
             heating_13_24=3210,
-            cooling_24h=1,
+            cooling_24h=1904,  # Servicewelt: 1.904 kWh
             cooling_12m=210,
             cooling_13_24=198,
-            dhw_24h=5,
+            dhw_24h=19574,  # Servicewelt: 19.574 kWh
             dhw_12m=1500,
             dhw_13_24=1450,
         )
     )
+    wh = UnitOfEnergy.WATT_HOUR
+    kwh = UnitOfEnergy.KILO_WATT_HOUR
     expected = {
-        CONSUMED_HEATING_LAST_24H: ("heating_24h", 12),
-        CONSUMED_HEATING_12M: ("heating_12m", 3456),
-        CONSUMED_HEATING_PREV_12M: ("heating_13_24", 3210),
-        CONSUMED_COOLING_LAST_24H: ("cooling_24h", 1),
-        CONSUMED_COOLING_12M: ("cooling_12m", 210),
-        CONSUMED_COOLING_PREV_12M: ("cooling_13_24", 198),
-        CONSUMED_WATER_HEATING_LAST_24H: ("dhw_24h", 5),
-        CONSUMED_WATER_HEATING_12M: ("dhw_12m", 1500),
-        CONSUMED_WATER_HEATING_PREV_12M: ("dhw_13_24", 1450),
+        CONSUMED_HEATING_LAST_24H: (12, wh),
+        CONSUMED_HEATING_12M: (7244, kwh),
+        CONSUMED_HEATING_PREV_12M: (3210, kwh),
+        CONSUMED_COOLING_LAST_24H: (1904, wh),
+        CONSUMED_COOLING_12M: (210, kwh),
+        CONSUMED_COOLING_PREV_12M: (198, kwh),
+        CONSUMED_WATER_HEATING_LAST_24H: (19574, wh),
+        CONSUMED_WATER_HEATING_12M: (1500, kwh),
+        CONSUMED_WATER_HEATING_PREV_12M: (1450, kwh),
     }
 
-    for key, (_field, value) in expected.items():
+    for key, (value, unit) in expected.items():
         desc = _wpm(key)
         assert desc.modbus_register(api) == value
-        assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+        assert desc.native_unit_of_measurement == unit
         assert desc.device_class == SensorDeviceClass.ENERGY
         # Rolling windows reset, so they must not be TOTAL_INCREASING.
         assert desc.state_class == SensorStateClass.TOTAL
@@ -134,3 +149,28 @@ def test_wpm_exposes_electrical_booster_energy() -> None:
             assert desc.device_class == SensorDeviceClass.ENERGY
             # Lifetime counters, not rolling windows.
             assert desc.state_class == SensorStateClass.TOTAL_INCREASING
+def test_lwz_solar_sensors_are_not_duplicates() -> None:
+    """The plain LWZ solar keys track day+total, the Total keys the lifetime sum.
+
+    Note the library's inconsistent spelling: the lifetime register is
+    ``hm_solar_dwh_total`` (dwh) while the day and day+total fields use dhw.
+    """
+    api = SimpleNamespace(
+        energy_data=SimpleNamespace(
+            hm_solar_htg_day_and_total=1101,
+            hm_solar_htg_total=1100,
+            hm_solar_dhw_day_and_total=2202,
+            hm_solar_dwh_total=2200,
+        )
+    )
+    expected = {
+        PRODUCED_SOLAR_HEATING: 1101,
+        PRODUCED_SOLAR_HEATING_TOTAL: 1100,
+        PRODUCED_SOLAR_WATER_HEATING: 2202,
+        PRODUCED_SOLAR_WATER_HEATING_TOTAL: 2200,
+    }
+
+    values = {key: _lwz(key).modbus_register(api) for key in expected}
+    assert values == expected
+    # A duplicated accessor would collapse two of the four sensors.
+    assert len(set(values.values())) == 4

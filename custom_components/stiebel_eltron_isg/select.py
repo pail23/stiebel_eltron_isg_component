@@ -7,6 +7,7 @@ from typing import Any
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pystiebeleltron import ControllerModel
 
 from .const import DOMAIN, OPERATION_MODE
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
@@ -84,7 +85,12 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     entities = []
-    if coordinator.is_wpm:
+    if coordinator.model in (
+        ControllerModel.WPM_3i,
+        ControllerModel.WPM_3,
+        ControllerModel.WPMsystem,
+        ControllerModel.LWZ_R290,
+    ):
         entities = [
             StiebelEltronISGSelectEntity(
                 coordinator,
