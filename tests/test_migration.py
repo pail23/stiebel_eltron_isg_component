@@ -1,5 +1,6 @@
 """Tests for the migration of legacy entity unique ids."""
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -131,6 +132,78 @@ async def test_configured_name_wins_over_the_replacement_entity(
         == f"{DOMAIN}_{MODEL_NAME}_{KEY}"
     )
     assert replacement.entity_id in caplog.text
+
+
+async def test_reload_with_a_leftover_duplicate_does_not_fail(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """The duplicate must not claim a unique id that is already migrated.
+
+    The first run leaves the replacement entity on its old unique id. On the
+    next run it is the only entry still matching a legacy prefix, so without
+    reserving the ids that are already in use it would try to take the one the
+    original entity now holds, and the registry would refuse it with a
+    ValueError that keeps the entry from loading.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    original = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{KEY}",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+    replacement = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_{MODEL_NAME}_{KEY}",
+        "stiebel_eltron_wpm_3_aussentemperatur",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_reload(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry_with_name.state is ConfigEntryState.LOADED
+    registry = er.async_get(hass)
+    assert (
+        registry.async_get(original.entity_id).unique_id
+        == f"{config_entry_with_name.entry_id}_{KEY}"
+    )
+    assert (
+        registry.async_get(replacement.entity_id).unique_id
+        == f"{DOMAIN}_{MODEL_NAME}_{KEY}"
+    )
+
+
+async def test_migrates_the_title_of_an_entry_without_a_configured_name(
+    hass: HomeAssistant,
+) -> None:
+    """An entry without CONF_NAME was named after its title.
+
+    That is the fallback the setup code used before 2026.7, so the migration
+    rebuilds the same name rather than assuming CONF_NAME is always there.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Waermepumpe",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 502},
+        entry_id="stiebel_eltron_004",
+    )
+    config_entry.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry,
+        f"{DOMAIN}_Waermepumpe_{KEY}",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = er.async_get(hass).async_get(legacy.entity_id)
+    assert migrated.entity_id == "sensor.stiebel_eltron_isg_outdoor_temperature"
+    assert migrated.unique_id == f"{config_entry.entry_id}_{KEY}"
 
 
 async def test_same_key_in_two_domains_is_not_a_conflict(

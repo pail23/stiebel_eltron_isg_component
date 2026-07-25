@@ -10,7 +10,6 @@ Both legacy schemes are migrated here to a unique id derived from the config
 entry id, which no rename can change again.
 """
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -35,13 +34,12 @@ def _legacy_prefixes(
     been updated holds registry entries of both schemes, and the older entry is
     the one dashboards, automations and long term statistics refer to.
     """
-    prefixes = []
     # The config flow dropped CONF_NAME in 2026.7, but nothing removes it from
     # the data of entries that were created earlier, so the old prefix can be
-    # rebuilt instead of guessed.
-    configured_name = entry.data.get(CONF_NAME)
-    if configured_name:
-        prefixes.append(f"{DOMAIN}_{configured_name}_")
+    # rebuilt instead of guessed. The title is the same fallback the setup code
+    # used for an entry without a configured name.
+    legacy_name = entry.data.get(CONF_NAME, entry.title)
+    prefixes = [f"{DOMAIN}_{legacy_name}_"]
     model_prefix = f"{DOMAIN}_{coordinator_display_name(model)}_"
     if model_prefix not in prefixes:
         prefixes.append(model_prefix)
@@ -51,7 +49,7 @@ def _legacy_prefixes(
 def _plan_migration(
     entries: list[er.RegistryEntry],
     prefixes: list[str],
-    new_unique_id: Callable[[str], str],
+    target_prefix: str,
 ) -> tuple[dict[str, str], list[er.RegistryEntry]]:
     """Return the new unique id per registry entry id, plus the entries left out.
 
@@ -61,6 +59,15 @@ def _plan_migration(
     """
     winners: dict[tuple[str, str], tuple[int, er.RegistryEntry]] = {}
     losers: list[er.RegistryEntry] = []
+
+    # An entity that was migrated by an earlier run already holds its new unique
+    # id. Claiming those slots up front keeps a leftover duplicate from taking
+    # the id a second time, which the registry would refuse.
+    taken = {
+        (registry_entry.domain, registry_entry.unique_id.removeprefix(target_prefix))
+        for registry_entry in entries
+        if registry_entry.unique_id.startswith(target_prefix)
+    }
 
     for registry_entry in entries:
         for priority, prefix in enumerate(prefixes):
@@ -72,7 +79,9 @@ def _plan_migration(
             # a real conflict.
             slot = (registry_entry.domain, key)
             previous = winners.get(slot)
-            if previous is None:
+            if slot in taken:
+                losers.append(registry_entry)
+            elif previous is None:
                 winners[slot] = (priority, registry_entry)
             elif priority < previous[0]:
                 winners[slot] = (priority, registry_entry)
@@ -82,7 +91,7 @@ def _plan_migration(
             break
 
     planned = {
-        registry_entry.id: new_unique_id(key)
+        registry_entry.id: f"{target_prefix}{key}"
         for (_, key), (_, registry_entry) in winners.items()
     }
     return planned, losers
@@ -103,10 +112,12 @@ async def async_migrate_unique_ids(
     planned, losers = _plan_migration(
         entries,
         _legacy_prefixes(entry, model),
-        lambda key: build_unique_id(entry, key),
+        build_unique_id(entry, ""),
     )
 
     if not planned:
+        # Nothing left to migrate. A duplicate that was reported by an earlier
+        # run is still there, but it has been reported already.
         return
 
     @callback
