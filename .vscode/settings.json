@@ -1,5 +1,4 @@
 {
-    "python.pythonPath": "/usr/local/bin/python",
     "files.associations": {
         "*.yaml": "home-assistant"
     },
@@ -11,5 +10,4 @@
     "[python]": {
         "editor.defaultFormatter": "charliermarsh.ruff"
     },
-    "python.formatting.provider": "charliermarsh.ruff"
 }
