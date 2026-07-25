@@ -5,12 +5,31 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from modbus_connection.mock import MockModbusConnection
-from pystiebeleltron import ControllerModel, EnergySystemInformation
+from pystiebeleltron import (
+    ControllerModel,
+    EnergyManagementSettings,
+    EnergySystemInformation,
+)
+from pystiebeleltron.wpm import (
+    WpmEnergyData,
+    WpmSystemParameters,
+    WpmSystemState,
+    WpmSystemValues,
+)
 from pystiebeleltron.lwz import OperatingMode
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
+from custom_components.stiebel_eltron_isg.wpm3i import (
+    Wpm3iEnergyData,
+    Wpm3iEnergySystemInformation,
+    Wpm3iSystemParameters,
+    Wpm3iEnergyManagementSettings,
+    Wpm3iSystemState,
+    Wpm3iSystemValues,
+)
+
 
 pytest_plugins = "pytest_homeassistant_custom_component"
 
@@ -78,6 +97,36 @@ def mock_lwz_api() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
+def mock_wpm_3i_api() -> Generator[MagicMock]:
+    """Patch the WPM API and return the mocked client."""
+
+    with patch(
+        "custom_components.stiebel_eltron_isg.wpm3i_coordinator.Wpm3iStiebelEltronAPI",
+        autospec=True,
+    ) as mock_api_cls:
+        api_client = mock_api_cls.return_value
+        type(api_client).energy_system_information = PropertyMock(
+            return_value=MagicMock(spec=Wpm3iEnergySystemInformation)
+        )
+        type(api_client).energy_management_settings = PropertyMock(
+            return_value=MagicMock(spec=Wpm3iEnergyManagementSettings)
+        )
+        type(api_client).system_parameters = PropertyMock(
+            return_value=MagicMock(spec=Wpm3iSystemParameters)
+        )
+        type(api_client).energy_data = PropertyMock(
+            return_value=MagicMock(spec=Wpm3iEnergyData)
+        )
+        type(api_client).system_state = PropertyMock(
+            return_value=MagicMock(spec=Wpm3iSystemState)
+        )
+        type(api_client).system_values = PropertyMock(
+            return_value=MagicMock(spec=Wpm3iSystemValues)
+        )
+        yield api_client
+
+
+@pytest.fixture(autouse=True)
 def mock_wpm_api() -> Generator[MagicMock]:
     """Patch the WPM API and return the mocked client."""
 
@@ -89,8 +138,21 @@ def mock_wpm_api() -> Generator[MagicMock]:
         type(api_client).energy_system_information = PropertyMock(
             return_value=MagicMock(spec=EnergySystemInformation)
         )
-        # api_client.energy_system_information.controller_identification = 390
-
+        type(api_client).system_parameters = PropertyMock(
+            return_value=MagicMock(spec=WpmSystemParameters)
+        )
+        type(api_client).energy_management_settings = PropertyMock(
+            return_value=MagicMock(spec=EnergyManagementSettings)
+        )
+        type(api_client).energy_data = PropertyMock(
+            return_value=MagicMock(spec=WpmEnergyData)
+        )
+        type(api_client).system_state = PropertyMock(
+            return_value=MagicMock(spec=WpmSystemState)
+        )
+        type(api_client).system_values = PropertyMock(
+            return_value=MagicMock(spec=WpmSystemValues)
+        )
         yield api_client
 
 

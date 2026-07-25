@@ -129,8 +129,8 @@ NUMBER_TYPES_WPM_3I = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.comfort_temperature_dhw,
-        write_field="comfort_temperature_dhw",
+        modbus_register=lambda api: api.system_parameters.comfort_temperature,
+        write_field="comfort_temperature",
     ),
     StiebelEltronNumberEntityDescription(
         key=ECO_WATER_TEMPERATURE_TARGET,
@@ -140,8 +140,8 @@ NUMBER_TYPES_WPM_3I = [
         native_min_value=10,
         native_max_value=60,
         native_step=0.1,
-        modbus_register=lambda api: api.system_parameters.eco_temperature_dhw,
-        write_field="eco_temperature_dhw",
+        modbus_register=lambda api: api.system_parameters.eco_temperature,
+        write_field="eco_temperature",
     ),
     StiebelEltronNumberEntityDescription(
         key=DUALMODE_TEMPERATURE_WW,
