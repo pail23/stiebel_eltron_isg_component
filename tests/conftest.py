@@ -5,21 +5,15 @@ from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from modbus_connection.mock import MockModbusConnection
-from pystiebeleltron import (
-    ControllerModel,
-)
-from pystiebeleltron.lwz import (
-    OperatingMode,
-    LwzEnergyManagementSettings,
-    LwzEnergySystemInformation,
-)
+from pystiebeleltron import ControllerModel
+from pystiebeleltron.lwz import OperatingMode
 from pystiebeleltron.wpm import (
     WpmEnergyData,
+    WpmEnergyManagementSettings,
+    WpmEnergySystemInformation,
     WpmSystemParameters,
     WpmSystemState,
     WpmSystemValues,
-    WpmEnergyManagementSettings,
-    WpmEnergySystemInformation,
 )
 from pystiebeleltron.wpm3i import (
     Wpm3iEnergyData,
