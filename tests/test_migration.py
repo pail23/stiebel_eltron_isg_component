@@ -331,6 +331,37 @@ async def test_configured_name_equal_to_the_model_name_migrates_once(
     assert "keep their old unique id" not in caplog.text
 
 
+async def test_no_identifier_is_derived_from_a_display_name(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """Guard against the mistake this migration exists to repair.
+
+    Deriving an identifier from a name that is allowed to change is what
+    orphaned every entity and replaced the device in 2026.7. This fails as soon
+    as a name finds its way back into a unique id or a device identifier,
+    whichever name it is, so the next rename cannot repeat it.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    names = ("My Heatpump", MODEL_NAME, "Stiebel Eltron", config_entry_with_name.title)
+    entries = er.async_entries_for_config_entry(
+        er.async_get(hass), config_entry_with_name.entry_id
+    )
+    assert entries
+    for entry in entries:
+        assert entry.unique_id.startswith(f"{config_entry_with_name.entry_id}_")
+        assert not any(name in entry.unique_id for name in names)
+
+    devices = dr.async_entries_for_config_entry(
+        dr.async_get(hass), config_entry_with_name.entry_id
+    )
+    assert devices
+    for device in devices:
+        assert device.identifiers == {(DOMAIN, config_entry_with_name.entry_id)}
+
+
 async def test_setup_without_legacy_entities_changes_nothing(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
