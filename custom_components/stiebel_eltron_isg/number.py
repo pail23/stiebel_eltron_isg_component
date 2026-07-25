@@ -43,7 +43,7 @@ from .const import (
     HEATING_CURVE_RISE_HK3,
 )
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
-from .entity import StiebelEltronISGEntity
+from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -526,7 +526,9 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
+class StiebelEltronISGNumberEntity(
+    OptimisticValueMixin, StiebelEltronISGEntity, NumberEntity
+):
     """stiebel_eltron_isg select class."""
 
     def __init__(
@@ -557,7 +559,11 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         if self.write_field is None:
             return
 
-        current = self.coordinator.get_value(self.modbus_register)
+        current = (
+            self._optimistic_value
+            if self._optimistic_value is not None
+            else self.coordinator.get_value(self.modbus_register)
+        )
         if current is not None and math.isclose(current, value, abs_tol=1e-9):
             return
 
@@ -566,8 +572,11 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
             self.write_field,
             value,
         )
+        self._set_optimistic_value(value)
 
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
+        if self._optimistic_value is not None:
+            return self._optimistic_value
         return self.coordinator.get_value(self.modbus_register)

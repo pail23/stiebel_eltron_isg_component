@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusError
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
@@ -134,6 +135,26 @@ def test_get_value_only_accepts_numeric_states(value, expected) -> None:
     coordinator = _coordinator(SimpleNamespace(value=value))
 
     assert coordinator.get_value(lambda api: api.value) == expected
+
+
+async def test_refresh_generations_only_advance_success_after_read() -> None:
+    """Entities can distinguish an old or failed poll from fresh device data."""
+    api = SimpleNamespace(async_update=AsyncMock())
+    coordinator = _coordinator(api)
+    coordinator._refresh_generation = 0
+    coordinator._last_successful_refresh_generation = 0
+
+    await coordinator._async_update_data()
+
+    assert coordinator.refresh_generation == 1
+    assert coordinator.last_successful_refresh_generation == 1
+
+    api.async_update.side_effect = ModbusError("read failed")
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+    assert coordinator.refresh_generation == 2
+    assert coordinator.last_successful_refresh_generation == 1
 
 
 async def test_write_component_value_writes_supported_field() -> None:

@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
-from .entity import StiebelEltronISGEntity
+from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -302,11 +302,16 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
+class StiebelEltronISGClimateEntity(
+    OptimisticValueMixin, StiebelEltronISGEntity, ClimateEntity
+):
     """stiebel_eltron_isg climate class."""
 
     _enable_turn_on_off_backwards_compatibility = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # The field an assumed target temperature was written to, see
+    # ``target_temperature``.
+    _optimistic_target_field: str | None = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
@@ -374,8 +379,23 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         return None
 
     @property
+    def _target_temp_write_field(self) -> str | None:
+        """Return the field the current operating mode takes its target from."""
+        if self.operation_mode == ECO_MODE:
+            return self.eco_target_temp_write_field
+        return self.comfort_target_temp_write_field
+
+    @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
+        # An assumed target only holds for the field it was written to. Once the
+        # operating mode makes the other field the target, it no longer applies,
+        # whoever changed that mode.
+        if (
+            self._optimistic_value is not None
+            and self._optimistic_target_field == self._target_temp_write_field
+        ):
+            return self._optimistic_value
         if self.operation_mode == ECO_MODE:
             return self._read_accessor(self.eco_target_temp_register)
         return self._read_accessor(self.comfort_target_temp_register)
@@ -383,13 +403,11 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
-        field = (
-            self.eco_target_temp_write_field
-            if self.operation_mode == ECO_MODE
-            else self.comfort_target_temp_write_field
-        )
+        field = self._target_temp_write_field
         if field is not None:
             await self._write_field(field, value)
+            self._optimistic_target_field = field
+            self._set_optimistic_value(value)
 
     def _read_accessor(self, accessor: Any) -> float | int | None:
         """Read a value via accessor callable."""
