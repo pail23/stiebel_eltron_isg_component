@@ -13,13 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
-from .const import (
-    CIRCULATION_PUMP,
-    DOMAIN,
-    SG_READY_ACTIVE,
-    SG_READY_INPUT_1,
-    SG_READY_INPUT_2,
-)
+from .const import CIRCULATION_PUMP, SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -132,11 +126,6 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the switch."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def is_on(self) -> bool:

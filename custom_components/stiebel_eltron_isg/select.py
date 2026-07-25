@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
-from .const import DOMAIN, OPERATION_MODE
+from .const import OPERATION_MODE
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -136,11 +136,6 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the select entity."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def options(self) -> list[str]:

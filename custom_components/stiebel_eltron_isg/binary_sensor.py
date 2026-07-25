@@ -24,7 +24,6 @@ from .const import (
     DHW_CHARGING_PUMP,
     DIFF_CONTROLLER_1_PUMP,
     DIFF_CONTROLLER_2_PUMP,
-    DOMAIN,
     ELECTRIC_REHEATING,
     EMERGENCY_HEATING_1,
     EMERGENCY_HEATING_1_2,
@@ -585,11 +584,6 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
         super().__init__(coordinator, config_entry)
         self.modbus_register = description.modbus_register
         self.bit_number = description.bit_number
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the sensor."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def is_on(self) -> bool:

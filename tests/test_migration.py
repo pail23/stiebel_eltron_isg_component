@@ -1,0 +1,230 @@
+"""Tests for the migration of legacy entity unique ids."""
+
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.stiebel_eltron_isg.const import DOMAIN
+
+# The model the mock_get_controller_model fixture reports, and the display name
+# the coordinator derives from it.
+MODEL_NAME = "Stiebel Eltron WPM_3"
+
+# A key that exists as a sensor for this model, so the entity is provided again
+# after the migration.
+KEY = "outdoor_temperature"
+
+
+@pytest.fixture
+def config_entry_with_name() -> MockConfigEntry:
+    """Return an entry as it was created before 2026.7, with a configured name."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_NAME: "My Heatpump"},
+        entry_id="stiebel_eltron_002",
+    )
+
+
+def _register(
+    hass: HomeAssistant,
+    entry: MockConfigEntry,
+    unique_id: str,
+    object_id: str,
+    domain: str = "sensor",
+) -> er.RegistryEntry:
+    """Add an entity to the registry as an earlier release would have."""
+    return er.async_get(hass).async_get_or_create(
+        domain,
+        DOMAIN,
+        unique_id,
+        config_entry=entry,
+        suggested_object_id=object_id,
+    )
+
+
+async def test_migrates_entities_of_the_configured_name_scheme(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """An installation that has not updated yet keeps every entity id."""
+    config_entry_with_name.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{KEY}",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = er.async_get(hass).async_get(legacy.entity_id)
+    assert migrated is not None
+    assert migrated.entity_id == "sensor.stiebel_eltron_isg_outdoor_temperature"
+    assert migrated.unique_id == f"{config_entry_with_name.entry_id}_{KEY}"
+
+
+async def test_migrates_entities_of_the_model_name_scheme(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Entities created by 2026.7 itself are migrated as well.
+
+    Their unique id was derived from the detected model, so it is just as
+    fragile as the one before it, and migrating both at once means users need
+    only a single migration.
+    """
+    mock_config_entry.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_{MODEL_NAME}_{KEY}",
+        "stiebel_eltron_wpm_3_aussentemperatur",
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = er.async_get(hass).async_get(legacy.entity_id)
+    assert migrated is not None
+    assert migrated.entity_id == "sensor.stiebel_eltron_wpm_3_aussentemperatur"
+    assert migrated.unique_id == f"{mock_config_entry.entry_id}_{KEY}"
+
+
+async def test_configured_name_wins_over_the_replacement_entity(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An installation that already updated holds both entities.
+
+    Only one of them can take the new unique id. The older entity wins, because
+    dashboards, automations and the recorded history refer to it. The
+    replacement keeps its unique id, is no longer provided, and is reported so
+    the duplicate does not go unnoticed.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    original = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{KEY}",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+    replacement = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_{MODEL_NAME}_{KEY}",
+        "stiebel_eltron_wpm_3_aussentemperatur",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    assert (
+        registry.async_get(original.entity_id).unique_id
+        == f"{config_entry_with_name.entry_id}_{KEY}"
+    )
+    assert (
+        registry.async_get(replacement.entity_id).unique_id
+        == f"{DOMAIN}_{MODEL_NAME}_{KEY}"
+    )
+    assert replacement.entity_id in caplog.text
+
+
+async def test_same_key_in_two_domains_is_not_a_conflict(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """A key shared by two entity domains migrates on both sides.
+
+    The unique id carries no platform, so the same key can appear for a sensor
+    and for a number without the two being duplicates of each other.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    legacy_unique_id = f"{DOMAIN}_My Heatpump_{KEY}"
+    sensor = _register(
+        hass, config_entry_with_name, legacy_unique_id, "outdoor_temperature"
+    )
+    number = _register(
+        hass,
+        config_entry_with_name,
+        legacy_unique_id,
+        "outdoor_temperature",
+        domain="number",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    expected = f"{config_entry_with_name.entry_id}_{KEY}"
+    assert registry.async_get(sensor.entity_id).unique_id == expected
+    assert registry.async_get(number.entity_id).unique_id == expected
+
+
+async def test_configured_name_equal_to_the_model_name_migrates_once(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """A name that already equalled the model name yields a single entity."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_NAME: MODEL_NAME},
+        entry_id="stiebel_eltron_003",
+    )
+    config_entry.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry,
+        f"{DOMAIN}_{MODEL_NAME}_{KEY}",
+        "stiebel_eltron_wpm_3_outdoor_temperature",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = er.async_get(hass).async_get(legacy.entity_id)
+    assert migrated.unique_id == f"{config_entry.entry_id}_{KEY}"
+    assert "keep their old unique id" not in caplog.text
+
+
+async def test_setup_without_legacy_entities_changes_nothing(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """A fresh installation has nothing to migrate."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entries = er.async_entries_for_config_entry(
+        er.async_get(hass), mock_config_entry.entry_id
+    )
+    assert entries
+    assert all(
+        entry.unique_id.startswith(f"{mock_config_entry.entry_id}_")
+        for entry in entries
+    )
+
+
+async def test_migration_is_idempotent(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """Reloading an already migrated entry leaves the registry untouched."""
+    config_entry_with_name.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{KEY}",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+    await hass.config_entries.async_reload(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = er.async_get(hass).async_get(legacy.entity_id)
+    assert migrated.entity_id == "sensor.stiebel_eltron_isg_outdoor_temperature"
+    assert migrated.unique_id == f"{config_entry_with_name.entry_id}_{KEY}"
