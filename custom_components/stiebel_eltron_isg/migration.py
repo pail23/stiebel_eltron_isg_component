@@ -152,6 +152,17 @@ def async_migrate_device_identifier(
         return
 
     replacement = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    if replacement is not None and replacement.config_entries != {entry.entry_id}:
+        # Nothing here creates a device that another config entry can share, so
+        # this should not happen. If it ever does, leaving both devices alone is
+        # the harmless outcome, while removing one would take somebody else's
+        # device with it.
+        _LOGGER.warning(
+            "The device of this config entry is shared with %s, so it is left as it is",
+            sorted(replacement.config_entries - {entry.entry_id}),
+        )
+        return
+
     if replacement is not None and replacement.id != legacy.id:
         # An installation that already updated has both devices, and two of them
         # cannot share an identifier. The replacement is at most as old as that

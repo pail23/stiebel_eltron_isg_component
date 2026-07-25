@@ -589,6 +589,78 @@ async def test_an_installation_that_already_updated_gets_its_device_back(
     assert er.async_get(hass).async_get(on_replacement.entity_id).device_id == legacy.id
 
 
+async def test_a_shared_replacement_device_is_left_alone(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A device another config entry also belongs to is never removed.
+
+    Nothing here creates a device that can be shared, so this is insurance
+    rather than a known case, but removing it would take somebody else's device
+    with it.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    stranger = MockConfigEntry(domain="demo", title="Something else")
+    stranger.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    replacement = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        name=MODEL_NAME,
+    )
+    device_registry.async_update_device(
+        replacement.id, add_config_entry_id=stranger.entry_id
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get(replacement.id) is not None
+    assert device_registry.async_get(legacy.id) is not None
+    assert "shared with" in caplog.text
+
+
+async def test_a_disabled_or_customised_entity_keeps_everything(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """Migration touches the unique id and nothing else.
+
+    A registry entry carries what the user did to it, and an installation of
+    several years is full of that.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    registry = er.async_get(hass)
+    legacy = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{KEY}",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+    registry.async_update_entity(
+        legacy.entity_id,
+        name="Temperatur draussen",
+        icon="mdi:snowflake",
+        disabled_by=er.RegistryEntryDisabler.USER,
+        hidden_by=er.RegistryEntryHider.USER,
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    migrated = registry.async_get(legacy.entity_id)
+    assert migrated.unique_id == f"{config_entry_with_name.entry_id}_{KEY}"
+    assert migrated.name == "Temperatur draussen"
+    assert migrated.icon == "mdi:snowflake"
+    assert migrated.disabled_by is er.RegistryEntryDisabler.USER
+    assert migrated.hidden_by is er.RegistryEntryHider.USER
+
+
 async def test_an_area_set_after_the_update_is_carried_over(
     hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:
