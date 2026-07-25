@@ -96,17 +96,15 @@ def _plan_migration(
     winners: dict[tuple[str, str], tuple[int, er.RegistryEntry]] = {}
     losers: list[er.RegistryEntry] = []
 
-    # An entity that was migrated by an earlier run already holds its new unique
-    # id. Claiming those slots up front keeps a leftover duplicate from taking
-    # the id a second time, which the registry would refuse.
-    taken = {
-        (registry_entry.domain, registry_entry.unique_id.removeprefix(target_prefix))
-        for registry_entry in entries
-        if registry_entry.unique_id.startswith(target_prefix)
-    }
+    # The target scheme is a source as well. An entity that an earlier run has
+    # migrated still has to follow a key that is renamed after that, otherwise
+    # the rename orphans it and the entry in _RENAMED_KEYS would do nothing. It
+    # comes first because it is the entity that is actually provided, so it
+    # outranks a legacy leftover of the same slot.
+    sources = [target_prefix, *prefixes]
 
     for registry_entry in entries:
-        match = _match_prefix(registry_entry.unique_id, prefixes)
+        match = _match_prefix(registry_entry.unique_id, sources)
         if match is None:
             continue
         priority, key = match
@@ -115,9 +113,7 @@ def _plan_migration(
         # a real conflict.
         slot = (registry_entry.domain, key)
         previous = winners.get(slot)
-        if slot in taken:
-            losers.append(registry_entry)
-        elif previous is None:
+        if previous is None:
             winners[slot] = (priority, registry_entry)
         elif priority < previous[0]:
             winners[slot] = (priority, registry_entry)
@@ -125,9 +121,12 @@ def _plan_migration(
         else:
             losers.append(registry_entry)
 
+    # An entry that already holds the id it would be given is left out, since
+    # the registry refuses a unique id that is in use, including by itself.
     planned = {
         registry_entry.id: f"{target_prefix}{key}"
         for (_, key), (_, registry_entry) in winners.items()
+        if registry_entry.unique_id != f"{target_prefix}{key}"
     }
     return planned, losers
 
@@ -195,11 +194,16 @@ def _adopt_replacement(
 
     # Whatever the user set on the replacement is only worth keeping where the
     # original has nothing, since the original is the one being restored.
-    carried_over = {
+    # disabled_by is deliberately not among them: disabling the replacement is
+    # how one hides the duplicate this migration exists to remove, and adopting
+    # that would disable the restored device and every entity on it.
+    carried_over: dict[str, Any] = {
         field: getattr(replacement, field)
         for field in ("area_id", "name_by_user")
         if getattr(legacy, field) is None and getattr(replacement, field) is not None
     }
+    if replacement.labels - legacy.labels:
+        carried_over["labels"] = legacy.labels | replacement.labels
     registry.async_remove_device(replacement.id)
     if carried_over:
         registry.async_update_device(legacy.id, **carried_over)

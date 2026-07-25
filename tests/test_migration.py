@@ -7,6 +7,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
+from custom_components.stiebel_eltron_isg import migration
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 
 # The model the mock_get_controller_model fixture reports, and the display name
@@ -587,6 +588,98 @@ async def test_an_installation_that_already_updated_gets_its_device_back(
     assert devices[0].name_by_user == "Waermepumpe Keller"
     # The entity of the dissolved device came along rather than being deleted.
     assert er.async_get(hass).async_get(on_replacement.entity_id).device_id == legacy.id
+
+
+async def test_a_key_renamed_after_the_migration_is_followed(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A later rename has to reach ids that are already on the new scheme.
+
+    Once an installation is migrated, every id starts with the config entry id.
+    A key renamed after that would never be rewritten if only the legacy
+    schemes were searched, so the entry in _RENAMED_KEYS would do nothing and
+    the entity would be orphaned by the very mechanism meant to prevent it.
+    """
+    monkeypatch.setitem(migration._RENAMED_KEYS, "outdoor_temperature_of_old", KEY)
+    config_entry_with_name.add_to_hass(hass)
+    already_migrated = _register(
+        hass,
+        config_entry_with_name,
+        f"{config_entry_with_name.entry_id}_outdoor_temperature_of_old",
+        "stiebel_eltron_isg_outdoor_temperature",
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    followed = er.async_get(hass).async_get(already_migrated.entity_id)
+    assert followed.entity_id == "sensor.stiebel_eltron_isg_outdoor_temperature"
+    assert followed.unique_id == f"{config_entry_with_name.entry_id}_{KEY}"
+
+
+async def test_labels_of_the_replacement_device_are_kept(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """Labels are user intent, and the replacement is removed, so they merge."""
+    config_entry_with_name.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    device_registry.async_update_device(legacy.id, labels={"keller"})
+    replacement = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        name=MODEL_NAME,
+    )
+    device_registry.async_update_device(replacement.id, labels={"waermepumpe"})
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    restored = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    )
+    assert restored.id == legacy.id
+    assert restored.labels == {"keller", "waermepumpe"}
+
+
+async def test_a_disabled_replacement_device_does_not_disable_the_original(
+    hass: HomeAssistant, config_entry_with_name: MockConfigEntry
+) -> None:
+    """Disabling the replacement is how one hides the duplicate.
+
+    Adopting that would disable the restored device and every entity on it,
+    which is the opposite of what the user meant by it.
+    """
+    config_entry_with_name.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    replacement = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        name=MODEL_NAME,
+    )
+    device_registry.async_update_device(
+        replacement.id, disabled_by=dr.DeviceEntryDisabler.USER
+    )
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    restored = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    )
+    assert restored.id == legacy.id
+    assert restored.disabled_by is None
 
 
 async def test_a_shared_replacement_device_is_left_alone(
