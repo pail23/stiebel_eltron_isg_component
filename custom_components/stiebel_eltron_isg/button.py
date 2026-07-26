@@ -9,7 +9,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, RESET_HEATPUMP
+from .const import RESET_HEATPUMP
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -69,11 +69,6 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
         """Initialize the button."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the button entity."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     async def async_press(self) -> None:
         """Trigger the button action."""

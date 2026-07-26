@@ -1,0 +1,104 @@
+name: Bug report
+description: Something in the integration does not work as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search the existing [issues](../issues?q=is%3Aissue) and
+        [discussions](../discussions) first, the same question is often already answered.
+
+        For questions and help rather than a defect, please use
+        [Discussions](../discussions) instead.
+
+        The single most useful thing you can attach is the diagnostics download:
+        Settings → Devices and Services → Stiebel Eltron ISG → three-dot menu →
+        Download diagnostics. It contains the detected controller and the decoded
+        register values, which is what most of these reports come down to.
+
+  - type: checkboxes
+    attributes:
+      label: Before reporting
+      options:
+        - label: I searched the existing issues and discussions
+          required: true
+        - label: I am running the latest version of the integration, or I state below why not
+          required: true
+
+  - type: input
+    id: integration_version
+    attributes:
+      label: Integration version
+      description: As shown in HACS, for example 2026.2
+    validations:
+      required: true
+
+  - type: input
+    id: ha_version
+    attributes:
+      label: Home Assistant version
+      placeholder: "2026.7.1"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: controller
+    attributes:
+      label: Detected controller
+      description: >
+        Shown on the device page as the model of the ISG controller. This decides
+        which Modbus register map applies, so a report without it usually cannot
+        be answered.
+      options:
+        - "WPM 3"
+        - "WPM 3i"
+        - "WPMsystem"
+        - "LWZ R290"
+        - "LWZ"
+        - "LWA/LWZ"
+        - "Other, the integration shows 'other model (...)'"
+        - "Setup fails, so no controller is shown"
+        - "Not sure, diagnostics attached below"
+    validations:
+      required: true
+
+  - type: input
+    id: heat_pump
+    attributes:
+      label: Heat pump model
+      description: The model on the unit's nameplate, which is not the same as the controller above
+      placeholder: "WPL 25 / LWZ 504 / TTC 05 cool"
+    validations:
+      required: true
+
+  - type: textarea
+    id: what_happened
+    attributes:
+      label: What happened, and what did you expect instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: entities
+    attributes:
+      label: Affected entities
+      description: Entity ids if the report is about specific entities, for example missing or unavailable ones
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostics
+      description: >
+        Attach the diagnostics file by dragging it into this field, or paste its
+        contents. If you cannot provide it, say why here.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Debug log
+      description: >
+        Optional but often decisive. See
+        https://www.home-assistant.io/integrations/logger/ for how to enable debug logging.
+      render: text

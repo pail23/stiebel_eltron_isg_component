@@ -13,13 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
-from .const import (
-    CIRCULATION_PUMP,
-    DOMAIN,
-    SG_READY_ACTIVE,
-    SG_READY_INPUT_1,
-    SG_READY_INPUT_2,
-)
+from .const import CIRCULATION_PUMP, SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -73,6 +67,18 @@ SWITCH_TYPES = [
     ),
 ]
 
+# Only for controllers that expose a domestic hot water circulation pump.
+CIRCULATION_PUMP_SWITCH_TYPES = [
+    StiebelEltronSwitchEntityDescription(
+        key=CIRCULATION_PUMP,
+        translation_key=CIRCULATION_PUMP,
+        device_class=SwitchDeviceClass.SWITCH,
+        modbus_register=lambda api: api.system_state.dhw_circulation_pump,
+        write_component="system_state",
+        write_field="dhw_circulation_pump",
+    ),
+]
+
 
 async def async_setup_entry(
     _hass: HomeAssistant,
@@ -93,19 +99,13 @@ async def async_setup_entry(
 
     if coordinator.model in (ControllerModel.LWZ_R290, ControllerModel.WPMsystem):
         # Add the circulation pump switch for WPM systems
-        entities.append(
+        entities.extend(
             StiebelEltronISGSwitch(
                 coordinator,
                 entry,
-                StiebelEltronSwitchEntityDescription(
-                    key=CIRCULATION_PUMP,
-                    translation_key=CIRCULATION_PUMP,
-                    device_class=SwitchDeviceClass.SWITCH,
-                    modbus_register=lambda api: api.system_state.dhw_circulation_pump,
-                    write_component="system_state",
-                    write_field="dhw_circulation_pump",
-                ),
+                description,
             )
+            for description in CIRCULATION_PUMP_SWITCH_TYPES
         )
 
     async_add_devices(entities)
@@ -126,11 +126,6 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the switch."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def is_on(self) -> bool:

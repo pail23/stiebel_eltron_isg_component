@@ -29,6 +29,15 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 type StiebelEltronConfigEntry = ConfigEntry[StiebelEltronDataCoordinator]
 
 
+def coordinator_display_name(model: ControllerModel) -> str:
+    """Return the display name used for a controller model.
+
+    The unique id migration has to rebuild this exact string for entities that
+    were created by an earlier release, so both places derive it from here.
+    """
+    return f"Stiebel Eltron {model.name}"
+
+
 class StiebelEltronApi(Protocol):
     """Protocol for Stiebel Eltron API clients."""
 
@@ -65,7 +74,7 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"Stiebel Eltron {self._model.name}",
+            name=coordinator_display_name(self._model),
             config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             # The coordinator holds no data of its own (the API client caches

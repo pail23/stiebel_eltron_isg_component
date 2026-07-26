@@ -21,7 +21,6 @@ from .const import (
     COMFORT_TEMPERATURE_TARGET_HK2,
     COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_WATER_TEMPERATURE_TARGET,
-    DOMAIN,
     DUALMODE_TEMPERATURE_HZG,
     DUALMODE_TEMPERATURE_WW,
     ECO_COOLING_TEMPERATURE_TARGET_HK1,
@@ -34,7 +33,9 @@ from .const import (
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
     FAN_COOLING_TARGET_ROOM_TEMPERATURE,
     FAN_LEVEL_DAY,
+    FAN_LEVEL_MANUAL,
     FAN_LEVEL_NIGHT,
+    FAN_LEVEL_PARTY,
     HEATING_CURVE_LOW_END_HK1,
     HEATING_CURVE_LOW_END_HK2,
     HEATING_CURVE_RISE_HK1,
@@ -366,6 +367,26 @@ NUMBER_TYPES_LWZ = [
         write_field="night_stage",
     ),
     StiebelEltronNumberEntityDescription(
+        key=FAN_LEVEL_PARTY,
+        translation_key=FAN_LEVEL_PARTY,
+        icon="mdi:fan",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+        modbus_register=lambda api: api.system_parameters.party_stage,
+        write_field="party_stage",
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=FAN_LEVEL_MANUAL,
+        translation_key=FAN_LEVEL_MANUAL,
+        icon="mdi:fan",
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+        modbus_register=lambda api: api.system_parameters.manual_stage,
+        write_field="manual_stage",
+    ),
+    StiebelEltronNumberEntityDescription(
         key=COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
         translation_key=COMFORT_COOLING_TEMPERATURE_TARGET_HK1,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -520,11 +541,6 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the select entity."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value.
