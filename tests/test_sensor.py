@@ -26,6 +26,7 @@ from custom_components.stiebel_eltron_isg.const import (
     PRODUCED_SOLAR_HEATING_TOTAL,
     PRODUCED_SOLAR_WATER_HEATING,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    TARGET_TEMPERATURE_HK1,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
     LWZ_SENSOR_TYPES,
@@ -71,6 +72,25 @@ def test_wpm_3i_exposes_compressor_runtime_hours() -> None:
     assert {COMPRESSOR_HEATING, COMPRESSOR_HEATING_WATER, COOLING_RUNTIME} <= keys
 
 
+def test_wpm_3i_target_temperature_hk1_reads_the_shared_field() -> None:
+    """WPM_3i reads the HK1 setpoint from set_temperature_hk_1 (wire 509).
+
+    The Modbus manual assigns doc register 509 to the WPM 3i and doc 510 to the
+    WPM 3, but a real WPM 3i answers the HK1 setpoint on doc 510 / wire 509, the
+    address the WPM models use. Library pull request #63 therefore added
+    ``set_temperature_hk_1`` next to the older ``set_temperature_hk_1_wpm3i``
+    (wire 508), and this entity has to read the measured one, see issue #601.
+    """
+    api = SimpleNamespace(
+        system_values=SimpleNamespace(
+            set_temperature_hk_1=23.4,
+            set_temperature_hk_1_wpm3i=999.9,
+        )
+    )
+
+    assert _wpm_3i(TARGET_TEMPERATURE_HK1).modbus_register(api) == 23.4
+
+
 def test_lwz_exposes_compressor_frequency() -> None:
     """LWZ compressor frequency reads system_values.compressor_speed (Hz)."""
     api = SimpleNamespace(system_values=SimpleNamespace(compressor_speed=31.0))
@@ -82,7 +102,7 @@ def test_lwz_exposes_compressor_frequency() -> None:
 
 
 def test_wpm_exposes_power_consumption_statistics() -> None:
-    """WPM power-consumption windows read the 3707-3723 energy_data fields.
+    """WPM power-consumption windows read the 3707-3723 extended_energy_data fields.
 
     Each window is a register pair that the library sums as
     ``low + high * 1000``, which yields the smaller of the two units the

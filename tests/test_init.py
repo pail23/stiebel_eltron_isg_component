@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import StiebelEltronModbusError, UnknownControllerModelError
@@ -12,6 +13,8 @@ import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
+from custom_components.stiebel_eltron_isg.entity import build_unique_id
+from custom_components.stiebel_eltron_isg.sensor import WPM_SENSOR_TYPES
 
 
 async def test_async_setup_entry_success(
@@ -24,6 +27,38 @@ async def test_async_setup_entry_success(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_registers_every_wpm_sensor(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Every WPM sensor description has to end up with a state.
+
+    An accessor that raises AttributeError, which is what an API mock missing
+    one of the optional components does, still reaches the entity registry but
+    fails while being added, so it never gets a state. Nothing else in the
+    suite notices that, which is why the power-consumption windows silently
+    vanished when they moved to the optional extended_energy_data component.
+    This guards the fixture as much as the code.
+    """
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_ids = {
+        entry.unique_id: entry.entity_id
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), mock_config_entry.entry_id
+        )
+    }
+    stateless = []
+    for description in WPM_SENSOR_TYPES:
+        entity_id = entity_ids.get(build_unique_id(mock_config_entry, description.key))
+        if entity_id is None or hass.states.get(entity_id) is None:
+            stateless.append(description.key)
+
+    assert not stateless, f"These sensors never got a state: {sorted(stateless)}"
 
 
 async def test_async_setup_entry_with_custom_port(
