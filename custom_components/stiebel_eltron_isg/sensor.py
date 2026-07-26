@@ -407,6 +407,13 @@ WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
     create_pressure_entity_description(
         LOW_PRESSURE, lambda api: api.system_values.low_pressure
     ),
+    StiebelEltronSensorEntityDescription(
+        key=ACTIVE_ERROR,
+        translation_key=ACTIVE_ERROR,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:alert-circle",
+        modbus_register=lambda api: api.system_state.active_error,
+    ),
 ]
 
 SYSTEM_VALUES_SENSOR_TYPES = [

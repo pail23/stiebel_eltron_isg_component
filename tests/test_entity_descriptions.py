@@ -94,10 +94,45 @@ _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
 ]
 
 
+# The WPM list and the WPM 3i list a platform keeps for the same entities. The
+# 3i profile is a subset of the WPM one, so every pair is a parity candidate.
+_PARITY_CASES = [
+    pytest.param(name, wpm, wpm_3i, id=name)
+    for name, wpm, wpm_3i in (
+        ("sensor", sensor.WPM_SENSOR_TYPES, sensor.WPM_3I_SENSOR_TYPES),
+        (
+            "binary_sensor",
+            binary_sensor.WPM_BINARY_SENSOR_TYPES,
+            binary_sensor.WPM_3I_BINARY_SENSOR_TYPES,
+        ),
+        ("number", number.NUMBER_TYPES_WPM, number.NUMBER_TYPES_WPM_3I),
+        ("climate", climate.WPM_CLIMATE_TYPES, climate.WPM_3I_CLIMATE_TYPES),
+    )
+]
+
+
 @cache
 def _api(model: str) -> Any:
     """Return the API object a coordinator builds for ``model``."""
     return _API_CLASSES[model](MockModbusConnection().for_unit(UNIT_ID))
+
+
+def _resolves_on_wpm_3i(description: Any) -> bool:
+    """Return whether every accessor of ``description`` resolves on the 3i api."""
+    accessors = [
+        accessor
+        for attribute in _ACCESSOR_ATTRIBUTES
+        for value in [getattr(description, attribute, None)]
+        if value is not None
+        for accessor in (value if isinstance(value, list) else [value])
+    ]
+
+    try:
+        for accessor in accessors:
+            accessor(_api(WPM_3I))
+    except AttributeError:
+        return False
+    return bool(accessors)
 
 
 def _module_description_lists(module: ModuleType) -> list[tuple[str, list[Any]]]:
@@ -171,6 +206,31 @@ def test_description_write_field_resolves(
     assert component_object is not None, f"{model} api has no component {component}"
     assert hasattr(component_object, field), (
         f"{type(component_object).__name__} has no field {field}"
+    )
+
+
+@pytest.mark.parametrize(("list_name", "wpm", "wpm_3i"), _PARITY_CASES)
+def test_wpm_3i_offers_what_its_api_supports(
+    list_name: str, wpm: list[Any], wpm_3i: list[Any]
+) -> None:
+    """A WPM entity the WPM 3i api can serve has to be offered to the 3i too.
+
+    The 3i lists are curated rather than derived, so an entity added to the WPM
+    list stays invisible on a 3i until someone remembers the second list. That
+    is silent: nothing raises, the entity simply never appears. Whether the 3i
+    api resolves the accessor is the same test the coordinator would fail on,
+    so it decides here which entities the 3i is entitled to.
+    """
+    offered = {description.key for description in wpm_3i}
+
+    missing = sorted(
+        description.key
+        for description in wpm
+        if description.key not in offered and _resolves_on_wpm_3i(description)
+    )
+
+    assert not missing, (
+        f"{list_name} entities the WPM 3i api supports but the 3i list omits: {missing}"
     )
 
 
