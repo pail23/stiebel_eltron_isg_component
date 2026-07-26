@@ -68,7 +68,6 @@ from .const import (
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
     DEWPOINT_TEMPERATURE_HK3,
-    DOMAIN,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
@@ -1212,11 +1211,6 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
         self.entity_description = description
         super().__init__(coordinator, config_entry)
         self.modbus_register = description.modbus_register
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the sensor."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def native_value(self) -> str | float | None:

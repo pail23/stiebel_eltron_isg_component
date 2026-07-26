@@ -21,7 +21,6 @@ from .const import (
     COMFORT_TEMPERATURE_TARGET_HK2,
     COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_WATER_TEMPERATURE_TARGET,
-    DOMAIN,
     DUALMODE_TEMPERATURE_HZG,
     DUALMODE_TEMPERATURE_WW,
     ECO_COOLING_TEMPERATURE_TARGET_HK1,
@@ -542,11 +541,6 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the select entity."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     async def async_set_native_value(self, value: float) -> None:
         """Set new value.

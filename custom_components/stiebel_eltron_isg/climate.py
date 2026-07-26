@@ -20,7 +20,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
-from .const import DOMAIN
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -351,11 +350,6 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
         raise NotImplementedError
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return the unique id of the climate entity."""
-        return f"{DOMAIN}_{self.coordinator.name}_{self.entity_description.key}"
 
     @property
     def current_humidity(self) -> int | None:

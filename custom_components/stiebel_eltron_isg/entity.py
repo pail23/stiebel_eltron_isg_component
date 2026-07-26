@@ -9,6 +9,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
 
+def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
+    """Return the unique id of an entity of this config entry."""
+    return f"{entry.entry_id}_{key}"
+
+
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronEntityDescription(EntityDescription):
     """Entity description for stiebel eltron with modbus register."""
@@ -30,6 +35,15 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
         super().__init__(coordinator)
         self.config_entry = config_entry
         self._attr_device_info = coordinator.device_info
+
+    @property
+    def unique_id(self) -> str | None:
+        """Return the unique id of the entity.
+
+        Derived from the config entry, never from a display name: a name is
+        allowed to change, and when it did in 2026.7 it orphaned every entity.
+        """
+        return build_unique_id(self.config_entry, self.entity_description.key)
 
     @property
     def available(self) -> bool:

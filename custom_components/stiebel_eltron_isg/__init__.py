@@ -21,6 +21,7 @@ from pystiebeleltron import (
 from .const import DEFAULT_PORT, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
+from .migration import async_migrate_device_identifier, async_migrate_unique_ids
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
@@ -68,6 +69,12 @@ async def async_setup_entry(
         raise ConfigEntryError(
             f"Unsupported controller model: {exception}"
         ) from exception
+
+    # Both have to run before the platforms are set up, so that the entities are
+    # added to the registry entries and the device that already carry their new
+    # identifiers.
+    async_migrate_device_identifier(hass, entry)
+    await async_migrate_unique_ids(hass, entry, model)
 
     coordinator = (
         StiebelEltronModbusWPM3iDataCoordinator(hass, entry, model, connection, host)
