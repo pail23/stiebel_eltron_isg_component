@@ -69,26 +69,26 @@ async def async_setup_entry(
             f"Unsupported controller model: {exception}"
         ) from exception
 
-    coordinator = (
-        StiebelEltronModbusWPM3iDataCoordinator(hass, entry, model, connection, host)
-        if model == ControllerModel.WPM_3i
-        else (
-            StiebelEltronModbusWPMDataCoordinator(hass, entry, model, connection, host)
-            if model
-            in (
-                ControllerModel.WPMsystem,
-                ControllerModel.WPM_3,
-                ControllerModel.LWZ_R290,
-            )
-            else StiebelEltronModbusLWZDataCoordinator(
-                hass,
-                entry,
-                model,
-                connection,
-                host,
-            )
+    coordinator = None
+    if model == ControllerModel.WPM_3i:
+        coordinator = StiebelEltronModbusWPM3iDataCoordinator(
+            hass, entry, model, connection, host
         )
-    )
+    elif model in (
+        ControllerModel.WPMsystem,
+        ControllerModel.WPM_3,
+        ControllerModel.LWZ_R290,
+    ):
+        coordinator = StiebelEltronModbusWPMDataCoordinator(
+            hass, entry, model, connection, host
+        )
+    elif model in (ControllerModel.LWZ, ControllerModel.LWZ_x04_SOL):
+        coordinator = StiebelEltronModbusLWZDataCoordinator(
+            hass, entry, model, connection, host
+        )
+    else:
+        raise ConfigEntryError(f"Unsupported controller model: {model}")
+
     entry.runtime_data = coordinator
 
     await coordinator.async_config_entry_first_refresh()
