@@ -11,6 +11,7 @@ from pystiebeleltron.wpm import (
     WpmEnergyData,
     WpmEnergyManagementSettings,
     WpmEnergySystemInformation,
+    WpmExtendedEnergyData,
     WpmSystemParameters,
     WpmSystemState,
     WpmSystemValues,
@@ -143,6 +144,12 @@ def mock_wpm_api() -> Generator[MagicMock]:
         )
         type(api_client).energy_data = PropertyMock(
             return_value=MagicMock(spec=WpmEnergyData)
+        )
+        # The optional components are built in the API constructor, so autospec
+        # does not know them and every accessor on them would raise
+        # AttributeError, which silently drops those entities.
+        type(api_client).extended_energy_data = PropertyMock(
+            return_value=MagicMock(spec=WpmExtendedEnergyData)
         )
         type(api_client).system_state = PropertyMock(
             return_value=MagicMock(spec=WpmSystemState)
