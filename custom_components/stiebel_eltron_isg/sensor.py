@@ -1065,42 +1065,42 @@ WPM_COMPRESSOR_SENSOR_TYPES = [
 WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     create_power_consumption_entity_description(
         CONSUMED_HEATING_LAST_24H,
-        lambda api: api.energy_data.heating_24h,
+        lambda api: api.extended_energy_data.heating_24h,
         UnitOfEnergy.WATT_HOUR,
     ),
     create_power_consumption_entity_description(
         CONSUMED_HEATING_12M,
-        lambda api: api.energy_data.heating_12m,
+        lambda api: api.extended_energy_data.heating_12m,
     ),
     create_power_consumption_entity_description(
         CONSUMED_HEATING_PREV_12M,
-        lambda api: api.energy_data.heating_13_24,
+        lambda api: api.extended_energy_data.heating_13_24,
     ),
     create_power_consumption_entity_description(
         CONSUMED_COOLING_LAST_24H,
-        lambda api: api.energy_data.cooling_24h,
+        lambda api: api.extended_energy_data.cooling_24h,
         UnitOfEnergy.WATT_HOUR,
     ),
     create_power_consumption_entity_description(
         CONSUMED_COOLING_12M,
-        lambda api: api.energy_data.cooling_12m,
+        lambda api: api.extended_energy_data.cooling_12m,
     ),
     create_power_consumption_entity_description(
         CONSUMED_COOLING_PREV_12M,
-        lambda api: api.energy_data.cooling_13_24,
+        lambda api: api.extended_energy_data.cooling_13_24,
     ),
     create_power_consumption_entity_description(
         CONSUMED_WATER_HEATING_LAST_24H,
-        lambda api: api.energy_data.dhw_24h,
+        lambda api: api.extended_energy_data.dhw_24h,
         UnitOfEnergy.WATT_HOUR,
     ),
     create_power_consumption_entity_description(
         CONSUMED_WATER_HEATING_12M,
-        lambda api: api.energy_data.dhw_12m,
+        lambda api: api.extended_energy_data.dhw_12m,
     ),
     create_power_consumption_entity_description(
         CONSUMED_WATER_HEATING_PREV_12M,
-        lambda api: api.energy_data.dhw_13_24,
+        lambda api: api.extended_energy_data.dhw_13_24,
     ),
 ]
 

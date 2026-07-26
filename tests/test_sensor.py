@@ -93,7 +93,7 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
     #544.
     """
     api = SimpleNamespace(
-        energy_data=SimpleNamespace(
+        extended_energy_data=SimpleNamespace(
             heating_24h=12,
             heating_12m=7244,  # Servicewelt: 7.244 MWh
             heating_13_24=3210,

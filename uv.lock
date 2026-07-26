@@ -1852,15 +1852,15 @@ wheels = [
 
 [[package]]
 name = "pystiebeleltron"
-version = "0.6.1"
+version = "0.6.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "modbus-connection", extra = ["pymodbus"] },
     { name = "pymodbus" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ff/d5/514dc667057595d238f15667730791de7cb3cf6ed37292f44cafec9048d2/pystiebeleltron-0.6.1.tar.gz", hash = "sha256:aef1d28514973c91f7d8a49905ee3535a1e9b7e59d51bb5ea1701a04f598b158", size = 13307, upload-time = "2026-07-25T11:10:01.853Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c0/17/d7ecd182c5f7259a9eb9e0000521462f37661369bfe8aa2ca598e59865b6/pystiebeleltron-0.6.2.tar.gz", hash = "sha256:1ad1af54e5492e299e21889cface568302c9b13d8b8e1caf07d76f1e520bd0f6", size = 15468, upload-time = "2026-07-26T15:49:27.698Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/74/38/7eac430baf38595d1ea65864eff793dfff225b6db6129166b86e3c55f86d/pystiebeleltron-0.6.1-py3-none-any.whl", hash = "sha256:bde8b88b7990678a80e7ad993864f163739f38798586a48f2cbd1d6848b403f2", size = 15464, upload-time = "2026-07-25T11:10:00.78Z" },
+    { url = "https://files.pythonhosted.org/packages/03/69/86a743cee4c42387464a76777d84830b51d057b13e53dbdc9686da0bc3f7/pystiebeleltron-0.6.2-py3-none-any.whl", hash = "sha256:d19ee17bdf08a81e0fc8af3480317c90175140f2620ca3901d5079d7a30d6e05", size = 18138, upload-time = "2026-07-26T15:49:26.613Z" },
 ]
 
 [[package]]
@@ -2345,7 +2345,7 @@ dev = [
 requires-dist = [
     { name = "colorlog", specifier = ">=6.10.1" },
     { name = "pymodbus", specifier = ">=3.14.0" },
-    { name = "pystiebeleltron", specifier = "==0.6.1" },
+    { name = "pystiebeleltron", specifier = "==0.6.2" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.348" },
 ]
 
