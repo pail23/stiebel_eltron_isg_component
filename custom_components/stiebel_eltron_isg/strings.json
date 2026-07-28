@@ -347,6 +347,9 @@
             "cooling_runtime": {
                 "name": "Cooling Runtime"
             },
+            "current_power_consumption": {
+                "name": "Inverter Power Consumption"
+            },
             "electrical_booster_heating": {
                 "name": "Electrical Booster Heating"
             },

@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfFrequency
+from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
 import pytest
 
 from custom_components.stiebel_eltron_isg.const import (
@@ -20,6 +20,7 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
     COOLING_RUNTIME,
+    CURRENT_POWER_CONSUMPTION,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
@@ -31,6 +32,7 @@ from custom_components.stiebel_eltron_isg.const import (
 from custom_components.stiebel_eltron_isg.sensor import (
     LWZ_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
+    WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
 )
 
@@ -200,3 +202,42 @@ def test_lwz_solar_sensors_are_not_duplicates() -> None:
     assert values == expected
     # A duplicated accessor would collapse two of the four sensors.
     assert len(set(values.values())) == 4
+
+
+def test_inverter_power_reads_the_measured_field() -> None:
+    """Inverter power reads extended_energy_data.inverter_power_iws_1 (3679).
+
+    The scale was measured on a WPMsystem while its compressor modulated: raw
+    values of 6, 10 and 11 stood next to 0.6, 1.0 and 1.1 kW on the ISG display
+    in the same sample, which is where the library's 0.1 factor comes from. The
+    value below is one of those readings after the library applies the scale.
+
+    Only IWS 1 is exposed. The library carries inverter_power_iws_2 through _6
+    for cascades, and on a single-compressor machine those read the unavailable
+    marker, so exposing all six would leave most installations with five dead
+    entities.
+    """
+    api = SimpleNamespace(
+        extended_energy_data=SimpleNamespace(inverter_power_iws_1=1.1)
+    )
+
+    desc = next(
+        d for d in WPM_INVERTER_POWER_SENSOR_TYPES if d.key == CURRENT_POWER_CONSUMPTION
+    )
+    assert desc.modbus_register(api) == 1.1
+    assert desc.native_unit_of_measurement == UnitOfPower.KILO_WATT
+    assert desc.device_class == SensorDeviceClass.POWER
+    # An instantaneous reading, not a counter.
+    assert desc.state_class == SensorStateClass.MEASUREMENT
+
+
+def test_inverter_power_stays_out_of_the_shared_lists() -> None:
+    """It must not ride along on models where the register is not measured.
+
+    ``WPM_SENSOR_TYPES`` serves WPM_3, WPMsystem and LWZ_R290 alike, but wire
+    3679 is only confirmed answered on WPMsystem, and a WPM 3i refuses it with
+    Modbus exception 2. Adding it to the shared list would hand the other models
+    an entity that can never hold a value.
+    """
+    for sensor_types in (WPM_SENSOR_TYPES, WPM_3I_SENSOR_TYPES, LWZ_SENSOR_TYPES):
+        assert not [d for d in sensor_types if d.key == CURRENT_POWER_CONSUMPTION]

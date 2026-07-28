@@ -72,6 +72,8 @@ _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
     ("NUMBER_TYPES_WPM_3I", WPM_3I, number.NUMBER_TYPES_WPM_3I),
     ("NUMBER_TYPES_LWZ", LWZ, number.NUMBER_TYPES_LWZ),
     ("WPM_SENSOR_TYPES", WPM, sensor.WPM_SENSOR_TYPES),
+    # WPMsystem only, see the comment on the list itself.
+    ("WPM_INVERTER_POWER_SENSOR_TYPES", WPM, sensor.WPM_INVERTER_POWER_SENSOR_TYPES),
     ("WPM_3I_SENSOR_TYPES", WPM_3I, sensor.WPM_3I_SENSOR_TYPES),
     ("LWZ_SENSOR_TYPES", LWZ, sensor.LWZ_SENSOR_TYPES),
     ("ENERGY_DAILY_SENSOR_TYPES", WPM, sensor.ENERGY_DAILY_SENSOR_TYPES),
