@@ -8,11 +8,15 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
-from pystiebeleltron import StiebelEltronModbusError, UnknownControllerModelError
+from pystiebeleltron import (
+    ControllerModel,
+    StiebelEltronModbusError,
+    UnknownControllerModelError,
+)
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.stiebel_eltron_isg.const import DOMAIN
+from custom_components.stiebel_eltron_isg.const import CURRENT_POWER_CONSUMPTION, DOMAIN
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import WPM_SENSOR_TYPES
 
@@ -59,6 +63,50 @@ async def test_setup_registers_every_wpm_sensor(
             stateless.append(description.key)
 
     assert not stateless, f"These sensors never got a state: {sorted(stateless)}"
+
+
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        (ControllerModel.WPMsystem, True),
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        (ControllerModel.WPMsystem, True),
+        (ControllerModel.WPM_3, False),
+        (ControllerModel.LWZ_R290, False),
+    ],
+)
+async def test_inverter_power_is_created_for_wpmsystem_only(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+    model: ControllerModel,
+    expected: bool,
+) -> None:
+    """Wire 3679 is only confirmed answered on WPMsystem.
+
+    WPM_3, WPMsystem and LWZ_R290 share one sensor list, so without a model
+    check the other two would be handed an entity that can never hold a value.
+    All three are covered here so that a change to ``async_setup_entry`` cannot
+    quietly widen the set again.
+    """
+    mock_get_controller_model.return_value = model
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), mock_config_entry.entry_id
+        )
+    }
+    created = (
+        build_unique_id(mock_config_entry, CURRENT_POWER_CONSUMPTION) in unique_ids
+    )
+    assert created is expected
 
 
 async def test_async_setup_entry_with_custom_port(

@@ -56,6 +56,7 @@ consumed_water_heating_today
 consumed_water_heating_total
 cooling_mode
 cooling_runtime
+current_power_consumption
 dew_point_temperature
 dew_point_temperature_hk1
 dew_point_temperature_hk2

@@ -347,6 +347,9 @@
             "cooling_runtime": {
                 "name": "Kühlbetrieb Laufzeit"
             },
+            "current_power_consumption": {
+                "name": "Inverter Aufnahmeleistung"
+            },
             "electrical_booster_heating": {
                 "name": "Elektroheizung Heizung"
             },

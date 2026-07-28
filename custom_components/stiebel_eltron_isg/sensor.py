@@ -17,6 +17,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfFrequency,
+    UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolumeFlowRate,
@@ -64,6 +65,7 @@ from .const import (
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
+    CURRENT_POWER_CONSUMPTION,
     DEWPOINT_TEMPERATURE,
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
@@ -1111,6 +1113,27 @@ WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     ),
 ]
 
+# Servicewelt "PROZESSDATEN" -> INVERTER AUFNAHMELEISTUNG, wire register 3679.
+# Verified against a WPMsystem while its compressor modulated: raw 6, 10 and 11
+# read 0.6, 1.0 and 1.1 kW on the ISG display in the same sample, which fixes
+# the library's 0.1 scale. The LWZ side declares 0.01 on the same wire address
+# and is deliberately left out until someone measures it.
+#
+# Only IWS 1 is exposed. The library carries inverter_power_iws_2 through _6 for
+# cascades; on a single-compressor machine those read the unavailable marker, so
+# exposing all six would give most installations five dead entities.
+WPM_INVERTER_POWER_SENSOR_TYPES = [
+    StiebelEltronSensorEntityDescription(
+        key=CURRENT_POWER_CONSUMPTION,
+        translation_key=CURRENT_POWER_CONSUMPTION,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        icon="mdi:flash",
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.POWER,
+        modbus_register=lambda api: api.extended_energy_data.inverter_power_iws_1,
+    ),
+]
+
 
 WPM_3I_SENSOR_TYPES = (
     WPM_3I_SYSTEM_VALUES_SENSOR_TYPES
@@ -1184,6 +1207,15 @@ async def async_setup_entry(
             for description in ENERGY_DAILY_SENSOR_TYPES
         ]
         entities.extend(daily_energy_entities)
+        if coordinator.model == ControllerModel.WPMsystem:
+            # Only WPMsystem is measured to answer wire 3679. A WPM 3i refuses
+            # it outright, and nothing is known about WPM_3 or LWZ_R290, so the
+            # sensor stays off the shared list rather than risk an entity that
+            # can never hold a value.
+            entities.extend(
+                StiebelEltronISGSensor(coordinator, entry, description)
+                for description in WPM_INVERTER_POWER_SENSOR_TYPES
+            )
     else:
         entities = [
             StiebelEltronISGSensor(
