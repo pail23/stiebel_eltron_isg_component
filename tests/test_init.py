@@ -67,7 +67,11 @@ async def test_setup_registers_every_wpm_sensor(
 
 @pytest.mark.parametrize(
     ("model", "expected"),
-    [(ControllerModel.WPMsystem, True), (ControllerModel.WPM_3, False)],
+    [
+        (ControllerModel.WPMsystem, True),
+        (ControllerModel.WPM_3, False),
+        (ControllerModel.LWZ_R290, False),
+    ],
 )
 async def test_inverter_power_is_created_for_wpmsystem_only(
     hass: HomeAssistant,
@@ -80,6 +84,8 @@ async def test_inverter_power_is_created_for_wpmsystem_only(
 
     WPM_3, WPMsystem and LWZ_R290 share one sensor list, so without a model
     check the other two would be handed an entity that can never hold a value.
+    All three are covered here so that a change to ``async_setup_entry`` cannot
+    quietly widen the set again.
     """
     mock_get_controller_model.return_value = model
     mock_config_entry.add_to_hass(hass)
