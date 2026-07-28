@@ -69,6 +69,10 @@ async def test_setup_registers_every_wpm_sensor(
     ("model", "expected"),
     [
         (ControllerModel.WPMsystem, True),
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        (ControllerModel.WPMsystem, True),
         (ControllerModel.WPM_3, False),
         (ControllerModel.LWZ_R290, False),
     ],
