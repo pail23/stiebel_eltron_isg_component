@@ -1,14 +1,19 @@
 """Tests for the climate platform."""
 
 from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.climate import ClimateEntityFeature
-from homeassistant.components.climate.const import FAN_HIGH, FAN_LOW
+from homeassistant.components.climate.const import FAN_HIGH, FAN_LOW, HVACMode
+from pystiebeleltron import ControllerModel
 import pytest
 
+from custom_components.stiebel_eltron_isg import climate as climate_module
 from custom_components.stiebel_eltron_isg.climate import (
     ECO_MODE,
     LWZ_CLIMATE_TYPES,
+    StiebelEltronClimateEntityDescription,
+    StiebelEltronISGClimateEntity,
     StiebelEltronLWZClimateEntity,
     StiebelEltronWPMClimateEntity,
 )
@@ -101,6 +106,163 @@ def _make_lwz_climate(
 
     entity.async_write_ha_state = _publish
     return entity
+
+
+def _make_wpm_climate(operating_mode: int) -> StiebelEltronWPMClimateEntity:
+    """Build a minimal WPM climate entity."""
+    entity = StiebelEltronWPMClimateEntity.__new__(StiebelEltronWPMClimateEntity)
+    api = _FakeApi(_FakeSystemParameters(operating_mode, 3, 1))
+    entity.coordinator = _StubCoordinator(api)
+    entity.write_component = "system_parameters"
+    entity.async_write_ha_state = lambda: None
+    return entity
+
+
+def test_climate_description_rejects_legacy_register_tokens() -> None:
+    """All descriptor inputs must use callable API accessors."""
+
+    def valid(api):
+        return 1
+
+    with pytest.raises(TypeError, match="climate field reference"):
+        StiebelEltronClimateEntityDescription(
+            key="invalid-list",
+            humidity_modbus_register=["legacy"],
+            actual_temperature_register=[valid],
+            eco_target_temp_register=valid,
+            comfort_target_temp_register=valid,
+        )
+    with pytest.raises(TypeError, match="eco_target_temp_register"):
+        StiebelEltronClimateEntityDescription(
+            key="invalid-eco",
+            humidity_modbus_register=[valid],
+            actual_temperature_register=[valid],
+            eco_target_temp_register="legacy",
+            comfort_target_temp_register=valid,
+        )
+    with pytest.raises(TypeError, match="comfort_target_temp_register"):
+        StiebelEltronClimateEntityDescription(
+            key="invalid-comfort",
+            humidity_modbus_register=[valid],
+            actual_temperature_register=[valid],
+            eco_target_temp_register=valid,
+            comfort_target_temp_register="legacy",
+        )
+
+
+async def test_setup_uses_wpm_3i_descriptions() -> None:
+    """WPM 3i receives its narrower climate description set."""
+    entry = SimpleNamespace(
+        runtime_data=SimpleNamespace(model=ControllerModel.WPM_3i),
+    )
+    add_entities = MagicMock()
+
+    with patch.object(
+        climate_module,
+        "StiebelEltronWPMClimateEntity",
+        side_effect=lambda coordinator, config_entry, description: description.key,
+    ):
+        await climate_module.async_setup_entry(None, entry, add_entities)
+
+    assert add_entities.call_args.args[0] == [
+        description.key for description in climate_module.WPM_3I_CLIMATE_TYPES
+    ]
+
+
+def test_base_climate_operation_mode_is_abstract() -> None:
+    """Controller-specific climate classes must implement their mode lookup."""
+    entity = StiebelEltronISGClimateEntity.__new__(StiebelEltronISGClimateEntity)
+
+    with pytest.raises(NotImplementedError):
+        _ = entity.operation_mode
+
+
+@pytest.mark.parametrize(
+    ("attribute", "values", "expected"),
+    [
+        ("humidity_modbus_register", [0, None, 47.9], 47),
+        ("humidity_modbus_register", [0, None], None),
+        ("actual_temperature_register", [0, None, 21.5], 21.5),
+        ("actual_temperature_register", [0, None], None),
+    ],
+)
+def test_climate_uses_the_first_nonzero_measurement(
+    attribute: str,
+    values: list,
+    expected,
+) -> None:
+    """Fallback accessors ignore unavailable and zero-valued room sensors."""
+    entity = StiebelEltronISGClimateEntity.__new__(StiebelEltronISGClimateEntity)
+    setattr(entity, attribute, [lambda api, value=value: value for value in values])
+    entity.coordinator = _StubCoordinator(SimpleNamespace())
+
+    property_name = (
+        "current_humidity"
+        if attribute == "humidity_modbus_register"
+        else "current_temperature"
+    )
+    assert getattr(entity, property_name) == expected
+
+
+async def test_wpm_hvac_and_preset_mapping() -> None:
+    """WPM exposes and writes Home Assistant modes through its mapping."""
+    entity = _make_wpm_climate(operating_mode=1)
+
+    assert entity.hvac_mode is HVACMode.AUTO
+    assert entity.preset_mode == "ready"
+
+    await entity.async_set_hvac_mode(HVACMode.OFF)
+    await entity.async_set_preset_mode("comfort")
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "operating_mode", 5),
+        ("system_parameters", "operating_mode", 3),
+    ]
+
+
+async def test_lwz_hvac_and_preset_mapping() -> None:
+    """LWZ exposes and writes Home Assistant modes through its mapping."""
+    entity = _make_lwz_climate(operating_mode=1)
+
+    assert entity.hvac_mode is HVACMode.AUTO
+    assert entity.preset_mode == "ready"
+
+    await entity.async_set_hvac_mode(HVACMode.OFF)
+    await entity.async_set_preset_mode("manual")
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "operating_mode", 5),
+        ("system_parameters", "operating_mode", 14),
+    ]
+
+
+@pytest.mark.parametrize("operating_mode", [ECO_MODE, 3])
+def test_lwz_fan_mode_is_none_when_stage_is_unavailable(
+    operating_mode: int,
+) -> None:
+    """A missing stage must not be presented as a real fan mode."""
+    entity = _make_lwz_climate(
+        operating_mode=operating_mode,
+        day_stage=None,
+        night_stage=None,
+    )
+
+    assert entity.fan_mode is None
+
+
+async def test_unknown_modes_do_not_write() -> None:
+    """Values outside the advertised mode lists are ignored safely."""
+    wpm = _make_wpm_climate(operating_mode=1)
+    lwz = _make_lwz_climate(operating_mode=1)
+
+    await wpm.async_set_hvac_mode(HVACMode.HEAT)
+    await wpm.async_set_preset_mode("unknown")
+    await lwz.async_set_hvac_mode(HVACMode.COOL)
+    await lwz.async_set_preset_mode("unknown")
+    await lwz.async_set_fan_mode("unknown")
+
+    assert wpm.coordinator.writes == []
+    assert lwz.coordinator.writes == []
 
 
 def test_lwz_fan_mode_uses_night_stage_when_eco() -> None:
