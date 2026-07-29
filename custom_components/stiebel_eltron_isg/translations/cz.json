@@ -74,16 +74,16 @@
             "actual_humidity_hk3": {
                 "name": "Vlhkost vzduchu TO 3"
             },
-            "dewpoint_temperature": {
+            "dew_point_temperature": {
                 "name": "Teplota rosného bodu"
             },
-            "dewpoint_temperature_hk1": {
+            "dew_point_temperature_hk1": {
                 "name": "Teplota rosného bodu TO 1"
             },
-            "dewpoint_temperature_hk2": {
+            "dew_point_temperature_hk2": {
                 "name": "Teplota rosného bodu TO 2"
             },
-            "dewpoint_temperature_hk3": {
+            "dew_point_temperature_hk3": {
                 "name": "Teplota rosného bodu TO 3"
             },
             "outdoor_temperature": {
@@ -329,10 +329,10 @@
             "ventilation_air_target_flow_rate": {
                 "name": "Přiváděný vzduch požadovaný průtok"
             },
-            "extract_air_actual_fan_speed": {
+            "extract_air_actual": {
                 "name": "Odváděný vzduch skutečné otáčky"
             },
-            "extract_air_target_flow_rate": {
+            "extract_air_target_flowrate": {
                 "name": "Odváděný vzduch požadovaný průtok"
             },
             "extract_air_dew_point": {
@@ -567,10 +567,10 @@
             "heating_curve_rise_hk3": {
                 "name": "Sklon topné křivky TO 3"
             },
-            "fan_level_day": {
+            "fan_level_comfort": {
                 "name": "Stupeň ventilátoru den"
             },
-            "fan_level_night": {
+            "fan_level_eco": {
                 "name": "Stupeň ventilátoru noc"
             },
             "comfort_cooling_temperature_target_hk1": {

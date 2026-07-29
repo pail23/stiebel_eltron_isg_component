@@ -74,16 +74,16 @@
             "actual_humidity_hk3": {
                 "name": "Humidade CC 3"
             },
-            "dewpoint_temperature": {
+            "dew_point_temperature": {
                 "name": "Temperatura de ponto de orvalho"
             },
-            "dewpoint_temperature_hk1": {
+            "dew_point_temperature_hk1": {
                 "name": "Temperatura ponto de orvalho CC 1"
             },
-            "dewpoint_temperature_hk2": {
+            "dew_point_temperature_hk2": {
                 "name": "Temperatura ponto de orvalho CC 2"
             },
-            "dewpoint_temperature_hk3": {
+            "dew_point_temperature_hk3": {
                 "name": "Temperatura ponto de orvalho CC 3"
             },
             "outdoor_temperature": {
@@ -329,10 +329,10 @@
             "ventilation_air_target_flow_rate": {
                 "name": "Caudal alvo ar de insuflação"
             },
-            "extract_air_actual_fan_speed": {
+            "extract_air_actual": {
                 "name": "Velocidade real ventilador ar de extracção"
             },
-            "extract_air_target_flow_rate": {
+            "extract_air_target_flowrate": {
                 "name": "Caudal alvo ar de extracção"
             },
             "extract_air_dew_point": {
@@ -567,10 +567,10 @@
             "heating_curve_rise_hk3": {
                 "name": "Inclinação curva de aquecimento CC 3"
             },
-            "fan_level_day": {
+            "fan_level_comfort": {
                 "name": "Nível ventilador dia"
             },
-            "fan_level_night": {
+            "fan_level_eco": {
                 "name": "Nível ventilador noite"
             },
             "comfort_cooling_temperature_target_hk1": {
