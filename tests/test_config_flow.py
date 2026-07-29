@@ -112,7 +112,6 @@ async def test_form_unknown_exception(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.skip(reason="lingering timer issue")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -134,8 +133,11 @@ async def test_reconfigure_flow(
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "2.2.2.2"
 
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-@pytest.mark.skip(reason="lingering timer issue")
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
@@ -173,6 +175,10 @@ async def test_reconfigure_flow_errors(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_flow_already_configured(
