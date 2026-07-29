@@ -480,9 +480,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         ]
         self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
         super().__init__(coordinator, config_entry, description)
-        self._attr_supported_features = (
-            ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
-        )
+        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
     def operation_mode(self) -> int:

@@ -2,10 +2,12 @@
 
 from types import SimpleNamespace
 
+from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import FAN_HIGH, FAN_LOW
 
 from custom_components.stiebel_eltron_isg.climate import (
     ECO_MODE,
+    LWZ_CLIMATE_TYPES,
     StiebelEltronLWZClimateEntity,
     StiebelEltronWPMClimateEntity,
 )
@@ -19,6 +21,25 @@ def test_climate_unavailable_when_last_update_failed() -> None:
     # last_update_success is False, so availability must short-circuit to False
     # without evaluating the (stale) target temperature.
     assert entity.available is False
+
+
+def test_lwz_climate_preserves_supported_features() -> None:
+    """LWZ fan support must not replace the features inherited from the base."""
+    coordinator = SimpleNamespace(device_info={})
+    config_entry = SimpleNamespace(entry_id="test")
+
+    entity = StiebelEltronLWZClimateEntity(
+        coordinator, config_entry, LWZ_CLIMATE_TYPES[0]
+    )
+
+    required_features = (
+        ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TURN_OFF
+        | ClimateEntityFeature.TURN_ON
+        | ClimateEntityFeature.FAN_MODE
+    )
+    assert entity.supported_features & required_features == required_features
 
 
 class _FakeSystemParameters:
