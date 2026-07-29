@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
+from pystiebeleltron import ControllerModel
 import pytest
 
 from custom_components.stiebel_eltron_isg.const import (
@@ -13,27 +14,39 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
+    CONSUMED_HEATING,
     CONSUMED_HEATING_12M,
     CONSUMED_HEATING_LAST_24H,
     CONSUMED_HEATING_PREV_12M,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
     CONSUMED_WATER_HEATING_12M,
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
+    CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
     PRODUCED_SOLAR_HEATING_TOTAL,
     PRODUCED_SOLAR_WATER_HEATING,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TOTAL,
     TARGET_TEMPERATURE_HK1,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
+    ENERGY_DAILY_SENSOR_TYPES,
+    LWZ_ENERGY_DAILY_SENSOR_TYPES,
     LWZ_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
+    StiebelEltronISGSensor,
+    async_setup_entry,
 )
 
 
@@ -148,6 +161,67 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.device_class == SensorDeviceClass.ENERGY
         # Rolling windows reset, so they must not be TOTAL_INCREASING.
         assert desc.state_class == SensorStateClass.TOTAL
+
+
+@pytest.mark.parametrize(
+    "descriptions", [ENERGY_DAILY_SENSOR_TYPES, LWZ_ENERGY_DAILY_SENSOR_TYPES]
+)
+def test_daily_energy_sensors_do_not_generate_long_term_sums(descriptions) -> None:
+    """Day-register residue makes zero-based long-term sums inaccurate."""
+    for description in descriptions:
+        assert description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+        assert description.device_class == SensorDeviceClass.ENERGY
+        assert description.state_class is None
+
+
+CUMULATIVE_ENERGY_KEYS = {
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TOTAL,
+    CONSUMED_HEATING,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_TOTAL,
+}
+
+
+@pytest.mark.parametrize(
+    "descriptions", [WPM_3I_SENSOR_TYPES, WPM_SENSOR_TYPES, LWZ_SENSOR_TYPES]
+)
+def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None:
+    """Cumulative alternatives remain suitable for long-term energy sums."""
+    descriptions_by_key = {description.key: description for description in descriptions}
+    assert descriptions_by_key.keys() >= CUMULATIVE_ENERGY_KEYS
+
+    for key in CUMULATIVE_ENERGY_KEYS:
+        assert descriptions_by_key[key].state_class == SensorStateClass.TOTAL_INCREASING
+
+
+@pytest.mark.parametrize(
+    ("model", "daily_descriptions"),
+    [
+        (ControllerModel.WPM_3i, ENERGY_DAILY_SENSOR_TYPES),
+        (ControllerModel.WPM_3, ENERGY_DAILY_SENSOR_TYPES),
+        (ControllerModel.LWZ, LWZ_ENERGY_DAILY_SENSOR_TYPES),
+    ],
+)
+async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
+    model, daily_descriptions
+) -> None:
+    """Day registers must not invent a new reset timestamp on each zero poll."""
+    coordinator = SimpleNamespace(model=model, device_info={})
+    entry = SimpleNamespace(runtime_data=coordinator, entry_id="test")
+    entities = []
+
+    await async_setup_entry(None, entry, entities.extend)
+
+    daily_entities = [
+        entity for entity in entities if entity.entity_description in daily_descriptions
+    ]
+    assert daily_entities
+    assert all(type(entity) is StiebelEltronISGSensor for entity in daily_entities)
+    assert all(entity.last_reset is None for entity in daily_entities)
 
 
 test_wpm_exposes_electrical_booster_energy_test_data = [_wpm, _wpm_3i]
