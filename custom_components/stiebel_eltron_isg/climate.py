@@ -129,6 +129,8 @@ class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     actual_temperature_register: list[Any]
     eco_target_temp_register: Any
     comfort_target_temp_register: Any
+    min_temp: float
+    max_temp: float
     write_component: str = "system_parameters"
     eco_target_temp_write_field: str | None = None
     comfort_target_temp_write_field: str | None = None
@@ -168,6 +170,8 @@ WPM_3I_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_1
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_1",
         comfort_target_temp_write_field="comfort_temperature_hk_1",
     )
@@ -190,6 +194,8 @@ WPM_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_1
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_1",
         comfort_target_temp_write_field="comfort_temperature_hk_1",
     ),
@@ -206,6 +212,8 @@ WPM_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_2
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_2",
         comfort_target_temp_write_field="comfort_temperature_hk_2",
     ),
@@ -222,6 +230,8 @@ WPM_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_3
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_3",
         comfort_target_temp_write_field="comfort_temperature_hk_3",
     ),
@@ -239,6 +249,8 @@ LWZ_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.room_temperature_day_hk1
         ),
+        min_temp=10,
+        max_temp=30,
         eco_target_temp_write_field="room_temperature_night_hk1",
         comfort_target_temp_write_field="room_temperature_day_hk1",
     ),
@@ -253,6 +265,8 @@ LWZ_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.room_temperature_day_hk2
         ),
+        min_temp=10,
+        max_temp=30,
         eco_target_temp_write_field="room_temperature_night_hk2",
         comfort_target_temp_write_field="room_temperature_day_hk2",
     ),
@@ -323,8 +337,10 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         """Initialize the climate entity."""
         self.entity_description = description
 
-        self._attr_target_temperature_low = 5
-        self._attr_target_temperature_high = 30
+        self._attr_min_temp = description.min_temp
+        self._attr_max_temp = description.max_temp
+        self._attr_target_temperature_low = description.min_temp
+        self._attr_target_temperature_high = description.max_temp
         self._attr_target_temperature_step = 0.1
 
         super().__init__(coordinator, config_entry)
