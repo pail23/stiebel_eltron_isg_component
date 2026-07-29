@@ -82,6 +82,11 @@ jobs:
             --durations=10 \
             -n auto \
             --cov custom_components.stiebel_eltron_isg \
+            --cov-report=json:coverage.json \
+            --cov-report=term-missing:skip-covered \
             -o console_output_style=count \
             -p no:sugar \
             tests
+      - name: Enforce per-module coverage
+        if: always()
+        run: uv run --prerelease=allow python scripts/check_module_coverage.py coverage.json --target 95
