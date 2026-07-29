@@ -12,6 +12,7 @@ from typing import Any, Protocol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from modbus_connection import ModbusConnection, ModbusUnit
@@ -27,6 +28,15 @@ from custom_components.stiebel_eltron_isg.const import (
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 type StiebelEltronConfigEntry = ConfigEntry[StiebelEltronDataCoordinator]
+
+
+def _is_read_only_write_error(err: AttributeError, field: str) -> bool:
+    """Return whether modbus_connection rejected a read-only field or space."""
+    message = str(err)
+    return message == f"{field} is read-only" or (
+        message.startswith(f"{field} is in the ")
+        and message.endswith(" register space, which is read-only")
+    )
 
 
 def coordinator_display_name(model: ControllerModel) -> str:
@@ -180,8 +190,48 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
     ) -> None:
         """Write a value to a component field."""
         component_obj = getattr(self._api, component, None)
-        if component_obj is not None and hasattr(component_obj, field):
+        if component_obj is None or not hasattr(component_obj, field):
+            _LOGGER.debug("Write target %s.%s is unsupported", component, field)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_unsupported",
+                translation_placeholders={"field": field},
+            )
+
+        try:
             await component_obj.write(field, value)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_write_value",
+                translation_placeholders={
+                    "field": field,
+                    "value": str(value),
+                },
+            ) from err
+        except AttributeError as err:
+            # Only translate the two documented read-only errors. An unrelated
+            # AttributeError from inside the library is a programming error and
+            # must remain visible.
+            if not _is_read_only_write_error(err, field):
+                raise
+            _LOGGER.debug(
+                "Write target %s.%s is read-only",
+                component,
+                field,
+                exc_info=True,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_unsupported",
+                translation_placeholders={"field": field},
+            ) from err
+        except (ModbusError, StiebelEltronModbusError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={"field": field},
+            ) from err
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
