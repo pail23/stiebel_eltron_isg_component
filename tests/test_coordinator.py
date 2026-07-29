@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from modbus_connection import ModbusError
-from pystiebeleltron import StiebelEltronModbusError
+from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
@@ -14,6 +14,9 @@ from custom_components.stiebel_eltron_isg.coordinator import (
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
+    StiebelEltronModbusWPM3iDataCoordinator,
 )
 
 
@@ -192,3 +195,23 @@ async def test_lwz_reset_heatpump_uses_central_write_path() -> None:
     coordinator.write_component_value.assert_awaited_once_with(
         "system_parameters", "reset", 1
     )
+
+
+def test_wpm_3i_coordinator_initializes_model_specific_api(
+    hass,
+    mock_config_entry,
+    mock_modbus_connection,
+    mock_wpm_3i_api,
+) -> None:
+    """The WPM 3i coordinator keeps its model-specific API, model and host."""
+    coordinator = StiebelEltronModbusWPM3iDataCoordinator(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3i,
+        mock_modbus_connection,
+        "isg.local",
+    )
+
+    assert coordinator.model is ControllerModel.WPM_3i
+    assert coordinator.host == "isg.local"
+    assert coordinator._api is mock_wpm_3i_api

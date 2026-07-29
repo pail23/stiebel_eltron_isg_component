@@ -1,12 +1,16 @@
 """Tests for the sensor platform."""
 
 from types import SimpleNamespace
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
+from pystiebeleltron import ControllerModel
 import pytest
 
+from custom_components.stiebel_eltron_isg import sensor as sensor_module
 from custom_components.stiebel_eltron_isg.const import (
+    ACTIVE_ERROR,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_SPEED,
@@ -34,6 +38,9 @@ from custom_components.stiebel_eltron_isg.sensor import (
     WPM_3I_SENSOR_TYPES,
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
+    StiebelEltronISGEnergySensor,
+    StiebelEltronISGSensor,
+    StiebelEltronSensorEntityDescription,
 )
 
 
@@ -47,6 +54,103 @@ def _wpm_3i(key: str):
 
 def _lwz(key: str):
     return next(d for d in LWZ_SENSOR_TYPES if d.key == key)
+
+
+def test_sensor_description_rejects_non_callable_register() -> None:
+    """Register references must use the API accessor contract."""
+    with pytest.raises(TypeError, match="must be a lambda expression"):
+        StiebelEltronSensorEntityDescription(
+            key="invalid",
+            modbus_register="legacy register token",
+        )
+
+
+async def test_setup_uses_wpm_3i_sensor_lists() -> None:
+    """WPM 3i receives both its regular and daily energy sensors."""
+    entry = SimpleNamespace(
+        runtime_data=SimpleNamespace(model=ControllerModel.WPM_3i),
+    )
+    add_entities = MagicMock()
+
+    with (
+        patch.object(
+            sensor_module,
+            "StiebelEltronISGSensor",
+            side_effect=lambda coordinator, config_entry, description: (
+                "sensor",
+                description.key,
+            ),
+        ),
+        patch.object(
+            sensor_module,
+            "StiebelEltronISGEnergySensor",
+            side_effect=lambda coordinator, config_entry, description: (
+                "energy",
+                description.key,
+            ),
+        ),
+    ):
+        await sensor_module.async_setup_entry(None, entry, add_entities)
+
+    entities = add_entities.call_args.args[0]
+    assert entities == [
+        *[("sensor", description.key) for description in WPM_3I_SENSOR_TYPES],
+        *[
+            ("energy", description.key)
+            for description in sensor_module.ENERGY_DAILY_SENSOR_TYPES
+        ],
+    ]
+
+
+@pytest.mark.parametrize(
+    ("key", "value", "expected"),
+    [
+        (ACTIVE_ERROR, None, None),
+        (ACTIVE_ERROR, 0, "no error"),
+        (ACTIVE_ERROR, 32768, "no error"),
+        (ACTIVE_ERROR, 42, "error 42"),
+        ("ordinary", 21.5, 21.5),
+    ],
+)
+def test_sensor_native_value_formats_active_errors(key: str, value, expected) -> None:
+    """The active-error register gets labels while ordinary values pass through."""
+    entity = StiebelEltronISGSensor.__new__(StiebelEltronISGSensor)
+    entity.entity_description = SimpleNamespace(key=key)
+    entity.modbus_register = lambda api: None
+    entity.coordinator = SimpleNamespace(get_value=lambda accessor: value)
+
+    assert entity.native_value == expected
+
+
+@pytest.mark.parametrize(
+    ("has_value", "value", "expected_reset"),
+    [
+        (False, None, False),
+        (True, 1, False),
+        (True, 0, True),
+    ],
+)
+def test_energy_sensor_reset_time(
+    has_value: bool,
+    value,
+    expected_reset: bool,
+) -> None:
+    """Only an available counter that reads zero reports a reset."""
+    entity = StiebelEltronISGEnergySensor.__new__(StiebelEltronISGEnergySensor)
+    entity.modbus_register = lambda api: None
+    entity.coordinator = SimpleNamespace(
+        has_value=lambda accessor: has_value,
+        get_value=lambda accessor: value,
+    )
+    reset_time = object()
+
+    with patch.object(sensor_module.dt_util, "utcnow", return_value=reset_time):
+        result = entity.last_reset
+
+    if expected_reset:
+        assert result is reset_time
+    else:
+        assert result is None
 
 
 def test_wpm_exposes_compressor_runtime_hours() -> None:
