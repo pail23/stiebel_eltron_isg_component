@@ -82,11 +82,15 @@ _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
     ("WPM_BINARY_SENSOR_TYPES", WPM, binary_sensor.WPM_BINARY_SENSOR_TYPES),
     ("WPM_3I_BINARY_SENSOR_TYPES", WPM_3I, binary_sensor.WPM_3I_BINARY_SENSOR_TYPES),
     ("LWZ_BINARY_SENSOR_TYPES", LWZ, binary_sensor.LWZ_BINARY_SENSOR_TYPES),
+    # WPMsystem and LWZ_R290, both of which are served by the WPM api.
+    (
+        "CIRCULATION_PUMP_BINARY_SENSOR_TYPES",
+        WPM,
+        binary_sensor.CIRCULATION_PUMP_BINARY_SENSOR_TYPES,
+    ),
     ("SWITCH_TYPES", WPM, switch.SWITCH_TYPES),
     ("SWITCH_TYPES", WPM_3I, switch.SWITCH_TYPES),
     ("SWITCH_TYPES", LWZ, switch.SWITCH_TYPES),
-    # WPMsystem and LWZ_R290, both of which are served by the WPM api.
-    ("CIRCULATION_PUMP_SWITCH_TYPES", WPM, switch.CIRCULATION_PUMP_SWITCH_TYPES),
     ("WPM_SELECT_TYPES", WPM, select.WPM_SELECT_TYPES),
     ("WPM_SELECT_TYPES", WPM_3I, select.WPM_SELECT_TYPES),
     ("LWZ_SELECT_TYPES", LWZ, select.LWZ_SELECT_TYPES),

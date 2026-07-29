@@ -21,7 +21,11 @@ from pystiebeleltron import (
 from .const import DEFAULT_PORT, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
-from .migration import async_migrate_device_identifier, async_migrate_unique_ids
+from .migration import (
+    async_migrate_device_identifier,
+    async_migrate_unique_ids,
+    async_remove_legacy_circulation_pump_switch,
+)
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
@@ -75,6 +79,7 @@ async def async_setup_entry(
     # identifiers.
     async_migrate_device_identifier(hass, entry)
     await async_migrate_unique_ids(hass, entry, model)
+    async_remove_legacy_circulation_pump_switch(hass, entry)
 
     coordinator = None
 
