@@ -74,16 +74,16 @@
             "actual_humidity_hk3": {
                 "name": "Humidité CC 3"
             },
-            "dewpoint_temperature": {
+            "dew_point_temperature": {
                 "name": "Température de rosée"
             },
-            "dewpoint_temperature_hk1": {
+            "dew_point_temperature_hk1": {
                 "name": "Température de rosée CC 1"
             },
-            "dewpoint_temperature_hk2": {
+            "dew_point_temperature_hk2": {
                 "name": "Température de rosée CC 2"
             },
-            "dewpoint_temperature_hk3": {
+            "dew_point_temperature_hk3": {
                 "name": "Température de rosée CC 3"
             },
             "outdoor_temperature": {
@@ -329,10 +329,10 @@
             "ventilation_air_target_flow_rate": {
                 "name": "Débit cible air soufflage"
             },
-            "extract_air_actual_fan_speed": {
+            "extract_air_actual": {
                 "name": "Vitesse réelle ventilateur extraction"
             },
-            "extract_air_target_flow_rate": {
+            "extract_air_target_flowrate": {
                 "name": "Débit cible air extraction"
             },
             "extract_air_dew_point": {
@@ -567,10 +567,10 @@
             "heating_curve_rise_hk3": {
                 "name": "Pente courbe de chauffe CC 3"
             },
-            "fan_level_day": {
+            "fan_level_comfort": {
                 "name": "Niveau ventilateur jour"
             },
-            "fan_level_night": {
+            "fan_level_eco": {
                 "name": "Niveau ventilateur nuit"
             },
             "comfort_cooling_temperature_target_hk1": {
