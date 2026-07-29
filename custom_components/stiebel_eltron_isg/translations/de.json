@@ -48,6 +48,17 @@
             }
         }
     },
+    "exceptions": {
+        "write_unsupported": {
+            "message": "Die Einstellung {field} kann bei der verbundenen Regelung nicht geschrieben werden."
+        },
+        "invalid_write_value": {
+            "message": "Der Wert {value} ist für die Einstellung {field} ungültig."
+        },
+        "write_failed": {
+            "message": "Die Einstellung {field} konnte wegen eines Kommunikationsfehlers mit der Wärmepumpe nicht geschrieben werden."
+        }
+    },
     "entity": {
         "sensor": {
             "actual_temperature": {

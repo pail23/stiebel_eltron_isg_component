@@ -37,6 +37,17 @@
             }
         }
     },
+    "exceptions": {
+        "write_unsupported": {
+            "message": "The setting {field} cannot be written on the connected controller."
+        },
+        "invalid_write_value": {
+            "message": "The value {value} is not valid for the setting {field}."
+        },
+        "write_failed": {
+            "message": "The setting {field} could not be written because communication with the heat pump failed."
+        }
+    },
     "entity": {
         "sensor": {
             "actual_temperature": {

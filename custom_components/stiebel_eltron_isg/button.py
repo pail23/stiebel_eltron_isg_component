@@ -84,6 +84,5 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-
-        return True  # The button is always available as it doesn't rely on specific data from the coordinator
+        """Follow connectivity without requiring a data field like other entities."""
+        return self.coordinator.last_update_success
