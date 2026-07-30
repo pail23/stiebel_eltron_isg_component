@@ -16,6 +16,7 @@ from functools import cache
 from types import ModuleType
 from typing import Any
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import EntityDescription
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
@@ -194,6 +195,20 @@ def _write_field_cases() -> list[Any]:
                 if getattr(description, attribute, None) is not None
             )
     return cases
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        *number.NUMBER_TYPES_WPM,
+        *number.NUMBER_TYPES_WPM_3I,
+        *number.NUMBER_TYPES_LWZ,
+    ],
+    ids=lambda description: description.key,
+)
+def test_number_settings_are_configuration_entities(description: Any) -> None:
+    """Persistent controller parameters belong in the device configuration."""
+    assert description.entity_category is EntityCategory.CONFIG
 
 
 @pytest.mark.parametrize(("model", "accessor"), _accessor_cases())
