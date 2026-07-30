@@ -50,6 +50,17 @@ _ICONS_FILE = _COMPONENT_DIR / "icons.json"
 _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 
+# Sensor descriptions without a device class may intentionally use HA's generic
+# sensor icon. This is therefore an explicit snapshot of the smaller set whose
+# custom icons are part of the integration's UI contract.
+_CUSTOM_ICON_TRANSLATION_KEYS = {
+    "sensor": {
+        "active_error",
+        "compressor_starts",
+        "sg_ready_state",
+    }
+}
+
 
 def _platform(module: ModuleType) -> str:
     """Return the platform domain a module provides entities for."""
@@ -151,7 +162,7 @@ def test_english_matches_strings() -> None:
     )
 
 
-@pytest.mark.parametrize("module", [binary_sensor, number], ids=_platform)
+@pytest.mark.parametrize("module", [binary_sensor, number, sensor], ids=_platform)
 def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
     """Every custom platform icon belongs in icons.json.
 
@@ -169,6 +180,18 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
     translated_icons = json.loads(_ICONS_FILE.read_text(encoding="utf-8"))[
         "entity"
     ].get(platform, {})
+    custom_icon_snapshot = _CUSTOM_ICON_TRANSLATION_KEYS.get(platform)
+    if custom_icon_snapshot is None:
+        required_custom_icons = {
+            description.translation_key
+            for description in descriptions
+            if description.translation_key is not None
+            and description.device_class is None
+        }
+        unexpected_custom_icons: list[str] = []
+    else:
+        required_custom_icons = custom_icon_snapshot
+        unexpected_custom_icons = sorted(set(translated_icons) - custom_icon_snapshot)
 
     hardcoded = sorted(
         f"{description.key} -> {description.translation_key}"
@@ -176,34 +199,46 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
         if description.icon is not None
     )
     missing = sorted(
-        {
-            description.translation_key
-            for description in descriptions
-            if description.translation_key is not None
-            and description.device_class is None
-            and not translated_icons.get(description.translation_key, {}).get(
-                "default"
-            )
-        }
+        key
+        for key in required_custom_icons
+        if not translated_icons.get(key, {}).get("default")
     )
-    device_class_overrides = sorted(
-        {
-            description.translation_key
-            for description in descriptions
-            if description.translation_key is not None
-            and description.device_class is not None
-            and description.translation_key in translated_icons
-        }
-    )
+    device_class_overrides = sorted({
+        description.translation_key
+        for description in descriptions
+        if description.translation_key is not None
+        and description.device_class is not None
+        and description.translation_key in translated_icons
+    })
     orphaned = sorted(set(translated_icons) - translation_keys)
+    device_classes_by_key = {
+        key: {
+            description.device_class
+            for description in descriptions
+            if description.translation_key == key
+        }
+        for key in translation_keys
+    }
+    inconsistent_device_classes = {
+        key: sorted(str(device_class) for device_class in device_classes)
+        for key, device_classes in device_classes_by_key.items()
+        if len(device_classes) > 1
+    }
 
     assert not hardcoded, f"{platform} descriptions with hardcoded icons: {hardcoded}"
     assert not missing, f"{platform} descriptions without icon translations: {missing}"
+    assert not unexpected_custom_icons, (
+        f"unexpected {platform} custom icon translations: {unexpected_custom_icons}"
+    )
     assert not device_class_overrides, (
         f"{platform} device-class descriptions with icon translations: "
         f"{device_class_overrides}"
     )
     assert not orphaned, f"orphaned {platform} icon translations: {orphaned}"
+    assert not inconsistent_device_classes, (
+        f"{platform} translation keys with inconsistent device classes: "
+        f"{inconsistent_device_classes}"
+    )
 
 
 def test_english_config_flow_matches_strings() -> None:

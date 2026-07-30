@@ -273,6 +273,17 @@
             "heating_curve_rise_hk3": {
                 "default": "mdi:chart-bell-curve-cumulative"
             }
+        },
+        "sensor": {
+            "active_error": {
+                "default": "mdi:alert-circle"
+            },
+            "compressor_starts": {
+                "default": "mdi:restart"
+            },
+            "sg_ready_state": {
+                "default": "mdi:solar-power"
+            }
         }
     }
 }
