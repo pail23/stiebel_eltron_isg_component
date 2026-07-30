@@ -5,8 +5,11 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import sensor as sensor_module
 from custom_components.stiebel_eltron_isg.const import (
@@ -29,9 +32,11 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
+    DOMAIN,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
+    PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
     PRODUCED_SOLAR_HEATING_TOTAL,
@@ -41,6 +46,7 @@ from custom_components.stiebel_eltron_isg.const import (
     PRODUCED_WATER_HEATING_TOTAL,
     TARGET_TEMPERATURE_HK1,
 )
+from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import (
     ENERGY_DAILY_SENSOR_TYPES,
     LWZ_ENERGY_DAILY_SENSOR_TYPES,
@@ -235,6 +241,73 @@ def test_daily_energy_sensors_are_opt_in_and_excluded_from_statistics(
         assert description.device_class == SensorDeviceClass.ENERGY
         assert description.state_class is None
         assert description.entity_registry_enabled_default is False
+        assert description.entity_registry_visible_default is True
+
+
+def test_every_today_energy_description_uses_the_opt_in_contract() -> None:
+    """No inline Today description may bypass the shared statistics contract."""
+    expected = {
+        description.key
+        for description in (ENERGY_DAILY_SENSOR_TYPES + LWZ_ENERGY_DAILY_SENSOR_TYPES)
+    }
+    discovered = {
+        description.key
+        for value in vars(sensor_module).values()
+        if isinstance(value, (list, tuple))
+        for description in value
+        if isinstance(description, sensor_module.StiebelEltronSensorEntityDescription)
+        and description.key.endswith("_today")
+    }
+
+    assert discovered == expected
+
+
+async def test_existing_daily_energy_registry_entry_stays_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The new default must not disable an entity a user already has."""
+    mock_config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    existing = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, PRODUCED_HEATING_TODAY),
+        config_entry=mock_config_entry,
+        suggested_object_id="produced_heating_today",
+    )
+    assert existing.disabled_by is None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    current = registry.async_get(existing.entity_id)
+    assert current is not None
+    assert current.disabled_by is None
+    assert hass.states.get(current.entity_id) is not None
+
+
+async def test_new_daily_energy_registry_entry_is_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A fresh Today entity is registered but not added to the state machine."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    current = registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, PRODUCED_HEATING_TODAY),
+    )
+    assert current is not None
+    entry = registry.async_get(current)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entry.entity_id) is None
 
 
 CUMULATIVE_ENERGY_KEYS = {

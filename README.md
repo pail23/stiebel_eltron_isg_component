@@ -81,19 +81,21 @@ stay enabled after the update, but no longer expose a state class.
 
 If a `Today` entity is configured in the Energy dashboard, replace it with the
 corresponding enabled cumulative entity. For example, replace **Produced Heating
-Today** with **Produced Heating** (the ISG `day_and_total` register) or **Produced
-Heating Total**; the same naming pattern applies to consumed and water-heating
-energy. Entity ids depend on the installation and language, so select by the entity
-name under **Settings → Devices & services → Entities**. Statistics already stored
-under the old `Today` entity are not transferred to the replacement.
+Today** with **Produced Heating**. This preferred `day_and_total` counter includes
+the current day's fractional energy while remaining cumulative. **Produced Heating
+Total** is also cumulative but is the whole-kWh lifetime counter updated when the
+day value is transferred. The same naming pattern applies to consumed and
+water-heating energy. Entity ids depend on the installation and language, so select
+by the entity name under **Settings → Devices & services → Entities**. Statistics
+already stored under the old `Today` entity are not transferred to the replacement.
 
-Home Assistant may offer a `state_class_removed` repair under **Developer Tools →
-Statistics** for a `Today` entity that previously generated statistics. Deleting
-that invalid statistic removes its long-term statistics, not the entity's ordinary
-state history. To derive a daily value, create a Home Assistant `utility_meter`
-helper with a daily cycle from the cumulative source. Users who still need the raw
-operational `Today` value can enable it manually under **Settings → Devices &
-services → Entities**.
+Home Assistant may offer a fixable `state_class_removed` issue under **Developer
+Tools → Statistics** for a `Today` entity that previously generated statistics.
+Deleting that invalid statistic removes its long-term statistics, not the entity's
+ordinary state history. To derive a daily value, create a Home Assistant
+`utility_meter` helper with a daily cycle from the cumulative source. Users who
+still need the raw operational `Today` value can enable it manually under
+**Settings → Devices & services → Entities**.
 
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be
