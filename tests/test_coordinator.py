@@ -111,6 +111,40 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
     assert len(recovery_logs) == 1
 
 
+async def test_equal_data_refreshes_still_notify_entities(
+    hass,
+    mock_config_entry,
+    mock_modbus_connection,
+) -> None:
+    """Every successful device poll must notify entities.
+
+    Register values are cached on the API client while coordinator data is
+    always an empty dict. Disabling ``always_update`` would therefore suppress
+    every listener update after the first successful poll.
+    """
+    api = SimpleNamespace(async_update=AsyncMock())
+    coordinator = StiebelEltronDataCoordinator(
+        hass,
+        mock_config_entry,
+        api,
+        StiebelEltronConnectionParams(
+            host="isg.local",
+            model=ControllerModel.WPM_3,
+            connection=mock_modbus_connection,
+        ),
+    )
+    listener = MagicMock()
+    remove_listener = coordinator.async_add_listener(listener)
+
+    await coordinator.async_refresh()
+    await coordinator.async_refresh()
+
+    assert coordinator.data == {}
+    assert api.async_update.await_count == 2
+    assert listener.call_count == 2
+    remove_listener()
+
+
 def test_for_unit_uses_the_active_connection() -> None:
     """Unit access must be delegated to the shared connection."""
     coordinator = _coordinator(SimpleNamespace())
