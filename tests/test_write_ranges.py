@@ -113,11 +113,11 @@ def test_advertised_write_range_is_accepted(
     # this project already hit in issue #607.
     assert validator is not False, "entity writes a field the library marks read-only"
 
-    if validator is True:
-        pytest.skip("library field has no range validator")
-
-    validator(minimum)
-    validator(maximum)
+    # ``True`` accepts values as-is, so both advertised bounds are accepted by
+    # construction. Callable validators need to prove that explicitly.
+    if validator is not True:
+        validator(minimum)
+        validator(maximum)
 
 
 @pytest.mark.parametrize(
