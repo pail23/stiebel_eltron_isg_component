@@ -46,6 +46,7 @@ _COMPONENT_DIR = (
     pathlib.Path(__file__).parent.parent / "custom_components" / "stiebel_eltron_isg"
 )
 _STRINGS_FILE = _COMPONENT_DIR / "strings.json"
+_ICONS_FILE = _COMPONENT_DIR / "icons.json"
 _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 
@@ -148,6 +149,32 @@ def test_english_matches_strings() -> None:
         f"{_RUNTIME_FILE.name} entity keys differ from "
         f"{_STRINGS_FILE.name}: {differences}"
     )
+
+
+def test_number_icons_use_icon_translations() -> None:
+    """Every number icon belongs in icons.json instead of entity state."""
+    descriptions = {
+        description.translation_key: description
+        for description in _descriptions(number)
+        if description.translation_key is not None
+    }
+    translated_icons = json.loads(_ICONS_FILE.read_text(encoding="utf-8"))[
+        "entity"
+    ].get("number", {})
+
+    hardcoded = sorted(
+        description.key
+        for description in descriptions.values()
+        if description.icon is not None
+    )
+    missing = sorted(
+        key for key in descriptions if not translated_icons.get(key, {}).get("default")
+    )
+    orphaned = sorted(set(translated_icons) - set(descriptions))
+
+    assert not hardcoded, f"number descriptions with hardcoded icons: {hardcoded}"
+    assert not missing, f"number descriptions without icon translations: {missing}"
+    assert not orphaned, f"orphaned number icon translations: {orphaned}"
 
 
 def test_english_config_flow_matches_strings() -> None:

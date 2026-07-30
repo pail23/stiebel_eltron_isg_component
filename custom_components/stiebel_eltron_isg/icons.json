@@ -14,6 +14,95 @@
                     }
                 }
             }
+        },
+        "number": {
+            "area_cooling_flow_temperature_hysteresis": {
+                "default": "mdi:thermometer-lines"
+            },
+            "area_cooling_target_flow_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "area_cooling_target_room_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "comfort_cooling_temperature_target_hk1": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "comfort_cooling_temperature_target_hk2": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "comfort_temperature_target_hk1": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_temperature_target_hk2": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_temperature_target_hk3": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_water_temperature_target": {
+                "default": "mdi:thermometer-high"
+            },
+            "dualmode_temperature_hzg": {
+                "default": "mdi:thermometer-off"
+            },
+            "dualmode_temperature_ww": {
+                "default": "mdi:thermometer-off"
+            },
+            "eco_cooling_temperature_target_hk1": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "eco_cooling_temperature_target_hk2": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "eco_temperature_target_hk1": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_temperature_target_hk2": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_temperature_target_hk3": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_water_temperature_target": {
+                "default": "mdi:thermometer-low"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "default": "mdi:thermometer-lines"
+            },
+            "fan_cooling_target_flow_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "fan_cooling_target_room_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "fan_level_comfort": {
+                "default": "mdi:fan"
+            },
+            "fan_level_eco": {
+                "default": "mdi:fan"
+            },
+            "fan_level_manual": {
+                "default": "mdi:fan"
+            },
+            "fan_level_party": {
+                "default": "mdi:fan"
+            },
+            "heating_curve_low_end_hk1": {
+                "default": "mdi:chart-sankey"
+            },
+            "heating_curve_low_end_hk2": {
+                "default": "mdi:chart-sankey"
+            },
+            "heating_curve_rise_hk1": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "heating_curve_rise_hk2": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "heating_curve_rise_hk3": {
+                "default": "mdi:thermometer-chevron-up"
+            }
         }
     }
 }
