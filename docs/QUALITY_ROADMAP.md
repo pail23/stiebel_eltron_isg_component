@@ -83,13 +83,18 @@ links before proposing this roadmap change upstream.
 | Number and binary-sensor icon translations | Number commit precedes binary-sensor commit in one reviewable stack | Moves hardcoded icons to `icons.json`, preserves canonical device-class icons and tests duplicate keys | `codex/binary-sensor-icon-translations` at `6e5b551`; full suite plus 25 reviewed translation tests |
 | Sensor icon translations | After both device-class and the Number/binary icon packages | Removes the final hardcoded entity icons, keeps three reviewed custom icons and otherwise uses canonical device-class icons | `codex/sensor-icon-translations-v2` at `52bd1d9`; 732 passed, one skipped |
 | Release artifact verification | Independent | Tracked-file-only HACS ZIP, source-byte verification, deterministic metadata and immutable action pins; publication order remains separate | `codex/release-artifact-verification` at `84f6893`; 746 passed, one skipped |
+| CI action pinning | After release artifact verification to avoid overlapping workflow edits | Pins every remote validation action to an immutable commit and enforces the policy in a test | `codex/pin-ci-actions` at `5eb7eaa`; 747 passed, one skipped |
+| Brand validation | Independent; merge before the Quality Scale evidence package | Removes the stale HACS `brands` exception now that all four official assets exist | `codex/enforce-brand-validation` at `b18b35d`; official 1x/2x icon and logo assets downloaded and dimensions verified |
 | Type-checking baseline | Independent | CI mypy gate for all 17 integration modules, without claiming full strict typing | `codex/typing-baseline` at `deac382`; mypy and Ruff clean, 726 passed, one skipped |
 | Typed dependency metadata | Independent change in `python-stiebel-eltron`; release a new version before the strict integration package | Adds the PEP 561 marker and typed-package classifier without widening the library API | `codex/add-py-typed` at `c1e694c`; strict mypy and Ruff clean, 24 tests passed, marker verified in sdist and wheel |
 | Strict integration typing | After the baseline and a newly versioned typed dependency release | Enables mypy strict mode for all 17 modules and closes every resulting integration error | `codex/strict-typing-followup` at `589ea5c`; strict mypy and Ruff clean, 726 passed, one skipped; dependency, manifest and lock version bump intentionally pending |
-| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim; async library entry points pinned by tests | `codex/docs-supported-functions` includes `10f2960`; schema and dependency-contract tests pass |
-| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `10f2960`; YAML examples and documentation tests pass |
+| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim; async library entry points pinned by tests | `codex/docs-supported-functions` includes `10f2960`; 732 passed, one skipped |
+| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `10f2960`; 732 passed, one skipped |
 | Capability-matrix design | Maintainer agreement before generator or model gates | Evidence model only; no runtime or entity-identity change | `codex/design-capability-matrix` at `17b2368`; review corrections and diff validation complete |
-| Energy counter semantics audit | After #618 | Separate state-class/statistics risk review, including unit migration behavior | Not started; create a dedicated issue instead of leaving it as a footnote |
+| Coordinator equal-data update contract | Independent | Proves `always_update=True` is required because register state lives in the API client while coordinator data stays `{}` | `codex/coordinator-always-update-contract` at `56d41c5`; 727 passed, one skipped |
+| Raw daily energy default | After #618 | Keeps misleading raw day registers opt-in for new entities while cumulative statistics stay enabled | `codex/disable-raw-day-energy` at `a9a80e3`; 731 passed, one skipped |
+| Unsupported-controller Repair | Independent | Creates one actionable Repair with the reported model ID and removes it after library support is added | `codex/unsupported-controller-repair` at `afa4563`; 728 passed, one skipped |
+| Energy counter semantics audit | After #618 | Confirms raw day residues must not compile sums; `day_and_total` gives a monotonic, whole-kWh cumulative source whose per-day deltas can be quantized but whose long-term error stays below the retained residue | Audit complete against the integration, `pystiebeleltron` and archived manufacturer/ISG evidence; no additional counter transform recommended |
 
 Icon migration remains split by platform even when Number and binary-sensor
 commits travel as one reviewable stack. The Sensor package is stacked after
@@ -226,10 +231,12 @@ behavior rather than hide known defects.
   locally; sensor icons follow the device-class work.
 - [ ] Keep raw ISG day energy registers visible without compiling invalid
   long-term sums; document `day_and_total` as the cumulative Energy Dashboard
-  source. Implemented across #618 and #622.
-- [ ] Add Repairs only for conditions on which the user can act, such as a
-  controller/firmware incompatibility with a documented remedy. Do not create
-  Repairs for unsupported hardware that the user cannot fix.
+  source. Implemented across #618 and #622; a follow-up keeps the raw values
+  disabled by default for newly created entities.
+- [ ] Add Repairs only for conditions on which the user can act. A local
+  package reports an unknown controller model ID, directs the user to update
+  first and then report the ID, and clears itself after library support lands.
+  Transient connectivity failures deliberately remain ordinary setup retries.
 - [ ] Define the single-device interpretation of dynamic/stale device rules and
   test config-entry removal and re-add behavior.
 - [ ] Document that ISG firmware cannot currently be updated through this
@@ -247,8 +254,9 @@ custom integration.
   its PEP 561 marker, followed by the integration dependency and lock-file
   bump.
 - [ ] Reduce broad Ruff exemptions and lower the McCabe complexity ceiling.
-- [ ] Audit whether `always_update=True` is still needed for every coordinator
-  update.
+- [ ] Keep `always_update=True`: the audit confirmed it is required because
+  register state lives in the dependency's API client and coordinator data is
+  always `{}`. A local behavior test prevents its accidental removal.
 - [ ] Add release artifact verification so the ZIP contents and manifest
   version are checked before publication. Artifact verification before upload
   is prepared locally; changing the workflow to publish the release only after
