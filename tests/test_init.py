@@ -175,6 +175,12 @@ async def test_async_setup_entry_cannot_connect(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_async_setup_entry_modbus_error(
@@ -190,6 +196,12 @@ async def test_async_setup_entry_modbus_error(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_async_setup_entry_unknown_model(
