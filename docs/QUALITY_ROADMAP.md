@@ -64,26 +64,28 @@ The first implementation batch has progressed as follows:
   the behavior coverage it enforces has merged.
 
 Issue #629 is the live checklist for merge order and PR status. This document
-keeps the longer-term engineering scope and evidence requirements.
+keeps the longer-term engineering scope and evidence requirements. A checkbox
+is marked only after the corresponding change is merged and released; an open
+PR reference records where the work lives without marking it complete.
 
-### Prepared follow-up queue
+### Local follow-up queue
 
-The following packages are prepared and verified locally, but have not been
-published as pull requests. They remain proposals until their diffs, ordering
-and PR text have been reviewed:
+The following packages have not been published as pull requests. Local refs
+make the prepared artifacts reproducible during review; replace them with PR
+links before proposing this roadmap change upstream.
 
-| Proposed package | Dependency and scope |
-| --- | --- |
-| Offline-to-online recovery test | Independent behavior test on current `main`; no runtime change |
-| Number entity semantics | Assigns `EntityCategory.CONFIG` to writable Number entities and records the wider category/default-enable audit |
-| Pressure and volume-flow device classes | Independent sensor metadata correction; avoids changing existing counter statistics |
-| Number icon translations | First entity-icon migration with a source/translation drift test |
-| Binary-sensor icon translations | Stacked after the Number icon package; retains canonical device-class icons |
-| Release artifact verification | Independent tracked-file-only, reproducible HACS ZIP builder and verification |
-| Type-checking baseline | Independent CI gate for all integration modules, including `config_flow.py`; deliberately not yet a `strict` claim |
-| Quality Scale evidence | Follows #622; declares only evidenced `done`/`exempt` rules and explicitly makes no official tier claim |
-| Supported functions and examples | Follows #622 and the evidence file; documents controllers, platforms, use cases and safe automation examples |
-| Capability-matrix design | Design only; needs maintainer agreement before code generation or model gates change |
+| Proposed package | Dependency | Scope | Local ref and verification |
+| --- | --- | --- | --- |
+| Offline-to-online recovery test | Independent | Real coordinator success/failure/recovery transition; tests only | `codex/test-offline-recovery` at `fc2c53b`; full suite plus reviewed targeted test |
+| Number entity semantics | Independent; merge after behavior coverage for easier review | `EntityCategory.CONFIG` for writable Number entities and wider category/default-enable audit | `codex/entity-semantics` at `ad2ed98`; full suite plus 53 reviewed category cases |
+| Pressure and volume-flow device classes | Independent | Sensor metadata correction; no counter state-class change | `codex/sensor-device-classes` at `5bba6a3`; full suite plus reviewed flow-unit test |
+| Number and binary-sensor icon translations | Number commit precedes binary-sensor commit in one reviewable stack | Moves hardcoded icons to `icons.json`, preserves canonical device-class icons and tests duplicate keys | `codex/binary-sensor-icon-translations` at `667732f`; full suite plus 25 reviewed translation tests |
+| Release artifact verification | Independent | Tracked-file-only HACS ZIP, source-byte verification and deterministic metadata; publication order remains separate | `codex/release-artifact-verification` at `ab3674f`; 738 passed, one skipped |
+| Type-checking baseline | Independent | CI mypy gate for all 17 integration modules, without claiming full strict typing | `codex/typing-baseline` at `5b70ac9`; mypy and Ruff clean, 726 passed, one skipped |
+| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim | `codex/docs-supported-functions` includes `0574f7a`; schema tests pass |
+| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `0574f7a`; YAML examples and documentation tests pass |
+| Capability-matrix design | Maintainer agreement before generator or model gates | Evidence model only; no runtime or entity-identity change | `codex/design-capability-matrix` at `17b2368`; review corrections and diff validation complete |
+| Energy counter semantics audit | After #618 | Separate state-class/statistics risk review, including unit migration behavior | Not started; create a dedicated issue instead of leaving it as a footnote |
 
 The icon packages are intentionally split by platform. Sensor icons should be
 handled only after the device-class package, so canonical Home Assistant icons
@@ -133,9 +135,9 @@ behavior rather than hide known defects.
 - [x] Reach full config-flow coverage. Implemented in #621.
 - [ ] Add local custom-integration brand assets and remove `ignore: brands`
   from HACS validation. Asset provenance and trademark use must be explicit.
-- [ ] Add removal instructions. Implemented in #622; check after merge.
+- [ ] Add removal instructions. Implemented in #622.
 - [ ] Describe the integration and its prerequisites in user language.
-  Implemented in #622; check after merge.
+  Implemented in #622.
 - [x] Remove the unused `options.init.scan_interval` translations because no
   options flow exposes them. Implemented in #621.
 - [ ] Add `quality_scale.yaml` with evidence-backed `done` and `exempt`
@@ -173,7 +175,7 @@ behavior rather than hide known defects.
   entity availability and log transition, without testing Home Assistant's
   internals. Prepared locally as a test-only package.
 - [ ] Document every installation parameter (`host`, `port`) and every actual
-  configuration option. Implemented in #622; check after merge.
+  configuration option. Implemented in #622.
 - [ ] Remove the remaining skipped unload test with deterministic cleanup after
   the config-flow reconfigure skips are addressed in the Bronze work.
 
@@ -202,8 +204,7 @@ behavior rather than hide known defects.
   cases and automation examples. The main rewrite is in #622; the structured
   platform/use-case/example follow-up is prepared locally.
 - [ ] Remove or replace the stale `info.md`; it currently describes only two
-  sensors and an obsolete installation layout. Implemented in #622; check
-  after merge.
+  sensors and an obsolete installation layout. Implemented in #622.
 - [ ] Build an entity capability matrix per controller model from the library,
   integration descriptions and reverse-engineered ISG object database evidence.
 - [ ] Assign `EntityCategory.CONFIG` and `EntityCategory.DIAGNOSTIC` where the
@@ -220,7 +221,7 @@ behavior rather than hide known defects.
   locally; sensor icons follow the device-class work.
 - [ ] Keep raw ISG day energy registers visible without compiling invalid
   long-term sums; document `day_and_total` as the cumulative Energy Dashboard
-  source. Implemented across #618 and #622; check after both merge.
+  source. Implemented across #618 and #622.
 - [ ] Add Repairs only for conditions on which the user can act, such as a
   controller/firmware incompatibility with a documented remedy. Do not create
   Repairs for unsupported hardware that the user cannot fix.
@@ -228,7 +229,7 @@ behavior rather than hide known defects.
   test config-entry removal and re-add behavior.
 - [ ] Document that ISG firmware cannot currently be updated through this
   Modbus integration and that updates are handled by Stiebel Eltron support.
-  Implemented in #622; check after merge.
+  Implemented in #622.
 
 ## Later engineering improvements
 
