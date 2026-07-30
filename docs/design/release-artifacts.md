@@ -21,8 +21,8 @@ The builder:
 The workflows pin third-party actions to reviewed commit SHAs and grant the
 `GITHUB_TOKEN` only the permissions each job needs. Actions that publish no
 immutable version tag are annotated with their tracked branch and review date.
-The existing weekly Dependabot configuration watches GitHub Actions for newer
-revisions.
+The existing weekly Dependabot configuration watches tagged GitHub Actions for
+newer versions; branch-only pins still require a manual review and date refresh.
 
 The checked-in manifest version is not required to equal the release tag. That
 is deliberate and preserves the current release process: the tag version
