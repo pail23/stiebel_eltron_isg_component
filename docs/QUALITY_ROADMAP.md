@@ -82,10 +82,12 @@ links before proposing this roadmap change upstream.
 | Runtime duration device class | After the pressure/flow metadata package for a linear sensor-semantics review | Canonical hour unit and `DURATION` class for six runtime keys; counter state classes deliberately unchanged | `codex/runtime-duration-device-class` at `93e86a2`; 729 passed, one skipped |
 | Number and binary-sensor icon translations | Number commit precedes binary-sensor commit in one reviewable stack | Moves hardcoded icons to `icons.json`, preserves canonical device-class icons and tests duplicate keys | `codex/binary-sensor-icon-translations` at `6e5b551`; full suite plus 25 reviewed translation tests |
 | Sensor icon translations | After both device-class and the Number/binary icon packages | Removes the final hardcoded entity icons, keeps three reviewed custom icons and otherwise uses canonical device-class icons | `codex/sensor-icon-translations-v2` at `52bd1d9`; 732 passed, one skipped |
-| Release artifact verification | Independent | Tracked-file-only HACS ZIP, source-byte verification and deterministic metadata; publication order remains separate | `codex/release-artifact-verification` at `a8817ba`; 746 passed, one skipped |
+| Release artifact verification | Independent | Tracked-file-only HACS ZIP, source-byte verification, deterministic metadata and immutable action pins; publication order remains separate | `codex/release-artifact-verification` at `84f6893`; 746 passed, one skipped |
 | Type-checking baseline | Independent | CI mypy gate for all 17 integration modules, without claiming full strict typing | `codex/typing-baseline` at `deac382`; mypy and Ruff clean, 726 passed, one skipped |
-| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim | `codex/docs-supported-functions` includes `0574f7a`; schema tests pass |
-| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `0574f7a`; YAML examples and documentation tests pass |
+| Typed dependency metadata | Independent change in `python-stiebel-eltron`; release a new version before the strict integration package | Adds the PEP 561 marker and typed-package classifier without widening the library API | `codex/add-py-typed` at `c1e694c`; strict mypy and Ruff clean, 24 tests passed, marker verified in sdist and wheel |
+| Strict integration typing | After the baseline and a newly versioned typed dependency release | Enables mypy strict mode for all 17 modules and closes every resulting integration error | `codex/strict-typing-followup` at `589ea5c`; strict mypy and Ruff clean, 726 passed, one skipped; dependency, manifest and lock version bump intentionally pending |
+| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim; async library entry points pinned by tests | `codex/docs-supported-functions` includes `10f2960`; schema and dependency-contract tests pass |
+| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `10f2960`; YAML examples and documentation tests pass |
 | Capability-matrix design | Maintainer agreement before generator or model gates | Evidence model only; no runtime or entity-identity change | `codex/design-capability-matrix` at `17b2368`; review corrections and diff validation complete |
 | Energy counter semantics audit | After #618 | Separate state-class/statistics risk review, including unit migration behavior | Not started; create a dedicated issue instead of leaving it as a footnote |
 
@@ -239,9 +241,11 @@ behavior rather than hide known defects.
 These are valuable but are not required to claim a Silver- or Gold-equivalent
 custom integration.
 
-- [ ] Enable strict type checking for every integration module and remove the
-  current config-flow exclusion. A stricter all-module CI baseline is prepared
-  locally; full `strict` remains open.
+- [ ] Enable strict type checking for every integration module. The all-module
+  CI baseline and a full strict follow-up are prepared locally. The strict
+  package deliberately waits for a new `pystiebeleltron` release containing
+  its PEP 561 marker, followed by the integration dependency and lock-file
+  bump.
 - [ ] Reduce broad Ruff exemptions and lower the McCabe complexity ceiling.
 - [ ] Audit whether `always_update=True` is still needed for every coordinator
   update.
