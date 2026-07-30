@@ -54,6 +54,9 @@ jobs:
 
         - name: "Format with ruff"
           run: uv run --prerelease=allow ruff format . --check
+
+        - name: "Run mypy"
+          run: uv run --prerelease=allow mypy custom_components/stiebel_eltron_isg
   tests:
     runs-on: "ubuntu-latest"
     name: Run tests
