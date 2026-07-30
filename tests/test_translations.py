@@ -156,7 +156,8 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
     """Every custom platform icon belongs in icons.json.
 
     Descriptions with a device class intentionally keep Home Assistant's
-    canonical device-class icon instead of overriding it.
+    canonical device-class icon. Both a hardcoded icon and an icon translation
+    would override that canonical icon and are rejected.
     """
     platform = _platform(module)
     descriptions = _descriptions(module)
