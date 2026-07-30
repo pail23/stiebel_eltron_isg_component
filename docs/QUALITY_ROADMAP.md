@@ -80,6 +80,7 @@ links before proposing this roadmap change upstream.
 | Number entity semantics | Independent; merge after behavior coverage for easier review | `EntityCategory.CONFIG` for writable Number entities and wider category/default-enable audit | `codex/entity-semantics` at `c85e7e0`; full suite plus 54 reviewed category cases |
 | Pressure and volume-flow device classes | Independent | Sensor metadata correction; no counter state-class change | `codex/sensor-device-classes` at `a782bae`; full suite plus reviewed flow-unit test |
 | Number and binary-sensor icon translations | Number commit precedes binary-sensor commit in one reviewable stack | Moves hardcoded icons to `icons.json`, preserves canonical device-class icons and tests duplicate keys | `codex/binary-sensor-icon-translations` at `6e5b551`; full suite plus 25 reviewed translation tests |
+| Sensor icon translations | After the device-class and Number/binary icon packages | Removes the final hardcoded entity icons, keeps nine reviewed custom icons and otherwise uses canonical device-class icons | `codex/sensor-icon-translations` at `46a481b`; 731 passed, one skipped |
 | Release artifact verification | Independent | Tracked-file-only HACS ZIP, source-byte verification and deterministic metadata; publication order remains separate | `codex/release-artifact-verification` at `a8817ba`; 746 passed, one skipped |
 | Type-checking baseline | Independent | CI mypy gate for all 17 integration modules, without claiming full strict typing | `codex/typing-baseline` at `deac382`; mypy and Ruff clean, 726 passed, one skipped |
 | Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim | `codex/docs-supported-functions` includes `0574f7a`; schema tests pass |
@@ -88,9 +89,9 @@ links before proposing this roadmap change upstream.
 | Energy counter semantics audit | After #618 | Separate state-class/statistics risk review, including unit migration behavior | Not started; create a dedicated issue instead of leaving it as a footnote |
 
 Icon migration remains split by platform even when Number and binary-sensor
-commits travel as one reviewable stack. Sensor icons should be handled only
-after the device-class package, so canonical Home Assistant icons are not
-replaced by unnecessary custom translations.
+commits travel as one reviewable stack. The Sensor package is stacked after
+the device-class work, so canonical Home Assistant icons are not replaced by
+unnecessary custom translations.
 
 ## Correctness work
 
