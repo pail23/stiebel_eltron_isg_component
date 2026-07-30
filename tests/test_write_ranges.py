@@ -97,6 +97,7 @@ def _write_range_cases() -> list[Any]:
                     )
                 )
 
+    assert cases, "no writable entity ranges were collected"
     return cases
 
 
