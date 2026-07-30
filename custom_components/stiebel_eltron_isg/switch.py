@@ -11,9 +11,8 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import ControllerModel
 
-from .const import CIRCULATION_PUMP, SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
+from .const import SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
 
@@ -67,18 +66,6 @@ SWITCH_TYPES = [
     ),
 ]
 
-# Only for controllers that expose a domestic hot water circulation pump.
-CIRCULATION_PUMP_SWITCH_TYPES = [
-    StiebelEltronSwitchEntityDescription(
-        key=CIRCULATION_PUMP,
-        translation_key=CIRCULATION_PUMP,
-        device_class=SwitchDeviceClass.SWITCH,
-        modbus_register=lambda api: api.system_state.dhw_circulation_pump,
-        write_component="system_state",
-        write_field="dhw_circulation_pump",
-    ),
-]
-
 
 async def async_setup_entry(
     _hass: HomeAssistant,
@@ -96,17 +83,6 @@ async def async_setup_entry(
         )
         for description in SWITCH_TYPES
     ]
-
-    if coordinator.model in (ControllerModel.LWZ_R290, ControllerModel.WPMsystem):
-        # Add the circulation pump switch for WPM systems
-        entities.extend(
-            StiebelEltronISGSwitch(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in CIRCULATION_PUMP_SWITCH_TYPES
-        )
 
     async_add_devices(entities)
 
@@ -162,11 +138,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        if self.entity_description.key in (
-            CIRCULATION_PUMP,
-            SG_READY_INPUT_1,
-            SG_READY_INPUT_2,
-        ):
+        if self.entity_description.key in (SG_READY_INPUT_1, SG_READY_INPUT_2):
             # These writable switches stay operable even when the device does
             # not report a read-back value, but must still go unavailable when
             # the coordinator can no longer reach the device.

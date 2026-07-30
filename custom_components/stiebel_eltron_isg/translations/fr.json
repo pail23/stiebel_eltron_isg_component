@@ -4,12 +4,10 @@
             "user": {
                 "description": "Entrez les détails de connexion pour votre pompe à chaleur Stiebel Eltron ISG.",
                 "data": {
-                    "name": "Nom",
                     "host": "L'adresse IP de votre ISG",
                     "port": "Le port TCP utilisé pour communiquer avec l'ISG"
                 },
                 "data_description": {
-                    "name": "Un nom pour cette instance de pompe à chaleur.",
                     "host": "L'adresse IP ou le nom d'hôte du serveur web ISG Stiebel Eltron.",
                     "port": "Le port TCP Modbus de l'ISG (défaut : 502)."
                 }
@@ -34,18 +32,6 @@
         "abort": {
             "already_configured": "Périphérique déjà configuré",
             "reconfigure_successful": "Les détails de connexion ont été mis à jour avec succès."
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervalle d'interrogation (secondes)"
-                },
-                "data_description": {
-                    "scan_interval": "La fréquence à laquelle les registres Modbus sont interrogés, en secondes."
-                }
-            }
         }
     },
     "entity": {
@@ -346,6 +332,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Pompe de circulation"
+            },
             "pump_on_hk1": {
                 "name": "Pompe CC 1"
             },
@@ -601,9 +590,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready entrée 2"
-            },
-            "circulation_pump": {
-                "name": "Pompe de circulation"
             }
         },
         "button": {

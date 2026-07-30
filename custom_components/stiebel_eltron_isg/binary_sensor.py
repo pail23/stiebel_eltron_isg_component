@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
+    BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
@@ -19,6 +20,7 @@ from .const import (
     BUFFER_4_CHARGING_PUMP,
     BUFFER_5_CHARGING_PUMP,
     BUFFER_6_CHARGING_PUMP,
+    CIRCULATION_PUMP,
     COMPRESSOR_ON,
     COOLING_MODE,
     DHW_CHARGING_PUMP,
@@ -405,6 +407,18 @@ WPM_BINARY_SENSOR_TYPES = [
     ),
 ]
 
+# Only WPMsystem and LWZ_R290 are confirmed to expose this system-state field,
+# see #607. Do not widen the model gate without controller-specific evidence.
+# pystiebeleltron exposes no matching writable WPM/LWZ parameter.
+CIRCULATION_PUMP_BINARY_SENSOR_TYPES = [
+    StiebelEltronBinarySensorEntityDescription(
+        key=CIRCULATION_PUMP,
+        translation_key=CIRCULATION_PUMP,
+        device_class=BinarySensorDeviceClass.RUNNING,
+        modbus_register=lambda api: api.system_state.dhw_circulation_pump,
+    ),
+]
+
 
 LWZ_BINARY_SENSOR_TYPES = [
     StiebelEltronBinarySensorEntityDescription(
@@ -567,6 +581,17 @@ async def async_setup_entry(
             )
             for description in LWZ_BINARY_SENSOR_TYPES
         ]
+
+    if coordinator.model in (ControllerModel.LWZ_R290, ControllerModel.WPMsystem):
+        entities.extend(
+            StiebelEltronISGBinarySensor(
+                coordinator,
+                entry,
+                description,
+            )
+            for description in CIRCULATION_PUMP_BINARY_SENSOR_TYPES
+        )
+
     async_add_devices(entities)
 
 

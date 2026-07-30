@@ -131,6 +131,8 @@ def test_climate_description_rejects_legacy_register_tokens() -> None:
             actual_temperature_register=[valid],
             eco_target_temp_register=valid,
             comfort_target_temp_register=valid,
+            min_temp=5,
+            max_temp=30,
         )
     with pytest.raises(TypeError, match="eco_target_temp_register"):
         StiebelEltronClimateEntityDescription(
@@ -139,6 +141,8 @@ def test_climate_description_rejects_legacy_register_tokens() -> None:
             actual_temperature_register=[valid],
             eco_target_temp_register="legacy",
             comfort_target_temp_register=valid,
+            min_temp=5,
+            max_temp=30,
         )
     with pytest.raises(TypeError, match="comfort_target_temp_register"):
         StiebelEltronClimateEntityDescription(
@@ -147,6 +151,8 @@ def test_climate_description_rejects_legacy_register_tokens() -> None:
             actual_temperature_register=[valid],
             eco_target_temp_register=valid,
             comfort_target_temp_register="legacy",
+            min_temp=5,
+            max_temp=30,
         )
 
 

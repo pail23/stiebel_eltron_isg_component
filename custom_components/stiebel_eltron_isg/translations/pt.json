@@ -4,12 +4,10 @@
             "user": {
                 "description": "Introduza os dados de ligação para a sua bomba de calor Stiebel Eltron ISG.",
                 "data": {
-                    "name": "Nome",
                     "host": "O endereço IP do ISG",
                     "port": "Porta TCP para ligação ao ISG"
                 },
                 "data_description": {
-                    "name": "Um nome para esta instância da bomba de calor.",
                     "host": "O endereço IP ou nome de host do servidor web ISG Stiebel Eltron.",
                     "port": "A porta TCP Modbus do ISG (predefinição: 502)."
                 }
@@ -34,18 +32,6 @@
         "abort": {
             "already_configured": "Equipamento já se encontra configurado.",
             "reconfigure_successful": "Detalhes de conexão atualizados com sucesso."
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Intervalo de pesquisa (segundos)"
-                },
-                "data_description": {
-                    "scan_interval": "Com que frequência os registos Modbus são consultados, em segundos."
-                }
-            }
         }
     },
     "entity": {
@@ -346,6 +332,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Bomba de circulação"
+            },
             "pump_on_hk1": {
                 "name": "Bomba CC 1"
             },
@@ -601,9 +590,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready entrada 2"
-            },
-            "circulation_pump": {
-                "name": "Bomba de circulação"
             }
         },
         "button": {
