@@ -15,6 +15,7 @@ from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.coordinator import (
     StiebelEltronConnectionParams,
     StiebelEltronDataCoordinator,
+    coordinator_display_name,
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
@@ -60,6 +61,7 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
                 raise outcome
 
     api = SequencedApi()
+    display_name = coordinator_display_name(ControllerModel.WPM_3)
     coordinator = StiebelEltronDataCoordinator(
         hass,
         mock_config_entry,
@@ -92,15 +94,18 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
     await coordinator.async_refresh()
     assert entity.available is True
 
+    # These messages come from DataUpdateCoordinator. Keeping them here pins the
+    # ModbusError -> UpdateFailed translation: returning stale data quietly
+    # would leave the entity available and suppress both transition messages.
     outage_logs = [
         record
         for record in caplog.records
-        if "Error fetching Stiebel Eltron WPM_3 data" in record.getMessage()
+        if f"Error fetching {display_name} data" in record.getMessage()
     ]
     recovery_logs = [
         record
         for record in caplog.records
-        if record.getMessage() == "Fetching Stiebel Eltron WPM_3 data recovered"
+        if record.getMessage() == f"Fetching {display_name} data recovered"
     ]
     assert len(outage_logs) == 1
     assert len(recovery_logs) == 1
