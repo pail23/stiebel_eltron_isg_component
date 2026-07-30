@@ -73,6 +73,24 @@ To change the address later, open **Settings → Devices & services**, select th
 three-dot menu on the integration entry, and choose **Reconfigure**. Existing
 entity IDs and history are retained.
 
+## Energy and long-term statistics
+
+For the Energy Dashboard and other long-term statistics, use the cumulative
+consumed or produced energy sensor whose source combines the current day with
+the historical total (`day_and_total`). These sensors are marked as
+`total_increasing`, so Home Assistant can derive clean hourly and daily deltas
+from them.
+
+Sensors whose names end in **Today** expose the raw ISG day registers. They are
+useful on dashboards for the device's current-day value, but deliberately do
+not generate long-term sums. At midnight the ISG transfers only whole kWh to
+the total register and retains the fractional remainder in the day register.
+Treating that remainder as a reset to zero would count part of the energy
+twice.
+
+The separate **Total** sensors remain cumulative alternatives. Which energy
+entities are available depends on the connected controller.
+
 ## Removing the integration
 
 1. Open **Settings → Devices & services**.
@@ -102,6 +120,10 @@ history is retained by Home Assistant until it is deleted separately.
 The integration polls locally every 30 seconds. A failed update marks entities
 unavailable; it does not keep presenting cached values as current.
 Write errors are returned to the Home Assistant action that initiated them.
+
+The integration cannot update ISG firmware. Firmware updates are handled
+through Stiebel Eltron support. It also cannot make a register writable when
+the connected controller or firmware exposes it as read-only.
 
 ## Upgrading to 2026.7
 
