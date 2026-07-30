@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
@@ -205,6 +205,37 @@ async def test_async_setup_entry_unknown_model(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.issue_domain == DOMAIN
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_key == "unsupported_controller"
+    assert issue.translation_placeholders == {"model_id": "165"}
+
+
+async def test_supported_model_clears_a_previous_controller_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A library update that recognizes the model resolves the repair."""
+    issue_id = f"unsupported_controller_{mock_config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="unsupported_controller",
+        translation_placeholders={"model_id": "165"},
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_async_setup_entry_rejects_unhandled_model(

@@ -158,6 +158,14 @@ def test_english_config_flow_matches_strings() -> None:
     assert _key_tree(english) == _key_tree(strings)
 
 
+def test_english_repair_issues_match_strings() -> None:
+    """Runtime repair translations must carry every declared field."""
+    strings = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["issues"]
+    english = json.loads(_RUNTIME_FILE.read_text(encoding="utf-8"))["issues"]
+
+    assert _key_tree(english) == _key_tree(strings)
+
+
 def test_config_flow_strings_match_runtime_fields() -> None:
     """Config-flow strings must describe the fields and forms users can open."""
     steps = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["config"]["step"]

@@ -45,6 +45,12 @@
             "message": "Die Einstellung {field} konnte wegen eines Kommunikationsfehlers mit der Wärmepumpe nicht geschrieben werden."
         }
     },
+    "issues": {
+        "unsupported_controller": {
+            "title": "Nicht unterstütztes Reglermodell",
+            "description": "Das ISG meldet die Reglermodell-ID {model_id}, die von dieser Version der Integration nicht unterstützt wird. Aktualisieren Sie die Integration und laden Sie den Eintrag erneut. Falls das Problem bestehen bleibt, melden Sie diese Modell-ID im Issue-Tracker des Projekts."
+        }
+    },
     "entity": {
         "sensor": {
             "actual_temperature": {

@@ -9,6 +9,7 @@ import logging
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import (
@@ -18,7 +19,7 @@ from pystiebeleltron import (
     get_controller_model,
 )
 
-from .const import DEFAULT_PORT, UNIT_ID
+from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
@@ -40,6 +41,11 @@ _PLATFORMS: list[Platform] = [
     Platform.SELECT,
     Platform.CLIMATE,
 ]
+
+
+def _unsupported_controller_issue_id(entry: StiebelEltronConfigEntry) -> str:
+    """Return the stable repair issue id for a config entry."""
+    return f"unsupported_controller_{entry.entry_id}"
 
 
 async def async_setup(hass: HomeAssistant, config: dict):
@@ -70,9 +76,23 @@ async def async_setup_entry(
         # transient modbus glitch: fail cleanly instead of retrying forever.
         # Adding support requires a pystiebeleltron update, which reloads the
         # entry anyway.
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            _unsupported_controller_issue_id(entry),
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key="unsupported_controller",
+            translation_placeholders={"model_id": str(exception.model_id)},
+        )
         raise ConfigEntryError(
             f"Unsupported controller model: {exception}"
         ) from exception
+
+    # A library update can add the model while this repair still exists from an
+    # earlier setup attempt.
+    ir.async_delete_issue(hass, DOMAIN, _unsupported_controller_issue_id(entry))
 
     # Both have to run before the platforms are set up, so that the entities are
     # added to the registry entries and the device that already carry their new
