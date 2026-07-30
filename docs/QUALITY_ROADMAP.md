@@ -88,8 +88,8 @@ links before proposing this roadmap change upstream.
 | Type-checking baseline | Independent | CI mypy gate for all 17 integration modules, without claiming full strict typing | `codex/typing-baseline` at `deac382`; mypy and Ruff clean, 726 passed, one skipped |
 | Typed dependency metadata | Independent change in `python-stiebel-eltron`; release a new version before the strict integration package | Adds the PEP 561 marker and typed-package classifier without widening the library API | `codex/add-py-typed` at `c1e694c`; strict mypy and Ruff clean, 24 tests passed, marker verified in sdist and wheel |
 | Strict integration typing | After the baseline and a newly versioned typed dependency release | Enables mypy strict mode for all 17 modules and closes every resulting integration error | `codex/strict-typing-followup` at `589ea5c`; strict mypy and Ruff clean, 726 passed, one skipped; dependency, manifest and lock version bump intentionally pending |
-| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim; async library entry points pinned by tests | `codex/docs-supported-functions` includes `ae21250`; 733 passed, one skipped |
-| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `ae21250`; 733 passed, one skipped |
+| Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim; async library entry points and the fixed-device lifecycle pinned by tests | `codex/docs-supported-functions` includes `3fe5bb6`; 734 passed, one skipped |
+| Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `3fe5bb6`; 734 passed, one skipped |
 | Capability-matrix design | Maintainer agreement before generator or model gates | Evidence model only; no runtime or entity-identity change | `codex/design-capability-matrix` at `17b2368`; review corrections and diff validation complete |
 | Coordinator equal-data update contract | Independent | Proves `always_update=True` is required because register state lives in the API client while coordinator data stays `{}` | `codex/coordinator-always-update-contract` at `56d41c5`; 727 passed, one skipped |
 | Raw daily energy default | After #618 | Keeps misleading raw day registers opt-in for new entities while cumulative statistics stay enabled | `codex/disable-raw-day-energy` at `a9a80e3`; 731 passed, one skipped |
@@ -238,7 +238,8 @@ behavior rather than hide known defects.
   first and then report the ID, and clears itself after library support lands.
   Transient connectivity failures deliberately remain ordinary setup retries.
 - [ ] Define the single-device interpretation of dynamic/stale device rules and
-  test config-entry removal and re-add behavior.
+  test config-entry removal and re-add behavior. Prepared locally with a full
+  lifecycle test and both no-exception rules recorded as done.
 - [ ] Document that ISG firmware cannot currently be updated through this
   Modbus integration and that updates are handled by Stiebel Eltron support.
   Implemented in #622.
