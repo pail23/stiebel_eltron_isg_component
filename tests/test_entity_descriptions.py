@@ -193,6 +193,9 @@ def _write_field_cases() -> list[Any]:
                 for attribute in _WRITE_FIELD_ATTRIBUTES
                 if getattr(description, attribute, None) is not None
             )
+    assert len(cases) == 77, (
+        "writable field inventory changed; review every added or removed case"
+    )
     return cases
 
 
@@ -214,8 +217,8 @@ def test_description_write_field_resolves(
         f"{type(component_object).__name__} has no field {field}"
     )
     field_descriptor = getattr(type(component_object), field)
-    assert field_descriptor.writable is not False, (
-        f"{type(component_object).__name__}.{field} is read-only"
+    assert field_descriptor.writable is True or callable(field_descriptor.writable), (
+        f"{type(component_object).__name__}.{field} has no supported write contract"
     )
 
 

@@ -46,6 +46,11 @@ _CLIMATE_WRITE_FIELDS = (
     "comfort_target_temp_write_field",
 )
 
+_EXPECTED_WRITE_RANGE_CASES = 65
+_BOUNDS_UNVERIFIED = frozenset({
+    ("NUMBER_TYPES_WPM-heating_curve_rise_hk3-heating_curve_rise_hk_3-0..3"),
+})
+
 
 def _field_descriptor(component_classes: tuple[type, ...], field: str) -> Any:
     """Return a field declared by the model, falling back for WPM 3i fields."""
@@ -58,6 +63,7 @@ def _field_descriptor(component_classes: tuple[type, ...], field: str) -> Any:
 def _write_range_cases() -> list[Any]:
     """Return every advertised writable range and its library descriptor."""
     cases = []
+    bounds_unverified = set()
 
     for list_name, component_classes, descriptions in _NUMBER_DESCRIPTION_LISTS:
         for description in descriptions:
@@ -65,15 +71,19 @@ def _write_range_cases() -> list[Any]:
                 continue
             minimum = description.native_min_value
             maximum = description.native_max_value
+            field = _field_descriptor(component_classes, description.write_field)
+            case_id = (
+                f"{list_name}-{description.key}-{description.write_field}"
+                f"-{minimum}..{maximum}"
+            )
+            if field.writable is True:
+                bounds_unverified.add(case_id)
             cases.append(
                 pytest.param(
-                    _field_descriptor(component_classes, description.write_field),
+                    field,
                     minimum,
                     maximum,
-                    id=(
-                        f"{list_name}-{description.key}-{description.write_field}"
-                        f"-{minimum}..{maximum}"
-                    ),
+                    id=case_id,
                 )
             )
 
@@ -85,19 +95,26 @@ def _write_range_cases() -> list[Any]:
                 field = getattr(description, write_field_attribute)
                 if field is None:
                     continue
+                descriptor = _field_descriptor(component_classes, field)
+                case_id = f"{list_name}-{description.key}-{field}-{minimum}..{maximum}"
+                if descriptor.writable is True:
+                    bounds_unverified.add(case_id)
                 cases.append(
                     pytest.param(
-                        _field_descriptor(component_classes, field),
+                        descriptor,
                         minimum,
                         maximum,
-                        id=(
-                            f"{list_name}-{description.key}-{field}"
-                            f"-{minimum}..{maximum}"
-                        ),
+                        id=case_id,
                     )
                 )
 
-    assert cases, "no writable entity ranges were collected"
+    assert len(cases) == _EXPECTED_WRITE_RANGE_CASES, (
+        "writable range inventory changed; review every added or removed case"
+    )
+    assert bounds_unverified == _BOUNDS_UNVERIFIED, (
+        "fields without a library range validator changed; verify and update "
+        "the explicit bounds-unverified inventory"
+    )
     return cases
 
 
@@ -113,8 +130,9 @@ def test_advertised_write_range_is_accepted(
     # this project already hit in issue #607.
     assert validator is not False, "entity writes a field the library marks read-only"
 
-    # ``True`` accepts values as-is, so both advertised bounds are accepted by
-    # construction. Callable validators need to prove that explicitly.
+    # The exact ``True`` cases are pinned by ``_BOUNDS_UNVERIFIED`` above so an
+    # unvalidated field cannot enter or leave the inventory silently. Callable
+    # validators need to accept both advertised endpoints.
     if validator is not True:
         validator(minimum)
         validator(maximum)
