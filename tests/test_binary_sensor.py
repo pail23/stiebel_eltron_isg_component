@@ -31,6 +31,7 @@ def test_circulation_pump_is_a_running_status() -> None:
         (ControllerModel.WPMsystem, True),
         (ControllerModel.LWZ_R290, True),
         (ControllerModel.WPM_3, False),
+        (ControllerModel.WPM_3i, False),
         (ControllerModel.LWZ, False),
     ],
 )
@@ -69,5 +70,31 @@ def test_circulation_pump_reports_the_read_back_state(value, expected: bool) -> 
     entity.modbus_register = description.modbus_register
     entity.bit_number = description.bit_number
     entity.coordinator = SimpleNamespace(get_value=lambda accessor: accessor(api))
+
+    assert entity.is_on is expected
+
+
+@pytest.mark.parametrize(
+    ("value", "bit_number", "expected"),
+    [
+        (None, 0, False),
+        (0, 0, False),
+        (1, 0, True),
+        (2, 0, False),
+        (2, 1, True),
+    ],
+)
+def test_binary_sensor_reads_its_configured_bit(
+    value,
+    bit_number: int,
+    expected: bool,
+) -> None:
+    """Binary sensors handle missing values and packed status bits."""
+    entity = binary_sensor.StiebelEltronISGBinarySensor.__new__(
+        binary_sensor.StiebelEltronISGBinarySensor
+    )
+    entity.modbus_register = lambda api: None
+    entity.bit_number = bit_number
+    entity.coordinator = SimpleNamespace(get_value=lambda accessor: value)
 
     assert entity.is_on is expected
