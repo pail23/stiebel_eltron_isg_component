@@ -11,7 +11,7 @@ from pystiebeleltron import ControllerModel
 
 from .const import OPERATION_MODE
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
-from .entity import StiebelEltronISGEntity
+from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,7 +120,9 @@ def get_key_from_value(d: dict[int, str], val: str) -> int | None:
     return None
 
 
-class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
+class StiebelEltronISGSelectEntity(
+    OptimisticValueMixin, StiebelEltronISGEntity, SelectEntity
+):
     """stiebel_eltron_isg select class."""
 
     def __init__(
@@ -145,7 +147,11 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Return current option."""
-        value = self.coordinator.get_value(self.modbus_register)
+        value = (
+            self._optimistic_value
+            if self._optimistic_value is not None
+            else self.coordinator.get_value(self.modbus_register)
+        )
         key = int(value) if value is not None else None
         if key is None:
             return None
@@ -160,3 +166,4 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
                 self.write_field,
                 key,
             )
+            self._set_optimistic_value(key)

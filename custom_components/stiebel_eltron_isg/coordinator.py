@@ -80,6 +80,8 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
         self._host = params.host
         self._connection = params.connection
         self._api = api_client
+        self._refresh_generation = 0
+        self._last_successful_refresh_generation = 0
 
         super().__init__(
             hass,
@@ -152,12 +154,25 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
 
     async def _async_update_data(self) -> dict[Any, float | int | None]:
         """Time to update."""
+        self._refresh_generation += 1
+        generation = self._refresh_generation
         try:
             await self._api.async_update()
         except ModbusError as exception:
             raise UpdateFailed(exception) from exception
         else:
+            self._last_successful_refresh_generation = generation
             return {}
+
+    @property
+    def refresh_generation(self) -> int:
+        """Return the generation of the newest started refresh."""
+        return self._refresh_generation
+
+    @property
+    def last_successful_refresh_generation(self) -> int:
+        """Return the generation of the newest successful refresh."""
+        return self._last_successful_refresh_generation
 
     def get_value(
         self,

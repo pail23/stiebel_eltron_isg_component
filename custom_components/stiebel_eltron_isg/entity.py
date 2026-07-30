@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from typing import Any
 
+from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,6 +20,44 @@ class StiebelEltronEntityDescription(EntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     modbus_register: Any
+
+
+class OptimisticValueMixin:
+    """Report a written value right away, until the device reports its own.
+
+    A write travels ISG to CAN to heat pump and needs a moment to be reflected
+    in the registers, so an immediate read back would still return the old
+    value. The written value is therefore assumed until the coordinator has
+    polled again, at which point the device's own value takes over. If the
+    controller clamps or rounds the value, that correction appears with that
+    poll.
+
+    The mixin must precede ``CoordinatorEntity`` in the entity's MRO. It keeps
+    the assumption until a successful poll that started after the write, so a
+    poll already in flight cannot restore a value it read before the write.
+    """
+
+    _optimistic_value: float | int | None = None
+    _optimistic_after_generation: int | None = None
+
+    def _set_optimistic_value(self, value: float | int) -> None:
+        """Assume ``value`` until the device has been polled after the write."""
+        self._optimistic_value = value
+        self._optimistic_after_generation = self.coordinator.refresh_generation
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Hand the value back to the device once it has been polled."""
+        if (
+            self._optimistic_after_generation is not None
+            and self.coordinator.last_update_success
+            and self.coordinator.last_successful_refresh_generation
+            > self._optimistic_after_generation
+        ):
+            self._optimistic_value = None
+            self._optimistic_after_generation = None
+        super()._handle_coordinator_update()
 
 
 class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
