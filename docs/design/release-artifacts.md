@@ -20,8 +20,8 @@ The builder:
 
 The checked-in manifest version is not required to equal the release tag. That
 is deliberate and preserves the current release process: the tag version
-replaces it only in the artifact, while all other manifest bytes and every
-other component file must match the checked-out source.
+replaces it only in the artifact. The manifest is normalized as indented JSON;
+every other component file must match the checked-out source byte for byte.
 
 The current GitHub workflow runs on `release: published`. Using the builder
 there verifies the asset before upload, but the GitHub release itself already

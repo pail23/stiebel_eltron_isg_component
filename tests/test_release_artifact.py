@@ -91,6 +91,30 @@ def test_release_artifact_is_reproducible(tmp_path: Path) -> None:
     assert outputs[0].read_bytes() == outputs[1].read_bytes()
 
 
+@pytest.mark.parametrize(
+    "version",
+    [
+        "2026.7",
+        "2026.7.3",
+        "2026.7-beta4",
+        "V0.12.0",
+        "2026.8.0b1",
+        "v2026.8.0-rc1",
+    ],
+)
+def test_release_artifact_accepts_historical_and_prerelease_tags(
+    tmp_path: Path, version: str
+) -> None:
+    """Historical and expected prerelease tag formats remain releasable."""
+    repository = _minimal_repository(tmp_path)
+    output = tmp_path / f"{version}.zip"
+
+    release_builder.build_release(repository, version, output)
+
+    with ZipFile(output) as archive:
+        assert json.loads(archive.read("manifest.json"))["version"] == version
+
+
 def test_release_artifact_rejects_an_invalid_version(tmp_path: Path) -> None:
     """A path-like or otherwise invalid tag can never reach manifest.json."""
     output = tmp_path / "stiebel_eltron_isg.zip"
@@ -131,6 +155,32 @@ def test_tracked_symlinks_are_rejected(tmp_path: Path) -> None:
     subprocess.run(["git", "add", str(link)], cwd=repository, check=True)
 
     with pytest.raises(release_builder.ArtifactError, match="is a symlink"):
+        release_builder.build_release(
+            repository, "2099.1-test", tmp_path / "release.zip"
+        )
+
+
+def test_generated_tracked_file_is_rejected_end_to_end(tmp_path: Path) -> None:
+    """The public builder rejects generated files even when they are tracked."""
+    repository = _minimal_repository(tmp_path)
+    generated = repository / COMPONENT / "__pycache__" / "module.pyc"
+    generated.parent.mkdir()
+    generated.write_bytes(b"generated")
+    subprocess.run(["git", "add", "-f", str(generated)], cwd=repository, check=True)
+
+    with pytest.raises(release_builder.ArtifactError, match="generated file"):
+        release_builder.build_release(
+            repository, "2099.1-test", tmp_path / "release.zip"
+        )
+
+
+def test_non_object_manifest_is_rejected(tmp_path: Path) -> None:
+    """The builder reports an invalid manifest shape without a traceback."""
+    repository = _minimal_repository(tmp_path)
+    manifest = repository / COMPONENT / "manifest.json"
+    manifest.write_text("[]\n", encoding="utf-8")
+
+    with pytest.raises(release_builder.ArtifactError, match="JSON object"):
         release_builder.build_release(
             repository, "2099.1-test", tmp_path / "release.zip"
         )

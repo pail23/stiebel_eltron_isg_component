@@ -30,4 +30,5 @@ jobs:
       - name: "Upload the ZIP file to the release"
         uses: softprops/action-gh-release@v3.0.2
         with:
+          fail_on_unmatched_files: true
           files: ${{ runner.temp }}/stiebel_eltron_isg.zip

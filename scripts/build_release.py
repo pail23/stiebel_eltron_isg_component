@@ -16,7 +16,7 @@ from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
 COMPONENT_PATH = Path("custom_components/stiebel_eltron_isg")
 REQUIRED_FILES = {"__init__.py", "manifest.json"}
-VERSION_PATTERN = re.compile(r"^\d{4}\.\d+(?:\.\d+)?(?:-[A-Za-z0-9][A-Za-z0-9.-]*)?$")
+VERSION_PATTERN = re.compile(r"^[vV]?\d+\.\d+(?:\.\d+)?(?:-?[A-Za-z][A-Za-z0-9.-]*)?$")
 ZIP_TIMESTAMP = (1980, 1, 1, 0, 0, 0)
 
 
@@ -69,6 +69,8 @@ def _manifest_with_version(path: Path, version: str) -> bytes:
         manifest = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as err:
         raise ArtifactError(f"invalid JSON in manifest.json: {err}") from err
+    if not isinstance(manifest, dict):
+        raise ArtifactError("manifest.json must contain a JSON object")
     manifest["version"] = version
     return f"{json.dumps(manifest, indent=2)}\n".encode()
 
@@ -164,7 +166,14 @@ def build_release(repository: Path, version: str, output: Path) -> None:
             for name, data in expected_contents.items():
                 archive.writestr(_zip_info(name), data)
 
-        _verify_archive(temporary_path, expected_contents, version)
+        # Read the sources again for verification instead of checking the
+        # archive only against the same in-memory mapping used to write it.
+        _verify_archive(
+            temporary_path,
+            _expected_contents(component, relative_files, version),
+            version,
+        )
+        temporary_path.chmod(0o644)
         os.replace(temporary_path, output)
     finally:
         temporary_path.unlink(missing_ok=True)
