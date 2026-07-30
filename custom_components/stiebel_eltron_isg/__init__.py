@@ -61,7 +61,6 @@ def _create_unsupported_controller_issue(
         DOMAIN,
         _unsupported_controller_issue_id(entry),
         is_fixable=False,
-        issue_domain=DOMAIN,
         learn_more_url=_ISSUE_TRACKER,
         severity=ir.IssueSeverity.ERROR,
         translation_key="unsupported_controller",

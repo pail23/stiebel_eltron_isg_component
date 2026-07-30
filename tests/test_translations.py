@@ -51,6 +51,16 @@ _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 
 
+def _repair_translation_files() -> list[pathlib.Path]:
+    """Return source and runtime files that ship repair text."""
+    runtime_files = [
+        file
+        for file in sorted(_TRANSLATIONS_DIR.glob("*.json"))
+        if "issues" in json.loads(file.read_text(encoding="utf-8"))
+    ]
+    return [_STRINGS_FILE, *runtime_files]
+
+
 def _platform(module: ModuleType) -> str:
     """Return the platform domain a module provides entities for."""
     return module.__name__.rsplit(".", 1)[-1]
@@ -169,7 +179,7 @@ def test_english_repair_issues_match_strings() -> None:
 
 @pytest.mark.parametrize(
     "translation_file",
-    [_STRINGS_FILE, _RUNTIME_FILE, _TRANSLATIONS_DIR / "de.json"],
+    _repair_translation_files(),
     ids=lambda file: file.name,
 )
 def test_controller_repair_uses_model_id_placeholder(

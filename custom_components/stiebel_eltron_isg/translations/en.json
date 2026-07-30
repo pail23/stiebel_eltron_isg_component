@@ -51,7 +51,7 @@
     "issues": {
         "unsupported_controller": {
             "title": "Unsupported controller model",
-            "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and try reloading the entry. If the issue remains, report this model ID in the project issue tracker."
+            "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. The entry remains unavailable until support is released in the device library and this integration. Update the integration and try reloading the entry. If the issue remains, report this model ID in the project issue tracker."
         }
     },
     "entity": {
