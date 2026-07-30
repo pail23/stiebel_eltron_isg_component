@@ -9,6 +9,7 @@ from homeassistant.const import (
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from pystiebeleltron import ControllerModel
@@ -31,12 +32,15 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_PREV_12M,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
+    ELECTRICAL_BOOSTER_HEATING,
+    ELECTRICAL_BOOSTER_HEATING_WATER,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
     PRODUCED_SOLAR_HEATING_TOTAL,
     PRODUCED_SOLAR_WATER_HEATING,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
@@ -115,6 +119,37 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
     assert all(
         description.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
         for description in flow_sensors
+    )
+
+
+def test_runtime_sensors_use_duration_device_class() -> None:
+    """Hour-valued runtime sensors expose canonical duration semantics."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    runtime_sensors = {
+        description.translation_key: description
+        for description in descriptions
+        if description.native_unit_of_measurement == "h"
+    }
+
+    assert set(runtime_sensors) == {
+        COMPRESSOR_HEATING,
+        COMPRESSOR_HEATING_WATER,
+        COOLING_RUNTIME,
+        ELECTRICAL_BOOSTER_HEATING,
+        ELECTRICAL_BOOSTER_HEATING_WATER,
+        SOLAR_RUNTIME,
+    }
+    assert all(
+        description.native_unit_of_measurement is UnitOfTime.HOURS
+        for description in runtime_sensors.values()
+    )
+    assert all(
+        description.device_class is SensorDeviceClass.DURATION
+        for description in runtime_sensors.values()
     )
 
 
