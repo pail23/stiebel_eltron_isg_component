@@ -138,7 +138,7 @@ fixture-parentheses = false
 mark-parentheses = false
 
 [tool.ruff.lint.mccabe]
-max-complexity = 25
+max-complexity = 10
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
