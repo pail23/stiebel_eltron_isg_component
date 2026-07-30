@@ -89,6 +89,9 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
         *WPM_SENSOR_TYPES,
         *LWZ_SENSOR_TYPES,
     ]
+    # Keep the legacy lowercase literal in the input set deliberately. The
+    # implementation must replace it with HA's canonical ``L/min`` unit; that
+    # metadata change can require a one-time Statistics repair after upgrading.
     flow_units = {
         "l/min",
         UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
