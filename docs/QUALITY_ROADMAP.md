@@ -66,6 +66,29 @@ The first implementation batch has progressed as follows:
 Issue #629 is the live checklist for merge order and PR status. This document
 keeps the longer-term engineering scope and evidence requirements.
 
+### Prepared follow-up queue
+
+The following packages are prepared and verified locally, but have not been
+published as pull requests. They remain proposals until their diffs, ordering
+and PR text have been reviewed:
+
+| Proposed package | Dependency and scope |
+| --- | --- |
+| Offline-to-online recovery test | Independent behavior test on current `main`; no runtime change |
+| Number entity semantics | Assigns `EntityCategory.CONFIG` to writable Number entities and records the wider category/default-enable audit |
+| Pressure and volume-flow device classes | Independent sensor metadata correction; avoids changing existing counter statistics |
+| Number icon translations | First entity-icon migration with a source/translation drift test |
+| Binary-sensor icon translations | Stacked after the Number icon package; retains canonical device-class icons |
+| Release artifact verification | Independent tracked-file-only, reproducible HACS ZIP builder and verification |
+| Type-checking baseline | Independent CI gate for all integration modules, including `config_flow.py`; deliberately not yet a `strict` claim |
+| Quality Scale evidence | Follows #622; declares only evidenced `done`/`exempt` rules and explicitly makes no official tier claim |
+| Supported functions and examples | Follows #622 and the evidence file; documents controllers, platforms, use cases and safe automation examples |
+| Capability-matrix design | Design only; needs maintainer agreement before code generation or model gates change |
+
+The icon packages are intentionally split by platform. Sensor icons should be
+handled only after the device-class package, so canonical Home Assistant icons
+are not replaced by unnecessary custom translations.
+
 ## Correctness work
 
 These items precede scale bookkeeping because the scale must describe real
@@ -110,12 +133,14 @@ behavior rather than hide known defects.
 - [x] Reach full config-flow coverage. Implemented in #621.
 - [ ] Add local custom-integration brand assets and remove `ignore: brands`
   from HACS validation. Asset provenance and trademark use must be explicit.
-- [ ] Add removal instructions.
+- [ ] Add removal instructions. Implemented in #622; check after merge.
 - [ ] Describe the integration and its prerequisites in user language.
+  Implemented in #622; check after merge.
 - [x] Remove the unused `options.init.scan_interval` translations because no
   options flow exposes them. Implemented in #621.
 - [ ] Add `quality_scale.yaml` with evidence-backed `done` and `exempt`
-  entries; do not claim a formal tier in `manifest.json`.
+  entries; do not claim a formal tier in `manifest.json`. Prepared locally
+  after #622.
 
 ## Silver target
 
@@ -146,9 +171,9 @@ behavior rather than hide known defects.
 - [ ] Make the CI fail if any integration module falls to 95% or below.
 - [ ] Test a complete offline-to-online coordinator transition and assert the
   entity availability and log transition, without testing Home Assistant's
-  internals.
+  internals. Prepared locally as a test-only package.
 - [ ] Document every installation parameter (`host`, `port`) and every actual
-  configuration option.
+  configuration option. Implemented in #622; check after merge.
 - [ ] Remove the remaining skipped unload test with deterministic cleanup after
   the config-flow reconfigure skips are addressed in the Bronze work.
 
@@ -174,23 +199,28 @@ behavior rather than hide known defects.
   supported controllers and known heat-pump families, prerequisites,
   installation/removal, configuration, update behavior, platforms and entity
   groups, Energy Dashboard guidance, known limitations, troubleshooting, use
-  cases and automation examples.
+  cases and automation examples. The main rewrite is in #622; the structured
+  platform/use-case/example follow-up is prepared locally.
 - [ ] Remove or replace the stale `info.md`; it currently describes only two
-  sensors and an obsolete installation layout.
+  sensors and an obsolete installation layout. Implemented in #622; check
+  after merge.
 - [ ] Build an entity capability matrix per controller model from the library,
   integration descriptions and reverse-engineered ISG object database evidence.
 - [ ] Assign `EntityCategory.CONFIG` and `EntityCategory.DIAGNOSTIC` where the
-  default primary category is inappropriate.
+  default primary category is inappropriate. Number configuration entities and
+  the wider audit are prepared locally.
 - [ ] Disable uncommon, noisy or specialist diagnostic entities by default,
   based on explicit criteria rather than arbitrary preference.
 - [ ] Audit every sensor for the most specific available device class, state
-  class and unit.
+  class and unit. Pressure and volume-flow corrections are prepared locally;
+  counter semantics remain a separate risk review.
 - [ ] Move hardcoded entity icons into `icons.json`. The existing climate
   state-attribute icons are only a partial implementation of the Gold
-  `icon-translations` rule.
+  `icon-translations` rule. Number and binary-sensor packages are prepared
+  locally; sensor icons follow the device-class work.
 - [ ] Keep raw ISG day energy registers visible without compiling invalid
   long-term sums; document `day_and_total` as the cumulative Energy Dashboard
-  source.
+  source. Implemented across #618 and #622; check after both merge.
 - [ ] Add Repairs only for conditions on which the user can act, such as a
   controller/firmware incompatibility with a documented remedy. Do not create
   Repairs for unsupported hardware that the user cannot fix.
@@ -198,6 +228,7 @@ behavior rather than hide known defects.
   test config-entry removal and re-add behavior.
 - [ ] Document that ISG firmware cannot currently be updated through this
   Modbus integration and that updates are handled by Stiebel Eltron support.
+  Implemented in #622; check after merge.
 
 ## Later engineering improvements
 
@@ -205,12 +236,15 @@ These are valuable but are not required to claim a Silver- or Gold-equivalent
 custom integration.
 
 - [ ] Enable strict type checking for every integration module and remove the
-  current config-flow exclusion.
+  current config-flow exclusion. A stricter all-module CI baseline is prepared
+  locally; full `strict` remains open.
 - [ ] Reduce broad Ruff exemptions and lower the McCabe complexity ceiling.
 - [ ] Audit whether `always_update=True` is still needed for every coordinator
   update.
 - [ ] Add release artifact verification so the ZIP contents and manifest
-  version are checked before publication.
+  version are checked before publication. Artifact verification before upload
+  is prepared locally; changing the workflow to publish the release only after
+  verification still needs maintainer agreement.
 - [ ] Keep the dependency privacy audit synchronized with every
   `pystiebeleltron` update.
 - [ ] Evaluate eventual Home Assistant Core inclusion only after the Bronze
