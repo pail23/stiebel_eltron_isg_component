@@ -17,14 +17,15 @@ jobs:
       - name: "Checkout the repository"
         uses: "actions/checkout@v7.0.1"
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.sha }}
 
       - name: "Build and verify the release artifact"
         shell: "bash"
-        run: |
-          python3 scripts/build_release.py \
-            "${{ github.event.release.tag_name }}" \
-            "${{ runner.temp }}/stiebel_eltron_isg.zip"
+        env:
+          OUTPUT_PATH: ${{ runner.temp }}/stiebel_eltron_isg.zip
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+        run: python3 scripts/build_release.py "$RELEASE_TAG" "$OUTPUT_PATH" |
+          tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: "Upload the ZIP file to the release"
         uses: softprops/action-gh-release@v3.0.2

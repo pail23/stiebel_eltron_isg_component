@@ -26,12 +26,19 @@ class ArtifactError(ValueError):
 
 def _tracked_component_files(repository: Path) -> list[Path]:
     """Return tracked component files relative to the component directory."""
-    result = subprocess.run(
-        ["git", "ls-files", "-z", "--", COMPONENT_PATH],
-        cwd=repository,
-        capture_output=True,
-        check=True,
-    )
+    try:
+        result = subprocess.run(
+            ["git", "ls-files", "-z", "--", COMPONENT_PATH],
+            cwd=repository,
+            capture_output=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as err:
+        message = os.fsdecode(err.stderr).strip()
+        raise ArtifactError(
+            f"could not list tracked component files: {message}"
+        ) from err
+
     prefix = f"{COMPONENT_PATH.as_posix()}/"
     files = []
     for raw_path in result.stdout.split(b"\0"):
@@ -43,7 +50,10 @@ def _tracked_component_files(repository: Path) -> list[Path]:
         relative = Path(path.removeprefix(prefix))
         if relative.is_absolute() or ".." in relative.parts:
             raise ArtifactError(f"unsafe component path: {relative}")
-        if not (repository / COMPONENT_PATH / relative).is_file():
+        source = repository / COMPONENT_PATH / relative
+        if source.is_symlink():
+            raise ArtifactError(f"tracked component file is a symlink: {relative}")
+        if not source.is_file():
             raise ArtifactError(f"tracked component file is missing: {relative}")
         files.append(relative)
 
@@ -55,7 +65,10 @@ def _tracked_component_files(repository: Path) -> list[Path]:
 
 def _manifest_with_version(path: Path, version: str) -> bytes:
     """Return manifest JSON carrying the release version."""
-    manifest = json.loads(path.read_text(encoding="utf-8"))
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as err:
+        raise ArtifactError(f"invalid JSON in manifest.json: {err}") from err
     manifest["version"] = version
     return f"{json.dumps(manifest, indent=2)}\n".encode()
 
@@ -63,13 +76,31 @@ def _manifest_with_version(path: Path, version: str) -> bytes:
 def _zip_info(name: str) -> ZipInfo:
     """Return reproducible metadata for one regular archive file."""
     info = ZipInfo(name, date_time=ZIP_TIMESTAMP)
+    info.create_system = 3
     info.compress_type = ZIP_DEFLATED
     info.external_attr = 0o100644 << 16
     return info
 
 
-def _verify_archive(path: Path, expected_names: set[str], version: str) -> None:
-    """Verify layout, paths, JSON files and the embedded manifest version."""
+def _expected_contents(
+    component: Path, relative_files: list[Path], version: str
+) -> dict[str, bytes]:
+    """Return the exact bytes each tracked source must have in the archive."""
+    return {
+        relative.as_posix(): (
+            _manifest_with_version(component / relative, version)
+            if relative.as_posix() == "manifest.json"
+            else (component / relative).read_bytes()
+        )
+        for relative in relative_files
+    }
+
+
+def _verify_archive(
+    path: Path, expected_contents: dict[str, bytes], version: str
+) -> None:
+    """Verify archive layout, contents, JSON files and manifest version."""
+    expected_names = set(expected_contents)
     with ZipFile(path) as archive:
         names = archive.namelist()
         if len(names) != len(set(names)):
@@ -90,8 +121,16 @@ def _verify_archive(path: Path, expected_names: set[str], version: str) -> None:
                 ".zip",
             }:
                 raise ArtifactError(f"archive contains generated file: {name}")
+            data = archive.read(name)
+            if data != expected_contents[name]:
+                raise ArtifactError(f"archive content differs from source: {name}")
             if pure_path.suffix == ".json":
-                json.loads(archive.read(name))
+                try:
+                    json.loads(data)
+                except json.JSONDecodeError as err:
+                    raise ArtifactError(
+                        f"archive contains invalid JSON: {name}"
+                    ) from err
 
         manifest = json.loads(archive.read("manifest.json"))
         if manifest.get("version") != version:
@@ -110,7 +149,7 @@ def build_release(repository: Path, version: str, output: Path) -> None:
     output.parent.mkdir(parents=True, exist_ok=True)
     component = repository / COMPONENT_PATH
     relative_files = _tracked_component_files(repository)
-    expected_names = {path.as_posix() for path in relative_files}
+    expected_contents = _expected_contents(component, relative_files, version)
 
     with tempfile.NamedTemporaryFile(
         dir=output.parent,
@@ -122,16 +161,10 @@ def build_release(repository: Path, version: str, output: Path) -> None:
 
     try:
         with ZipFile(temporary_path, mode="w") as archive:
-            for relative in relative_files:
-                source = component / relative
-                data = (
-                    _manifest_with_version(source, version)
-                    if relative.as_posix() == "manifest.json"
-                    else source.read_bytes()
-                )
-                archive.writestr(_zip_info(relative.as_posix()), data)
+            for name, data in expected_contents.items():
+                archive.writestr(_zip_info(name), data)
 
-        _verify_archive(temporary_path, expected_names, version)
+        _verify_archive(temporary_path, expected_contents, version)
         os.replace(temporary_path, output)
     finally:
         temporary_path.unlink(missing_ok=True)
