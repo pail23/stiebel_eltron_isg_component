@@ -124,18 +124,20 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
 
 def test_runtime_sensors_use_duration_device_class() -> None:
     """Hour-valued runtime sensors expose canonical duration semantics."""
-    descriptions = [
-        *WPM_3I_SENSOR_TYPES,
-        *WPM_SENSOR_TYPES,
-        *LWZ_SENSOR_TYPES,
-    ]
-    runtime_sensors = {
-        description.translation_key: description
-        for description in descriptions
-        if description.native_unit_of_measurement == "h"
+    expected_model_keys = {
+        ("wpm_3i", COMPRESSOR_HEATING),
+        ("wpm_3i", COMPRESSOR_HEATING_WATER),
+        ("wpm_3i", COOLING_RUNTIME),
+        ("wpm", COMPRESSOR_HEATING),
+        ("wpm", COMPRESSOR_HEATING_WATER),
+        ("wpm", COOLING_RUNTIME),
+        ("wpm", SOLAR_RUNTIME),
+        ("lwz", COMPRESSOR_HEATING),
+        ("lwz", COMPRESSOR_HEATING_WATER),
+        ("lwz", ELECTRICAL_BOOSTER_HEATING),
+        ("lwz", ELECTRICAL_BOOSTER_HEATING_WATER),
     }
-
-    assert set(runtime_sensors) == {
+    expected_keys = {
         COMPRESSOR_HEATING,
         COMPRESSOR_HEATING_WATER,
         COOLING_RUNTIME,
@@ -143,13 +145,32 @@ def test_runtime_sensors_use_duration_device_class() -> None:
         ELECTRICAL_BOOSTER_HEATING_WATER,
         SOLAR_RUNTIME,
     }
+    runtime_sensors = [
+        (model, description)
+        for model, descriptions in (
+            ("wpm_3i", WPM_3I_SENSOR_TYPES),
+            ("wpm", WPM_SENSOR_TYPES),
+            ("lwz", LWZ_SENSOR_TYPES),
+        )
+        for description in descriptions
+        if description.translation_key in expected_keys
+    ]
+
+    assert len(runtime_sensors) == len(expected_model_keys)
+    assert {
+        (model, description.translation_key) for model, description in runtime_sensors
+    } == expected_model_keys
     assert all(
         description.native_unit_of_measurement is UnitOfTime.HOURS
-        for description in runtime_sensors.values()
+        for _, description in runtime_sensors
     )
     assert all(
         description.device_class is SensorDeviceClass.DURATION
-        for description in runtime_sensors.values()
+        for _, description in runtime_sensors
+    )
+    assert all(
+        description.state_class is SensorStateClass.MEASUREMENT
+        for _, description in runtime_sensors
     )
 
 

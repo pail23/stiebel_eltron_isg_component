@@ -1041,10 +1041,10 @@ WPM_COMPRESSOR_SENSOR_TYPES = [
         COMPRESSOR_HEATING_WATER,
         lambda api: api.energy_data.vd_dhw,
     ),
+    # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling is
+    # passive (no compressor runs), so this counts cooling operation hours
+    # rather than compressor hours - hence the neutral name.
     create_runtime_entity_description(
-        # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling
-        # is passive (no compressor runs), so this counts cooling operation
-        # hours rather than compressor hours - hence the neutral name.
         COOLING_RUNTIME,
         lambda api: api.energy_data.vd_cooling,
     ),
