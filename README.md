@@ -73,6 +73,13 @@ automatically is linking them to a differently named replacement. Renaming an en
 inside Home Assistant is the one path that carries its statistics along, because the
 recorder migrates the statistic id on a rename but has no hook for a removal.
 
+Flow-rate sensors now use Home Assistant's canonical `L/min` unit and volume-flow
+device class instead of the legacy `l/min` string. Home Assistant may flag the unit
+metadata of an existing long-term statistic after the update. Open **Developer
+Tools → Statistics**, choose **Fix issue** for the affected entity and confirm the
+canonical unit. This repairs the statistic metadata; it does not require deleting
+the recorded history.
+
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be
 matched up afterwards.
