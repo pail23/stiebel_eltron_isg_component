@@ -216,10 +216,18 @@ async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
 
     await async_setup_entry(None, entry, entities.extend)
 
+    daily_description_keys = {description.key for description in daily_descriptions}
     daily_entities = [
-        entity for entity in entities if entity.entity_description in daily_descriptions
+        entity
+        for entity in entities
+        if entity.entity_description.key in daily_description_keys
     ]
-    assert daily_entities
+    daily_entity_keys = [entity.entity_description.key for entity in daily_entities]
+
+    assert daily_description_keys
+    assert len(daily_description_keys) == len(daily_descriptions)
+    assert len(daily_entity_keys) == len(daily_description_keys)
+    assert set(daily_entity_keys) == daily_description_keys
     assert all(type(entity) is StiebelEltronISGSensor for entity in daily_entities)
     assert all(entity.last_reset is None for entity in daily_entities)
 
