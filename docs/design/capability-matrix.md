@@ -225,7 +225,7 @@ claims:
         verdict: refutes
         source: python_stiebel_eltron
         source_file: api/wpm_system_parameters.csv
-        source_row: 23
+        source_line: 23
         register_space: holding
         documented_address: 1551
         wire_address: 1550
@@ -255,22 +255,24 @@ repeated deliberately so the generated diff exposes every widened claim.
 
 Every repository-backed evidence and gap row names a source from `sources`; the
 exact commit is therefore unambiguous. Live observations instead carry their
-opaque reference and scope fields. `kind` and `confidence` have validated pairings:
-`live_controller/measured`, `object_mapping/object_db`,
+opaque reference and scope fields. `kind` and `confidence` have validated
+pairings: `live_controller/measured`, `object_mapping/object_db`,
 `manufacturer_table/documented`, `family_inference/inferred` and
 `current_integration/integration_only`. A mismatched pair is a schema error.
+Coverage gaps use their own `kind` enum, initially only
+`object_mapping_absence`, and never carry confidence or verdict.
 
-Object rows use a composite reference. At minimum it includes `source_db`,
-`device_model`, `register_space`, zero-based `wire_address`, one-based
-`documented_address` and the verbatim `source_register_literal`; `web_id`,
-`info_number`, `device_code` and `web_type` are retained when present. The
-validator checks `documented_address == wire_address + 1`. A full Modicon-style
-reference such as `WPM:41551` remains only in `source_register_literal`; it is
-never joined numerically to the library's `1550` wire address. A claim can
-reference multiple databases, and every reference declares `role: primary` or
-`role: secondary`. The renderer preserves both when they disagree; evidence
-precedence decides the outcome, while an unresolved same-level disagreement is
-a validation error.
+Any register-bearing evidence or gap row declares `register_space`, zero-based
+`wire_address`, one-based `documented_address` and the verbatim
+`source_register_literal`. The validator checks
+`documented_address == wire_address + 1`. Object rows additionally require
+`source_db` and `device_model`; `web_id`, `info_number`, `device_code` and
+`web_type` are retained when present. A full Modicon-style reference such as
+`WPM:41551` remains only in `source_register_literal`; it is never joined
+numerically to the library's `1550` wire address. A claim can reference multiple
+databases, and every reference declares `role: primary` or `role: secondary`.
+The renderer preserves both when they disagree; evidence precedence decides the
+outcome, while an unresolved same-level disagreement is a validation error.
 
 A row containing only `web_id` is rejected by the schema. Imports must retain
 the database and model family so a coincidentally reused web ID cannot pull a
@@ -300,21 +302,22 @@ one family-wide availability flag:
 
 | Controller | Library field | Manufacturer-derived row | Pilot verdict |
 | --- | --- | --- | --- |
-| `WPM_3` | `system_parameters.comfort_temperature_hk_3` | `api/wpm_system_parameters.csv`, row 23, address 1551 | `documented/refutes` |
-| `WPM_3` | `system_parameters.eco_temperature_hk_3` | `api/wpm_system_parameters.csv`, row 24, address 1552 | `documented/refutes` |
-| `WPM_3` | `system_parameters.heating_curve_rise_hk_3` | `api/wpm_system_parameters.csv`, row 25, address 1553 | `documented/refutes` |
-| `WPMsystem` | `system_parameters.flow_temp_hysteresis_area` | `api/wpm_system_parameters.csv`, row 16, address 1515 | `documented/refutes` |
-| `WPMsystem` | `system_parameters.flow_temp_hysteresis_fan` | `api/wpm_system_parameters.csv`, row 19, address 1518 | `documented/refutes` |
+| `WPM_3` | `system_parameters.comfort_temperature_hk_3` | `api/wpm_system_parameters.csv`, line 23, address 1551 | `documented/refutes` |
+| `WPM_3` | `system_parameters.eco_temperature_hk_3` | `api/wpm_system_parameters.csv`, line 24, address 1552 | `documented/refutes` |
+| `WPM_3` | `system_parameters.heating_curve_rise_hk_3` | `api/wpm_system_parameters.csv`, line 25, address 1553 | `documented/refutes` |
+| `WPMsystem` | `system_parameters.flow_temp_hysteresis_area` | `api/wpm_system_parameters.csv`, line 16, address 1515 | `documented/refutes` |
+| `WPMsystem` | `system_parameters.flow_temp_hysteresis_fan` | `api/wpm_system_parameters.csv`, line 19, address 1518 | `documented/refutes` |
 
 Those rows are pinned to `python-stiebel-eltron` tag `v0.6.2`, commit
-`3d27058bdfee677a68397834915a08fe466cc149`. The source CSV marks registers
-1551 through 1553 for WPMsystem only and registers 1515 and 1518 for WPM 3 and
-WPM 3i only. It is the source of the refutation.
+`3d27058bdfee677a68397834915a08fe466cc149`. The source CSV marks documented
+addresses 1551 through 1553 for WPMsystem only and documented addresses 1515
+and 1518 for WPM 3 and WPM 3i only. It is the source of the refutation.
+`source_line` counts the CSV header as line 1.
 
-The accepted overlay contains one singular claim and one `coverage_gap` row for
-each table entry; the YAML above shows the complete first pair. A coverage gap
-must reference an existing claim, a pinned source, file, database, model, role
-and all three address forms, and must set
+The accepted overlay contains one singular claim for each table entry and one
+`coverage_gap` row per claim and checked database; the YAML above shows the
+complete first pair. A coverage gap must reference an existing claim, a pinned
+source, file, database, model, role and all three address forms, and must set
 `interpretation: non_evidentiary`. It carries neither confidence nor verdict.
 
 The ISG object export provides a separate, weaker cross-check at commit
@@ -334,6 +337,12 @@ distinction remains visible even when a stronger documented source already
 refutes the capability. A later measured contradiction is retained with its
 exact controller and firmware scope and must not silently generalize to the
 whole model.
+
+Because all five pilot claims currently describe offered writable fields, they
+are kept as expected-invalid schema fixtures until the corresponding
+correctness and entity-registry migration PRs land. The fixture proves that
+enforcement rejects them as `remediation_required`; it is not copied into the
+accepted overlay early or waived in CI.
 
 The integration repository remains buildable by itself. A developer tool may
 accept `--isg-re-path` to validate or refresh evidence against a sibling clone,
@@ -375,7 +384,7 @@ Availability:
 - `observed_only`: enabled only for a specifically measured model;
 - `faulting`: reading the address is known to put a controller into an error
   state and must not be retried by a probe;
-- `unknown`: insufficient evidence.
+- `unknown`: the availability class has not yet been concluded.
 
 A refuted writable claim is a test failure. An unknown read capability is
 displayed as `unverified` and is not silently promoted to supported. Successful
