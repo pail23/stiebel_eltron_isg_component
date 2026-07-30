@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Protocol, cast
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
@@ -10,19 +10,10 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
-
-class _OptimisticEntityHost(Protocol):
-    """Entity operations required by the optimistic-value mixin."""
-
-    coordinator: StiebelEltronDataCoordinator
-
-    def async_write_ha_state(self) -> None:
-        """Write the current entity state."""
-        ...
-
-    def _handle_coordinator_update(self) -> None:
-        """Handle a coordinator update."""
-        ...
+if TYPE_CHECKING:
+    _OptimisticValueMixinBase = CoordinatorEntity[StiebelEltronDataCoordinator]
+else:
+    _OptimisticValueMixinBase = object
 
 
 def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
@@ -37,7 +28,7 @@ class StiebelEltronEntityDescription(EntityDescription):
     modbus_register: Any
 
 
-class OptimisticValueMixin:
+class OptimisticValueMixin(_OptimisticValueMixinBase):
     """Report a written value right away, until the device reports its own.
 
     A write travels ISG to CAN to heat pump and needs a moment to be reflected
@@ -57,25 +48,22 @@ class OptimisticValueMixin:
 
     def _set_optimistic_value(self, value: float | int) -> None:
         """Assume ``value`` until the device has been polled after the write."""
-        host = cast(_OptimisticEntityHost, self)
         self._optimistic_value = value
-        self._optimistic_after_generation = host.coordinator.refresh_generation
-        host.async_write_ha_state()
+        self._optimistic_after_generation = self.coordinator.refresh_generation
+        self.async_write_ha_state()
 
     @callback
     def _handle_coordinator_update(self) -> None:
         """Hand the value back to the device once it has been polled."""
-        host = cast(_OptimisticEntityHost, self)
         if (
             self._optimistic_after_generation is not None
-            and host.coordinator.last_update_success
-            and host.coordinator.last_successful_refresh_generation
+            and self.coordinator.last_update_success
+            and self.coordinator.last_successful_refresh_generation
             > self._optimistic_after_generation
         ):
             self._optimistic_value = None
             self._optimistic_after_generation = None
-        next_entity = cast(_OptimisticEntityHost, super())
-        next_entity._handle_coordinator_update()  # noqa: SLF001
+        super()._handle_coordinator_update()
 
 
 class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):

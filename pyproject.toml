@@ -13,7 +13,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
-    "mypy>=2.3.0",
+    "mypy>=2.3.0,<3",
     "pytest>=9.0.3",
     "ruff>=0.16.0",
 ]
@@ -155,9 +155,16 @@ split-on-trailing-comma = false
 check_untyped_defs = true
 disallow_incomplete_defs = true
 disallow_untyped_defs = true
-ignore_missing_imports = true
+ignore_missing_imports = false
 no_implicit_optional = true
-python_version = 3.14
+python_version = "3.14"
 native_parser = true
 warn_redundant_casts = true
 warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+module = [
+  "pystiebeleltron",
+  "pystiebeleltron.*",
+]
+ignore_missing_imports = true

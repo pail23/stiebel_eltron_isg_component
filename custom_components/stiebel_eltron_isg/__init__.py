@@ -20,7 +20,7 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, UNIT_ID
-from .coordinator import StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
     async_migrate_device_identifier,
@@ -82,11 +82,7 @@ async def async_setup_entry(
     await async_migrate_unique_ids(hass, entry, model)
     async_remove_legacy_circulation_pump_switch(hass, entry, model)
 
-    coordinator: (
-        StiebelEltronModbusWPM3iDataCoordinator
-        | StiebelEltronModbusWPMDataCoordinator
-        | StiebelEltronModbusLWZDataCoordinator
-    )
+    coordinator: StiebelEltronDataCoordinator
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(
