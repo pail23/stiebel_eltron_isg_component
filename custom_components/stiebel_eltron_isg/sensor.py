@@ -270,6 +270,7 @@ def create_pressure_entity_description(
         native_unit_of_measurement=UnitOfPressure.BAR,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
         modbus_register=modbus_register,
     )
 
@@ -281,9 +282,10 @@ def create_volume_stream_entity_description(
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
-        native_unit_of_measurement="l/min",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         modbus_register=modbus_register,
     )
 
@@ -998,6 +1000,7 @@ LWZ_VENTILATION_SENSOR_TYPES = [
         translation_key=VENTILATION_AIR_TARGET_FLOW_RATE,
         icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.ventilation_air_set_flow_rate,
     ),
@@ -1015,6 +1018,7 @@ LWZ_VENTILATION_SENSOR_TYPES = [
         translation_key=EXTRACT_AIR_TARGET_FLOW_RATE,
         icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.extract_air_set_flow_rate,
     ),

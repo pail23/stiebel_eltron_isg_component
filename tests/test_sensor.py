@@ -4,7 +4,13 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfVolumeFlowRate,
+)
 from pystiebeleltron import ControllerModel
 import pytest
 
@@ -54,6 +60,59 @@ def _wpm_3i(key: str):
 
 def _lwz(key: str):
     return next(d for d in LWZ_SENSOR_TYPES if d.key == key)
+
+
+def test_pressure_sensors_use_the_pressure_device_class() -> None:
+    """Every bar-valued sensor must expose Home Assistant pressure semantics."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    pressure_sensors = [
+        description
+        for description in descriptions
+        if description.native_unit_of_measurement == UnitOfPressure.BAR
+    ]
+
+    assert pressure_sensors
+    assert all(
+        description.device_class is SensorDeviceClass.PRESSURE
+        for description in pressure_sensors
+    )
+
+
+def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
+    """Flow sensors use HA units so conversions and dashboards understand them."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    flow_units = {
+        "l/min",
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+    flow_sensors = [
+        description
+        for description in descriptions
+        if description.native_unit_of_measurement in flow_units
+    ]
+
+    assert flow_sensors
+    assert all(
+        description.native_unit_of_measurement
+        in {
+            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        }
+        for description in flow_sensors
+    )
+    assert all(
+        description.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
+        for description in flow_sensors
+    )
 
 
 def test_sensor_description_rejects_non_callable_register() -> None:
