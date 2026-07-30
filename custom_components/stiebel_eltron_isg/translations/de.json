@@ -4,12 +4,10 @@
             "user": {
                 "description": "Geben Sie die Verbindungsdaten für Ihre Stiebel Eltron ISG Wärmepumpe ein.",
                 "data": {
-                    "name": "Name",
                     "host": "Die IP-Adresse des Stiebel Eltron ISG",
                     "port": "Der TCP Port des Stiebel Eltron ISG (z.B. 502)"
                 },
                 "data_description": {
-                    "name": "Ein Name für diese Wärmepumpen-Instanz.",
                     "host": "Die IP-Adresse oder der Hostname des Stiebel Eltron ISG Webservers.",
                     "port": "Der Modbus-TCP-Port des ISG (Standard: 502)."
                 }
@@ -36,16 +34,15 @@
             "reconfigure_successful": "Verbindungsdaten erfolgreich aktualisiert."
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Abfrageintervall (Sekunden)"
-                },
-                "data_description": {
-                    "scan_interval": "Wie oft die Modbus-Register abgefragt werden, in Sekunden."
-                }
-            }
+    "exceptions": {
+        "write_unsupported": {
+            "message": "Die Einstellung {field} kann bei der verbundenen Regelung nicht geschrieben werden."
+        },
+        "invalid_write_value": {
+            "message": "Der Wert {value} ist für die Einstellung {field} ungültig."
+        },
+        "write_failed": {
+            "message": "Die Einstellung {field} konnte wegen eines Kommunikationsfehlers mit der Wärmepumpe nicht geschrieben werden."
         }
     },
     "entity": {
@@ -379,6 +376,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Zirkulationspumpe"
+            },
             "pump_on_hk1": {
                 "name": "Pumpe HK 1"
             },
@@ -646,9 +646,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready Eingang 2"
-            },
-            "circulation_pump": {
-                "name": "Zirkulationspumpe"
             }
         },
         "button": {

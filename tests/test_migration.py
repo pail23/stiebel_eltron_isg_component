@@ -4,11 +4,13 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from pystiebeleltron import ControllerModel
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import migration
-from custom_components.stiebel_eltron_isg.const import DOMAIN
+from custom_components.stiebel_eltron_isg.const import CIRCULATION_PUMP, DOMAIN
+from custom_components.stiebel_eltron_isg.entity import build_unique_id
 
 # The model the mock_get_controller_model fixture reports, and the display name
 # the coordinator derives from it.
@@ -45,6 +47,118 @@ def _register(
         config_entry=entry,
         suggested_object_id=object_id,
     )
+
+
+def test_removes_obsolete_circulation_pump_switch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The domain change must not leave the old switch in the registry."""
+    mock_config_entry.add_to_hass(hass)
+    obsolete = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, CIRCULATION_PUMP),
+        "circulation_pump",
+        domain="switch",
+    )
+
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
+
+    assert er.async_get(hass).async_get(obsolete.entity_id) is None
+
+
+def test_circulation_pump_cleanup_leaves_other_switches_untouched(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Only the obsolete entity with the exact unique id is removed."""
+    mock_config_entry.add_to_hass(hass)
+    other = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, "sg_ready_active"),
+        "sg_ready_active",
+        domain="switch",
+    )
+
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
+
+    assert er.async_get(hass).async_get(other.entity_id) is not None
+
+
+def test_circulation_pump_cleanup_requires_an_exact_legacy_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A coincidental key suffix must not make an unrelated switch removable."""
+    mock_config_entry.add_to_hass(hass)
+    unrelated = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(
+            mock_config_entry,
+            f"unrelated_{CIRCULATION_PUMP}",
+        ),
+        "unrelated_circulation_pump",
+        domain="switch",
+    )
+
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
+
+    assert er.async_get(hass).async_get(unrelated.entity_id) is not None
+
+
+def test_removes_legacy_duplicate_circulation_pump_switches(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A duplicate left on either historical unique-id scheme is removed."""
+    mock_config_entry.add_to_hass(hass)
+    current = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, CIRCULATION_PUMP),
+        "circulation_pump",
+        domain="switch",
+    )
+    legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron_{CIRCULATION_PUMP}",
+        "legacy_circulation_pump",
+        domain="switch",
+    )
+    model_legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_{MODEL_NAME}_{CIRCULATION_PUMP}",
+        "model_legacy_circulation_pump",
+        domain="switch",
+    )
+
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
+
+    registry = er.async_get(hass)
+    assert registry.async_get(current.entity_id) is None
+    assert registry.async_get(legacy.entity_id) is None
+    assert registry.async_get(model_legacy.entity_id) is None
 
 
 async def test_migrates_entities_of_the_configured_name_scheme(

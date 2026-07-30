@@ -50,7 +50,4 @@ class StiebelEltronModbusLWZDataCoordinator(
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
-        await self._api.system_parameters.write(
-            "reset",
-            1,
-        )
+        await self.write_component_value("system_parameters", "reset", 1)

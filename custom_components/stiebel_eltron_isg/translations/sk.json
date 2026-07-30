@@ -4,12 +4,10 @@
             "user": {
                 "description": "Zadajte prihlasovacie údaje pre vaše tepelné čerpadlo Stiebel Eltron ISG.",
                 "data": {
-                    "name": "Názov",
                     "host": "IP adresa vášho ISG",
                     "port": "TCP port, na ktorom sa má pripojiť k ISG"
                 },
                 "data_description": {
-                    "name": "Názov pre túto inštanciu tepelného čerpadla.",
                     "host": "IP adresa alebo názov hostiteľa webového servera Stiebel Eltron ISG.",
                     "port": "Modbus TCP port ISG (predvolené: 502)."
                 }
@@ -34,18 +32,6 @@
         "abort": {
             "already_configured": "Zariadenie je už nakonfigurované",
             "reconfigure_successful": "Podrobnosti o pripojení boli úspešne aktualizované."
-        }
-    },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Interval dotazovania (sekundy)"
-                },
-                "data_description": {
-                    "scan_interval": "Ako často sú dotazované Modbus registre, v sekundách."
-                }
-            }
         }
     },
     "entity": {
@@ -346,6 +332,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Cirkulačné čerpadlo"
+            },
             "pump_on_hk1": {
                 "name": "Čerpadlo TO 1"
             },
@@ -601,9 +590,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready vstup 2"
-            },
-            "circulation_pump": {
-                "name": "Cirkulačné čerpadlo"
             }
         },
         "button": {

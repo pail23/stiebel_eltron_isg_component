@@ -4,12 +4,24 @@
             "user": {
                 "description": "Enter the connection details for your Stiebel Eltron ISG heat pump.",
                 "data": {
-                    "name": "Name",
                     "host": "The IP address of the Stiebel Eltron ISG",
                     "port": "The TCP port of the Stiebel Eltron ISG (e.g. 502)"
                 },
                 "data_description": {
-                    "name": "A name for this heat pump instance.",
+                    "host": "The IP address or hostname of the Stiebel Eltron ISG web server.",
+                    "port": "The Modbus TCP port of the ISG (default: 502)."
+                }
+            },
+            "discovery_confirm": {
+                "description": "Do you want to set up the Stiebel Eltron ISG at {host}?"
+            },
+            "reconfigure": {
+                "description": "Update the connection details for your Stiebel Eltron ISG heat pump.",
+                "data": {
+                    "host": "Host",
+                    "port": "Port"
+                },
+                "data_description": {
                     "host": "The IP address or hostname of the Stiebel Eltron ISG web server.",
                     "port": "The Modbus TCP port of the ISG (default: 502)."
                 }
@@ -25,16 +37,15 @@
             "reconfigure_successful": "Connection details updated successfully."
         }
     },
-    "options": {
-        "step": {
-            "init": {
-                "data": {
-                    "scan_interval": "Polling interval (seconds)"
-                },
-                "data_description": {
-                    "scan_interval": "How often the Modbus registers are polled, in seconds."
-                }
-            }
+    "exceptions": {
+        "write_unsupported": {
+            "message": "The setting {field} cannot be written on the connected controller."
+        },
+        "invalid_write_value": {
+            "message": "The value {value} is not valid for the setting {field}."
+        },
+        "write_failed": {
+            "message": "The setting {field} could not be written because communication with the heat pump failed."
         }
     },
     "entity": {
@@ -368,6 +379,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Circulation Pump"
+            },
             "pump_on_hk1": {
                 "name": "Pump HK1"
             },
@@ -635,9 +649,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready Input 2"
-            },
-            "circulation_pump": {
-                "name": "Circulation Pump"
             }
         },
         "button": {

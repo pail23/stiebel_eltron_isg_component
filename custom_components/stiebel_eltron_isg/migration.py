@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from pystiebeleltron import ControllerModel
 
-from .const import DOMAIN, HEATER_PRESSURE
+from .const import CIRCULATION_PUMP, DOMAIN, HEATER_PRESSURE
 from .coordinator import StiebelEltronConfigEntry, coordinator_display_name
 from .entity import build_unique_id
 
@@ -31,6 +31,37 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 # entity would be migrated to an id that no entity description produces and stay
 # orphaned for the second time.
 _RENAMED_KEYS = {"heating_pressure": HEATER_PRESSURE}
+
+
+@callback
+def async_remove_legacy_circulation_pump_switch(
+    hass: HomeAssistant,
+    entry: StiebelEltronConfigEntry,
+    model: ControllerModel,
+) -> None:
+    """Remove the switch that represented a read-only status register."""
+    registry = er.async_get(hass)
+    obsolete_unique_ids = {
+        build_unique_id(entry, CIRCULATION_PUMP),
+        *(f"{prefix}{CIRCULATION_PUMP}" for prefix in _legacy_prefixes(entry, model)),
+    }
+    obsolete = [
+        registry_entry
+        for registry_entry in er.async_entries_for_config_entry(
+            registry,
+            entry.entry_id,
+        )
+        if registry_entry.domain == "switch"
+        and registry_entry.unique_id in obsolete_unique_ids
+    ]
+    for registry_entry in obsolete:
+        registry.async_remove(registry_entry.entity_id)
+
+    if obsolete:
+        _LOGGER.info(
+            "Removed %s obsolete circulation pump switch entities",
+            len(obsolete),
+        )
 
 
 def _legacy_name(entry: StiebelEltronConfigEntry) -> str:

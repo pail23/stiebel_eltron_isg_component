@@ -15,6 +15,12 @@ body:
         Settings → Devices and Services → Stiebel Eltron ISG → three-dot menu →
         Download diagnostics. It contains the detected controller and the decoded
         register values, which is what most of these reports come down to.
+        Current integration versions redact the configured host name or IP
+        address. Older versions may still include it, so always check the
+        `config_entry` section for a `host` field before uploading. The configured
+        name and port as well as operating values such as temperatures and energy
+        counters remain visible because they are useful for diagnosis. Please
+        remove anything you do not want to publish.
 
   - type: checkboxes
     attributes:
@@ -90,7 +96,10 @@ body:
       label: Diagnostics
       description: >
         Attach the diagnostics file by dragging it into this field, or paste its
-        contents. If you cannot provide it, say why here.
+        contents. Current versions redact the configured host automatically;
+        older versions may not. The configured name, port and operating values
+        remain visible. Review the file before posting it. If you cannot provide
+        it, say why here.
     validations:
       required: true
 
