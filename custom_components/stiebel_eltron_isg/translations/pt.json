@@ -346,6 +346,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Bomba de circulação"
+            },
             "pump_on_hk1": {
                 "name": "Bomba CC 1"
             },
@@ -601,9 +604,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready entrada 2"
-            },
-            "circulation_pump": {
-                "name": "Bomba de circulação"
             }
         },
         "button": {

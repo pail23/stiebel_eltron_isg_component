@@ -346,6 +346,9 @@
             }
         },
         "binary_sensor": {
+            "circulation_pump": {
+                "name": "Cirkulační čerpadlo"
+            },
             "pump_on_hk1": {
                 "name": "Čerpadlo TO 1"
             },
@@ -601,9 +604,6 @@
             },
             "sg_ready_input_2": {
                 "name": "SG Ready vstup 2"
-            },
-            "circulation_pump": {
-                "name": "Cirkulační čerpadlo"
             }
         },
         "button": {
