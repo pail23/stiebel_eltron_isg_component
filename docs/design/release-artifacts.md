@@ -15,6 +15,7 @@ The builder:
 - parses every JSON file;
 - compares every archived file with its intended source bytes and verifies the
   embedded manifest version;
+- pins third-party workflow actions to reviewed commit SHAs;
 - writes deterministic ZIP metadata and reports a SHA-256 digest;
 - atomically replaces the output only after verification.
 
