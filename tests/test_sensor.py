@@ -137,14 +137,6 @@ def test_runtime_sensors_use_duration_device_class() -> None:
         ("lwz", ELECTRICAL_BOOSTER_HEATING),
         ("lwz", ELECTRICAL_BOOSTER_HEATING_WATER),
     }
-    expected_keys = {
-        COMPRESSOR_HEATING,
-        COMPRESSOR_HEATING_WATER,
-        COOLING_RUNTIME,
-        ELECTRICAL_BOOSTER_HEATING,
-        ELECTRICAL_BOOSTER_HEATING_WATER,
-        SOLAR_RUNTIME,
-    }
     runtime_sensors = [
         (model, description)
         for model, descriptions in (
@@ -153,7 +145,7 @@ def test_runtime_sensors_use_duration_device_class() -> None:
             ("lwz", LWZ_SENSOR_TYPES),
         )
         for description in descriptions
-        if description.translation_key in expected_keys
+        if description.native_unit_of_measurement is UnitOfTime.HOURS
     ]
 
     assert len(runtime_sensors) == len(expected_model_keys)

@@ -29,7 +29,9 @@ model gating.
 
 All number entities write persistent controller parameters: room and water
 setpoints, heating curves, bivalence points, cooling settings and fan levels.
-They should share `EntityCategory.CONFIG`.
+They should share `EntityCategory.CONFIG`. The scheduled and manual fan stages
+remain configuration because they store controller parameters; unlike the
+operation-mode select, changing one does not itself activate an operating mode.
 
 The implementation should set the default once on
 `StiebelEltronNumberEntityDescription` and test every WPM, WPM 3i and LWZ
@@ -84,10 +86,11 @@ counter semantic, not a diagnostic category.
 
 ## PR boundary
 
-The first PR should contain only:
+This metadata PR contains:
 
 - `EntityCategory.CONFIG` for every number description;
-- the exhaustive category test.
+- canonical pressure, volume-flow and duration metadata;
+- exhaustive metadata tests and the related upgrade notes.
 
-Default enablement and diagnostic sensor reclassification belong in later,
-separately reviewable PRs after the capability matrix is accepted.
+Counter state classes, default enablement and diagnostic sensor
+reclassification belong in later, separately reviewable PRs.
