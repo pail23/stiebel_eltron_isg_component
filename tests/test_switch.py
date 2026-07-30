@@ -88,14 +88,18 @@ async def test_switch_without_write_target_does_nothing(method: str) -> None:
     entity.coordinator.write_component_value.assert_not_awaited()
 
 
-def test_regular_switch_availability_requires_a_value() -> None:
+@pytest.mark.parametrize(("has_value", "expected"), [(False, False), (True, True)])
+def test_regular_switch_availability_follows_read_back_value(
+    has_value: bool,
+    expected: bool,
+) -> None:
     """Read-back switches use the shared coordinator availability rules."""
     entity = StiebelEltronISGSwitch.__new__(StiebelEltronISGSwitch)
     entity.entity_description = SimpleNamespace(key=SG_READY_ACTIVE)
     entity.modbus_register = lambda api: None
     entity.coordinator = SimpleNamespace(
         last_update_success=True,
-        has_value=lambda register: False,
+        has_value=lambda _register: has_value,
     )
 
-    assert entity.available is False
+    assert entity.available is expected
