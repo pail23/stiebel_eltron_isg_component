@@ -281,8 +281,20 @@
             "compressor_starts": {
                 "default": "mdi:restart"
             },
+            "extract_air_actual": {
+                "default": "mdi:fan"
+            },
+            "extract_air_target_flowrate": {
+                "default": "mdi:fan"
+            },
             "sg_ready_state": {
                 "default": "mdi:solar-power"
+            },
+            "ventilation_air_actual_fan_speed": {
+                "default": "mdi:fan"
+            },
+            "ventilation_air_target_flow_rate": {
+                "default": "mdi:fan"
             }
         }
     }

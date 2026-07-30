@@ -50,14 +50,26 @@ _ICONS_FILE = _COMPONENT_DIR / "icons.json"
 _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 
-# Sensor descriptions without a device class may intentionally use HA's generic
-# sensor icon. This is therefore an explicit snapshot of the smaller set whose
-# custom icons are part of the integration's UI contract.
+# This explicit snapshot keeps the small set of reviewed custom sensor icons
+# stable. The fan overrides preserve useful equipment context that the generic
+# frequency and volume-flow device-class icons cannot express.
 _CUSTOM_ICON_TRANSLATION_KEYS = {
     "sensor": {
         "active_error",
         "compressor_starts",
+        "extract_air_actual",
+        "extract_air_target_flowrate",
         "sg_ready_state",
+        "ventilation_air_actual_fan_speed",
+        "ventilation_air_target_flow_rate",
+    }
+}
+_DEVICE_CLASS_ICON_OVERRIDES = {
+    "sensor": {
+        "extract_air_actual",
+        "extract_air_target_flowrate",
+        "ventilation_air_actual_fan_speed",
+        "ventilation_air_target_flow_rate",
     }
 }
 
@@ -69,19 +81,42 @@ def _platform(module: ModuleType) -> str:
 
 def _descriptions(module: ModuleType) -> list[EntityDescription]:
     """Return every entity description a module holds in a module level list."""
-    return [
-        description
-        for value in vars(module).values()
-        if isinstance(value, (list, tuple))
-        and value
-        and all(isinstance(item, EntityDescription) for item in value)
-        for description in value
-    ]
+    descriptions: list[EntityDescription] = []
+    seen: set[int] = set()
+    for value in vars(module).values():
+        if (
+            not isinstance(value, (list, tuple))
+            or not value
+            or not all(isinstance(item, EntityDescription) for item in value)
+        ):
+            continue
+        for description in value:
+            if id(description) not in seen:
+                descriptions.append(description)
+                seen.add(id(description))
+    return descriptions
+
+
+def _load_json(file: pathlib.Path):
+    """Load JSON while rejecting duplicate object keys."""
+
+    def reject_duplicates(pairs):
+        result = {}
+        for key, value in pairs:
+            if key in result:
+                raise ValueError(f"{file}: duplicate key {key!r}")
+            result[key] = value
+        return result
+
+    return json.loads(
+        file.read_text(encoding="utf-8"),
+        object_pairs_hook=reject_duplicates,
+    )
 
 
 def _entity_names(file: pathlib.Path) -> dict[str, dict[str, dict]]:
     """Return the ``entity`` section of a translation file."""
-    return json.loads(file.read_text(encoding="utf-8")).get("entity", {})
+    return _load_json(file).get("entity", {})
 
 
 def _translation_keys(file: pathlib.Path, platform: str) -> set[str]:
@@ -94,6 +129,16 @@ def _key_tree(value):
     if not isinstance(value, dict):
         return None
     return {key: _key_tree(child) for key, child in value.items()}
+
+
+@pytest.mark.parametrize(
+    "json_file",
+    [_ICONS_FILE, _STRINGS_FILE, *sorted(_TRANSLATIONS_DIR.glob("*.json"))],
+    ids=lambda file: file.name,
+)
+def test_translation_json_has_no_duplicate_keys(json_file: pathlib.Path) -> None:
+    """Duplicate JSON keys must not be silently replaced by the parser."""
+    _load_json(json_file)
 
 
 @pytest.mark.parametrize("module", _PLATFORM_MODULES, ids=_platform)
@@ -177,10 +222,9 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
         for description in descriptions
         if description.translation_key is not None
     }
-    translated_icons = json.loads(_ICONS_FILE.read_text(encoding="utf-8"))[
-        "entity"
-    ].get(platform, {})
+    translated_icons = _load_json(_ICONS_FILE)["entity"].get(platform, {})
     custom_icon_snapshot = _CUSTOM_ICON_TRANSLATION_KEYS.get(platform)
+    allowed_device_class_overrides = _DEVICE_CLASS_ICON_OVERRIDES.get(platform, set())
     if custom_icon_snapshot is None:
         required_custom_icons = {
             description.translation_key
@@ -203,13 +247,22 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
         for key in required_custom_icons
         if not translated_icons.get(key, {}).get("default")
     )
-    device_class_overrides = sorted({
-        description.translation_key
-        for description in descriptions
-        if description.translation_key is not None
-        and description.device_class is not None
-        and description.translation_key in translated_icons
-    })
+    device_class_overrides = sorted(
+        {
+            description.translation_key
+            for description in descriptions
+            if description.translation_key is not None
+            and description.device_class is not None
+            and description.translation_key in translated_icons
+        }
+        - allowed_device_class_overrides
+    )
+    invalid_icons = sorted(
+        f"{key} -> {value.get('default')!r}"
+        for key, value in translated_icons.items()
+        if not isinstance(value.get("default"), str)
+        or not value["default"].startswith("mdi:")
+    )
     orphaned = sorted(set(translated_icons) - translation_keys)
     device_classes_by_key = {
         key: {
@@ -234,11 +287,29 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
         f"{platform} device-class descriptions with icon translations: "
         f"{device_class_overrides}"
     )
+    assert not invalid_icons, f"invalid {platform} icon translations: {invalid_icons}"
     assert not orphaned, f"orphaned {platform} icon translations: {orphaned}"
     assert not inconsistent_device_classes, (
         f"{platform} translation keys with inconsistent device classes: "
         f"{inconsistent_device_classes}"
     )
+
+
+def test_shared_heating_curve_icons_are_intentionally_unified() -> None:
+    """Shared translation keys use one reviewed icon across controller families."""
+    number_icons = _load_json(_ICONS_FILE)["entity"]["number"]
+    assert {
+        key: number_icons[key]["default"]
+        for key in (
+            "heating_curve_rise_hk1",
+            "heating_curve_rise_hk2",
+            "heating_curve_rise_hk3",
+        )
+    } == {
+        "heating_curve_rise_hk1": "mdi:chart-bell-curve-cumulative",
+        "heating_curve_rise_hk2": "mdi:chart-bell-curve-cumulative",
+        "heating_curve_rise_hk3": "mdi:chart-bell-curve-cumulative",
+    }
 
 
 def test_english_config_flow_matches_strings() -> None:
