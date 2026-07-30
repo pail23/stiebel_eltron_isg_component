@@ -34,7 +34,7 @@ jobs:
             ignore: "brands"
 
   ruff:
-    name: "Lint and type check"
+    name: "Ruff"
     runs-on: "ubuntu-latest"
     steps:
         - name: "Checkout the repository"
