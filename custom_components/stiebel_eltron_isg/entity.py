@@ -10,6 +10,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
+# At runtime this must remain ``object``: concrete entities place the mixin
+# before StiebelEltronISGEntity so ``super()`` reaches CoordinatorEntity.
 if TYPE_CHECKING:
     _OptimisticValueMixinBase = CoordinatorEntity[StiebelEltronDataCoordinator]
 else:
