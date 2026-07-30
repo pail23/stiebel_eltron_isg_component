@@ -208,13 +208,17 @@ def _write_field_cases() -> list[Any]:
 )
 def test_number_settings_are_configuration_entities(description: Any) -> None:
     """Persistent controller parameters belong in the device configuration."""
+    assert description.entity_category is EntityCategory.CONFIG
+
+
+def test_number_description_defaults_to_configuration_category() -> None:
+    """New Number descriptions inherit the reviewed configuration category."""
     assert (
         number.StiebelEltronNumberEntityDescription.__dataclass_fields__[
             "entity_category"
         ].default
         is EntityCategory.CONFIG
     )
-    assert description.entity_category is EntityCategory.CONFIG
 
 
 @pytest.mark.parametrize(("model", "accessor"), _accessor_cases())
