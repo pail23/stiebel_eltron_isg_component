@@ -206,12 +206,16 @@ def test_description_accessor_resolves(model: str, accessor: Any) -> None:
 def test_description_write_field_resolves(
     model: str, component: str, field: str
 ) -> None:
-    """Every write field must exist on the component of the model using it."""
+    """Every write field must exist and be writable for the model using it."""
     component_object = getattr(_api(model), component, None)
 
     assert component_object is not None, f"{model} api has no component {component}"
     assert hasattr(component_object, field), (
         f"{type(component_object).__name__} has no field {field}"
+    )
+    field_descriptor = getattr(type(component_object), field)
+    assert field_descriptor.writable is not False, (
+        f"{type(component_object).__name__}.{field} is read-only"
     )
 
 
