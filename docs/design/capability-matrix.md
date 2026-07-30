@@ -47,6 +47,30 @@ Primary reverse-engineering references:
 - `ISG-Web-RE/data/object-mappings/isg_object_mappings.csv`
 - `ISG-Web-RE/data/controller-identification/controller_codes.csv`
 
+## Pilot audit findings
+
+A first read-only cross-check already demonstrates why library resolution alone
+is not a model-capability decision:
+
+- The integration currently gives `WPM_3` the shared WPM Number and Climate
+  lists, including heating circuit 3. The manufacturer table marks documented
+  registers 41551 through 41553 for WPMsystem only, and the WPM 3 object
+  database has no matching register evidence.
+- The same shared Number list gives `WPMsystem` the area- and fan-cooling flow
+  temperature hysteresis controls. Their documented registers 41515 and 41518
+  are mapped for WPM 3 and WPM 3i object databases, but not for the reviewed
+  WPMsystem-family databases.
+- Every corresponding accessor and write field still resolves against the
+  generated WPM library API. That proves the integration will not raise
+  `AttributeError`; it does not prove that the selected controller serves the
+  register.
+
+These are evidence candidates, not runtime changes in this design proposal.
+Before a later correctness PR stops creating an existing entity, it must define
+what happens to its entity-registry entry and user customizations. A model gate
+without that migration policy merely turns an offered entity into a stale,
+unavailable registry entry.
+
 ## Approaches considered
 
 ### Hand-maintained Markdown
