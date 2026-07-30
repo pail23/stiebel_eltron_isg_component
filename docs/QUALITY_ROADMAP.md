@@ -85,7 +85,7 @@ links before proposing this roadmap change upstream.
 | Release artifact verification | Independent | Tracked-file-only HACS ZIP, source-byte verification, deterministic metadata and immutable action pins; publication order remains separate | `codex/release-artifact-verification` at `84f6893`; 746 passed, one skipped |
 | CI action pinning | After release artifact verification to avoid overlapping workflow edits | Pins every remote validation action to an immutable commit and enforces the policy in a test | `codex/pin-ci-actions` at `5eb7eaa`; 747 passed, one skipped |
 | Brand validation | Independent; merge before the Quality Scale evidence package | Removes the stale HACS `brands` exception now that all four official assets exist | `codex/enforce-brand-validation` at `b18b35d`; official 1x/2x icon and logo assets downloaded and dimensions verified |
-| Type-checking baseline | Independent | CI mypy gate for all 17 integration modules, without claiming full strict typing | `codex/typing-baseline` at `deac382`; mypy and Ruff clean, 726 passed, one skipped |
+| Static-analysis baseline | Independent | CI mypy gate for all 17 integration modules, McCabe capped at 10 and 14 obsolete Ruff exemptions removed, without claiming full strict typing | `codex/typing-baseline` at `7ca9698`; mypy and Ruff clean, 726 passed, one skipped |
 | Typed dependency metadata | Independent change in `python-stiebel-eltron`; release a new version before the strict integration package | Adds the PEP 561 marker and typed-package classifier without widening the library API | `codex/add-py-typed` at `c1e694c`; strict mypy and Ruff clean, 24 tests passed, marker verified in sdist and wheel |
 | Strict integration typing | After the baseline and a newly versioned typed dependency release | Enables mypy strict mode for all 17 modules and closes every resulting integration error | `codex/strict-typing-followup` at `589ea5c`; strict mypy and Ruff clean, 726 passed, one skipped; dependency, manifest and lock version bump intentionally pending |
 | Quality Scale evidence | After #622 | All 54 current rules visible as evidenced `done`, reasoned `exempt` or open `todo`; no official tier claim; async library entry points and the fixed-device lifecycle pinned by tests | `codex/docs-supported-functions` includes `3fe5bb6`; 734 passed, one skipped |
@@ -259,6 +259,8 @@ custom integration.
   its PEP 561 marker, followed by the integration dependency and lock-file
   bump.
 - [ ] Reduce broad Ruff exemptions and lower the McCabe complexity ceiling.
+  Prepared locally with 14 passing rules enabled and the ceiling reduced from
+  25 to 10.
 - [ ] Keep `always_update=True`: the audit confirmed it is required because
   register state lives in the dependency's API client and coordinator data is
   always `{}`. A local behavior test prevents its accidental removal.
