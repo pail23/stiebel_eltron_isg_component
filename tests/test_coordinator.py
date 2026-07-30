@@ -59,6 +59,8 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
             outcome = self._updates.pop(0)
             if outcome is not None:
                 raise outcome
+            if not self._updates:
+                self.value = 22.0
 
     api = SequencedApi()
     display_name = coordinator_display_name(ControllerModel.WPM_3)
@@ -93,6 +95,8 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
 
     await coordinator.async_refresh()
     assert entity.available is True
+    assert entity.native_value == 22.0
+    assert not api._updates
 
     # These messages come from DataUpdateCoordinator. Keeping them here pins the
     # ModbusError -> UpdateFailed translation: returning stale data quietly
@@ -136,13 +140,15 @@ async def test_equal_data_refreshes_still_notify_entities(
     listener = MagicMock()
     remove_listener = coordinator.async_add_listener(listener)
 
-    await coordinator.async_refresh()
-    await coordinator.async_refresh()
+    try:
+        await coordinator.async_refresh()
+        await coordinator.async_refresh()
 
-    assert coordinator.data == {}
-    assert api.async_update.await_count == 2
-    assert listener.call_count == 2
-    remove_listener()
+        assert coordinator.data == {}
+        assert api.async_update.await_count == 2
+        assert listener.call_count == 2
+    finally:
+        remove_listener()
 
 
 def test_for_unit_uses_the_active_connection() -> None:
