@@ -111,6 +111,25 @@ async def test_number_shows_written_value_before_the_next_poll() -> None:
     assert entity.native_value == 12.0
 
 
+async def test_number_repeated_optimistic_value_is_a_noop() -> None:
+    """Repeating the visible value must neither write nor delay reconciliation."""
+    entity = _make_number(current=10.0)
+
+    await entity.async_set_native_value(12.0)
+    entity.coordinator.refresh_generation = 1
+    await entity.async_set_native_value(12.0)
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "set_flow_temperature_area", 12.0)
+    ]
+
+    entity.coordinator._current = 11.0
+    entity.coordinator.last_successful_refresh_generation = 1
+    entity._handle_coordinator_update()
+
+    assert entity.native_value == 11.0
+
+
 async def test_number_can_return_to_device_value_before_the_next_poll() -> None:
     """A correction must be compared with the visible optimistic value."""
     entity = _make_number(current=10.0)
@@ -153,6 +172,25 @@ async def test_number_uses_the_first_poll_started_after_the_write() -> None:
     entity.coordinator.refresh_generation = 1
     entity.coordinator.last_successful_refresh_generation = 1
 
+    entity._handle_coordinator_update()
+
+    assert entity.native_value == 11.0
+
+
+async def test_number_keeps_optimistic_value_when_refresh_fails() -> None:
+    """A failed poll has no fresh device value to replace the written value."""
+    entity = _make_number(current=10.0)
+    await entity.async_set_native_value(12.0)
+
+    entity.coordinator.refresh_generation = 1
+    entity.coordinator.last_update_success = False
+    entity._handle_coordinator_update()
+
+    assert entity.native_value == 12.0
+
+    entity.coordinator._current = 11.0
+    entity.coordinator.last_update_success = True
+    entity.coordinator.last_successful_refresh_generation = 1
     entity._handle_coordinator_update()
 
     assert entity.native_value == 11.0

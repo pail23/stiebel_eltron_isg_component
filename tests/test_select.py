@@ -72,6 +72,24 @@ async def test_select_returns_to_the_device_value_once_polled() -> None:
     assert entity.current_option == "off"
 
 
+async def test_select_keeps_optimistic_option_when_refresh_fails() -> None:
+    """A failed poll has no fresh device option to replace the selected one."""
+    entity = _make_select(current=0)
+    await entity.async_select_option("comfort")
+
+    entity.coordinator.refresh_generation = 1
+    entity.coordinator.last_update_success = False
+    entity._handle_coordinator_update()
+
+    assert entity.current_option == "comfort"
+
+    entity.coordinator.last_update_success = True
+    entity.coordinator.last_successful_refresh_generation = 1
+    entity._handle_coordinator_update()
+
+    assert entity.current_option == "off"
+
+
 async def test_select_does_not_assume_an_option_it_did_not_write() -> None:
     """A failed write must not change the reported option."""
     entity = _make_select(current=0)
