@@ -19,6 +19,9 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.stiebel_eltron_isg.const import CURRENT_POWER_CONSUMPTION, DOMAIN
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import WPM_SENSOR_TYPES
+from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
+    StiebelEltronModbusWPM3iDataCoordinator,
+)
 
 
 async def test_async_setup_entry_success(
@@ -31,6 +34,23 @@ async def test_async_setup_entry_success(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_async_setup_entry_selects_wpm_3i_coordinator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """WPM 3i controllers must use their model-specific API coordinator."""
+    mock_get_controller_model.return_value = ControllerModel.WPM_3i
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert isinstance(
+        mock_config_entry.runtime_data,
+        StiebelEltronModbusWPM3iDataCoordinator,
+    )
 
 
 async def test_setup_registers_every_wpm_sensor(
@@ -186,6 +206,22 @@ async def test_async_setup_entry_unknown_model(
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
+async def test_async_setup_entry_rejects_unhandled_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """A detected model without a coordinator must fail without retries."""
+    mock_get_controller_model.return_value = MagicMock(name="future_model")
+    mock_get_controller_model.return_value.name = "FUTURE"
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert result is False
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
 async def test_async_setup_entry_coordinator_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -239,7 +275,6 @@ async def test_unload_entry_closes_connection(
     assert mock_modbus_connection.connected is False
 
 
-@pytest.mark.skip(reason="lingering timer issue")
 async def test_unload_entry_does_not_close_connection_if_platform_unload_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -259,3 +294,9 @@ async def test_unload_entry_does_not_close_connection_if_platform_unload_fails(
 
     assert result is False
     assert mock_modbus_connection.connected is True
+
+    # Home Assistant puts the entry into FAILED_UNLOAD, which cannot be
+    # unloaded a second time. Stop the coordinator and connection explicitly
+    # so the deliberately failed unload does not leak resources from the test.
+    await mock_config_entry.runtime_data.async_shutdown()
+    await mock_modbus_connection.close()
