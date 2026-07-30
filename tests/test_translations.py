@@ -159,9 +159,10 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
     canonical device-class icon instead of overriding it.
     """
     platform = _platform(module)
-    descriptions = {
-        description.translation_key: description
-        for description in _descriptions(module)
+    descriptions = _descriptions(module)
+    translation_keys = {
+        description.translation_key
+        for description in descriptions
         if description.translation_key is not None
     }
     translated_icons = json.loads(_ICONS_FILE.read_text(encoding="utf-8"))[
@@ -169,20 +170,38 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
     ].get(platform, {})
 
     hardcoded = sorted(
-        description.key
-        for description in descriptions.values()
+        f"{description.key} -> {description.translation_key}"
+        for description in descriptions
         if description.icon is not None
     )
     missing = sorted(
-        key
-        for key, description in descriptions.items()
-        if description.device_class is None
-        and not translated_icons.get(key, {}).get("default")
+        {
+            description.translation_key
+            for description in descriptions
+            if description.translation_key is not None
+            and description.device_class is None
+            and not translated_icons.get(description.translation_key, {}).get(
+                "default"
+            )
+        }
     )
-    orphaned = sorted(set(translated_icons) - set(descriptions))
+    device_class_overrides = sorted(
+        {
+            description.translation_key
+            for description in descriptions
+            if description.translation_key is not None
+            and description.device_class is not None
+            and description.translation_key in translated_icons
+        }
+    )
+    orphaned = sorted(set(translated_icons) - translation_keys)
 
     assert not hardcoded, f"{platform} descriptions with hardcoded icons: {hardcoded}"
     assert not missing, f"{platform} descriptions without icon translations: {missing}"
+    assert not device_class_overrides, (
+        f"{platform} device-class descriptions with icon translations: "
+        f"{device_class_overrides}"
+    )
     assert not orphaned, f"orphaned {platform} icon translations: {orphaned}"
 
 
