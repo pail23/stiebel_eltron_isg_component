@@ -18,8 +18,11 @@ jobs:
         uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
 
       - name: "Build and verify the release artifact"
+        # Explicit bash keeps pipefail enabled so a failed build cannot be
+        # hidden by the successful tee process.
         shell: "bash"
         env:
           OUTPUT_PATH: ${{ runner.temp }}/stiebel_eltron_isg.zip

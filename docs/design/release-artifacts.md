@@ -1,6 +1,6 @@
 # Release artifact verification
 
-Status: proposed
+Status: implemented
 
 The release ZIP should contain exactly the Git-tracked files below
 `custom_components/stiebel_eltron_isg`, placed at the ZIP root for HACS. Its
@@ -15,9 +15,14 @@ The builder:
 - parses every JSON file;
 - compares every archived file with its intended source bytes and verifies the
   embedded manifest version;
-- pins third-party workflow actions to reviewed commit SHAs;
 - writes deterministic ZIP metadata and reports a SHA-256 digest;
 - atomically replaces the output only after verification.
+
+The workflows pin third-party actions to reviewed commit SHAs and grant the
+`GITHUB_TOKEN` only the permissions each job needs. Actions that publish no
+immutable version tag are annotated with their tracked branch and review date.
+The existing weekly Dependabot configuration watches GitHub Actions for newer
+revisions.
 
 The checked-in manifest version is not required to equal the release tag. That
 is deliberate and preserves the current release process: the tag version
