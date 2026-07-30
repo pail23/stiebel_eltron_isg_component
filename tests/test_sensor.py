@@ -246,20 +246,37 @@ def test_daily_energy_sensors_are_opt_in_and_excluded_from_statistics(
 
 def test_every_today_energy_description_uses_the_opt_in_contract() -> None:
     """No inline Today description may bypass the shared statistics contract."""
+
+    def descriptions_in(value):
+        if isinstance(value, sensor_module.StiebelEltronSensorEntityDescription):
+            yield value
+        elif isinstance(value, dict):
+            for child in value.values():
+                yield from descriptions_in(child)
+        elif isinstance(value, (list, tuple, set, frozenset)):
+            for child in value:
+                yield from descriptions_in(child)
+
     expected = {
         description.key
-        for description in (ENERGY_DAILY_SENSOR_TYPES + LWZ_ENERGY_DAILY_SENSOR_TYPES)
+        for description in (
+            *ENERGY_DAILY_SENSOR_TYPES,
+            *LWZ_ENERGY_DAILY_SENSOR_TYPES,
+        )
     }
-    discovered = {
-        description.key
-        for value in vars(sensor_module).values()
-        if isinstance(value, (list, tuple))
-        for description in value
-        if isinstance(description, sensor_module.StiebelEltronSensorEntityDescription)
-        and description.key.endswith("_today")
-    }
+    discovered = [
+        description
+        for name, value in vars(sensor_module).items()
+        if name.isupper()
+        for description in descriptions_in(value)
+        if description.key.endswith("_today")
+    ]
 
-    assert discovered == expected
+    assert {description.key for description in discovered} == expected
+    for description in discovered:
+        assert description.state_class is None
+        assert description.entity_registry_enabled_default is False
+        assert description.entity_registry_visible_default is True
 
 
 async def test_existing_daily_energy_registry_entry_stays_enabled(
@@ -284,7 +301,9 @@ async def test_existing_daily_energy_registry_entry_stays_enabled(
     current = registry.async_get(existing.entity_id)
     assert current is not None
     assert current.disabled_by is None
-    assert hass.states.get(current.entity_id) is not None
+    state = hass.states.get(current.entity_id)
+    assert state is not None
+    assert "state_class" not in state.attributes
 
 
 async def test_new_daily_energy_registry_entry_is_disabled(
