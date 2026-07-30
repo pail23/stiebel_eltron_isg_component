@@ -47,14 +47,34 @@ Coverage by integration module:
 Silver requires more than 95% coverage for every integration module, not merely
 an aggregate above 95%.
 
+### Progress since the baseline
+
+Current `main` at `f01c1af` has 726 passing tests, one intentional skip and 96%
+aggregate coverage. Every integration module is above 95% except
+`climate.py` (82%) and `switch.py` (81%).
+
+The first implementation batch has progressed as follows:
+
+- Merged: #621 (config-flow quality), #625 (read-only platform coverage),
+  #626 (coordinator/setup coverage), #627 (circulation-pump status) and #630
+  (forward-compatible model handling).
+- Ready for review: #618 (daily energy statistics), #622 (end-user
+  documentation) and #628 (writable-platform coverage).
+- Deliberately last: #624, whose per-module coverage gate remains a draft until
+  the behavior coverage it enforces has merged.
+
+Issue #629 is the live checklist for merge order and PR status. This document
+keeps the longer-term engineering scope and evidence requirements.
+
 ## Correctness work
 
 These items precede scale bookkeeping because the scale must describe real
 behavior rather than hide known defects.
 
-- [ ] Resolve issue #607. The circulation-pump entity is a switch backed by a
+- [x] Resolve issue #607. The circulation-pump entity is a switch backed by a
   read-only input register and cannot perform the action it exposes. Current
-  WPM and LWZ evidence identifies no writable replacement.
+  WPM and LWZ evidence identifies no writable replacement. #627 exposes it as
+  status instead and migrates the obsolete switch.
 - [ ] Resolve issue #612 only after defining model capability evidence. One
   measured WPMsystem does not serve aggregate compressor runtime registers, but
   that does not prove the same behavior on every controller or firmware.
@@ -85,16 +105,15 @@ behavior rather than hide known defects.
 
 ### Remaining Bronze work
 
-- [ ] Add a successful, non-skipped reconfiguration test and remove the
-  lingering-timer skip without weakening cleanup.
-- [ ] Reach full config-flow coverage.
+- [x] Add a successful, non-skipped reconfiguration test and remove the
+  lingering-timer skip without weakening cleanup. Implemented in #621.
+- [x] Reach full config-flow coverage. Implemented in #621.
 - [ ] Add local custom-integration brand assets and remove `ignore: brands`
   from HACS validation. Asset provenance and trademark use must be explicit.
 - [ ] Add removal instructions.
 - [ ] Describe the integration and its prerequisites in user language.
-- [ ] Decide whether the unused `options.init.scan_interval` translations are
-  removed or backed by a real options flow. Do not document an option users
-  cannot open.
+- [x] Remove the unused `options.init.scan_interval` translations because no
+  options flow exposes them. Implemented in #621.
 - [ ] Add `quality_scale.yaml` with evidence-backed `done` and `exempt`
   entries; do not claim a formal tier in `manifest.json`.
 
@@ -121,6 +140,9 @@ behavior rather than hide known defects.
   3. select and switch validation/error behavior;
   4. sensor and binary-sensor setup/model gates;
   5. remaining setup, number and WPM 3i coordinator paths.
+  #628 raises both remaining modules above the threshold and reaches 99%
+  aggregate coverage on top of current `main`; this item can be checked after
+  that PR merges.
 - [ ] Make the CI fail if any integration module falls to 95% or below.
 - [ ] Test a complete offline-to-online coordinator transition and assert the
   entity availability and log transition, without testing Home Assistant's
@@ -198,17 +220,13 @@ custom integration.
 
 The order is chosen so later claims rest on verified behavior:
 
-1. **Config-flow cleanup and full coverage** — make reconfiguration tests
-   deterministic, cover the success path, and settle dead option strings.
-2. **Coordinator behavior coverage** — cover connection/accessor/update paths
-   and establish reusable fixtures for platform tests.
-3. **Writable-platform behavior coverage** — climate, select, switch and number
-   actions, including invalid input and failed writes.
-4. **Read-only platform coverage** — sensor and binary-sensor setup/model gates.
-5. **Coverage enforcement** — fail CI per module only after every module exceeds
-   95%.
-6. **End-user documentation** — complete Bronze/Silver/Gold documentation
-   requirements and remove stale duplicate material.
+1. **Config-flow cleanup and full coverage** — completed in #621.
+2. **Coordinator behavior coverage** — completed in #626.
+3. **Writable-platform behavior coverage** — ready for review in #628.
+4. **Read-only platform coverage** — completed in #625.
+5. **Coverage enforcement** — #624 remains a draft until #628 merges.
+6. **End-user documentation** — ready for review in #622; keep it behind the
+   behavior PRs so its claims match the merged implementation.
 7. **Entity quality audit** — categories, default enablement, device/state
    classes and model capability gates.
 8. **Actionable Repairs** — only for verified user-remediable states.
