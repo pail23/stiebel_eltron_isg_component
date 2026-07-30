@@ -138,22 +138,7 @@ split-on-trailing-comma = false
 "tests/**" = ["D", "SLF001"]
 
 [tool.mypy]
-check_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_defs = true
 files = ["custom_components/stiebel_eltron_isg"]
-ignore_missing_imports = false
-no_implicit_optional = true
-python_version = "3.14"
 native_parser = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-# pystiebeleltron 0.6.2 has inline annotations but does not publish a py.typed
-# marker. Remove this override after the separately reviewed typed release.
-module = [
-  "pystiebeleltron",
-  "pystiebeleltron.*",
-]
-ignore_missing_imports = true
+python_version = "3.14"
+strict = true
