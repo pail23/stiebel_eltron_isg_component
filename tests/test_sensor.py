@@ -226,7 +226,9 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
 @pytest.mark.parametrize(
     "descriptions", [ENERGY_DAILY_SENSOR_TYPES, LWZ_ENERGY_DAILY_SENSOR_TYPES]
 )
-def test_daily_energy_sensors_do_not_generate_long_term_sums(descriptions) -> None:
+def test_daily_energy_sensors_are_opt_in_and_excluded_from_statistics(
+    descriptions,
+) -> None:
     """Raw day registers stay opt-in and out of long-term statistics."""
     for description in descriptions:
         assert description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
@@ -257,6 +259,7 @@ def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None
 
     for key in CUMULATIVE_ENERGY_KEYS:
         assert descriptions_by_key[key].state_class == SensorStateClass.TOTAL_INCREASING
+        assert descriptions_by_key[key].entity_registry_enabled_default is True
 
 
 @pytest.mark.parametrize(

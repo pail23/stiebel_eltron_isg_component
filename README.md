@@ -73,6 +73,28 @@ automatically is linking them to a differently named replacement. Renaming an en
 inside Home Assistant is the one path that carries its statistics along, because the
 recorder migrates the statistic id on a rename but has no hook for a removal.
 
+Raw energy entities whose names end in `Today` are disabled by default for new
+installations. Their ISG registers reset at midnight to a non-zero fractional
+remainder. Treating that value as `TOTAL_INCREASING` makes Home Assistant interpret
+the reset incorrectly and causes long-term sums to drift. Existing registry entries
+stay enabled after the update, but no longer expose a state class.
+
+If a `Today` entity is configured in the Energy dashboard, replace it with the
+corresponding enabled cumulative entity. For example, replace **Produced Heating
+Today** with **Produced Heating** (the ISG `day_and_total` register) or **Produced
+Heating Total**; the same naming pattern applies to consumed and water-heating
+energy. Entity ids depend on the installation and language, so select by the entity
+name under **Settings → Devices & services → Entities**. Statistics already stored
+under the old `Today` entity are not transferred to the replacement.
+
+Home Assistant may offer a `state_class_removed` repair under **Developer Tools →
+Statistics** for a `Today` entity that previously generated statistics. Deleting
+that invalid statistic removes its long-term statistics, not the entity's ordinary
+state history. To derive a daily value, create a Home Assistant `utility_meter`
+helper with a daily cycle from the cumulative source. Users who still need the raw
+operational `Today` value can enable it manually under **Settings → Devices &
+services → Entities**.
+
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be
 matched up afterwards.
