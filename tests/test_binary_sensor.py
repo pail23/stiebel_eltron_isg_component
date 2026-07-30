@@ -50,7 +50,7 @@ async def test_circulation_pump_is_only_added_for_supported_models(
         await binary_sensor.async_setup_entry(None, entry, async_add_entities)
 
     entities = async_add_entities.call_args.args[0]
-    assert (CIRCULATION_PUMP in entities) is expected
+    assert entities.count(CIRCULATION_PUMP) == int(expected)
 
 
 @pytest.mark.parametrize(

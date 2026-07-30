@@ -79,7 +79,7 @@ async def async_setup_entry(
     # identifiers.
     async_migrate_device_identifier(hass, entry)
     await async_migrate_unique_ids(hass, entry, model)
-    async_remove_legacy_circulation_pump_switch(hass, entry)
+    async_remove_legacy_circulation_pump_switch(hass, entry, model)
 
     coordinator = None
 

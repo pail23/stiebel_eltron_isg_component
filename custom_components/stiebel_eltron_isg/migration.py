@@ -37,9 +37,14 @@ _RENAMED_KEYS = {"heating_pressure": HEATER_PRESSURE}
 def async_remove_legacy_circulation_pump_switch(
     hass: HomeAssistant,
     entry: StiebelEltronConfigEntry,
+    model: ControllerModel,
 ) -> None:
     """Remove the switch that represented a read-only status register."""
     registry = er.async_get(hass)
+    obsolete_unique_ids = {
+        build_unique_id(entry, CIRCULATION_PUMP),
+        *(f"{prefix}{CIRCULATION_PUMP}" for prefix in _legacy_prefixes(entry, model)),
+    }
     obsolete = [
         registry_entry
         for registry_entry in er.async_entries_for_config_entry(
@@ -47,10 +52,7 @@ def async_remove_legacy_circulation_pump_switch(
             entry.entry_id,
         )
         if registry_entry.domain == "switch"
-        and (
-            registry_entry.unique_id == build_unique_id(entry, CIRCULATION_PUMP)
-            or registry_entry.unique_id.endswith(f"_{CIRCULATION_PUMP}")
-        )
+        and registry_entry.unique_id in obsolete_unique_ids
     ]
     for registry_entry in obsolete:
         registry.async_remove(registry_entry.entity_id)

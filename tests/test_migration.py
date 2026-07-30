@@ -4,6 +4,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from pystiebeleltron import ControllerModel
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -62,7 +63,11 @@ def test_removes_obsolete_circulation_pump_switch(
         domain="switch",
     )
 
-    migration.async_remove_legacy_circulation_pump_switch(hass, mock_config_entry)
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
 
     assert er.async_get(hass).async_get(obsolete.entity_id) is None
 
@@ -81,9 +86,39 @@ def test_circulation_pump_cleanup_leaves_other_switches_untouched(
         domain="switch",
     )
 
-    migration.async_remove_legacy_circulation_pump_switch(hass, mock_config_entry)
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
 
     assert er.async_get(hass).async_get(other.entity_id) is not None
+
+
+def test_circulation_pump_cleanup_requires_an_exact_legacy_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A coincidental key suffix must not make an unrelated switch removable."""
+    mock_config_entry.add_to_hass(hass)
+    unrelated = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(
+            mock_config_entry,
+            f"unrelated_{CIRCULATION_PUMP}",
+        ),
+        "unrelated_circulation_pump",
+        domain="switch",
+    )
+
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
+
+    assert er.async_get(hass).async_get(unrelated.entity_id) is not None
 
 
 def test_removes_legacy_duplicate_circulation_pump_switches(
@@ -106,12 +141,24 @@ def test_removes_legacy_duplicate_circulation_pump_switches(
         "legacy_circulation_pump",
         domain="switch",
     )
+    model_legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_{MODEL_NAME}_{CIRCULATION_PUMP}",
+        "model_legacy_circulation_pump",
+        domain="switch",
+    )
 
-    migration.async_remove_legacy_circulation_pump_switch(hass, mock_config_entry)
+    migration.async_remove_legacy_circulation_pump_switch(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3,
+    )
 
     registry = er.async_get(hass)
     assert registry.async_get(current.entity_id) is None
     assert registry.async_get(legacy.entity_id) is None
+    assert registry.async_get(model_legacy.entity_id) is None
 
 
 async def test_migrates_entities_of_the_configured_name_scheme(
