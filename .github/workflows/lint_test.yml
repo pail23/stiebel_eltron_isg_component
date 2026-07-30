@@ -34,7 +34,7 @@ jobs:
             ignore: "brands"
 
   ruff:
-    name: "Ruff"
+    name: "Lint and type check"
     runs-on: "ubuntu-latest"
     steps:
         - name: "Checkout the repository"
@@ -56,7 +56,7 @@ jobs:
           run: uv run --prerelease=allow ruff format . --check
 
         - name: "Run mypy"
-          run: uv run --prerelease=allow mypy custom_components/stiebel_eltron_isg
+          run: uv run --prerelease=allow mypy
   tests:
     runs-on: "ubuntu-latest"
     name: Run tests
