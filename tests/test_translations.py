@@ -151,16 +151,22 @@ def test_english_matches_strings() -> None:
     )
 
 
-def test_number_icons_use_icon_translations() -> None:
-    """Every number icon belongs in icons.json instead of entity state."""
+@pytest.mark.parametrize("module", [binary_sensor, number], ids=_platform)
+def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
+    """Every custom platform icon belongs in icons.json.
+
+    Descriptions with a device class intentionally keep Home Assistant's
+    canonical device-class icon instead of overriding it.
+    """
+    platform = _platform(module)
     descriptions = {
         description.translation_key: description
-        for description in _descriptions(number)
+        for description in _descriptions(module)
         if description.translation_key is not None
     }
     translated_icons = json.loads(_ICONS_FILE.read_text(encoding="utf-8"))[
         "entity"
-    ].get("number", {})
+    ].get(platform, {})
 
     hardcoded = sorted(
         description.key
@@ -168,13 +174,16 @@ def test_number_icons_use_icon_translations() -> None:
         if description.icon is not None
     )
     missing = sorted(
-        key for key in descriptions if not translated_icons.get(key, {}).get("default")
+        key
+        for key, description in descriptions.items()
+        if description.device_class is None
+        and not translated_icons.get(key, {}).get("default")
     )
     orphaned = sorted(set(translated_icons) - set(descriptions))
 
-    assert not hardcoded, f"number descriptions with hardcoded icons: {hardcoded}"
-    assert not missing, f"number descriptions without icon translations: {missing}"
-    assert not orphaned, f"orphaned number icon translations: {orphaned}"
+    assert not hardcoded, f"{platform} descriptions with hardcoded icons: {hardcoded}"
+    assert not missing, f"{platform} descriptions without icon translations: {missing}"
+    assert not orphaned, f"orphaned {platform} icon translations: {orphaned}"
 
 
 def test_english_config_flow_matches_strings() -> None:
