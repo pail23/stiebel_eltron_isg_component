@@ -28,8 +28,8 @@ from custom_components.stiebel_eltron_isg.const import (
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 # Entity accessors reach model-specific API attributes that the shared protocol
-# cannot express. Keep that erasure at the config-entry boundary while the
-# coordinator's own interface and data remain typed.
+# cannot express. Keep that erasure at the shared coordinator/config-entry
+# boundary while the coordinator's own interface and data remain typed.
 type AnyStiebelEltronDataCoordinator = StiebelEltronDataCoordinator[Any]
 type StiebelEltronConfigEntry = ConfigEntry[AnyStiebelEltronDataCoordinator]
 
@@ -70,7 +70,7 @@ class StiebelEltronConnectionParams:
 
 
 class StiebelEltronDataCoordinator[T: StiebelEltronApi](
-    DataUpdateCoordinator[dict[Any, float | int | None]]
+    DataUpdateCoordinator[dict[str, float | int | None]]
 ):
     """Data coordinator base class for stiebel eltron isg."""
 
@@ -158,7 +158,7 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             result = {**result, **component_result}
         return result
 
-    async def _async_update_data(self) -> dict[Any, float | int | None]:
+    async def _async_update_data(self) -> dict[str, float | int | None]:
         """Time to update."""
         self._refresh_generation += 1
         generation = self._refresh_generation
