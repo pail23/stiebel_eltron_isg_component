@@ -24,6 +24,7 @@ other means one of them is stale, so both directions are compared as well.
 
 import json
 import pathlib
+from string import Formatter
 from types import ModuleType
 
 from homeassistant.helpers.entity import EntityDescription
@@ -164,6 +165,28 @@ def test_english_repair_issues_match_strings() -> None:
     english = json.loads(_RUNTIME_FILE.read_text(encoding="utf-8"))["issues"]
 
     assert _key_tree(english) == _key_tree(strings)
+
+
+@pytest.mark.parametrize(
+    "translation_file",
+    [_STRINGS_FILE, _RUNTIME_FILE, _TRANSLATIONS_DIR / "de.json"],
+    ids=lambda file: file.name,
+)
+def test_controller_repair_uses_model_id_placeholder(
+    translation_file: pathlib.Path,
+) -> None:
+    """Every shipped repair text must preserve its runtime placeholder."""
+    issue = json.loads(translation_file.read_text(encoding="utf-8"))["issues"][
+        "unsupported_controller"
+    ]
+    placeholders = {
+        field
+        for text in issue.values()
+        for _, field, _, _ in Formatter().parse(text)
+        if field is not None
+    }
+
+    assert placeholders == {"model_id"}
 
 
 def test_config_flow_strings_match_runtime_fields() -> None:
