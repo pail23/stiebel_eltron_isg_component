@@ -1,5 +1,6 @@
 """Tests for the STIEBEL ELTRON integration."""
 
+from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.config_entries import ConfigEntryState
@@ -212,8 +213,7 @@ async def test_async_setup_entry_rejects_unhandled_model(
     mock_get_controller_model: MagicMock,
 ) -> None:
     """A detected model without a coordinator must fail without retries."""
-    mock_get_controller_model.return_value = MagicMock(name="future_model")
-    mock_get_controller_model.return_value.name = "FUTURE"
+    mock_get_controller_model.return_value = SimpleNamespace(name="FUTURE")
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
