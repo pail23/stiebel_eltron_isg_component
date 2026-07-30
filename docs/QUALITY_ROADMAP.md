@@ -76,7 +76,7 @@ links before proposing this roadmap change upstream.
 
 | Proposed package | Dependency | Scope | Local ref and verification |
 | --- | --- | --- | --- |
-| Coordinator behavior contracts | Independent | Real success/failure/recovery transition plus proof that equal `{}` coordinator data must still notify entities | `codex/coordinator-contracts` at `7611f41`; 728 passed, one skipped |
+| Coordinator behavior contracts | Independent | Real success/failure/recovery transition plus proof that equal `{}` coordinator data must still notify entities | `codex/coordinator-contracts` at `fcdc521`; 728 passed, one skipped |
 | Entity metadata | Independent; merge after behavior coverage for easier review | `EntityCategory.CONFIG` for writable Numbers, pressure/flow device classes and canonical duration metadata; counter state classes deliberately unchanged | `codex/entity-metadata` at `c5476a9`; 783 passed, one skipped |
 | Entity icon translations | After the entity-metadata package | Moves Number, binary-sensor and Sensor hardcoded icons to `icons.json`, preserves canonical device-class icons, keeps three reviewed custom icons and tests duplicate keys | `codex/entity-icon-translations` at `77ed5e9`; 786 passed, one skipped |
 | Release and CI hardening | Independent | Tracked-file-only HACS ZIP, source-byte verification, deterministic metadata and immutable action pins for release and validation workflows | `codex/pin-ci-actions` at `5eb7eaa`; 747 passed, one skipped |
