@@ -92,8 +92,9 @@ links before proposing this roadmap change upstream.
 | Supported functions and examples | After #622 and the evidence-file commit | Controllers, platforms, use cases and safe current-syntax automations | `codex/docs-supported-functions` at `3fe5bb6`; 734 passed, one skipped |
 | Capability-matrix design | Maintainer agreement before generator or model gates | Evidence model only; no runtime or entity-identity change | `codex/design-capability-matrix` at `17b2368`; review corrections and diff validation complete |
 | Coordinator equal-data update contract | Independent | Proves `always_update=True` is required because register state lives in the API client while coordinator data stays `{}` | `codex/coordinator-always-update-contract` at `56d41c5`; 727 passed, one skipped |
+| Writable target capability guard | Independent | Rejects any Number, Select, Switch or Climate entity whose model-specific library field is missing or read-only | `codex/writable-capability-evidence` at `84020df`; 77 write targets checked, 726 passed, one skipped |
 | Raw daily energy default | After #618 | Keeps misleading raw day registers opt-in for new entities while cumulative statistics stay enabled | `codex/disable-raw-day-energy` at `a9a80e3`; 731 passed, one skipped |
-| Unsupported-controller Repair | Independent | Creates one actionable Repair with the reported model ID and removes it after library support is added | `codex/unsupported-controller-repair` at `afa4563`; 728 passed, one skipped |
+| Unsupported-controller Repair | Independent | Creates one actionable Repair with the reported model ID and removes it after library support is added; transient failures are explicitly excluded | `codex/unsupported-controller-repair` at `4c20fc2`; 728 passed, one skipped |
 | Energy counter semantics audit | After #618 | Confirms raw day residues must not compile sums; `day_and_total` gives a monotonic, whole-kWh cumulative source whose per-day deltas can be quantized but whose long-term error stays below the retained residue | Audit complete against the integration, `pystiebeleltron` and archived manufacturer/ISG evidence; no additional counter transform recommended |
 
 Icon migration remains split by platform even when Number and binary-sensor
@@ -115,7 +116,10 @@ behavior rather than hide known defects.
   that does not prove the same behavior on every controller or firmware.
 - [ ] Audit all writable descriptions against `pystiebeleltron==0.6.2` and the
   reverse-engineered ISG object databases so unsupported controls are not
-  offered as working entities.
+  offered as working entities. A local guard now rejects missing and read-only
+  library targets across all writable platforms. Hardware evidence also shows
+  model-specific capability differences; hiding existing registry entities
+  needs an explicit, migration-safe policy before changing runtime behavior.
 
 ## Bronze baseline
 
