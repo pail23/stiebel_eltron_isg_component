@@ -1,5 +1,6 @@
 """Tests for coordinator write actions."""
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,10 +13,15 @@ import pytest
 from custom_components.stiebel_eltron_isg import coordinator as coordinator_module
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronConnectionParams,
     StiebelEltronDataCoordinator,
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.sensor import (
+    StiebelEltronISGSensor,
+    StiebelEltronSensorEntityDescription,
 )
 from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
     StiebelEltronModbusWPM3iDataCoordinator,
@@ -27,6 +33,77 @@ def _coordinator(api) -> StiebelEltronDataCoordinator:
     coordinator = StiebelEltronDataCoordinator.__new__(StiebelEltronDataCoordinator)
     coordinator._api = api
     return coordinator
+
+
+async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
+    hass,
+    mock_config_entry,
+    mock_modbus_connection,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One outage log and one recovery log accompany entity availability."""
+
+    class SequencedApi:
+        value = 21.5
+
+        def __init__(self) -> None:
+            self._updates = [
+                None,
+                ModbusError("offline"),
+                ModbusError("still offline"),
+                None,
+            ]
+
+        async def async_update(self) -> None:
+            outcome = self._updates.pop(0)
+            if outcome is not None:
+                raise outcome
+
+    api = SequencedApi()
+    coordinator = StiebelEltronDataCoordinator(
+        hass,
+        mock_config_entry,
+        api,
+        StiebelEltronConnectionParams(
+            host="isg.local",
+            model=ControllerModel.WPM_3,
+            connection=mock_modbus_connection,
+        ),
+    )
+    entity = StiebelEltronISGSensor(
+        coordinator,
+        mock_config_entry,
+        StiebelEltronSensorEntityDescription(
+            key="outdoor_temperature",
+            modbus_register=lambda client: client.value,
+        ),
+    )
+    caplog.set_level(logging.INFO, logger="custom_components.stiebel_eltron_isg")
+
+    await coordinator.async_refresh()
+    assert entity.available is True
+
+    await coordinator.async_refresh()
+    assert entity.available is False
+
+    await coordinator.async_refresh()
+    assert entity.available is False
+
+    await coordinator.async_refresh()
+    assert entity.available is True
+
+    outage_logs = [
+        record
+        for record in caplog.records
+        if "Error fetching Stiebel Eltron WPM_3 data" in record.getMessage()
+    ]
+    recovery_logs = [
+        record
+        for record in caplog.records
+        if record.getMessage() == "Fetching Stiebel Eltron WPM_3 data recovered"
+    ]
+    assert len(outage_logs) == 1
+    assert len(recovery_logs) == 1
 
 
 def test_for_unit_uses_the_active_connection() -> None:
