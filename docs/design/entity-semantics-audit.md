@@ -1,6 +1,6 @@
 # Entity semantics audit
 
-Status: proposed
+Status: proposed and implemented in this change
 
 This audit applies the Home Assistant Gold rules for entity categories and
 default enablement without changing entity IDs or hiding useful primary

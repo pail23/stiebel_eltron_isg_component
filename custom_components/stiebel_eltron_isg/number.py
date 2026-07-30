@@ -54,7 +54,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    entity_category: EntityCategory = EntityCategory.CONFIG
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
     modbus_register: Any
     write_component: str = "system_parameters"
     write_field: str | None = None
