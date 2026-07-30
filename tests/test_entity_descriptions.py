@@ -13,6 +13,7 @@ escapes that sweep.
 """
 
 from functools import cache
+from pathlib import Path
 from types import ModuleType
 from typing import Any
 
@@ -62,6 +63,8 @@ _WRITE_FIELD_ATTRIBUTES = (
     "eco_target_temp_write_field",
     "comfort_target_temp_write_field",
 )
+
+_EXPECTED_WRITE_FIELD_CASES = Path(__file__).with_name("capability_write_fields.txt")
 
 # Every description list a platform hands to a model, with that model. Lists
 # used by more than one model appear once per model. Lists that only exist to
@@ -193,10 +196,14 @@ def _write_field_cases() -> list[Any]:
                 for attribute in _WRITE_FIELD_ATTRIBUTES
                 if getattr(description, attribute, None) is not None
             )
-    assert len(cases) == 77, (
-        "writable field inventory changed; review every added or removed case"
-    )
     return cases
+
+
+def test_write_field_inventory_matches_reviewed_snapshot() -> None:
+    """Write-field drift must identify every added or removed case."""
+    expected = _EXPECTED_WRITE_FIELD_CASES.read_text(encoding="utf-8").splitlines()
+
+    assert sorted(case.id for case in _write_field_cases()) == expected
 
 
 @pytest.mark.parametrize(("model", "accessor"), _accessor_cases())
@@ -216,8 +223,12 @@ def test_description_write_field_resolves(
     assert hasattr(component_object, field), (
         f"{type(component_object).__name__} has no field {field}"
     )
-    field_descriptor = getattr(type(component_object), field)
-    assert field_descriptor.writable is True or callable(field_descriptor.writable), (
+    field_descriptor = getattr(type(component_object), field, None)
+    assert field_descriptor is not None, (
+        f"{type(component_object).__name__}.{field} is not a field descriptor"
+    )
+    write_contract = getattr(field_descriptor, "writable", None)
+    assert write_contract is True or callable(write_contract), (
         f"{type(component_object).__name__}.{field} has no supported write contract"
     )
 

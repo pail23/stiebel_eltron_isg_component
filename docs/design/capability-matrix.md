@@ -54,12 +54,14 @@ is not a model-capability decision:
 
 - The integration currently gives `WPM_3` the shared WPM Number and Climate
   lists, including heating circuit 3. The manufacturer table marks documented
-  registers 41551 through 41553 for WPMsystem only, and the WPM 3 object
-  database has no matching register evidence.
+  addresses 1551 through 1553 for WPMsystem only, and the WPM 3 object
+  database has no matching register evidence. The table is a documented
+  refutation; the absent database rows are only non-evidentiary silence.
 - The same shared Number list gives `WPMsystem` the area- and fan-cooling flow
-  temperature hysteresis controls. Their documented registers 41515 and 41518
+  temperature hysteresis controls. Their documented addresses 1515 and 1518
   are mapped for WPM 3 and WPM 3i object databases, but not for the reviewed
-  WPMsystem-family databases.
+  WPMsystem-family databases. Here too, model columns in the manufacturer table
+  establish the refutation; database absence only identifies a coverage gap.
 - Every corresponding accessor and write field still resolves against the
   generated WPM library API. That proves the integration will not raise
   `AttributeError`; it does not prove that the selected controller serves the
@@ -178,9 +180,14 @@ Proposed shape:
 
 ```yaml
 schema_version: 1
-source:
-  repository: ISG-Web-RE
-  default_commit: "fdb5f5efb1d80548e40a02f4e6901bcc9671e0b2"
+sources:
+  isg_web_re:
+    repository: ISG-Web-RE
+    commit: "fdb5f5efb1d80548e40a02f4e6901bcc9671e0b2"
+  python_stiebel_eltron:
+    repository: python-stiebel-eltron
+    tag: v0.6.2
+    commit: "3d27058bdfee677a68397834915a08fe466cc149"
 
 model_mappings:
   - integration_model: WPMsystem
@@ -194,8 +201,8 @@ claims:
   - id: wpm-system-inverter-power
     controller_model: WPMsystem
     field: extended_energy_data.inverter_power_iws_1
-    source_commit: "fdb5f5efb1d80548e40a02f4e6901bcc9671e0b2"
     availability: observed_only
+    measured_sample_count: 1
     evidence:
       - kind: live_controller
         confidence: measured
@@ -204,17 +211,39 @@ claims:
         firmware: "12.2.2"
         hardware_revision: "<anonymized revision>"
         sample_id: "<opaque observation id>"
-        sample_count: 1
         observed_on: "2026-07-30"
         plant: third_party_anonymized
         reference: "<consented, anonymized observation>"
-      - kind: object_mapping
-        confidence: object_db
-        verdict: supports
-        role: primary
-        source_db: WPM_4_isg_objects.db
-        device_model: WPM_4
-        modbus_register: 3680
+
+  - id: wpm3-hk3-comfort
+    controller_model: WPM_3
+    field: system_parameters.comfort_temperature_hk_3
+    availability: unknown
+    evidence:
+      - kind: manufacturer_table
+        confidence: documented
+        verdict: refutes
+        source: python_stiebel_eltron
+        source_file: api/wpm_system_parameters.csv
+        source_row: 23
+        register_space: holding
+        documented_address: 1551
+        wire_address: 1550
+        source_register_literal: "1551"
+
+coverage_gaps:
+  - claim_id: wpm3-hk3-comfort
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_3_isg_objects.db
+    device_model: WPM_3
+    role: primary
+    register_space: holding
+    documented_address: 1551
+    wire_address: 1550
+    source_register_literal: "WPM:41551"
+    interpretation: non_evidentiary
 ```
 
 Every claim addresses exactly one `controller_model` and one library `field`.
@@ -224,10 +253,21 @@ components therefore cannot make an availability statement leak to another
 controller. If the same evidence applies to several models or fields, it is
 repeated deliberately so the generated diff exposes every widened claim.
 
+Every repository-backed evidence and gap row names a source from `sources`; the
+exact commit is therefore unambiguous. Live observations instead carry their
+opaque reference and scope fields. `kind` and `confidence` have validated pairings:
+`live_controller/measured`, `object_mapping/object_db`,
+`manufacturer_table/documented`, `family_inference/inferred` and
+`current_integration/integration_only`. A mismatched pair is a schema error.
+
 Object rows use a composite reference. At minimum it includes `source_db`,
-`device_model` and the relevant Modbus register; `web_id`, `info_number`,
-`device_code` and `web_type` are retained when present. A claim can reference
-multiple databases, and every reference declares `role: primary` or
+`device_model`, `register_space`, zero-based `wire_address`, one-based
+`documented_address` and the verbatim `source_register_literal`; `web_id`,
+`info_number`, `device_code` and `web_type` are retained when present. The
+validator checks `documented_address == wire_address + 1`. A full Modicon-style
+reference such as `WPM:41551` remains only in `source_register_literal`; it is
+never joined numerically to the library's `1550` wire address. A claim can
+reference multiple databases, and every reference declares `role: primary` or
 `role: secondary`. The renderer preserves both when they disagree; evidence
 precedence decides the outcome, while an unresolved same-level disagreement is
 a validation error.
@@ -238,11 +278,10 @@ foreign-family row into a claim.
 
 Measured evidence requires controller code, firmware, observation date and a
 hardware revision, an opaque sample ID and a plant classification of `own` or
-`third_party_anonymized`. `sample_count` is derived from distinct sample IDs and
-must match the number of retained observations; it is not entered as an
-unverifiable assertion. Evidence from another installation is stored only with
-consent and without identifying plant, network or owner data. Each claim pins
-the source revision that supports it; the global commit is only a default.
+`third_party_anonymized`. Claim-level `measured_sample_count` is derived from
+distinct sample IDs and must match the retained live observations; it is not
+entered separately on each observation. Evidence from another installation is
+stored only with consent and without identifying plant, network or owner data.
 
 Measured evidence is scoped, not family-wide. It can outrank another source only
 for a generated row whose controller code, hardware revision and firmware
@@ -261,24 +300,32 @@ one family-wide availability flag:
 
 | Controller | Library field | Manufacturer-derived row | Pilot verdict |
 | --- | --- | --- | --- |
-| `WPM_3` | `system_parameters.comfort_temperature_hk_3` | `api/wpm_system_parameters.csv`, register 1551 | `documented/refutes` |
-| `WPM_3` | `system_parameters.eco_temperature_hk_3` | `api/wpm_system_parameters.csv`, register 1552 | `documented/refutes` |
-| `WPM_3` | `system_parameters.heating_curve_rise_hk_3` | `api/wpm_system_parameters.csv`, register 1553 | `documented/refutes` |
-| `WPMsystem` | `system_parameters.flow_temp_hysteresis_area` | `api/wpm_system_parameters.csv`, register 1515 | `documented/refutes` |
-| `WPMsystem` | `system_parameters.flow_temp_hysteresis_fan` | `api/wpm_system_parameters.csv`, register 1518 | `documented/refutes` |
+| `WPM_3` | `system_parameters.comfort_temperature_hk_3` | `api/wpm_system_parameters.csv`, row 23, address 1551 | `documented/refutes` |
+| `WPM_3` | `system_parameters.eco_temperature_hk_3` | `api/wpm_system_parameters.csv`, row 24, address 1552 | `documented/refutes` |
+| `WPM_3` | `system_parameters.heating_curve_rise_hk_3` | `api/wpm_system_parameters.csv`, row 25, address 1553 | `documented/refutes` |
+| `WPMsystem` | `system_parameters.flow_temp_hysteresis_area` | `api/wpm_system_parameters.csv`, row 16, address 1515 | `documented/refutes` |
+| `WPMsystem` | `system_parameters.flow_temp_hysteresis_fan` | `api/wpm_system_parameters.csv`, row 19, address 1518 | `documented/refutes` |
 
 Those rows are pinned to `python-stiebel-eltron` tag `v0.6.2`, commit
 `3d27058bdfee677a68397834915a08fe466cc149`. The source CSV marks registers
 1551 through 1553 for WPMsystem only and registers 1515 and 1518 for WPM 3 and
 WPM 3i only. It is the source of the refutation.
 
+The accepted overlay contains one singular claim and one `coverage_gap` row for
+each table entry; the YAML above shows the complete first pair. A coverage gap
+must reference an existing claim, a pinned source, file, database, model, role
+and all three address forms, and must set
+`interpretation: non_evidentiary`. It carries neither confidence nor verdict.
+
 The ISG object export provides a separate, weaker cross-check at commit
 `fdb5f5efb1d80548e40a02f4e6901bcc9671e0b2`:
 
-- `WPM_3_isg_objects.db` contains no mapping for documented registers 41551
-  through 41553.
+- `WPM_3_isg_objects.db` contains none of the source literals `WPM:41551`
+  through `WPM:41553`, corresponding to documented addresses 1551 through
+  1553.
 - `WPM_4_isg_objects.db` and `WPM_4_v1_isg_objects.db` contain no mapping for
-  documented registers 41515 or 41518.
+  source literals `WPM:41515` or `WPM:41518`, corresponding to documented
+  addresses 1515 and 1518.
 
 These exact database/revision checks are stored as `coverage_gap` metadata, not
 as evidence with a `refutes` verdict. An absent object row can mean that the
@@ -315,6 +362,9 @@ requires human resolution; polarity must never be hidden inside the confidence
 value. Precedence is applied only after filtering evidence to the row's exact
 controller and firmware scope. `integration_only` records what the current code
 offers; it is never independent support and can produce only `unverified`.
+Exact object-database presence ranks above a general manufacturer table because
+it is model-specific. Object-database absence has no strength and remains a
+non-evidentiary coverage gap.
 
 Availability:
 
@@ -328,7 +378,7 @@ Availability:
 - `unknown`: insufficient evidence.
 
 A refuted writable claim is a test failure. An unknown read capability is
-displayed as unknown and is not silently promoted to supported. Successful
+displayed as `unverified` and is not silently promoted to supported. Successful
 negotiation of an optional block proves the block read was accepted, not that
 every register within it is individually available.
 
@@ -360,7 +410,8 @@ The renderer derives those four states with this complete rule table:
 | no | any or none | any | `not offered` |
 | yes | `supports` from `measured`, `object_db`, `documented` or `inferred` | `standard` | `available` |
 | yes | the same independent support | `optional_block`, `configuration_dependent` or `observed_only` | `optional/configuration-dependent` |
-| yes | none, `integration_only` support, or `unknown` | any except `faulting` | `unverified` |
+| yes | `supports` from independent evidence | `unknown` | `unverified` |
+| yes | none or `integration_only` support | any except `faulting` | `unverified` |
 | yes | `refutes` | any | `unverified` with a visible refuted warning |
 | yes | any or none | `faulting` | `unverified` with a do-not-probe warning |
 
@@ -369,6 +420,11 @@ offered and refuted writable row is also a hard validation failure. An offered
 and refuted read-only row remains visible as `unverified` only while a separate
 correctness PR and entity-registry migration are prepared; its evidence note
 must say `refuted`, not merely `unknown`.
+
+`observed_only` deliberately renders as conditional even though its scoped
+evidence is stronger than documentation: the observation proves the exact
+sample, not the whole controller profile. Evidence strength selects the
+verdict; availability expresses how broadly that verdict may be presented.
 
 The document must explain that `available` means both that the integration
 offers the entity and that scoped independent evidence supports it. It still
@@ -384,8 +440,9 @@ Automated checks should prove:
    explicit evidence, confidence and verdict.
 2. Every entity description dispatched by a platform appears exactly once per
    applicable controller model.
-3. Every writable entity resolves to a library field that is writable and whose
-   declared range contains the Home Assistant range.
+3. Every writable entity resolves to a library field that is writable and,
+   where the library declares a range, that range contains the Home Assistant
+   range.
 4. Every accessor resolves through the recording proxy, or is explicitly
    allowlisted as derived/action-based.
 5. Home Assistant units and state classes agree with the library's scale and
@@ -401,8 +458,11 @@ Automated checks should prove:
 10. Measured evidence contains the complete hardware/firmware/sample scope, and
     precedence is applied only to overlapping scopes.
 11. `integration_only` evidence never renders an entity as available.
-12. Every offered writable field is either checked by a callable library range
-    validator or appears in a reviewed `bounds_unverified` inventory.
+12. Every Number or Climate field that advertises Home Assistant bounds is
+    either checked by a callable library range validator or appears in a
+    reviewed `bounds_unverified` inventory. Other writable platforms remain in
+    the complete write-field inventory and are checked for a valid write
+    contract.
 13. The generated Markdown is deterministic and committed output is current.
 14. Adding or removing an entity without regenerating/reviewing the matrix fails
     CI.

@@ -1,5 +1,6 @@
 """Verify that entity write ranges are accepted by the library."""
 
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -46,9 +47,9 @@ _CLIMATE_WRITE_FIELDS = (
     "comfort_target_temp_write_field",
 )
 
-_EXPECTED_WRITE_RANGE_CASES = 65
+_EXPECTED_WRITE_RANGE_CASES = Path(__file__).with_name("capability_write_ranges.txt")
 _BOUNDS_UNVERIFIED = frozenset({
-    ("NUMBER_TYPES_WPM-heating_curve_rise_hk3-heating_curve_rise_hk_3-0..3"),
+    "NUMBER_TYPES_WPM-heating_curve_rise_hk3-heating_curve_rise_hk_3-0..3"
 })
 
 
@@ -63,7 +64,6 @@ def _field_descriptor(component_classes: tuple[type, ...], field: str) -> Any:
 def _write_range_cases() -> list[Any]:
     """Return every advertised writable range and its library descriptor."""
     cases = []
-    bounds_unverified = set()
 
     for list_name, component_classes, descriptions in _NUMBER_DESCRIPTION_LISTS:
         for description in descriptions:
@@ -76,8 +76,6 @@ def _write_range_cases() -> list[Any]:
                 f"{list_name}-{description.key}-{description.write_field}"
                 f"-{minimum}..{maximum}"
             )
-            if field.writable is True:
-                bounds_unverified.add(case_id)
             cases.append(
                 pytest.param(
                     field,
@@ -97,8 +95,6 @@ def _write_range_cases() -> list[Any]:
                     continue
                 descriptor = _field_descriptor(component_classes, field)
                 case_id = f"{list_name}-{description.key}-{field}-{minimum}..{maximum}"
-                if descriptor.writable is True:
-                    bounds_unverified.add(case_id)
                 cases.append(
                     pytest.param(
                         descriptor,
@@ -108,14 +104,21 @@ def _write_range_cases() -> list[Any]:
                     )
                 )
 
-    assert len(cases) == _EXPECTED_WRITE_RANGE_CASES, (
-        "writable range inventory changed; review every added or removed case"
-    )
-    assert bounds_unverified == _BOUNDS_UNVERIFIED, (
-        "fields without a library range validator changed; verify and update "
-        "the explicit bounds-unverified inventory"
-    )
     return cases
+
+
+def test_write_range_inventory_matches_reviewed_snapshot() -> None:
+    """Range changes must name the exact reviewed entity and endpoints."""
+    cases = _write_range_cases()
+    expected = _EXPECTED_WRITE_RANGE_CASES.read_text(encoding="utf-8").splitlines()
+
+    assert sorted(case.id for case in cases) == expected
+
+    bounds_unverified = {case.id for case in cases if case.values[0].writable is True}
+    assert bounds_unverified == _BOUNDS_UNVERIFIED, (
+        "fields or advertised bounds without a library validator changed; "
+        "verify both endpoints and update the reviewed inventory"
+    )
 
 
 @pytest.mark.parametrize(("field", "minimum", "maximum"), _write_range_cases())
