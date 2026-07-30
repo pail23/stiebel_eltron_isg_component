@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -61,6 +61,8 @@ async def async_setup_entry(
 class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
     """stiebel_eltron_isg button class."""
 
+    entity_description: StiebelEltronISGButtonDescription
+
     def __init__(
         self,
         coordinator: AnyStiebelEltronDataCoordinator,
@@ -73,8 +75,7 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the button action."""
-        description = cast(StiebelEltronISGButtonDescription, self.entity_description)
-        await description.press_action(self.coordinator)
+        await self.entity_description.press_action(self.coordinator)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

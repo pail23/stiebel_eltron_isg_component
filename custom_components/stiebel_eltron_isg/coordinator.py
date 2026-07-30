@@ -27,6 +27,9 @@ from custom_components.stiebel_eltron_isg.const import (
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
+# Entity accessors reach model-specific API attributes that the shared protocol
+# cannot express. Keep that erasure at the config-entry boundary while the
+# coordinator's own interface and data remain typed.
 type AnyStiebelEltronDataCoordinator = StiebelEltronDataCoordinator[Any]
 type StiebelEltronConfigEntry = ConfigEntry[AnyStiebelEltronDataCoordinator]
 
@@ -66,7 +69,9 @@ class StiebelEltronConnectionParams:
     connection: ModbusConnection
 
 
-class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
+class StiebelEltronDataCoordinator[T: StiebelEltronApi](
+    DataUpdateCoordinator[dict[Any, float | int | None]]
+):
     """Data coordinator base class for stiebel eltron isg."""
 
     def __init__(
