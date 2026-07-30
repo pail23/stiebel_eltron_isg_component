@@ -16,20 +16,17 @@ jobs:
     steps:
       - name: "Checkout the repository"
         uses: "actions/checkout@v7.0.1"
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
-      - name: "Adjust version number"
+      - name: "Build and verify the release artifact"
         shell: "bash"
         run: |
-          yq -i -o json '.version="${{ github.event.release.tag_name }}"' \
-            "${{ github.workspace }}/custom_components/stiebel_eltron_isg/manifest.json"
-
-      - name: "ZIP the integration directory"
-        shell: "bash"
-        run: |
-          cd "${{ github.workspace }}/custom_components/stiebel_eltron_isg"
-          zip stiebel_eltron_isg.zip -r ./
+          python3 scripts/build_release.py \
+            "${{ github.event.release.tag_name }}" \
+            "${{ runner.temp }}/stiebel_eltron_isg.zip"
 
       - name: "Upload the ZIP file to the release"
         uses: softprops/action-gh-release@v3.0.2
         with:
-          files: ${{ github.workspace }}/custom_components/stiebel_eltron_isg/stiebel_eltron_isg.zip
+          files: ${{ runner.temp }}/stiebel_eltron_isg.zip
