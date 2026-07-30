@@ -33,11 +33,12 @@ or firmware.
   It is refuted for the LWZ family.
 - A field present in a generated library map is not proof that every controller
   serves it. Optional register blocks are discovered at runtime when the device
-  accepts or rejects their Modbus reads.
+  accepts or rejects their Modbus reads. Acceptance of a block is not proof that
+  every address inside that block exists.
 - Derived library properties such as `day_and_total` do not have a single wire
   register. Their component registers must be recorded separately.
 - Firmware and plant configuration can make a documented value unavailable.
-  `unknown`, `optional` and `contradicted` are distinct states.
+  Unknown, optional, refuted and known-to-fault reads are distinct states.
 
 Primary reverse-engineering references:
 
@@ -71,7 +72,22 @@ explicit and human-reviewable.
 
 ## Proposed architecture
 
-### 1. Integration inventory
+### 1. Controller identity mapping
+
+Keep the identities used by each source separate:
+
+- the integration's `ControllerModel`;
+- the controller code read through Modbus;
+- the firmware's CAN identity, only where measured;
+- the object database's `device_model`.
+
+A small, versioned mapping table relates these identifiers. Every relationship
+has its own evidence, confidence and verdict; no claim inherits a family-wide
+equivalence implicitly. This allows the measured WPM codes 390, 391 and 449 to
+be exact without extending that conclusion to unmeasured WPM codes or to the
+incompatible LWZ numbering.
+
+### 2. Integration inventory
 
 A generator imports or statically reads the entity-description collections and
 the model dispatch in each platform. It emits one row for every
@@ -100,7 +116,7 @@ Each row captures:
 The inventory must use `(platform, key)` as entity identity. A key by itself is
 not guaranteed to be unique across platforms.
 
-### 2. Library field resolver
+### 3. Library field resolver
 
 Accessor lambdas are resolved to component paths such as
 `system_parameters.comfort_temperature_hk_1`. The matching
@@ -117,7 +133,18 @@ Accessors with alternatives or indexes retain all paths. Derived values retain
 their source fields instead of inventing an address. Buttons record their
 coordinator action and the eventual write target separately.
 
-### 3. Evidence overlay
+Resolution executes each accessor against a recording proxy that logs attribute
+and index access without reading hardware. Arithmetic, boolean fallbacks and
+multiple possible paths are recorded explicitly. An accessor the proxy cannot
+resolve is a CI failure unless it is present in a small reviewed allowlist as a
+derived or action-based case; the generator must never emit a silently empty
+field path.
+
+The extracted library facts are committed as a versioned snapshot. Updating
+the pinned dependency must regenerate that snapshot, making changed addresses,
+ranges, scaling or optionality visible in the integration PR.
+
+### 4. Evidence overlay
 
 A local YAML file stores only claims that cannot be generated from the
 integration and its pinned library. It does not copy the complete
@@ -129,18 +156,35 @@ Proposed shape:
 schema_version: 1
 source:
   repository: ISG-Web-RE
-  commit: "<reviewed commit>"
+  default_commit: "<reviewed commit>"
+
+model_mappings:
+  - integration_model: WPMsystem
+    controller_code: 390
+    object_db_device_model: WPM_4
+    confidence: measured
+    verdict: supports
+    evidence_reference: "<anonymized observation>"
 
 claims:
   - id: wpm-system-inverter-power
     controller_models: [WPMsystem]
     fields: [extended_energy_data.inverter_power_iws_1]
-    availability: observed
-    confidence: measured
+    source_commit: "<commit containing these source rows>"
+    availability: observed_only
     evidence:
       - kind: live_controller
-        reference: "stiebel_eltron_isg_component#608"
+        confidence: measured
+        verdict: supports
+        controller_code: 390
+        firmware: "<firmware version>"
+        observed_on: "2026-07-30"
+        plant: third_party_anonymized
+        reference: "<consented, anonymized observation>"
       - kind: object_mapping
+        confidence: object_db
+        verdict: supports
+        role: primary
         source_db: WPM_4_isg_objects.db
         device_model: WPM_4
         modbus_register: 3680
@@ -149,25 +193,46 @@ claims:
 Object rows use a composite reference. At minimum it includes `source_db`,
 `device_model` and the relevant Modbus register; `web_id`, `info_number`,
 `device_code` and `web_type` are retained when present. A claim can reference
-multiple primary and secondary databases.
+multiple databases, and every reference declares `role: primary` or
+`role: secondary`. The renderer preserves both when they disagree; evidence
+precedence decides the outcome, while an unresolved same-level disagreement is
+a validation error.
+
+A row containing only `web_id` is rejected by the schema. Imports must retain
+the database and model family so a coincidentally reused web ID cannot pull a
+foreign-family row into a claim.
+
+Measured evidence requires controller code, firmware, observation date and a
+plant classification of `own` or `third_party_anonymized`. Evidence from
+another installation is stored only with consent and without identifying
+plant, network or owner data. Each claim pins the source revision that supports
+it; the global commit is only a default.
 
 The integration repository remains buildable by itself. A developer tool may
 accept `--isg-re-path` to validate or refresh evidence against a sibling clone,
 but normal CI validates the pinned, minimal overlay without requiring another
 repository.
 
-### 4. Confidence and availability vocabulary
+### 5. Evidence strength, verdict and availability
 
-Confidence:
+Evidence strength, from strongest to weakest:
 
 - `measured`: observed on identified hardware and firmware;
 - `object_db`: exact object-database/register evidence;
 - `documented`: manufacturer Modbus documentation or generated library source;
 - `inferred`: shared map or family relationship, explicitly not measured;
-- `integration_only`: currently offered by code without independent hardware
-  evidence;
-- `contradicted`: evidence shows the entity should not be offered as that
-  capability.
+- `integration_only`: currently offered by code without independent evidence.
+
+Verdict is a separate axis:
+
+- `supports`;
+- `refutes`.
+
+Precedence is deterministic: `measured` > `object_db` > `documented` >
+`inferred` > `integration_only`. Higher-strength evidence decides the rendered
+outcome. Support and refutation at the same strength is a test failure that
+requires human resolution; polarity must never be hidden inside the confidence
+value.
 
 Availability:
 
@@ -176,16 +241,26 @@ Availability:
 - `configuration_dependent`: valid register whose value depends on installed
   equipment or controller configuration;
 - `observed_only`: enabled only for a specifically measured model;
+- `faulting`: reading the address is known to put a controller into an error
+  state and must not be retried by a probe;
 - `unknown`: insufficient evidence.
 
-A contradictory writable claim is a test failure. An unknown read capability
-is displayed as unknown and is not silently promoted to supported.
+A refuted writable claim is a test failure. An unknown read capability is
+displayed as unknown and is not silently promoted to supported. Successful
+negotiation of an optional block proves the block read was accepted, not that
+every register within it is individually available.
 
-### 5. Generated outputs
+Measured claims are reviewed again when the affected firmware or controller
+mapping changes. Library-backed claims are refreshed with every dependency-pin
+update; stale source commits fail validation rather than being updated
+implicitly.
 
-The first user-facing output is
-`docs/ENTITY_CAPABILITIES.md`, grouped by platform. Its compact model columns
-use words or accessible symbols for:
+### 6. Generated outputs
+
+The user-facing output has an index at `docs/ENTITY_CAPABILITIES.md` and one
+deterministically sorted file per platform so reviews stay readable. Each table
+shows the translated entity name first and the internal `(platform, key)`
+identity second. Compact model columns use words or accessible symbols for:
 
 - available;
 - optional/configuration-dependent;
@@ -198,23 +273,31 @@ integration at runtime.
 
 The document must explain that "available" means the integration offers the
 entity for that controller profile. It does not guarantee a non-null value on
-every plant.
+every plant. "Not offered" describes the integration profile and is not proof
+that the physical hardware lacks the capability.
 
 ## Verification
 
 Automated checks should prove:
 
-1. Every entity description dispatched by a platform appears exactly once per
+1. Every integration-model/controller-code/object-database relationship has
+   explicit evidence, confidence and verdict.
+2. Every entity description dispatched by a platform appears exactly once per
    applicable controller model.
-2. Every writable entity resolves to a library field that is writable and whose
+3. Every writable entity resolves to a library field that is writable and whose
    declared range contains the Home Assistant range.
-3. Every accessor resolves, or is explicitly marked as derived/action-based.
-4. Every matrix row has a translation and valid Home Assistant entity
+4. Every accessor resolves through the recording proxy, or is explicitly
+   allowlisted as derived/action-based.
+5. Home Assistant units and state classes agree with the library's scale and
+   unit, in addition to write-range validation.
+6. Every matrix row has a translation and valid Home Assistant entity
    semantics.
-5. Every evidence claim refers to a real generated row and no row has conflicting
-   claims at the same confidence level.
-6. The generated Markdown is deterministic and committed output is current.
-7. Adding or removing an entity without regenerating/reviewing the matrix fails
+7. Every evidence claim refers to a real generated row; same-strength support
+   and refutation is rejected.
+8. Object evidence always carries the composite database/model/register key and
+   a database role; a web ID alone is rejected.
+9. The generated Markdown is deterministic and committed output is current.
+10. Adding or removing an entity without regenerating/reviewing the matrix fails
    CI.
 
 The current Home Assistant Quality Scale requires above 95% coverage for every
@@ -233,7 +316,7 @@ Keep implementation reviewable:
    internal output; no runtime behavior change.
 2. **Evidence overlay and documentation** — reviewed ISG evidence and generated
    user-facing matrix.
-3. **Correctness gates** — separate, small PRs for contradicted or
+3. **Correctness gates** — separate, small PRs for refuted or
    observed-only entities, with migrations where entity removal is necessary.
 4. **Home Assistant semantics** — categories, default enablement, device/state
    classes and icons, informed by the accepted matrix but not bundled into it.
@@ -246,8 +329,11 @@ runtime is unsupported, optional or merely unobserved on each model.
 - Maintainer agrees that generated inventory plus an evidence overlay is the
   desired maintenance model.
 - The confidence vocabulary does not overstate reverse-engineered evidence.
+- Controller-code, CAN and object-database model mappings carry their own
+  reviewed evidence instead of being inherited from a family.
 - The first PR changes no entity availability or unique IDs.
 - The reverse-engineering source commit is pinned and refreshable.
+- Measured third-party evidence follows the consent and anonymization rule.
 - Sample rows cover one simple sensor, one writable entity, one optional block,
   one derived energy counter and one two-database controller case before the
   full matrix is generated.
