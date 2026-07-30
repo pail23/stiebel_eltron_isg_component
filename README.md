@@ -88,7 +88,8 @@ installations, Home Assistant therefore displays their native `bar` values as
 
 Writable number entities are now grouped under **Configuration** on the device
 page. Existing entity IDs and manually configured dashboards or automations are not
-changed.
+changed. These settings may no longer appear in automatically generated dashboards
+or default voice-assistant exposure.
 
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be

@@ -145,7 +145,7 @@ def test_runtime_sensors_use_duration_device_class() -> None:
             ("lwz", LWZ_SENSOR_TYPES),
         )
         for description in descriptions
-        if description.native_unit_of_measurement is UnitOfTime.HOURS
+        if description.native_unit_of_measurement == UnitOfTime.HOURS
     ]
 
     assert len(runtime_sensors) == len(expected_model_keys)
