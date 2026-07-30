@@ -48,7 +48,7 @@
     "issues": {
         "unsupported_controller": {
             "title": "Nicht unterstütztes Reglermodell",
-            "description": "Das ISG meldet die Reglermodell-ID {model_id}, die von dieser Version der Integration nicht unterstützt wird. Der Eintrag bleibt nicht verfügbar, bis die Gerätebibliothek und diese Integration das Modell unterstützen. Aktualisieren Sie die Integration und laden Sie den Eintrag erneut. Falls das Problem bestehen bleibt, melden Sie diese Modell-ID im Issue-Tracker des Projekts."
+            "description": "Das ISG meldet die Reglermodell-ID {model_id}, die von dieser Version der Integration nicht unterstützt wird. Aktualisieren Sie die Integration und laden Sie den Eintrag erneut. Falls er weiterhin nicht verfügbar ist, wurde die Unterstützung noch nicht in der Gerätebibliothek und dieser Integration veröffentlicht; melden Sie die Modell-ID im Issue-Tracker des Projekts."
         }
     },
     "entity": {

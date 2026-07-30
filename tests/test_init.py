@@ -211,6 +211,7 @@ async def test_async_setup_entry_unknown_model(
     mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Setup fails cleanly (no retry) when the controller model is unknown."""
+    assert mock_modbus_connection.connected is True
     mock_config_entry.add_to_hass(hass)
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
 
@@ -262,6 +263,7 @@ async def test_async_setup_entry_rejects_unhandled_model(
     mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """A detected model without a coordinator must fail with a repair."""
+    assert mock_modbus_connection.connected is True
     mock_get_controller_model.return_value = SimpleNamespace(name="FUTURE", value=166)
     mock_config_entry.add_to_hass(hass)
 
