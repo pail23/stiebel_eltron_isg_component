@@ -308,7 +308,10 @@ fixture may contain placeholder values. The generator owns code and library
 facts such as platform, entity key, field path, writable range, derivation and
 optional-block negotiation. The overlay alone owns evidence verdict and
 `availability`; a disagreement cannot arise because the generated schema does
-not contain that key.
+not contain that key. The validator still cross-checks semantics: a generated
+field whose block is negotiated at runtime must use
+`availability: optional_block`, unless a reviewed source-backed override
+explains a narrower class.
 
 The required valid shape manifest is:
 
@@ -348,7 +351,9 @@ produces `incomplete_evidence`; equal-strength conflicting evidence produces
 `conflicting_evidence`; and a valid claim for a currently exposed refuted
 writable field produces `remediation_required`. Evaluation stops at the first
 class in that order. `expected_error` and `expected_renderer_state` are mutually
-exclusive harness keys.
+exclusive harness keys. The conflict mutation adds one same-scope,
+same-strength opposing primary evidence row to a valid case and must produce
+`conflicting_evidence`.
 
 Every claim addresses exactly one `controller_model` and one library `field`.
 Plural model or field keys fail with `schema_invalid`, as do duplicate
@@ -800,8 +805,9 @@ The ISG object export provides a separate, weaker cross-check at commit
   source literals `WPM:41515` or `WPM:41518`, corresponding to documented
   addresses 1515 and 1518.
 
-The pinned controller-identification table has no separate revision database
-for controller code `390`; its `WPM_3_S` menu variant shares
+The pinned library enum maps `WPM_3` to code `390`, and the pinned
+controller-identification table has no separate revision database for that
+code; its `WPM_3_S` menu variant shares
 `WPM_3_isg_objects.db`. The WPM 3 gap set is therefore complete for that code.
 
 These exact database/revision checks are stored as `coverage_gap` metadata, not
@@ -953,10 +959,14 @@ Automated checks should prove:
 13. The generated Markdown is deterministic and committed output is current.
 14. Adding or removing an entity without regenerating/reviewing the matrix fails
     CI.
-15. Every measured register's space, address, signedness, scale and offset match
-    the pinned generated library snapshot or carry an explicit reviewed override.
+15. Every measured non-sentinel register's space, address, signedness, scale and
+    offset match the pinned generated library snapshot or carry an explicit
+    reviewed override; sentinel rows require only wire encoding and sentinel
+    agreement.
 16. Every measured `sample_id` resolves once in the global observation catalog
     and has identical scope wherever it is referenced.
+17. Generated optional-block negotiation and overlay availability agree unless
+    an explicit reviewed override narrows the class.
 
 The current Home Assistant Quality Scale requires above 95% coverage for every
 integration module and expects Gold integrations to document supported
