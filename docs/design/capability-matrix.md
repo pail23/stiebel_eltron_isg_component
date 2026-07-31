@@ -176,7 +176,9 @@ A local YAML file stores only claims that cannot be generated from the
 integration and its pinned library. It does not copy the complete
 reverse-engineering database.
 
-Proposed shape:
+Proposed logical shape. In the implementation, `sources` and `observations`
+live in one shared catalog imported by the accepted overlay and remediation
+fixtures, so a sample scope cannot be redefined per file:
 
 ```yaml
 schema_version: 1
@@ -189,12 +191,22 @@ sources:
     tag: v0.6.2
     commit: "3d27058bdfee677a68397834915a08fe466cc149"
 
+observations:
+  - sample_id: "obs-7f3c2a91"
+    controller_code: 449
+    controller_firmware: "not exposed"
+    isg_software: "1.6.04.0000"
+    hardware_revision: "not exposed"
+    observed_on: "2026-07-31"
+    plant: third_party_anonymized
+    consent: confirmed
+    consent_scope: read_only_observation_and_publication
+    reference: "consented read-only Modbus observation"
+
 model_mappings:
   - integration_model: WPMsystem
     controller_code: 449
     object_db_device_model: WPM_4
-    confidence: reverse_engineered
-    verdict: supports
     evidence:
       - kind: library_enum
         confidence: documented
@@ -225,16 +237,7 @@ claims:
       - kind: live_controller
         confidence: measured
         verdict: supports
-        controller_code: 449
-        controller_firmware: "not exposed"
-        isg_software: "1.6.04.0000"
-        hardware_revision: "not exposed"
         sample_id: "obs-7f3c2a91"
-        observed_on: "2026-07-31"
-        plant: third_party_anonymized
-        consent: confirmed
-        consent_scope: read_only_observation_and_publication
-        reference: "consented read-only Modbus observation"
         register_space: holding
         documented_address: 1509
         wire_address: 1508
@@ -289,106 +292,66 @@ claims:
         source_register_literal: "1509"
 ```
 
-Accepted evidence and schema-shape fixtures remain separate. The eventual test
-fixtures live outside the accepted overlay and cannot affect published
-capabilities. Each combines a generated-inventory input with an evidence-overlay
-input and imports the same pinned `sources` catalog as the real overlay. The
-implementation stores these as separate files below
-`tests/fixtures/capability_matrix/<case>/`; fixture metadata is never copied into
-the production overlay. The fixture harness owns `fixture_only`, `expected_error` and
-`expected_renderer_state`; those keys are not part of the evidence schema.
-Incomplete cases must fail with `incomplete_evidence`, while complete
-integration-only cases may validate as `unverified`. The five required generator
-shapes and the separate `observed_only` state remain explicit:
+Accepted evidence and test fixtures remain separate. Two fixture families have
+different jobs and directories:
+
+- `tests/fixtures/capability_matrix/shapes/<case>/` contains a complete generated
+  inventory input, a complete evidence-overlay input and the expected rendered
+  state. These are valid end-to-end examples.
+- `tests/fixtures/capability_matrix/remediation/` contains production-shaped
+  claims that deliberately fail with `remediation_required` while the runtime
+  still exposes refuted writable fields.
+
+Fixture metadata is never copied into the production overlay. Both families
+import the same pinned source and observation catalogs as the real overlay. No
+fixture may contain placeholder values. The generator owns code and library
+facts such as platform, entity key, field path, writable range, derivation and
+optional-block negotiation. The overlay alone owns evidence verdict and
+`availability`; a disagreement cannot arise because the generated schema does
+not contain that key.
+
+The required valid shape manifest is:
 
 ```yaml
-schema_shape_fixtures:
-  - id: simple-sensor-example
-    fixture_only: true
-    expected_error: incomplete_evidence
-    generated_inventory:
-      controller_model: WPM_3
-      field: system_values.outside_temperature
-      availability: standard
-    evidence_overlay: "<required pinned evidence>"
-
-  - id: writable-entity-example
-    fixture_only: true
-    expected_error: incomplete_evidence
-    generated_inventory:
-      controller_model: WPM_3
-      field: system_parameters.comfort_temperature_hk_1
-      availability: standard
-      writable: true
-      accepted_write_range: "<generated library range>"
-    evidence_overlay: "<required pinned evidence>"
-
-  - id: optional-block-example
-    fixture_only: true
-    expected_renderer_state: unverified
-    generated_inventory:
-      controller_model: WPMsystem
-      field: extended_energy_data.inverter_power_iws_1
-      availability: optional_block
-      integration_reference: custom_components/stiebel_eltron_isg/sensor.py
-      scoped_measurement_retained: false
-    evidence_overlay: []
-
-  - id: observed-only-example
-    fixture_only: true
-    expected_error: incomplete_evidence
-    generated_inventory:
-      controller_model: "<single controller model>"
-      field: "<single measured field>"
-      availability: observed_only
-    evidence_overlay:
-      - kind: live_controller
-        confidence: measured
-        verdict: supports
-        controller_code: 449
-        controller_firmware: "<required>"
-        isg_software: "<required>"
-        hardware_revision: "<required>"
-        sample_id: "<opaque observation id>"
-        observed_on: "<required>"
-        plant: third_party_anonymized
-        consent: confirmed
-        consent_scope: read_only_observation_and_publication
-        reference: "<consented anonymized observation>"
-
-  - id: derived-energy-counter-example
-    fixture_only: true
-    expected_error: incomplete_evidence
-    generated_inventory:
-      controller_model: WPMsystem
-      field: energy_data.vd_heating_day
-      availability: standard
-      component_status: derived
-      derived_from: "<all generated source fields and arithmetic>"
-    evidence_overlay: "<required pinned evidence>"
-
-  - id: two-database-controller-example
-    fixture_only: true
-    expected_error: incomplete_evidence
-    generated_inventory:
-      controller_model: "<controller with two object databases>"
-      field: "<single generated field>"
-      availability: standard
-    evidence_overlay:
-      - kind: object_mapping
-        confidence: object_db
-        verdict: supports
-        source_db: "<primary database>"
-        role: primary
-      - kind: object_mapping
-        confidence: object_db
-        verdict: supports
-        source_db: "<secondary database>"
-        role: secondary
+fixture_schema_version: 1
+shape_cases:
+  - id: simple-sensor
+    generated_input: shapes/simple-sensor/generated.yaml
+    evidence_input: shapes/simple-sensor/evidence.yaml
+    expected_renderer_state: available
+  - id: writable-entity
+    generated_input: shapes/writable-entity/generated.yaml
+    evidence_input: shapes/writable-entity/evidence.yaml
+    expected_renderer_state: available
+  - id: optional-block
+    generated_input: shapes/optional-block/generated.yaml
+    evidence_input: shapes/optional-block/evidence.yaml
+    expected_renderer_state: "optional/configuration-dependent"
+  - id: derived-energy-counter
+    generated_input: shapes/derived-energy-counter/generated.yaml
+    evidence_input: shapes/derived-energy-counter/evidence.yaml
+    expected_renderer_state: available
+  - id: two-database-controller
+    generated_input: shapes/two-database-controller/generated.yaml
+    evidence_input: shapes/two-database-controller/evidence.yaml
+    expected_renderer_state: available
+  - id: observed-only
+    generated_input: shapes/observed-only/generated.yaml
+    evidence_input: shapes/observed-only/evidence.yaml
+    expected_renderer_state: "optional/configuration-dependent"
 ```
 
+The harness derives negative cases from those valid inputs one mutation at a
+time. Validation order and error values are fixed: structural/type/enum errors
+produce `schema_invalid`; missing required evidence or a broken reference
+produces `incomplete_evidence`; equal-strength conflicting evidence produces
+`conflicting_evidence`; and a valid claim for a currently exposed refuted
+writable field produces `remediation_required`. Evaluation stops at the first
+class in that order. `expected_error` and `expected_renderer_state` are mutually
+exclusive harness keys.
+
 Every claim addresses exactly one `controller_model` and one library `field`.
-Plural model or field keys are schema errors, as are duplicate
+Plural model or field keys fail with `schema_invalid`, as do duplicate
 `(controller_model, field)` claims. Shared entity lists and shared library
 components therefore cannot make an availability statement leak to another
 controller. If the same evidence applies to several models or fields, it is
@@ -400,7 +363,8 @@ opaque reference and scope fields. `kind` and `confidence` have validated
 pairings: `live_controller/measured`, `object_mapping/object_db`,
 `manufacturer_table/documented`, `library_enum/documented`,
 `controller_identification/reverse_engineered`, `family_inference/inferred`
-and `current_integration/integration_only`. A mismatched pair is a schema error.
+and `current_integration/integration_only`. A mismatched pair fails with
+`schema_invalid`.
 Coverage gaps use their own `kind` enum, initially only
 `object_mapping_absence`, and never carry confidence or verdict.
 
@@ -419,6 +383,11 @@ retained for investigation, its `evidence_sample_id` must resolve within the
 same accepted or fixture section to exactly one consented live observation and
 remains sample-scoped; it cannot drive model-wide dispatch.
 
+Mapping rows do not repeat aggregate `confidence` or `verdict` values. Each
+relationship evidence row owns those fields. A mapping is accepted only when
+the required library-enum and controller-identification rows both support the
+same code and targets and no retained row refutes either relationship.
+
 Any register-bearing evidence or gap row declares `register_space`, zero-based
 `wire_address`, one-based `documented_address` and the verbatim
 `source_register_literal`. The validator checks
@@ -429,30 +398,49 @@ Any register-bearing evidence or gap row declares `register_space`, zero-based
 numerically to the library's `1550` wire address. A claim can reference multiple
 databases, and every reference declares `role: primary` or `role: secondary`.
 The renderer preserves both when they disagree; evidence precedence decides the
-outcome, while an unresolved same-level disagreement is a validation error.
+outcome, while an unresolved same-level disagreement fails with
+`conflicting_evidence`.
+
+At least one `primary` object row must match the claim's exact controller
+identity mapping. A `secondary` row belonging to a differently coded database
+variant is shown only as a cross-check and never participates in verdict
+precedence for the primary controller. It can expose a disagreement for review,
+but it cannot widen or refute the primary model claim.
 
 A row containing only `web_id` is rejected by the schema. Imports must retain
 the database and model family so a coincidentally reused web ID cannot pull a
 foreign-family row into a claim.
 
-Measured evidence requires controller code, separate controller-firmware and
-ISG-software fields, observation date and a hardware revision, an opaque sample
-ID, explicit consent state, and a plant classification of `own` or
-`third_party_anonymized`. Claim-level `measured_sample_count` is derived from
-distinct sample IDs and must match the retained live observations; it is not
-entered separately on each observation. Evidence from another installation is
-stored only with `consent: confirmed`, an explicit `consent_scope` that includes
-both the read-only observation and publication of the anonymized facts, and
-without identifying plant, network or owner data. A register-bearing
-measurement also retains the raw value, signed
+Each measured evidence row references one entry in the shared `observations`
+catalog by opaque `sample_id`. The catalog, not individual claim or fixture
+files, owns controller code, controller firmware, ISG software, hardware
+revision, date, plant class, consent and reference. Sample IDs are globally
+unique across accepted overlays and every fixture; duplicate definitions fail
+with `schema_invalid`, while an unresolved reference fails with
+`incomplete_evidence`. Claim-level
+`measured_sample_count` is derived from distinct referenced IDs and must match
+the live evidence rows.
+
+For `plant: own`, consent is `not_applicable`. Evidence from another
+installation uses `plant: third_party_anonymized`, `consent: confirmed` and an
+explicit `consent_scope` that includes both the read-only observation and
+publication of the anonymized facts. It contains no plant, network or owner
+data. A register-bearing measurement also retains the raw value, signed
 decoding and scale when those are needed to reproduce the decoded value; its
 unit remains generated from the pinned library snapshot instead of being
 duplicated in the overlay.
 
+`consent: confirmed` is the contributor's attestation, not something CI can
+infer. Before a branch containing third-party observations is pushed, the human
+review checklist requires confirmation from the operator that both the
+read-only check and publication of the listed anonymized facts were authorized.
+No identifying proof of consent is stored in the public repository.
+
 Register `raw_value` and `block_read_raw_value` fields with
 `wire_encoding: uint16_word` are unsigned 16-bit wire words in the range 0
-through 65535. Reproducible numeric decoding applies the
-declared signedness first and then computes
+through 65535. The validator checks sentinels on this unsigned word before any
+signed conversion. For non-sentinel values, reproducible numeric decoding
+applies the declared signedness and then computes
 `decoded = signed_or_unsigned(raw) * scale + offset`; `offset` defaults to zero.
 For example, unsigned word `65486` becomes signed `-50` and then `-5.0` at scale
 `0.1`. A sentinel such as unsigned word `32768` (`0x8000`) stops decoding and
@@ -460,6 +448,13 @@ therefore needs neither signedness nor scale. `single_read_exception` is the
 integer Modbus exception code; value `2` means illegal data address. These
 fields describe two separate read attempts and must not be collapsed into one
 result.
+
+Although a measurement repeats address and decoding metadata for
+reproducibility, the pinned generated library snapshot remains authoritative.
+The validator requires its register space, address, signedness, scale and offset
+to match the generated field exactly. A mismatch fails as `schema_invalid`
+unless a reviewed, source-backed override is explicit; dependency-pin updates
+therefore cannot leave stale decoding facts unnoticed.
 
 When the ISG does not expose a requested revision, controller firmware or its
 own software version, that individual value uses the schema sentinel
@@ -476,14 +471,17 @@ cover later versions; an explicit reviewed range may be added only after repeat
 observations justify it. Evidence from two installations increases the
 displayed sample count, but does not change the `measured` strength.
 Non-overlapping measured scopes produce separate notes rather than overriding
-one another. Conflicting verdicts at the same strength and overlapping scope are
-a validation error.
+one another. Conflicting verdicts at the same strength and overlapping scope
+fail with `conflicting_evidence`.
 
 The `wpm-system-dual-mode-heating` claim belongs to the accepted overlay because
 its exact `WPM_4` object-database evidence supplies model-scoped support that
 outranks the manufacturer-table refutation. Its measurement has unknown revision
 and controller-firmware scope, so that row confirms only `obs-7f3c2a91` and does
-not decide the model-wide verdict. The two measured hysteresis refutations below
+not decide the model-wide verdict. The renderer labels the verdict source as
+`object_db` and shows the one measured sample only as separate corroboration;
+the sample count is never presented as the basis for model-wide availability.
+The two measured hysteresis refutations below
 remain expected-invalid `remediation_required` fixtures while the integration
 still offers those writable entities.
 
@@ -569,16 +567,18 @@ machine-readable retention is useful; until then the renderer deliberately
 ignores these prose-only controls.
 
 Because the integration still offers all five refuted pilot fields, their
-records belong to the expected-invalid remediation fixture rather than the
-accepted overlay until the correctness and entity-registry migration lands:
+records belong to one production-shaped file,
+`tests/fixtures/capability_matrix/remediation/pilot-writable.yaml`, rather than
+the accepted overlay until the correctness and entity-registry migration lands.
+The two top-level keys below are sections of that same file:
 
 ```yaml
+expected_error: remediation_required
 expected_invalid_claims:
   - id: wpm3-hk3-comfort
     controller_model: WPM_3
     field: system_parameters.comfort_temperature_hk_3
     availability: unknown
-    expected_error: remediation_required
     evidence:
       - kind: manufacturer_table
         confidence: documented
@@ -595,7 +595,6 @@ expected_invalid_claims:
     controller_model: WPM_3
     field: system_parameters.eco_temperature_hk_3
     availability: unknown
-    expected_error: remediation_required
     evidence:
       - kind: manufacturer_table
         confidence: documented
@@ -612,7 +611,6 @@ expected_invalid_claims:
     controller_model: WPM_3
     field: system_parameters.heating_curve_rise_hk_3
     availability: unknown
-    expected_error: remediation_required
     evidence:
       - kind: manufacturer_table
         confidence: documented
@@ -629,22 +627,12 @@ expected_invalid_claims:
     controller_model: WPMsystem
     field: system_parameters.flow_temp_hysteresis_area
     availability: unknown
-    expected_error: remediation_required
     measured_sample_count: 1
     evidence:
       - kind: live_controller
         confidence: measured
         verdict: refutes
-        controller_code: 449
-        controller_firmware: "not exposed"
-        isg_software: "1.6.04.0000"
-        hardware_revision: "not exposed"
         sample_id: "obs-7f3c2a91"
-        observed_on: "2026-07-31"
-        plant: third_party_anonymized
-        consent: confirmed
-        consent_scope: read_only_observation_and_publication
-        reference: "consented read-only Modbus observation"
         register_space: holding
         documented_address: 1515
         wire_address: 1514
@@ -667,22 +655,12 @@ expected_invalid_claims:
     controller_model: WPMsystem
     field: system_parameters.flow_temp_hysteresis_fan
     availability: unknown
-    expected_error: remediation_required
     measured_sample_count: 1
     evidence:
       - kind: live_controller
         confidence: measured
         verdict: refutes
-        controller_code: 449
-        controller_firmware: "not exposed"
-        isg_software: "1.6.04.0000"
-        hardware_revision: "not exposed"
         sample_id: "obs-7f3c2a91"
-        observed_on: "2026-07-31"
-        plant: third_party_anonymized
-        consent: confirmed
-        consent_scope: read_only_observation_and_publication
-        reference: "consented read-only Modbus observation"
         register_space: holding
         documented_address: 1518
         wire_address: 1517
@@ -794,17 +772,21 @@ expected_invalid_coverage_gaps:
     interpretation: non_evidentiary
 ```
 
-Those rows are pinned to `python-stiebel-eltron` tag `v0.6.2`, commit
+The manufacturer evidence rows are pinned to `python-stiebel-eltron` tag
+`v0.6.2`, commit
 `3d27058bdfee677a68397834915a08fe466cc149`. The source CSV marks documented
 addresses 1551 through 1553 for WPMsystem only and documented addresses 1515
 and 1518 for WPM 3 and WPM 3i only. It is the source of the refutation.
-`source_line` counts the CSV header as line 1.
+`source_line` counts the CSV header as line 1. The coverage-gap rows instead
+resolve through the separately pinned `isg_web_re` source.
 
-Each accepted overlay or expected-invalid fixture contains one singular claim
-for each table entry and one corresponding gap row per checked database. The
+Within an accepted overlay or remediation fixture, every table entry represented
+by that artifact has exactly one singular claim and one corresponding gap row
+per checked database. The
 `wpm3-hk3-comfort` entries above form a complete expected-invalid claim/gap
 pair; neither entry belongs to the accepted overlay. A gap must reference an
-existing claim in the same section, a pinned source, file, database, model,
+existing claim in the same accepted-overlay or remediation-fixture file, a
+pinned source, file, database, model,
 role and all three address forms, and must set
 `interpretation: non_evidentiary`. It carries neither confidence nor verdict.
 
@@ -817,6 +799,10 @@ The ISG object export provides a separate, weaker cross-check at commit
 - `WPM_4_isg_objects.db` and `WPM_4_v1_isg_objects.db` contain no mapping for
   source literals `WPM:41515` or `WPM:41518`, corresponding to documented
   addresses 1515 and 1518.
+
+The pinned controller-identification table has no separate revision database
+for controller code `390`; its `WPM_3_S` menu variant shares
+`WPM_3_isg_objects.db`. The WPM 3 gap set is therefore complete for that code.
 
 These exact database/revision checks are stored as `coverage_gap` metadata, not
 as evidence with a `refutes` verdict. An absent object row can mean that the
@@ -856,8 +842,9 @@ Verdict is a separate axis:
 
 Precedence is deterministic: `measured` > `object_db` > `documented` >
 `inferred` > `integration_only`. Higher-strength evidence decides the rendered
-outcome. Support and refutation at the same strength is a test failure that
-requires human resolution; polarity must never be hidden inside the confidence
+outcome. Support and refutation at the same strength produce
+`conflicting_evidence` and require human resolution; polarity must never be
+hidden inside the confidence
 value. Precedence is applied only after filtering evidence to the row's exact
 controller and version scope. `integration_only` records what the current code
 offers; it is never independent support and can produce only `unverified`.
@@ -876,8 +863,9 @@ Availability:
   state and must not be retried by a probe;
 - `unknown`: the availability class has not yet been concluded.
 
-A refuted writable claim is a test failure. An unknown read capability is
-displayed as `unverified` and is not silently promoted to supported. Successful
+A refuted writable claim produces `remediation_required`. An unknown read
+capability is displayed as `unverified` and is not silently promoted to
+supported. Successful
 negotiation of an optional block proves the block read was accepted, not that
 every register within it is individually available.
 
@@ -965,6 +953,10 @@ Automated checks should prove:
 13. The generated Markdown is deterministic and committed output is current.
 14. Adding or removing an entity without regenerating/reviewing the matrix fails
     CI.
+15. Every measured register's space, address, signedness, scale and offset match
+    the pinned generated library snapshot or carry an explicit reviewed override.
+16. Every measured `sample_id` resolves once in the global observation catalog
+    and has identical scope wherever it is referenced.
 
 The current Home Assistant Quality Scale requires above 95% coverage for every
 integration module and expects Gold integrations to document supported
