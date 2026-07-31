@@ -374,6 +374,12 @@ class StiebelEltronISGClimateEntity(
         raise NotImplementedError
 
     @property
+    def _raw_operation_mode(self) -> int | None:
+        """Return the raw mode while preserving an unavailable read-back."""
+        value = self._read_register(lambda api: api.system_parameters.operating_mode)
+        return int(value) if value is not None else None
+
+    @property
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         for accessor in self.humidity_modbus_register:
@@ -421,9 +427,9 @@ class StiebelEltronISGClimateEntity(
         """Set new target temperature."""
         value = kwargs["temperature"]
         field = self._target_temp_write_field
-        current = self.target_temperature
         if field is None:
             return
+        current = self.target_temperature
         if current is not None and math.isclose(current, value, abs_tol=1e-9):
             return
 
@@ -472,8 +478,8 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        value = self._read_register(lambda api: api.system_parameters.operating_mode)
-        return int(value) if value is not None else 0
+        raw_mode = self._raw_operation_mode
+        return raw_mode if raw_mode is not None else 0
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -483,7 +489,8 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
-        if new_mode is not None and self.operation_mode != new_mode:
+        # Several raw modes map to AUTO, so compare the controller value.
+        if new_mode is not None and self._raw_operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
@@ -494,7 +501,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
-        if new_mode is not None and self.operation_mode != new_mode:
+        if new_mode is not None and self._raw_operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
 
@@ -525,8 +532,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     @property
     def operation_mode(self) -> int:
         """Operating mode of the heat pump."""
-        value = self._read_register(lambda api: api.system_parameters.operating_mode)
-        return int(value) if value is not None else 0
+        raw_mode = self._raw_operation_mode
+        return raw_mode if raw_mode is not None else 0
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -536,7 +543,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
-        if new_mode is not None and self.operation_mode != new_mode:
+        # Several raw modes map to AUTO, so compare the controller value.
+        if new_mode is not None and self._raw_operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
@@ -547,7 +555,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
-        if new_mode is not None and self.operation_mode != new_mode:
+        if new_mode is not None and self._raw_operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property

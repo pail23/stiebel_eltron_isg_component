@@ -84,7 +84,9 @@ class _StubCoordinator:
 
 
 def _make_lwz_climate(
-    operating_mode: int, day_stage: int = 3, night_stage: int = 1
+    operating_mode: int | None,
+    day_stage: int | None = 3,
+    night_stage: int | None = 1,
 ) -> StiebelEltronLWZClimateEntity:
     entity = StiebelEltronLWZClimateEntity.__new__(StiebelEltronLWZClimateEntity)
     api = _FakeApi(_FakeSystemParameters(operating_mode, day_stage, night_stage))
@@ -108,7 +110,7 @@ def _make_lwz_climate(
     return entity
 
 
-def _make_wpm_climate(operating_mode: int) -> StiebelEltronWPMClimateEntity:
+def _make_wpm_climate(operating_mode: int | None) -> StiebelEltronWPMClimateEntity:
     """Build a minimal WPM climate entity."""
     entity = StiebelEltronWPMClimateEntity.__new__(StiebelEltronWPMClimateEntity)
     api = _FakeApi(_FakeSystemParameters(operating_mode, 3, 1))
@@ -244,6 +246,15 @@ async def test_wpm_skips_unchanged_preset_mode() -> None:
     assert entity.coordinator.writes == []
 
 
+async def test_wpm_writes_emergency_when_operating_mode_is_unknown() -> None:
+    """An unknown raw mode must not suppress an emergency-mode write."""
+    entity = _make_wpm_climate(operating_mode=None)
+
+    await entity.async_set_preset_mode("emergency")
+
+    assert entity.coordinator.writes == [("system_parameters", "operating_mode", 0)]
+
+
 async def test_wpm_hvac_compares_raw_mode_not_mapped_auto_state() -> None:
     """AUTO must still select program when another raw AUTO mode is active."""
     entity = _make_wpm_climate(operating_mode=1)
@@ -286,6 +297,15 @@ async def test_lwz_skips_unchanged_preset_mode() -> None:
     await entity.async_set_preset_mode("manual")
 
     assert entity.coordinator.writes == []
+
+
+async def test_lwz_writes_emergency_when_operating_mode_is_unknown() -> None:
+    """An unknown raw mode must not suppress an emergency-mode write."""
+    entity = _make_lwz_climate(operating_mode=None)
+
+    await entity.async_set_preset_mode("emergency")
+
+    assert entity.coordinator.writes == [("system_parameters", "operating_mode", 0)]
 
 
 @pytest.mark.parametrize("operating_mode", [ECO_MODE, 3])
@@ -368,6 +388,15 @@ async def test_lwz_skips_unchanged_fan_mode(
     await entity.async_set_fan_mode(fan_mode)
 
     assert entity.coordinator.writes == []
+
+
+async def test_lwz_writes_fan_mode_when_stage_is_unknown() -> None:
+    """An unknown active fan stage must not suppress a valid write."""
+    entity = _make_lwz_climate(operating_mode=ECO_MODE, night_stage=None)
+
+    await entity.async_set_fan_mode(FAN_LOW)
+
+    assert entity.coordinator.writes == [("system_parameters", "night_stage", 1)]
 
 
 async def test_climate_shows_written_target_before_the_next_poll() -> None:

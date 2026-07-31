@@ -125,7 +125,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
             return
 
         current = self.coordinator.get_value(self.modbus_register)
-        if current is not None and (current != 0) == (value != 0):
+        if current is not None and bool(current) == bool(value):
             return
 
         await self.coordinator.write_component_value(

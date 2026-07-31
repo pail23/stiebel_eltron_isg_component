@@ -54,6 +54,15 @@ async def test_select_skips_write_when_option_is_unchanged() -> None:
     assert entity.coordinator.writes == []
 
 
+async def test_select_writes_when_current_option_is_unknown() -> None:
+    """An unknown read-back must not suppress a valid option write."""
+    entity = _make_select(current=None)
+
+    await entity.async_select_option("comfort")
+
+    assert entity.coordinator.writes == [("system_parameters", "operating_mode", 2)]
+
+
 async def test_select_shows_written_option_before_the_next_poll() -> None:
     """A selected option must be reported at once, not only after the next poll."""
     entity = _make_select(current=0)
