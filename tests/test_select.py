@@ -61,6 +61,7 @@ async def test_select_writes_when_current_option_is_unknown() -> None:
     await entity.async_select_option("comfort")
 
     assert entity.coordinator.writes == [("system_parameters", "operating_mode", 2)]
+    assert entity.current_option == "comfort"
 
 
 async def test_select_shows_written_option_before_the_next_poll() -> None:

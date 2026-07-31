@@ -399,6 +399,15 @@ async def test_lwz_writes_fan_mode_when_stage_is_unknown() -> None:
     assert entity.coordinator.writes == [("system_parameters", "night_stage", 1)]
 
 
+async def test_lwz_writes_fan_mode_when_day_stage_is_unknown() -> None:
+    """An unknown day stage outside eco mode must not suppress a valid write."""
+    entity = _make_lwz_climate(operating_mode=3, day_stage=None)
+
+    await entity.async_set_fan_mode(FAN_LOW)
+
+    assert entity.coordinator.writes == [("system_parameters", "day_stage", 1)]
+
+
 async def test_climate_shows_written_target_before_the_next_poll() -> None:
     """A written target must be reported at once, not only after the next poll."""
     entity = _make_lwz_climate(operating_mode=3)
@@ -420,6 +429,20 @@ async def test_climate_skips_write_when_target_is_unchanged() -> None:
 
     assert entity.coordinator.writes == []
     assert entity.published_states == 0
+
+
+async def test_climate_writes_when_target_is_unknown() -> None:
+    """An unknown target must not suppress a valid temperature write."""
+    entity = _make_lwz_climate(operating_mode=3)
+    entity.coordinator._api.system_parameters.room_temperature_day_hk1 = None
+
+    await entity.async_set_temperature(temperature=21.0)
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "room_temperature_day_hk1", 21.0)
+    ]
+    assert entity.target_temperature == 21.0
+    assert entity.published_states == 1
 
 
 async def test_climate_skips_float_imprecise_unchanged_target() -> None:
