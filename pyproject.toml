@@ -13,6 +13,7 @@ dependencies = [
 
 [dependency-groups]
 dev = [
+    "mypy>=2.3.0,<3",
     "pytest>=9.0.3",
     "ruff>=0.16.0",
 ]
@@ -98,28 +99,14 @@ ignore = [
   "D202",    # No blank lines allowed after function docstring
   "D203",    # 1 blank line required before class docstring
   "D213",    # Multi-line docstring summary should start at the second line
-  "D406",    # Section name should end with a newline
-  "D407",    # Section name underlining
-  "D417",    # Missing argument descriptions in docstring
   "E501",    # line too long
   "PLC1901", # can be simplified to empty string; too many false positives
   "PLR0911", # Too many return statements
-  "PLR0912", # Too many branches
-  "PLR0913", # Too many arguments to function call
-  "PLR0915", # Too many statements
   "PLR2004", # Magic value used in comparison
-  "PLW2901", # Outer variable overwritten by inner target
-  "PT011",   # pytest.raises() is too broad
-  "PT018",   # Assertion should be broken down into multiple parts
-  "SIM102",  # Use a single if statement instead of nested if statements
-  "SIM103",  # Return the condition directly
-  "SIM108",  # Use ternary operator instead of if-else-block
-  "SIM115",  # Use context handler for opening files
   "TC001",   # Move application import into a type-checking block
   "TC002",   # Move third-party import into a type-checking block
   "TC003",   # Move standard library import into a type-checking block
   "TRY003",  # Avoid specifying long messages outside the exception class
-  "TRY400",  # Use logging.exception instead of logging.error
   # May conflict with the formatter
   "W191",
   "E111",
@@ -137,7 +124,7 @@ fixture-parentheses = false
 mark-parentheses = false
 
 [tool.ruff.lint.mccabe]
-max-complexity = 25
+max-complexity = 10
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -151,7 +138,22 @@ split-on-trailing-comma = false
 "tests/**" = ["D", "SLF001"]
 
 [tool.mypy]
-ignore_missing_imports = true
-python_version = 3.14
+check_untyped_defs = true
+disallow_incomplete_defs = true
+disallow_untyped_defs = true
+files = ["custom_components/stiebel_eltron_isg"]
+ignore_missing_imports = false
+no_implicit_optional = true
+python_version = "3.14"
 native_parser = true
-exclude = "custom_components/stiebel_eltron_isg/config_flow.py"
+warn_redundant_casts = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+# pystiebeleltron 0.6.2 has inline annotations but does not publish a py.typed
+# marker. Remove this override after the separately reviewed typed release.
+module = [
+  "pystiebeleltron",
+  "pystiebeleltron.*",
+]
+ignore_missing_imports = true
