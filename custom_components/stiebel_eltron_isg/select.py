@@ -160,10 +160,12 @@ class StiebelEltronISGSelectEntity(
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
-        if key is not None and self.write_field is not None:
-            await self.coordinator.write_component_value(
-                self.write_component,
-                self.write_field,
-                key,
-            )
-            self._set_optimistic_value(key)
+        if key is None or self.write_field is None or self.current_option == option:
+            return
+
+        await self.coordinator.write_component_value(
+            self.write_component,
+            self.write_field,
+            key,
+        )
+        self._set_optimistic_value(key)
