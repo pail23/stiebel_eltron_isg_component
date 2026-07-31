@@ -109,8 +109,8 @@ Keep the identities used by each source separate:
 
 A small, versioned mapping table relates these identifiers. Every relationship
 has its own evidence, confidence and verdict; no claim inherits a family-wide
-equivalence implicitly. This allows the measured WPM codes 390, 391 and 449 to
-be exact without extending that conclusion to unmeasured WPM codes or to the
+equivalence implicitly. This allows evidenced WPM codes such as `449` to be
+exact without extending that conclusion to other WPM codes or to the
 incompatible LWZ numbering.
 
 ### 2. Integration inventory
@@ -193,15 +193,27 @@ model_mappings:
   - integration_model: WPMsystem
     controller_code: 449
     object_db_device_model: WPM_4
-    confidence: measured
+    confidence: reverse_engineered
     verdict: supports
-    evidence_sample_id: "obs-7f3c2a91"
-    observed_on: "2026-07-31"
-    plant: third_party_anonymized
-    consent: confirmed
-    controller_firmware: "not exposed"
-    isg_software: "1.6.04.0000"
-    hardware_revision: "not exposed"
+    evidence:
+      - kind: library_enum
+        confidence: documented
+        verdict: supports
+        source: python_stiebel_eltron
+        source_file: pystiebeleltron/__init__.py
+        source_line: 85
+        integration_model: WPMsystem
+        controller_code: 449
+      - kind: controller_identification
+        confidence: reverse_engineered
+        verdict: supports
+        source: isg_web_re
+        source_file: data/controller-identification/controller_codes.csv
+        source_line: 38
+        controller_code: 449
+        mapping_kind: direct
+        object_db_device_model: WPM_4
+        source_db: WPM_4_isg_objects.db
 
 claims:
   - id: wpm-system-dual-mode-heating
@@ -221,13 +233,14 @@ claims:
         observed_on: "2026-07-31"
         plant: third_party_anonymized
         consent: confirmed
+        consent_scope: read_only_observation_and_publication
         reference: "consented read-only Modbus observation"
         register_space: holding
         documented_address: 1509
         wire_address: 1508
         source_register_literal: "1509"
         raw_value: 65486
-        raw_encoding: uint16
+        wire_encoding: uint16_word
         signed: true
         scale: 0.1
         offset: 0
@@ -248,6 +261,22 @@ claims:
         documented_address: 1509
         wire_address: 1508
         source_register_literal: "WPM:41509"
+      - kind: object_mapping
+        confidence: object_db
+        verdict: supports
+        source: isg_web_re
+        source_file: data/object-mappings/isg_object_mappings.csv
+        source_db: WPM_4_v1_isg_objects.db
+        device_model: WPM_4_v1
+        role: secondary
+        web_id: 41
+        info_number: 428
+        device_code: 49
+        web_type: 2
+        register_space: holding
+        documented_address: 1509
+        wire_address: 1508
+        source_register_literal: "WPM:41509"
       - kind: manufacturer_table
         confidence: documented
         verdict: refutes
@@ -258,57 +287,61 @@ claims:
         documented_address: 1509
         wire_address: 1508
         source_register_literal: "1509"
-
 ```
 
-Accepted evidence and schema-shape fixtures remain separate. The latter keep
-coverage for states whose complete evidence package has not yet been retained;
-they are required to fail with `incomplete_evidence` and cannot affect rendered
-capabilities. The eventual fixtures live outside the accepted overlay. They may
-reference pinned sources, but the validator never renders them as capabilities.
-The five required generator shapes and the separate `observed_only` state remain
-explicit:
+Accepted evidence and schema-shape fixtures remain separate. The eventual test
+fixtures live outside the accepted overlay and cannot affect published
+capabilities. Each combines a generated-inventory input with an evidence-overlay
+input and imports the same pinned `sources` catalog as the real overlay. The
+implementation stores these as separate files below
+`tests/fixtures/capability_matrix/<case>/`; fixture metadata is never copied into
+the production overlay. The fixture harness owns `fixture_only`, `expected_error` and
+`expected_renderer_state`; those keys are not part of the evidence schema.
+Incomplete cases must fail with `incomplete_evidence`, while complete
+integration-only cases may validate as `unverified`. The five required generator
+shapes and the separate `observed_only` state remain explicit:
 
 ```yaml
 schema_shape_fixtures:
   - id: simple-sensor-example
     fixture_only: true
     expected_error: incomplete_evidence
-    controller_model: WPM_3
-    field: system_values.outside_temperature
-    availability: standard
-    evidence: "<required pinned evidence>"
+    generated_inventory:
+      controller_model: WPM_3
+      field: system_values.outside_temperature
+      availability: standard
+    evidence_overlay: "<required pinned evidence>"
 
   - id: writable-entity-example
     fixture_only: true
     expected_error: incomplete_evidence
-    controller_model: WPM_3
-    field: system_parameters.comfort_temperature_hk_1
-    availability: standard
-    writable: true
-    accepted_write_range: "<required from generated library snapshot>"
-    evidence: "<required pinned evidence>"
+    generated_inventory:
+      controller_model: WPM_3
+      field: system_parameters.comfort_temperature_hk_1
+      availability: standard
+      writable: true
+      accepted_write_range: "<generated library range>"
+    evidence_overlay: "<required pinned evidence>"
 
   - id: optional-block-example
     fixture_only: true
-    expected_error: incomplete_evidence
-    controller_model: WPMsystem
-    field: extended_energy_data.inverter_power_iws_1
-    availability: optional_block
-    evidence:
-      - kind: current_integration
-        confidence: integration_only
-        verdict: supports
-        reference: custom_components/stiebel_eltron_isg/sensor.py
-        note: "measurement rationale exists in code; full scoped observation metadata is not retained"
+    expected_renderer_state: unverified
+    generated_inventory:
+      controller_model: WPMsystem
+      field: extended_energy_data.inverter_power_iws_1
+      availability: optional_block
+      integration_reference: custom_components/stiebel_eltron_isg/sensor.py
+      scoped_measurement_retained: false
+    evidence_overlay: []
 
   - id: observed-only-example
     fixture_only: true
     expected_error: incomplete_evidence
-    controller_model: "<single controller model>"
-    field: "<single measured field>"
-    availability: observed_only
-    evidence:
+    generated_inventory:
+      controller_model: "<single controller model>"
+      field: "<single measured field>"
+      availability: observed_only
+    evidence_overlay:
       - kind: live_controller
         confidence: measured
         verdict: supports
@@ -320,24 +353,28 @@ schema_shape_fixtures:
         observed_on: "<required>"
         plant: third_party_anonymized
         consent: confirmed
+        consent_scope: read_only_observation_and_publication
         reference: "<consented anonymized observation>"
 
   - id: derived-energy-counter-example
     fixture_only: true
     expected_error: incomplete_evidence
-    controller_model: WPMsystem
-    field: energy_data.vd_heating_day
-    availability: derived
-    derived_from: "<all generated source fields and arithmetic>"
-    evidence: "<required pinned evidence>"
+    generated_inventory:
+      controller_model: WPMsystem
+      field: energy_data.vd_heating_day
+      availability: standard
+      component_status: derived
+      derived_from: "<all generated source fields and arithmetic>"
+    evidence_overlay: "<required pinned evidence>"
 
   - id: two-database-controller-example
     fixture_only: true
     expected_error: incomplete_evidence
-    controller_model: "<controller with two object databases>"
-    field: "<single generated field>"
-    availability: standard
-    evidence:
+    generated_inventory:
+      controller_model: "<controller with two object databases>"
+      field: "<single generated field>"
+      availability: standard
+    evidence_overlay:
       - kind: object_mapping
         confidence: object_db
         verdict: supports
@@ -361,17 +398,26 @@ Every repository-backed evidence and gap row names a source from `sources`; the
 exact commit is therefore unambiguous. Live observations instead carry their
 opaque reference and scope fields. `kind` and `confidence` have validated
 pairings: `live_controller/measured`, `object_mapping/object_db`,
-`manufacturer_table/documented`, `family_inference/inferred` and
-`current_integration/integration_only`. A mismatched pair is a schema error.
+`manufacturer_table/documented`, `library_enum/documented`,
+`controller_identification/reverse_engineered`, `family_inference/inferred`
+and `current_integration/integration_only`. A mismatched pair is a schema error.
 Coverage gaps use their own `kind` enum, initially only
 `object_mapping_absence`, and never carry confidence or verdict.
 
-A measured `model_mappings` row must carry `evidence_sample_id`. That ID must
-resolve to a retained `live_controller` observation with `consent: confirmed`.
-Its controller code, consent, plant class, observation date, controller
-firmware, ISG software and hardware revision must exactly match the referenced
-observation. The mapping may not introduce broader scope. An unresolved or
-mismatched reference is a validation error.
+`reverse_engineered` is limited to controller-identity mappings recovered from
+a pinned firmware dispatch table. It is not part of capability-evidence
+precedence and cannot by itself support a register claim. The validator requires
+an independent pinned library enum for the same integration model and code
+before such a mapping can drive database dispatch.
+
+Controller identity mappings are model-wide only when their evidence is
+model-wide. The example combines the pinned library enum that maps code `449`
+to `WPMsystem` with the reverse-engineered direct firmware dispatch that maps
+the same code to `WPM_4_isg_objects.db`. A live sample may corroborate those two
+relationships, but it cannot create or broaden them. If a measured mapping is
+retained for investigation, its `evidence_sample_id` must resolve within the
+same accepted or fixture section to exactly one consented live observation and
+remains sample-scoped; it cannot drive model-wide dispatch.
 
 Any register-bearing evidence or gap row declares `register_space`, zero-based
 `wire_address`, one-based `documented_address` and the verbatim
@@ -395,14 +441,17 @@ ID, explicit consent state, and a plant classification of `own` or
 `third_party_anonymized`. Claim-level `measured_sample_count` is derived from
 distinct sample IDs and must match the retained live observations; it is not
 entered separately on each observation. Evidence from another installation is
-stored only with `consent: confirmed` and without identifying plant, network or
-owner data. A register-bearing measurement also retains the raw value, signed
+stored only with `consent: confirmed`, an explicit `consent_scope` that includes
+both the read-only observation and publication of the anonymized facts, and
+without identifying plant, network or owner data. A register-bearing
+measurement also retains the raw value, signed
 decoding and scale when those are needed to reproduce the decoded value; its
 unit remains generated from the pinned library snapshot instead of being
 duplicated in the overlay.
 
-Register `raw_value` and `block_read_raw_value` fields are unsigned 16-bit wire
-words in the range 0 through 65535. Reproducible numeric decoding applies the
+Register `raw_value` and `block_read_raw_value` fields with
+`wire_encoding: uint16_word` are unsigned 16-bit wire words in the range 0
+through 65535. Reproducible numeric decoding applies the
 declared signedness first and then computes
 `decoded = signed_or_unsigned(raw) * scale + offset`; `offset` defaults to zero.
 For example, unsigned word `65486` becomes signed `-50` and then `-5.0` at scale
@@ -485,6 +534,13 @@ claim confirms that conclusion only for its matching sample scope; the
 disagreement remains visible instead of silently rewriting the manufacturer
 evidence.
 
+The secondary `WPM_4_v1` database contains the same exact 1509 object row. It
+corroborates the capability shape but does not define controller code `449`:
+the pinned controller-identification table maps `449` directly to `WPM_4` and
+the distinct code `10449` to `WPM_4_v1`. The primary mapping is therefore
+sufficient for dispatch, while the secondary row makes the cross-database check
+visible.
+
 The two hysteresis results independently strengthen the existing documented
 refutations. They do not by themselves prove that every WPMsystem firmware
 revision rejects the addresses, so the eventual runtime correction still uses
@@ -496,17 +552,21 @@ remain configuration-dependent. It also demonstrates why accepting a containing
 block is not proof that every address inside it exists, as noted above.
 
 The HK3 sentinel values only describe this installation, which has no HK3
-hardware. Issue
-[#560](https://github.com/pail23/stiebel_eltron_isg_component/issues/560)
-reports a configured WPMsystem HK3 with partial Modbus availability: the HK3
-eco target and pump were available while the climate entity and comfort target
-were not. That does not prove support for addresses 1551 through 1553, but it
-does show that HK3 exposure depends on configuration and field. The rows from
-this sample therefore must not become controller-model `refutes` claims.
+hardware. That fact alone is sufficient to keep the observation sample-scoped:
+an unavailable sentinel on a controller without the relevant circuit cannot
+refute the registers for the controller model. Issue reports affected by older
+off-by-one HK3 mappings are deliberately not used as capability evidence here.
 
 The SG Ready rows are retained only as positive controls proving that the same
 read path and address conversion produced ordinary values on the sample. They
 do not create additional capability claims.
+
+The HK3 and SG Ready measurements remain in the table rather than becoming
+overlay claims because neither set changes a rendered capability: HK3 is
+inconclusive on hardware without that circuit, and SG Ready is only a read-path
+control. The later implementation may add a non-claim observation ledger if
+machine-readable retention is useful; until then the renderer deliberately
+ignores these prose-only controls.
 
 Because the integration still offers all five refuted pilot fields, their
 records belong to the expected-invalid remediation fixture rather than the
@@ -583,6 +643,7 @@ expected_invalid_claims:
         observed_on: "2026-07-31"
         plant: third_party_anonymized
         consent: confirmed
+        consent_scope: read_only_observation_and_publication
         reference: "consented read-only Modbus observation"
         register_space: holding
         documented_address: 1515
@@ -590,7 +651,7 @@ expected_invalid_claims:
         source_register_literal: "1515"
         single_read_exception: 2
         block_read_raw_value: 32768
-        raw_encoding: uint16
+        wire_encoding: uint16_word
       - kind: manufacturer_table
         confidence: documented
         verdict: refutes
@@ -620,6 +681,7 @@ expected_invalid_claims:
         observed_on: "2026-07-31"
         plant: third_party_anonymized
         consent: confirmed
+        consent_scope: read_only_observation_and_publication
         reference: "consented read-only Modbus observation"
         register_space: holding
         documented_address: 1518
@@ -627,7 +689,7 @@ expected_invalid_claims:
         source_register_literal: "1518"
         single_read_exception: 2
         block_read_raw_value: 32768
-        raw_encoding: uint16
+        wire_encoding: uint16_word
       - kind: manufacturer_table
         confidence: documented
         verdict: refutes
@@ -692,6 +754,19 @@ expected_invalid_coverage_gaps:
     source_register_literal: "WPM:41515"
     interpretation: non_evidentiary
 
+  - claim_id: wpm-system-area-cooling-hysteresis
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_4_v1_isg_objects.db
+    device_model: WPM_4_v1
+    role: secondary
+    register_space: holding
+    documented_address: 1515
+    wire_address: 1514
+    source_register_literal: "WPM:41515"
+    interpretation: non_evidentiary
+
   - claim_id: wpm-system-fan-cooling-hysteresis
     kind: object_mapping_absence
     source: isg_web_re
@@ -699,6 +774,19 @@ expected_invalid_coverage_gaps:
     source_db: WPM_4_isg_objects.db
     device_model: WPM_4
     role: primary
+    register_space: holding
+    documented_address: 1518
+    wire_address: 1517
+    source_register_literal: "WPM:41518"
+    interpretation: non_evidentiary
+
+  - claim_id: wpm-system-fan-cooling-hysteresis
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_4_v1_isg_objects.db
+    device_model: WPM_4_v1
+    role: secondary
     register_space: holding
     documented_address: 1518
     wire_address: 1517
@@ -753,7 +841,9 @@ repository.
 
 Evidence strength, from strongest to weakest:
 
-- `measured`: observed on identified hardware and version scope;
+- `measured`: observed on an identified controller with every exposed scope
+  value retained; an unavailable version or revision is recorded as
+  `"not exposed"` and limits the evidence to that sample;
 - `object_db`: exact object-database/register evidence;
 - `documented`: manufacturer Modbus documentation or generated library source;
 - `inferred`: shared map or family relationship, explicitly not measured;
@@ -794,8 +884,7 @@ every register within it is individually available.
 Measured claims are reviewed again when the affected controller firmware, ISG
 software or controller mapping changes. Library-backed claims are refreshed
 with every dependency-pin update; stale source commits fail validation rather
-than being updated
-implicitly.
+than being updated implicitly.
 
 ### 6. Generated outputs
 
