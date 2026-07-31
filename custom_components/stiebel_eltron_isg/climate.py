@@ -335,10 +335,10 @@ class StiebelEltronISGClimateEntity(
 
     def __init__(
         self,
-        coordinator,
-        config_entry,
+        coordinator: StiebelEltronDataCoordinator,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
-    ):
+    ) -> None:
         """Initialize the climate entity."""
         self.entity_description = description
 
@@ -416,7 +416,7 @@ class StiebelEltronISGClimateEntity(
             return self._read_accessor(self.eco_target_temp_register)
         return self._read_accessor(self.comfort_target_temp_register)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
         field = self._target_temp_write_field
