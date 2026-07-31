@@ -195,7 +195,13 @@ model_mappings:
     object_db_device_model: WPM_4
     confidence: measured
     verdict: supports
-    evidence_reference: "obs-7f3c2a91"
+    evidence_sample_id: "obs-7f3c2a91"
+    observed_on: "2026-07-31"
+    plant: third_party_anonymized
+    consent: confirmed
+    controller_firmware: "not exposed"
+    isg_software: "1.6.04.0000"
+    hardware_revision: "not exposed"
 
 claims:
   - id: wpm-system-dual-mode-heating
@@ -221,8 +227,10 @@ claims:
         wire_address: 1508
         source_register_literal: "1509"
         raw_value: 65486
+        raw_encoding: uint16
         signed: true
         scale: 0.1
+        offset: 0
         decoded_value: -5.0
       - kind: object_mapping
         confidence: object_db
@@ -251,51 +259,54 @@ claims:
         wire_address: 1508
         source_register_literal: "1509"
 
-  - id: wpm3-hk3-comfort
-    controller_model: WPM_3
-    field: system_parameters.comfort_temperature_hk_3
-    availability: unknown
-    evidence:
-      - kind: manufacturer_table
-        confidence: documented
-        verdict: refutes
-        source: python_stiebel_eltron
-        source_file: api/wpm_system_parameters.csv
-        source_line: 23
-        register_space: holding
-        documented_address: 1551
-        wire_address: 1550
-        source_register_literal: "1551"
-
-coverage_gaps:
-  - claim_id: wpm3-hk3-comfort
-    kind: object_mapping_absence
-    source: isg_web_re
-    source_file: data/object-mappings/isg_object_mappings.csv
-    source_db: WPM_3_isg_objects.db
-    device_model: WPM_3
-    role: primary
-    register_space: holding
-    documented_address: 1551
-    wire_address: 1550
-    source_register_literal: "WPM:41551"
-    interpretation: non_evidentiary
 ```
 
 Accepted evidence and schema-shape fixtures remain separate. The latter keep
-coverage for states that have not yet been backed by a retained observation;
+coverage for states whose complete evidence package has not yet been retained;
 they are required to fail with `incomplete_evidence` and cannot affect rendered
-capabilities. In particular, the optional-block and `observed_only` shape lost
-when the earlier hypothetical inverter claim was replaced by the real 1509
-observation remains explicit:
+capabilities. The eventual fixtures live outside the accepted overlay. They may
+reference pinned sources, but the validator never renders them as capabilities.
+The five required generator shapes and the separate `observed_only` state remain
+explicit:
 
 ```yaml
 schema_shape_fixtures:
-  - id: optional-block-observed-only-example
+  - id: simple-sensor-example
+    fixture_only: true
+    expected_error: incomplete_evidence
+    controller_model: WPM_3
+    field: system_values.outside_temperature
+    availability: standard
+    evidence: "<required pinned evidence>"
+
+  - id: writable-entity-example
+    fixture_only: true
+    expected_error: incomplete_evidence
+    controller_model: WPM_3
+    field: system_parameters.comfort_temperature_hk_1
+    availability: standard
+    writable: true
+    accepted_write_range: "<required from generated library snapshot>"
+    evidence: "<required pinned evidence>"
+
+  - id: optional-block-example
     fixture_only: true
     expected_error: incomplete_evidence
     controller_model: WPMsystem
     field: extended_energy_data.inverter_power_iws_1
+    availability: optional_block
+    evidence:
+      - kind: current_integration
+        confidence: integration_only
+        verdict: supports
+        reference: custom_components/stiebel_eltron_isg/sensor.py
+        note: "measurement rationale exists in code; full scoped observation metadata is not retained"
+
+  - id: observed-only-example
+    fixture_only: true
+    expected_error: incomplete_evidence
+    controller_model: "<single controller model>"
+    field: "<single measured field>"
     availability: observed_only
     evidence:
       - kind: live_controller
@@ -310,10 +321,34 @@ schema_shape_fixtures:
         plant: third_party_anonymized
         consent: confirmed
         reference: "<consented anonymized observation>"
-```
 
-The fixture set also retains distinct examples for a simple sensor, a derived
-energy counter and a two-database controller before implementation is accepted.
+  - id: derived-energy-counter-example
+    fixture_only: true
+    expected_error: incomplete_evidence
+    controller_model: WPMsystem
+    field: energy_data.vd_heating_day
+    availability: derived
+    derived_from: "<all generated source fields and arithmetic>"
+    evidence: "<required pinned evidence>"
+
+  - id: two-database-controller-example
+    fixture_only: true
+    expected_error: incomplete_evidence
+    controller_model: "<controller with two object databases>"
+    field: "<single generated field>"
+    availability: standard
+    evidence:
+      - kind: object_mapping
+        confidence: object_db
+        verdict: supports
+        source_db: "<primary database>"
+        role: primary
+      - kind: object_mapping
+        confidence: object_db
+        verdict: supports
+        source_db: "<secondary database>"
+        role: secondary
+```
 
 Every claim addresses exactly one `controller_model` and one library `field`.
 Plural model or field keys are schema errors, as are duplicate
@@ -330,6 +365,13 @@ pairings: `live_controller/measured`, `object_mapping/object_db`,
 `current_integration/integration_only`. A mismatched pair is a schema error.
 Coverage gaps use their own `kind` enum, initially only
 `object_mapping_absence`, and never carry confidence or verdict.
+
+A measured `model_mappings` row must carry `evidence_sample_id`. That ID must
+resolve to a retained `live_controller` observation with `consent: confirmed`.
+Its controller code, consent, plant class, observation date, controller
+firmware, ISG software and hardware revision must exactly match the referenced
+observation. The mapping may not introduce broader scope. An unresolved or
+mismatched reference is a validation error.
 
 Any register-bearing evidence or gap row declares `register_space`, zero-based
 `wire_address`, one-based `documented_address` and the verbatim
@@ -359,9 +401,21 @@ decoding and scale when those are needed to reproduce the decoded value; its
 unit remains generated from the pinned library snapshot instead of being
 duplicated in the overlay.
 
+Register `raw_value` and `block_read_raw_value` fields are unsigned 16-bit wire
+words in the range 0 through 65535. Reproducible numeric decoding applies the
+declared signedness first and then computes
+`decoded = signed_or_unsigned(raw) * scale + offset`; `offset` defaults to zero.
+For example, unsigned word `65486` becomes signed `-50` and then `-5.0` at scale
+`0.1`. A sentinel such as unsigned word `32768` (`0x8000`) stops decoding and
+therefore needs neither signedness nor scale. `single_read_exception` is the
+integer Modbus exception code; value `2` means illegal data address. These
+fields describe two separate read attempts and must not be collapsed into one
+result.
+
 When the ISG does not expose a requested revision, controller firmware or its
-own software version, that individual value is recorded as `not exposed`
-rather than guessed. Such an observation remains scoped to its opaque sample.
+own software version, that individual value uses the schema sentinel
+`"not exposed"` rather than a guessed or free-form string. Such an observation
+remains scoped to its opaque sample.
 An unknown scope field never wildcard-matches a generated model row and cannot
 establish a firmware-, software- or revision-wide claim.
 
@@ -442,19 +496,75 @@ remain configuration-dependent. It also demonstrates why accepting a containing
 block is not proof that every address inside it exists, as noted above.
 
 The HK3 sentinel values only describe this installation, which has no HK3
-hardware. Other WPMsystem installations are known to expose HK3, so these rows
-must not become `refutes` claims for the controller model.
+hardware. Issue
+[#560](https://github.com/pail23/stiebel_eltron_isg_component/issues/560)
+reports a configured WPMsystem HK3 with partial Modbus availability: the HK3
+eco target and pump were available while the climate entity and comfort target
+were not. That does not prove support for addresses 1551 through 1553, but it
+does show that HK3 exposure depends on configuration and field. The rows from
+this sample therefore must not become controller-model `refutes` claims.
 
 The SG Ready rows are retained only as positive controls proving that the same
 read path and address conversion produced ordinary values on the sample. They
 do not create additional capability claims.
 
-Because the integration still offers both hysteresis fields, their measured
+Because the integration still offers all five refuted pilot fields, their
 records belong to the expected-invalid remediation fixture rather than the
 accepted overlay until the correctness and entity-registry migration lands:
 
 ```yaml
 expected_invalid_claims:
+  - id: wpm3-hk3-comfort
+    controller_model: WPM_3
+    field: system_parameters.comfort_temperature_hk_3
+    availability: unknown
+    expected_error: remediation_required
+    evidence:
+      - kind: manufacturer_table
+        confidence: documented
+        verdict: refutes
+        source: python_stiebel_eltron
+        source_file: api/wpm_system_parameters.csv
+        source_line: 23
+        register_space: holding
+        documented_address: 1551
+        wire_address: 1550
+        source_register_literal: "1551"
+
+  - id: wpm3-hk3-eco
+    controller_model: WPM_3
+    field: system_parameters.eco_temperature_hk_3
+    availability: unknown
+    expected_error: remediation_required
+    evidence:
+      - kind: manufacturer_table
+        confidence: documented
+        verdict: refutes
+        source: python_stiebel_eltron
+        source_file: api/wpm_system_parameters.csv
+        source_line: 24
+        register_space: holding
+        documented_address: 1552
+        wire_address: 1551
+        source_register_literal: "1552"
+
+  - id: wpm3-hk3-curve
+    controller_model: WPM_3
+    field: system_parameters.heating_curve_rise_hk_3
+    availability: unknown
+    expected_error: remediation_required
+    evidence:
+      - kind: manufacturer_table
+        confidence: documented
+        verdict: refutes
+        source: python_stiebel_eltron
+        source_file: api/wpm_system_parameters.csv
+        source_line: 25
+        register_space: holding
+        documented_address: 1553
+        wire_address: 1552
+        source_register_literal: "1553"
+
   - id: wpm-system-area-cooling-hysteresis
     controller_model: WPMsystem
     field: system_parameters.flow_temp_hysteresis_area
@@ -480,6 +590,7 @@ expected_invalid_claims:
         source_register_literal: "1515"
         single_read_exception: 2
         block_read_raw_value: 32768
+        raw_encoding: uint16
       - kind: manufacturer_table
         confidence: documented
         verdict: refutes
@@ -516,6 +627,7 @@ expected_invalid_claims:
         source_register_literal: "1518"
         single_read_exception: 2
         block_read_raw_value: 32768
+        raw_encoding: uint16
       - kind: manufacturer_table
         confidence: documented
         verdict: refutes
@@ -526,6 +638,72 @@ expected_invalid_claims:
         documented_address: 1518
         wire_address: 1517
         source_register_literal: "1518"
+
+expected_invalid_coverage_gaps:
+  - claim_id: wpm3-hk3-comfort
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_3_isg_objects.db
+    device_model: WPM_3
+    role: primary
+    register_space: holding
+    documented_address: 1551
+    wire_address: 1550
+    source_register_literal: "WPM:41551"
+    interpretation: non_evidentiary
+
+  - claim_id: wpm3-hk3-eco
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_3_isg_objects.db
+    device_model: WPM_3
+    role: primary
+    register_space: holding
+    documented_address: 1552
+    wire_address: 1551
+    source_register_literal: "WPM:41552"
+    interpretation: non_evidentiary
+
+  - claim_id: wpm3-hk3-curve
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_3_isg_objects.db
+    device_model: WPM_3
+    role: primary
+    register_space: holding
+    documented_address: 1553
+    wire_address: 1552
+    source_register_literal: "WPM:41553"
+    interpretation: non_evidentiary
+
+  - claim_id: wpm-system-area-cooling-hysteresis
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_4_isg_objects.db
+    device_model: WPM_4
+    role: primary
+    register_space: holding
+    documented_address: 1515
+    wire_address: 1514
+    source_register_literal: "WPM:41515"
+    interpretation: non_evidentiary
+
+  - claim_id: wpm-system-fan-cooling-hysteresis
+    kind: object_mapping_absence
+    source: isg_web_re
+    source_file: data/object-mappings/isg_object_mappings.csv
+    source_db: WPM_4_isg_objects.db
+    device_model: WPM_4
+    role: primary
+    register_space: holding
+    documented_address: 1518
+    wire_address: 1517
+    source_register_literal: "WPM:41518"
+    interpretation: non_evidentiary
 ```
 
 Those rows are pinned to `python-stiebel-eltron` tag `v0.6.2`, commit
@@ -534,11 +712,12 @@ addresses 1551 through 1553 for WPMsystem only and documented addresses 1515
 and 1518 for WPM 3 and WPM 3i only. It is the source of the refutation.
 `source_line` counts the CSV header as line 1.
 
-The accepted overlay contains one singular claim for each table entry and one
-`coverage_gap` row per claim and checked database; the `wpm3-hk3-comfort`
-example above shows a complete claim/gap pair. A coverage gap must reference an
-existing claim, a pinned
-source, file, database, model, role and all three address forms, and must set
+Each accepted overlay or expected-invalid fixture contains one singular claim
+for each table entry and one corresponding gap row per checked database. The
+`wpm3-hk3-comfort` entries above form a complete expected-invalid claim/gap
+pair; neither entry belongs to the accepted overlay. A gap must reference an
+existing claim in the same section, a pinned source, file, database, model,
+role and all three address forms, and must set
 `interpretation: non_evidentiary`. It carries neither confidence nor verdict.
 
 The ISG object export provides a separate, weaker cross-check at commit
