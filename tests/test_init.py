@@ -219,6 +219,7 @@ async def test_async_setup_entry_unknown_model(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hasattr(mock_config_entry, "runtime_data")
     issue = ir.async_get(hass).async_get_issue(
         DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
     )
@@ -284,6 +285,7 @@ async def test_async_setup_entry_rejects_unhandled_model(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hasattr(mock_config_entry, "runtime_data")
     migrate_device.assert_not_called()
     migrate_entities.assert_not_awaited()
     remove_legacy.assert_not_called()
