@@ -10,6 +10,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.typing import ConfigType
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import (
@@ -20,7 +21,7 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
-from .coordinator import StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
     async_migrate_device_identifier,
@@ -68,7 +69,7 @@ def _create_unsupported_controller_issue(
     )
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up this integration using YAML is not supported."""
     return True
 
@@ -101,7 +102,7 @@ async def async_setup_entry(
             f"Unsupported controller model: {exception}"
         ) from exception
 
-    coordinator = None
+    coordinator: StiebelEltronDataCoordinator
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(
