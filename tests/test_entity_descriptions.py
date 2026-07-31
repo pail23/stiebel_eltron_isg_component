@@ -211,6 +211,13 @@ def test_number_settings_are_configuration_entities(description: Any) -> None:
     assert description.entity_category is EntityCategory.CONFIG
 
 
+def test_every_controller_family_has_number_settings() -> None:
+    """The category contract must exercise settings for every model family."""
+    assert number.NUMBER_TYPES_WPM
+    assert number.NUMBER_TYPES_WPM_3I
+    assert number.NUMBER_TYPES_LWZ
+
+
 def test_number_description_defaults_to_configuration_category() -> None:
     """New Number descriptions inherit the reviewed configuration category."""
     assert (

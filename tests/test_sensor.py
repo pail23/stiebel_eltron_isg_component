@@ -120,6 +120,10 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
         description.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
         for description in flow_sensors
     )
+    assert {description.native_unit_of_measurement for description in flow_sensors} == {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
 
 
 def test_runtime_sensors_use_duration_device_class() -> None:
