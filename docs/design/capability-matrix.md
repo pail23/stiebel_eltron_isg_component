@@ -352,8 +352,8 @@ produces `incomplete_evidence`; equal-strength conflicting evidence produces
 writable field produces `remediation_required`. Evaluation stops at the first
 class in that order. `expected_error` and `expected_renderer_state` are mutually
 exclusive harness keys. The conflict mutation adds one same-scope,
-same-strength opposing primary evidence row to a valid case and must produce
-`conflicting_evidence`.
+same-strength opposing evidence row that participates in precedence to a valid
+case and must produce `conflicting_evidence`.
 
 Every claim addresses exactly one `controller_model` and one library `field`.
 Plural model or field keys fail with `schema_invalid`, as do duplicate
@@ -961,8 +961,8 @@ Automated checks should prove:
     CI.
 15. Every measured non-sentinel register's space, address, signedness, scale and
     offset match the pinned generated library snapshot or carry an explicit
-    reviewed override; sentinel rows require only wire encoding and sentinel
-    agreement.
+    reviewed override; sentinel rows must still match register space, address,
+    wire encoding and sentinel, while signedness, scale and offset are exempt.
 16. Every measured `sample_id` resolves once in the global observation catalog
     and has identical scope wherever it is referenced.
 17. Generated optional-block negotiation and overlay availability agree unless
