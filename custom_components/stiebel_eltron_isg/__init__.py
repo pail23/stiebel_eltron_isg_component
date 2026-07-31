@@ -9,6 +9,7 @@ import logging
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.typing import ConfigType
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import (
@@ -19,9 +20,13 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, UNIT_ID
-from .coordinator import StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
-from .migration import async_migrate_device_identifier, async_migrate_unique_ids
+from .migration import (
+    async_migrate_device_identifier,
+    async_migrate_unique_ids,
+    async_remove_legacy_circulation_pump_switch,
+)
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
@@ -38,7 +43,7 @@ _PLATFORMS: list[Platform] = [
 ]
 
 
-async def async_setup(hass: HomeAssistant, config: dict):
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up this integration using YAML is not supported."""
     return True
 
@@ -75,8 +80,9 @@ async def async_setup_entry(
     # identifiers.
     async_migrate_device_identifier(hass, entry)
     await async_migrate_unique_ids(hass, entry, model)
+    async_remove_legacy_circulation_pump_switch(hass, entry, model)
 
-    coordinator = None
+    coordinator: StiebelEltronDataCoordinator
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(

@@ -77,6 +77,13 @@ To change the IP address or port of the ISG, use **Reconfigure** in the three-do
 menu of the integration entry. It leaves the entities untouched, so nothing has to be
 matched up afterwards.
 
+The domestic hot water circulation pump is a read-only operating status on
+WPMsystem and LWZ R290. It is therefore exposed as
+`binary_sensor.<device>_circulation_pump`, not as a switch. Existing
+automations and dashboards that reference the former switch entity need to use
+the binary sensor instead; switch actions must be removed because the register
+was never writable.
+
 For contributors, the transition the earlier migration notes described is complete.
 The compatibility shims are gone, along with `probe.py` and `client_bridge.py`:
 

@@ -33,6 +33,7 @@ from custom_components.stiebel_eltron_isg import (
     binary_sensor,
     button,
     climate,
+    config_flow,
     number,
     select,
     sensor,
@@ -74,6 +75,13 @@ def _entity_names(file: pathlib.Path) -> dict[str, dict[str, dict]]:
 def _translation_keys(file: pathlib.Path, platform: str) -> set[str]:
     """Return the keys a translation file carries for one platform."""
     return set(_entity_names(file).get(platform, {}))
+
+
+def _key_tree(value):
+    """Return nested dictionary keys while ignoring translated text."""
+    if not isinstance(value, dict):
+        return None
+    return {key: _key_tree(child) for key, child in value.items()}
 
 
 @pytest.mark.parametrize("module", _PLATFORM_MODULES, ids=_platform)
@@ -140,6 +148,24 @@ def test_english_matches_strings() -> None:
         f"{_RUNTIME_FILE.name} entity keys differ from "
         f"{_STRINGS_FILE.name}: {differences}"
     )
+
+
+def test_english_config_flow_matches_strings() -> None:
+    """English runtime config-flow strings must carry every declared field."""
+    strings = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["config"]
+    english = json.loads(_RUNTIME_FILE.read_text(encoding="utf-8"))["config"]
+
+    assert _key_tree(english) == _key_tree(strings)
+
+
+def test_config_flow_strings_match_runtime_fields() -> None:
+    """Config-flow strings must describe the fields and forms users can open."""
+    steps = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["config"]["step"]
+    user_fields = {marker.schema for marker in config_flow.STEP_USER_DATA_SCHEMA.schema}
+
+    assert set(steps["user"]["data"]) == user_fields
+    assert set(steps["user"]["data_description"]) == user_fields
+    assert "description" in steps["discovery_confirm"]
 
 
 @pytest.mark.parametrize(

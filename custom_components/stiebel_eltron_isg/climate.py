@@ -21,7 +21,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
-from .entity import StiebelEltronISGEntity
+from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,6 +129,8 @@ class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     actual_temperature_register: list[Any]
     eco_target_temp_register: Any
     comfort_target_temp_register: Any
+    min_temp: float
+    max_temp: float
     write_component: str = "system_parameters"
     eco_target_temp_write_field: str | None = None
     comfort_target_temp_write_field: str | None = None
@@ -168,6 +170,8 @@ WPM_3I_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_1
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_1",
         comfort_target_temp_write_field="comfort_temperature_hk_1",
     )
@@ -190,6 +194,8 @@ WPM_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_1
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_1",
         comfort_target_temp_write_field="comfort_temperature_hk_1",
     ),
@@ -206,6 +212,8 @@ WPM_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_2
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_2",
         comfort_target_temp_write_field="comfort_temperature_hk_2",
     ),
@@ -222,6 +230,8 @@ WPM_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.comfort_temperature_hk_3
         ),
+        min_temp=5,
+        max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_3",
         comfort_target_temp_write_field="comfort_temperature_hk_3",
     ),
@@ -239,6 +249,8 @@ LWZ_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.room_temperature_day_hk1
         ),
+        min_temp=10,
+        max_temp=30,
         eco_target_temp_write_field="room_temperature_night_hk1",
         comfort_target_temp_write_field="room_temperature_day_hk1",
     ),
@@ -253,6 +265,8 @@ LWZ_CLIMATE_TYPES = [
         comfort_target_temp_register=lambda api: (
             api.system_parameters.room_temperature_day_hk2
         ),
+        min_temp=10,
+        max_temp=30,
         eco_target_temp_write_field="room_temperature_night_hk2",
         comfort_target_temp_write_field="room_temperature_day_hk2",
     ),
@@ -302,11 +316,16 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
+class StiebelEltronISGClimateEntity(
+    OptimisticValueMixin, StiebelEltronISGEntity, ClimateEntity
+):
     """stiebel_eltron_isg climate class."""
 
     _enable_turn_on_off_backwards_compatibility = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    # The field an assumed target temperature was written to, see
+    # ``target_temperature``.
+    _optimistic_target_field: str | None = None
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
@@ -316,15 +335,17 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator,
-        config_entry,
+        coordinator: StiebelEltronDataCoordinator,
+        config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
-    ):
+    ) -> None:
         """Initialize the climate entity."""
         self.entity_description = description
 
-        self._attr_target_temperature_low = 5
-        self._attr_target_temperature_high = 30
+        self._attr_min_temp = description.min_temp
+        self._attr_max_temp = description.max_temp
+        self._attr_target_temperature_low = description.min_temp
+        self._attr_target_temperature_high = description.max_temp
         self._attr_target_temperature_step = 0.1
 
         super().__init__(coordinator, config_entry)
@@ -374,22 +395,35 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         return None
 
     @property
+    def _target_temp_write_field(self) -> str | None:
+        """Return the field the current operating mode takes its target from."""
+        if self.operation_mode == ECO_MODE:
+            return self.eco_target_temp_write_field
+        return self.comfort_target_temp_write_field
+
+    @property
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
+        # An assumed target only holds for the field it was written to. Once the
+        # operating mode makes the other field the target, it no longer applies,
+        # whoever changed that mode.
+        if (
+            self._optimistic_value is not None
+            and self._optimistic_target_field == self._target_temp_write_field
+        ):
+            return self._optimistic_value
         if self.operation_mode == ECO_MODE:
             return self._read_accessor(self.eco_target_temp_register)
         return self._read_accessor(self.comfort_target_temp_register)
 
-    async def async_set_temperature(self, **kwargs) -> None:
+    async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
-        field = (
-            self.eco_target_temp_write_field
-            if self.operation_mode == ECO_MODE
-            else self.comfort_target_temp_write_field
-        )
+        field = self._target_temp_write_field
         if field is not None:
             await self._write_field(field, value)
+            self._optimistic_target_field = field
+            self._set_optimistic_value(value)
 
     def _read_accessor(self, accessor: Any) -> float | int | None:
         """Read a value via accessor callable."""
