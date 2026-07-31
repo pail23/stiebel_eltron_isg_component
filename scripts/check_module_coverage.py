@@ -17,7 +17,7 @@ def modules_failing_target(report: dict, target: float) -> list[tuple[str, float
     )
     if not modules:
         raise ValueError(
-            f"coverage report contains no files below {INTEGRATION_PREFIX}"
+            f"coverage report contains no files with prefix {INTEGRATION_PREFIX}"
         )
     return [
         (filename, coverage) for filename, coverage in modules if coverage <= target
@@ -34,7 +34,10 @@ def main() -> int:
         report = json.loads(args.report.read_text(encoding="utf-8"))
         failures = modules_failing_target(report, args.target)
     except (OSError, KeyError, TypeError, ValueError) as err:
-        print(f"Cannot check module coverage: {err}", file=sys.stderr)  # noqa: T201
+        print(  # noqa: T201
+            f"Cannot check module coverage for {args.report}: {err}",
+            file=sys.stderr,
+        )
         return 1
 
     for filename, coverage in failures:
