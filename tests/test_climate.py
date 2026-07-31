@@ -226,6 +226,34 @@ async def test_wpm_hvac_and_preset_mapping() -> None:
     ]
 
 
+async def test_wpm_skips_unchanged_hvac_mode() -> None:
+    """Setting the raw operating mode again through HVAC must not write."""
+    entity = _make_wpm_climate(operating_mode=5)
+
+    await entity.async_set_hvac_mode(HVACMode.OFF)
+
+    assert entity.coordinator.writes == []
+
+
+async def test_wpm_skips_unchanged_preset_mode() -> None:
+    """Setting the reported preset again must not write its operating mode."""
+    entity = _make_wpm_climate(operating_mode=3)
+
+    await entity.async_set_preset_mode("comfort")
+
+    assert entity.coordinator.writes == []
+
+
+async def test_wpm_hvac_compares_raw_mode_not_mapped_auto_state() -> None:
+    """AUTO must still select program when another raw AUTO mode is active."""
+    entity = _make_wpm_climate(operating_mode=1)
+    assert entity.hvac_mode is HVACMode.AUTO
+
+    await entity.async_set_hvac_mode(HVACMode.AUTO)
+
+    assert entity.coordinator.writes == [("system_parameters", "operating_mode", 2)]
+
+
 async def test_lwz_hvac_and_preset_mapping() -> None:
     """LWZ exposes and writes Home Assistant modes through its mapping."""
     entity = _make_lwz_climate(operating_mode=1)
@@ -240,6 +268,24 @@ async def test_lwz_hvac_and_preset_mapping() -> None:
         ("system_parameters", "operating_mode", 5),
         ("system_parameters", "operating_mode", 14),
     ]
+
+
+async def test_lwz_skips_unchanged_hvac_mode() -> None:
+    """Setting the raw operating mode again through HVAC must not write."""
+    entity = _make_lwz_climate(operating_mode=5)
+
+    await entity.async_set_hvac_mode(HVACMode.OFF)
+
+    assert entity.coordinator.writes == []
+
+
+async def test_lwz_skips_unchanged_preset_mode() -> None:
+    """Setting the reported preset again must not write its operating mode."""
+    entity = _make_lwz_climate(operating_mode=14)
+
+    await entity.async_set_preset_mode("manual")
+
+    assert entity.coordinator.writes == []
 
 
 @pytest.mark.parametrize("operating_mode", [ECO_MODE, 3])
@@ -287,7 +333,7 @@ def test_lwz_fan_mode_uses_day_stage_when_not_eco() -> None:
 
 async def test_lwz_set_fan_mode_writes_night_stage_when_eco() -> None:
     """Setting the fan mode in eco mode must write the night stage field."""
-    entity = _make_lwz_climate(operating_mode=ECO_MODE)
+    entity = _make_lwz_climate(operating_mode=ECO_MODE, night_stage=2)
 
     await entity.async_set_fan_mode(FAN_LOW)
 
@@ -296,11 +342,32 @@ async def test_lwz_set_fan_mode_writes_night_stage_when_eco() -> None:
 
 async def test_lwz_set_fan_mode_writes_day_stage_when_not_eco() -> None:
     """Setting the fan mode outside eco mode must write the day stage field."""
-    entity = _make_lwz_climate(operating_mode=3)
+    entity = _make_lwz_climate(operating_mode=3, day_stage=1)
 
     await entity.async_set_fan_mode(FAN_HIGH)
 
     assert entity.coordinator.writes == [("system_parameters", "day_stage", 3)]
+
+
+@pytest.mark.parametrize(
+    ("operating_mode", "day_stage", "night_stage", "fan_mode"),
+    [
+        (3, 3, 1, FAN_HIGH),
+        (ECO_MODE, 3, 1, FAN_LOW),
+    ],
+)
+async def test_lwz_skips_unchanged_fan_mode(
+    operating_mode: int,
+    day_stage: int,
+    night_stage: int,
+    fan_mode: str,
+) -> None:
+    """Setting the active fan stage again must not issue a Modbus write."""
+    entity = _make_lwz_climate(operating_mode, day_stage, night_stage)
+
+    await entity.async_set_fan_mode(fan_mode)
+
+    assert entity.coordinator.writes == []
 
 
 async def test_climate_shows_written_target_before_the_next_poll() -> None:
@@ -314,6 +381,28 @@ async def test_climate_shows_written_target_before_the_next_poll() -> None:
     ]
     assert entity.target_temperature == 22.5
     assert entity.published_states == 1
+
+
+async def test_climate_skips_write_when_target_is_unchanged() -> None:
+    """Setting the reported target again must not issue a Modbus write."""
+    entity = _make_lwz_climate(operating_mode=3)
+
+    await entity.async_set_temperature(temperature=21.0)
+
+    assert entity.coordinator.writes == []
+    assert entity.published_states == 0
+
+
+async def test_climate_skips_float_imprecise_unchanged_target() -> None:
+    """A decoded float equal to the requested target must not be rewritten."""
+    entity = _make_lwz_climate(operating_mode=3)
+    decoded = 71 * 0.1
+    assert decoded != 7.1
+    entity.coordinator._api.system_parameters.room_temperature_day_hk1 = decoded
+
+    await entity.async_set_temperature(temperature=7.1)
+
+    assert entity.coordinator.writes == []
 
 
 async def test_climate_does_not_assume_a_target_when_the_write_fails() -> None:

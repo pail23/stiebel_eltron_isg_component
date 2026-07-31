@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+import math
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
@@ -420,10 +421,15 @@ class StiebelEltronISGClimateEntity(
         """Set new target temperature."""
         value = kwargs["temperature"]
         field = self._target_temp_write_field
-        if field is not None:
-            await self._write_field(field, value)
-            self._optimistic_target_field = field
-            self._set_optimistic_value(value)
+        current = self.target_temperature
+        if field is None:
+            return
+        if current is not None and math.isclose(current, value, abs_tol=1e-9):
+            return
+
+        await self._write_field(field, value)
+        self._optimistic_target_field = field
+        self._set_optimistic_value(value)
 
     def _read_accessor(self, accessor: Any) -> float | int | None:
         """Read a value via accessor callable."""
@@ -477,7 +483,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
-        if new_mode is not None:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
@@ -488,7 +494,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
-        if new_mode is not None:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
 
@@ -530,7 +536,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
-        if new_mode is not None:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
@@ -541,7 +547,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
-        if new_mode is not None:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
@@ -560,7 +566,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
-        if new_mode is not None:
+        if new_mode is not None and self.fan_mode != fan_mode:
             if self.operation_mode == ECO_MODE:
                 await self._write_field("night_stage", new_mode)
             else:
