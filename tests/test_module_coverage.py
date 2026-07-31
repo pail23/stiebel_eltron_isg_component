@@ -7,7 +7,8 @@ import pytest
 
 _SCRIPT = Path(__file__).parents[1] / "scripts" / "check_module_coverage.py"
 _SPEC = importlib.util.spec_from_file_location("check_module_coverage", _SCRIPT)
-assert _SPEC is not None and _SPEC.loader is not None
+assert _SPEC is not None
+assert _SPEC.loader is not None
 _MODULE = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(_MODULE)
 
