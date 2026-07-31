@@ -51,14 +51,18 @@ _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 
 
-def _repair_translation_files() -> list[pathlib.Path]:
-    """Return source and runtime files that ship repair text."""
-    runtime_files = [
+def _runtime_repair_translation_files() -> list[pathlib.Path]:
+    """Return runtime files that ship repair text."""
+    return [
         file
         for file in sorted(_TRANSLATIONS_DIR.glob("*.json"))
         if "issues" in json.loads(file.read_text(encoding="utf-8"))
     ]
-    return [_STRINGS_FILE, *runtime_files]
+
+
+def _repair_translation_files() -> list[pathlib.Path]:
+    """Return source and runtime files that ship repair text."""
+    return [_STRINGS_FILE, *_runtime_repair_translation_files()]
 
 
 def _platform(module: ModuleType) -> str:
@@ -169,12 +173,19 @@ def test_english_config_flow_matches_strings() -> None:
     assert _key_tree(english) == _key_tree(strings)
 
 
-def test_english_repair_issues_match_strings() -> None:
-    """Runtime repair translations must carry every declared field."""
+@pytest.mark.parametrize(
+    "translation_file",
+    _runtime_repair_translation_files(),
+    ids=lambda file: file.name,
+)
+def test_runtime_repair_issues_match_strings(
+    translation_file: pathlib.Path,
+) -> None:
+    """Every runtime file with repair text must carry each declared field."""
     strings = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["issues"]
-    english = json.loads(_RUNTIME_FILE.read_text(encoding="utf-8"))["issues"]
+    runtime = json.loads(translation_file.read_text(encoding="utf-8"))["issues"]
 
-    assert _key_tree(english) == _key_tree(strings)
+    assert _key_tree(runtime) == _key_tree(strings)
 
 
 @pytest.mark.parametrize(
