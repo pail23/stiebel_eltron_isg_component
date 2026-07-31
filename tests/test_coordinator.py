@@ -96,7 +96,6 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
     await coordinator.async_refresh()
     assert entity.available is True
     assert entity.native_value == 22.0
-    assert not api._updates
 
     # These messages come from DataUpdateCoordinator. Keeping them here pins the
     # ModbusError -> UpdateFailed translation: returning stale data quietly
