@@ -108,12 +108,25 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
     ]
 
     assert flow_sensors
+
+    allowed_units = {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+
     assert all(
-        description.native_unit_of_measurement
-        in {
-            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        }
+        description.native_unit_of_measurement in allowed_units
+        for description in flow_sensors
+    )
+
+    # Ensure both canonical flow units are represented so unit handling
+    # and metadata coverage are properly exercised.
+    assert any(
+        description.native_unit_of_measurement == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+        for description in flow_sensors
+    )
+    assert any(
+        description.native_unit_of_measurement == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
         for description in flow_sensors
     )
     assert all(

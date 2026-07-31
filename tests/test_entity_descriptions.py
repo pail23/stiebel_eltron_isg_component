@@ -197,6 +197,13 @@ def _write_field_cases() -> list[Any]:
     return cases
 
 
+def test_number_type_sets_are_non_empty() -> None:
+    """Ensure configuration-category tests always run against non-empty entity sets."""
+    assert number.NUMBER_TYPES_WPM
+    assert number.NUMBER_TYPES_WPM_3I
+    assert number.NUMBER_TYPES_LWZ
+
+
 @pytest.mark.parametrize(
     "description",
     [
