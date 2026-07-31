@@ -191,29 +191,46 @@ sources:
 
 model_mappings:
   - integration_model: WPMsystem
-    controller_code: 390
+    controller_code: 449
     object_db_device_model: WPM_4
     confidence: measured
     verdict: supports
-    evidence_reference: "<anonymized observation>"
+    evidence_reference: "third-party-wpmsystem-20260731-a"
 
 claims:
-  - id: wpm-system-inverter-power
+  - id: wpm-system-dual-mode-heating
     controller_model: WPMsystem
-    field: extended_energy_data.inverter_power_iws_1
-    availability: observed_only
+    field: system_parameters.dual_mode_temp_hzg
+    availability: standard
     measured_sample_count: 1
     evidence:
       - kind: live_controller
         confidence: measured
         verdict: supports
-        controller_code: 390
-        firmware: "12.2.2"
-        hardware_revision: "<anonymized revision>"
-        sample_id: "<opaque observation id>"
-        observed_on: "2026-07-30"
+        controller_code: 449
+        firmware: "ISG software 1.6.04.0000"
+        hardware_revision: "not exposed"
+        sample_id: "third-party-wpmsystem-20260731-a"
+        observed_on: "2026-07-31"
         plant: third_party_anonymized
-        reference: "<consented, anonymized observation>"
+        reference: "consented read-only Modbus observation"
+        register_space: holding
+        documented_address: 1509
+        wire_address: 1508
+        source_register_literal: "1509"
+        raw_value: 65486
+        decoded_value: -5.0
+        unit: "°C"
+      - kind: manufacturer_table
+        confidence: documented
+        verdict: refutes
+        source: python_stiebel_eltron
+        source_file: api/wpm_system_parameters.csv
+        source_line: 10
+        register_space: holding
+        documented_address: 1509
+        wire_address: 1508
+        source_register_literal: "1509"
 
   - id: wpm3-hk3-comfort
     controller_model: WPM_3
@@ -284,6 +301,9 @@ hardware revision, an opaque sample ID and a plant classification of `own` or
 distinct sample IDs and must match the retained live observations; it is not
 entered separately on each observation. Evidence from another installation is
 stored only with consent and without identifying plant, network or owner data.
+When the ISG does not expose a requested revision, the value is recorded as
+`not exposed` rather than guessed. Such an observation remains scoped to its
+opaque sample and cannot establish a firmware- or revision-wide claim.
 
 Measured evidence is scoped, not family-wide. It can outrank another source only
 for a generated row whose controller code, hardware revision and firmware
@@ -307,6 +327,41 @@ one family-wide availability flag:
 | `WPM_3` | `system_parameters.heating_curve_rise_hk_3` | `api/wpm_system_parameters.csv`, line 25, address 1553 | `documented/refutes` |
 | `WPMsystem` | `system_parameters.flow_temp_hysteresis_area` | `api/wpm_system_parameters.csv`, line 16, address 1515 | `documented/refutes` |
 | `WPMsystem` | `system_parameters.flow_temp_hysteresis_fan` | `api/wpm_system_parameters.csv`, line 19, address 1518 | `documented/refutes` |
+
+### Measured WPMsystem pilot
+
+The anonymized sample `third-party-wpmsystem-20260731-a` was checked twice with
+read-only Modbus function codes on 2026-07-31. The controller reported code
+449, which maps exactly to integration model `WPMsystem` and firmware object
+database `WPM_4`. The ISG displayed software version `1.6.04.0000`; it did not
+expose a hardware revision. No plant, owner or network identifier is retained.
+
+| Field | Documented address | Single-register result | Containing-block result | Measured verdict |
+| --- | --- | --- | --- | --- |
+| `system_parameters.dual_mode_temp_hzg` | 1509 | raw `65486`, decoded `-5.0 °C` | same value | `supports` |
+| `system_parameters.flow_temp_hysteresis_area` | 1515 | Modbus exception 2 | unavailable sentinel `0x8000` | `refutes` for this sample |
+| `system_parameters.flow_temp_hysteresis_fan` | 1518 | Modbus exception 2 | unavailable sentinel `0x8000` | `refutes` for this sample |
+| `system_parameters.comfort_temperature_hk_3` | 1551 | unavailable sentinel `0x8000` | unavailable sentinel `0x8000` | configuration-dependent, not a model refutation |
+| `system_parameters.eco_temperature_hk_3` | 1552 | unavailable sentinel `0x8000` | unavailable sentinel `0x8000` | configuration-dependent, not a model refutation |
+| `system_parameters.heating_curve_rise_hk_3` | 1553 | unavailable sentinel `0x8000` | unavailable sentinel `0x8000` | configuration-dependent, not a model refutation |
+| `energy_management_settings.switch_sg_ready_on_and_off` | 4001 | raw `1` | raw `1` | `supports` |
+| `energy_management_settings.sg_ready_input_1` | 4002 | raw `0` | raw `0` | `supports` |
+| `energy_management_settings.sg_ready_input_2` | 4003 | raw `0` | raw `0` | `supports` |
+
+The 1509 result is the important conflict case: the manufacturer-derived
+WPMsystem column omits this field, while both the WPM 4 object database and the
+measured controller support it. The measured claim therefore wins only for the
+matching sample scope; the disagreement remains visible instead of silently
+rewriting the manufacturer evidence.
+
+The two hysteresis results independently strengthen the existing documented
+refutations. They do not by themselves prove that every WPMsystem firmware
+revision rejects the addresses, so the eventual runtime correction still uses
+the reviewed model claim and preserves the exact measurement scope.
+
+The HK3 sentinel values only describe this installation, which has no HK3
+hardware. Other WPMsystem installations are known to expose HK3, so these rows
+must not become `refutes` claims for the controller model.
 
 Those rows are pinned to `python-stiebel-eltron` tag `v0.6.2`, commit
 `3d27058bdfee677a68397834915a08fe466cc149`. The source CSV marks documented
