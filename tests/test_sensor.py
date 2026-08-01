@@ -12,8 +12,11 @@ from homeassistant.const import (
     UnitOfTime,
     UnitOfVolumeFlowRate,
 )
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import sensor as sensor_module
 from custom_components.stiebel_eltron_isg.const import (
@@ -36,11 +39,13 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
+    DOMAIN,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
+    PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
     PRODUCED_SOLAR_HEATING_TOTAL,
@@ -51,6 +56,7 @@ from custom_components.stiebel_eltron_isg.const import (
     SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
 )
+from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import (
     ENERGY_DAILY_SENSOR_TYPES,
     LWZ_ENERGY_DAILY_SENSOR_TYPES,
@@ -354,12 +360,101 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
 @pytest.mark.parametrize(
     "descriptions", [ENERGY_DAILY_SENSOR_TYPES, LWZ_ENERGY_DAILY_SENSOR_TYPES]
 )
-def test_daily_energy_sensors_do_not_generate_long_term_sums(descriptions) -> None:
-    """Day-register residue makes zero-based long-term sums inaccurate."""
+def test_daily_energy_sensors_are_opt_in_and_excluded_from_statistics(
+    descriptions,
+) -> None:
+    """Raw day registers stay opt-in and out of long-term statistics."""
     for description in descriptions:
         assert description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
         assert description.device_class == SensorDeviceClass.ENERGY
         assert description.state_class is None
+        assert description.entity_registry_enabled_default is False
+        assert description.entity_registry_visible_default is True
+
+
+def test_every_today_energy_description_uses_the_opt_in_contract() -> None:
+    """No inline Today description may bypass the shared statistics contract."""
+
+    def descriptions_in(value):
+        if isinstance(value, sensor_module.StiebelEltronSensorEntityDescription):
+            yield value
+        elif isinstance(value, dict):
+            for child in value.values():
+                yield from descriptions_in(child)
+        elif isinstance(value, (list, tuple, set, frozenset)):
+            for child in value:
+                yield from descriptions_in(child)
+
+    expected = {
+        description.key
+        for description in (
+            *ENERGY_DAILY_SENSOR_TYPES,
+            *LWZ_ENERGY_DAILY_SENSOR_TYPES,
+        )
+    }
+    discovered = [
+        description
+        for name, value in vars(sensor_module).items()
+        if name.isupper()
+        for description in descriptions_in(value)
+        if description.key.endswith("_today")
+    ]
+
+    assert {description.key for description in discovered} == expected
+    for description in discovered:
+        assert description.state_class is None
+        assert description.entity_registry_enabled_default is False
+        assert description.entity_registry_visible_default is True
+
+
+async def test_existing_daily_energy_registry_entry_stays_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The new default must not disable an entity a user already has."""
+    mock_config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    existing = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, PRODUCED_HEATING_TODAY),
+        config_entry=mock_config_entry,
+        suggested_object_id="produced_heating_today",
+    )
+    assert existing.disabled_by is None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    current = registry.async_get(existing.entity_id)
+    assert current is not None
+    assert current.disabled_by is None
+    state = hass.states.get(current.entity_id)
+    assert state is not None
+    assert "state_class" not in state.attributes
+
+
+async def test_new_daily_energy_registry_entry_is_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A fresh Today entity is registered but not added to the state machine."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    current = registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, PRODUCED_HEATING_TODAY),
+    )
+    assert current is not None
+    entry = registry.async_get(current)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entry.entity_id) is None
 
 
 CUMULATIVE_ENERGY_KEYS = {
@@ -384,6 +479,7 @@ def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None
 
     for key in CUMULATIVE_ENERGY_KEYS:
         assert descriptions_by_key[key].state_class == SensorStateClass.TOTAL_INCREASING
+        assert descriptions_by_key[key].entity_registry_enabled_default is True
 
 
 @pytest.mark.parametrize(

@@ -226,7 +226,6 @@ def create_power_consumption_entity_description(
 def create_daily_energy_entity_description(
     key: str,
     modbus_register: StiebelEltronModbusRegister,
-    visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
     """Create a sensor for an ISG day register.
 
@@ -234,14 +233,15 @@ def create_daily_energy_entity_description(
     retains the fractional residue here. A state class would make Home Assistant
     compile a misleading long-term sum: a detected reset assumes a zero baseline
     and counts the retained residue again. The day register remains useful as an
-    operational value; the separate cumulative sensors provide energy statistics.
+    opt-in operational value; the separate cumulative sensors are enabled by
+    default and provide energy statistics.
     """
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        entity_registry_visible_default=visible_default,
+        entity_registry_enabled_default=False,
         modbus_register=modbus_register,
     )
 
