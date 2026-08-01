@@ -147,7 +147,7 @@ This PR implements only two fail-closed integration inventories:
 
 The tests also require each target to resolve to a library descriptor with a supported write contract.
 Callable library validators must accept both Home Assistant endpoints.
-Fields whose library contract is only the unbounded marker `True` are kept in a small reviewed allowlist and cannot enter or leave it silently.
+Number and Climate ranges whose library contract is only the unbounded marker `True` are kept in a small reviewed allowlist and cannot enter or leave it silently.
 
 The snapshots are deliberately reviewed rather than regenerated automatically.
 Their failure output is the update mechanism: a contributor sees the exact added or removed case, verifies the source change and updates the relevant lines.

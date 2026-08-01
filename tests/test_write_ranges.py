@@ -1,14 +1,16 @@
 """Verify that entity write ranges are accepted by the library."""
 
+from functools import cache
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
 from homeassistant.components.climate import ClimateEntityDescription
 from homeassistant.components.number import NumberEntityDescription
-from pystiebeleltron.lwz import LwzSystemParameters
-from pystiebeleltron.wpm import WpmSystemParameters
-from pystiebeleltron.wpm3i import Wpm3iSystemParameters
+from modbus_connection.mock import MockModbusConnection
+from pystiebeleltron.lwz import LwzStiebelEltronAPI
+from pystiebeleltron.wpm import WpmStiebelEltronAPI
+from pystiebeleltron.wpm3i import Wpm3iStiebelEltronAPI
 import pytest
 
 from custom_components.stiebel_eltron_isg import (
@@ -21,6 +23,7 @@ from custom_components.stiebel_eltron_isg.climate import (
     WPM_CLIMATE_TYPES,
     StiebelEltronISGClimateEntity,
 )
+from custom_components.stiebel_eltron_isg.const import UNIT_ID
 from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_LWZ,
     NUMBER_TYPES_WPM,
@@ -28,21 +31,21 @@ from custom_components.stiebel_eltron_isg.number import (
 )
 
 _NUMBER_DESCRIPTION_LISTS = (
-    ("NUMBER_TYPES_LWZ", LwzSystemParameters, NUMBER_TYPES_LWZ),
-    ("NUMBER_TYPES_WPM", WpmSystemParameters, NUMBER_TYPES_WPM),
+    ("NUMBER_TYPES_LWZ", LwzStiebelEltronAPI, NUMBER_TYPES_LWZ),
+    ("NUMBER_TYPES_WPM", WpmStiebelEltronAPI, NUMBER_TYPES_WPM),
     (
         "NUMBER_TYPES_WPM_3I",
-        Wpm3iSystemParameters,
+        Wpm3iStiebelEltronAPI,
         NUMBER_TYPES_WPM_3I,
     ),
 )
 
 _CLIMATE_DESCRIPTION_LISTS = (
-    ("LWZ_CLIMATE_TYPES", LwzSystemParameters, LWZ_CLIMATE_TYPES),
-    ("WPM_CLIMATE_TYPES", WpmSystemParameters, WPM_CLIMATE_TYPES),
+    ("LWZ_CLIMATE_TYPES", LwzStiebelEltronAPI, LWZ_CLIMATE_TYPES),
+    ("WPM_CLIMATE_TYPES", WpmStiebelEltronAPI, WPM_CLIMATE_TYPES),
     (
         "WPM_3I_CLIMATE_TYPES",
-        Wpm3iSystemParameters,
+        Wpm3iStiebelEltronAPI,
         WPM_3I_CLIMATE_TYPES,
     ),
 )
@@ -58,25 +61,42 @@ _BOUNDS_UNVERIFIED = frozenset({
 })
 
 
-def _field_descriptor(component_class: type[Any], field: str) -> Any:
-    """Return a field declared by the model-specific component class."""
-    if field in component_class.__dict__:
-        return component_class.__dict__[field]
-    raise AssertionError(f"{field} is not declared by {component_class.__name__}")
+@cache
+def _api(api_class: type[Any]) -> Any:
+    """Return the API object used by one integration API family."""
+    return api_class(MockModbusConnection().for_unit(UNIT_ID))
+
+
+def _field_descriptor(
+    api_class: type[Any],
+    component: str,
+    field: str,
+) -> Any:
+    """Return the descriptor from the component used by the real API."""
+    component_object = getattr(_api(api_class), component, None)
+    assert component_object is not None, (
+        f"{api_class.__name__} has no component {component}"
+    )
+    descriptor = getattr(type(component_object), field, None)
+    assert descriptor is not None, (
+        f"{type(component_object).__name__} has no field {field}"
+    )
+    return descriptor
 
 
 def _write_range_cases() -> list[Any]:
     """Return every advertised writable range and its library descriptor."""
     cases: list[Any] = []
 
-    for list_name, component_class, descriptions in _NUMBER_DESCRIPTION_LISTS:
+    for list_name, api_class, descriptions in _NUMBER_DESCRIPTION_LISTS:
         for number_description in descriptions:
             if number_description.write_field is None:
                 continue
             minimum = number_description.native_min_value
             maximum = number_description.native_max_value
             field = _field_descriptor(
-                component_class,
+                api_class,
+                number_description.write_component,
                 number_description.write_field,
             )
             case_id = (
@@ -92,7 +112,7 @@ def _write_range_cases() -> list[Any]:
                 )
             )
 
-    for list_name, component_class, descriptions in _CLIMATE_DESCRIPTION_LISTS:
+    for list_name, api_class, descriptions in _CLIMATE_DESCRIPTION_LISTS:
         for climate_description in descriptions:
             minimum = climate_description.min_temp
             maximum = climate_description.max_temp
@@ -100,7 +120,11 @@ def _write_range_cases() -> list[Any]:
                 field = getattr(climate_description, write_field_attribute)
                 if field is None:
                     continue
-                descriptor = _field_descriptor(component_class, field)
+                descriptor = _field_descriptor(
+                    api_class,
+                    climate_description.write_component,
+                    field,
+                )
                 case_id = (
                     f"{list_name}-{climate_description.key}-{field}"
                     f"-{minimum}..{maximum}"
@@ -208,9 +232,7 @@ def test_climate_entity_publishes_its_description_bounds(description: Any) -> No
     restore Home Assistant's 7/35 defaults while the range test above still
     passed, because it only ever reads the description.
     """
-    entity = StiebelEltronISGClimateEntity.__new__(StiebelEltronISGClimateEntity)
-    StiebelEltronISGClimateEntity.__init__(
-        entity,
+    entity = StiebelEltronISGClimateEntity(
         SimpleNamespace(device_info=None, last_update_success=True),
         SimpleNamespace(entry_id="test"),
         description,

@@ -184,7 +184,17 @@ def _write_field_cases() -> list[Any]:
     for list_name, model, descriptions in _DESCRIPTION_LISTS:
         for description in descriptions:
             component = getattr(description, "write_component", None)
+            write_fields = [
+                (attribute, field)
+                for attribute in _WRITE_FIELD_ATTRIBUTES
+                for field in [getattr(description, attribute, None)]
+                if field is not None
+            ]
             if component is None:
+                assert not write_fields, (
+                    f"{list_name}-{model}-{description.key} carries a write field "
+                    "without a write component"
+                )
                 continue
             cases.extend(
                 pytest.param(
@@ -193,9 +203,7 @@ def _write_field_cases() -> list[Any]:
                     field,
                     id=(f"{list_name}-{model}-{description.key}-{attribute}-{field}"),
                 )
-                for attribute in _WRITE_FIELD_ATTRIBUTES
-                for field in [getattr(description, attribute, None)]
-                if field is not None
+                for attribute, field in write_fields
             )
     return cases
 
