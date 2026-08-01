@@ -11,17 +11,31 @@
 
 [![Community Forum][forum-shield]][forum]
 
-## Preliminary Remark
-Although this integration has been created for Stiebel Eltron devices, it can successfully be used for Tecalor devices as well.
+## What this integration does
+
+This custom integration connects Home Assistant directly to an ISG over the
+local Modbus TCP interface. It does not require the Stiebel Eltron cloud or a
+Web-Monitoring subscription.
+
+Supported controller families include WPM 3, WPM 3i, WPMsystem, LWZ, LWZ x04
+SOL and LWZ R290. The exact entities depend on the controller and the registers
+it exposes. They can include temperatures, operating states, energy values,
+climate controls, setpoints, operating modes and SG Ready inputs.
+
+Although the integration was created for Stiebel Eltron devices, it can also be
+used with compatible Tecalor devices.
 
 ## Prerequisites
-In order to use this Integration you need:
 
-1. ISG device connected to the heat pump and your local network
-2. IP address of the ISG device on your local network
+You need:
+
+1. An ISG connected to the heat pump and the same local network as Home
+   Assistant.
+2. Modbus TCP enabled on the ISG.
+3. The IP address or hostname of the ISG. A DHCP reservation is recommended.
 
 For connecting the ISG device to your heat pump refer to the corresponding Stiebel Eltron documentation or ask your installer.
-There is no need to get the "STIEBEL ELTRON Web-Monitoring" subscription, this is for Stiebel Eltron itself monitoring your heat pump and NOT needed for this integration to work.
+There is no need to buy the "STIEBEL ELTRON Web-Monitoring" subscription.
 
 If you are using the ISG with the [STIEBEL ELTRON EMI extension](https://www.stiebel-eltron.de/de/home/service/smart-home/energy-management-interface-emi.html) make sure that your ISG Firmware is current because this Integration is using Modbus, older versions of ISG Software are not able to do Modbus and EMI at the same time. (ISG Software Version `v12.1.2` was tested by [@northalpha](https://github.com/northalpha) using this integration to be working).
 An update may be triggered via Stiebel Eltron Support (Kundendienst).
@@ -30,13 +44,15 @@ An update may be triggered via Stiebel Eltron Support (Kundendienst).
 
 ### Using HACS
 
+This is the preferred installation option:
 
-This is the preferred installation option. If you are using HACS:
-1. Add the component to your home assistant installation: [![Open your Home Assistant instance and show the blueprint import dialog with a specific blueprint pre-filled.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pail23&repository=stiebel_eltron_isg_component&category=integration)
-2. Add the _Stiebel Eltron ISG_ Integration in HACS and restart Home Assistant
-3. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
+1. Open the repository in HACS: [![Open your Home Assistant instance and show
+   the HACS repository.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=pail23&repository=stiebel_eltron_isg_component&category=integration)
+2. Download _Stiebel Eltron ISG_ and restart Home Assistant.
+3. Go to **Settings → Devices & services**, select **Add integration**, and
+   search for _Stiebel Eltron ISG_.
 
-### Manual installation:
+### Manual installation
 
 1. Using the tool of choice open the directory (folder) for your HA configuration (where you find `configuration.yaml`).
 2. If you do not have a `custom_components` directory (folder) there, you need to create it.
@@ -44,14 +60,70 @@ This is the preferred installation option. If you are using HACS:
 4. Download _all_ the files from the `custom_components/stiebel_eltron_isg/` directory (folder) in this repository.
 5. Place the files you downloaded in the new directory (folder) you created.
 6. Restart Home Assistant
-7. In the HA UI go to "Configuration" -> "Integrations" click "+" and search for "Stiebel Eltron ISG"
+7. Go to **Settings → Devices & services**, select **Add integration**, and
+   search for _Stiebel Eltron ISG_.
 
+## Configuration
 
+Configuration is entirely UI based. Enter the ISG host and Modbus TCP port
+(normally `502`). When the ISG advertises itself through DHCP, Home Assistant
+may discover it automatically.
 
+To change the address later, open **Settings → Devices & services**, select the
+three-dot menu on the integration entry, and choose **Reconfigure**. Existing
+entity IDs and history are retained.
 
-## Configuration is done in the UI
+## Energy and long-term statistics
 
-<!---->
+For the Energy Dashboard and other long-term statistics, use the cumulative
+consumed or produced energy sensor whose source combines the current day with
+the historical total (`day_and_total`). These sensors are marked as
+`total_increasing`, so Home Assistant can derive clean hourly and daily deltas
+from them.
+
+Sensors whose names end in **Today** expose the raw ISG day registers. They are
+useful on dashboards for the device's current-day value, but deliberately do
+not generate long-term sums. At midnight the ISG transfers only whole kWh to
+the total register and retains the fractional remainder in the day register.
+Treating that remainder as a reset to zero would count part of the energy
+twice.
+
+The separate **Total** sensors remain cumulative alternatives. Which energy
+entities are available depends on the connected controller.
+
+## Removing the integration
+
+1. Open **Settings → Devices & services**.
+2. Select the three-dot menu on the Stiebel Eltron ISG entry and choose
+   **Delete**.
+3. To remove the code as well, uninstall the repository in HACS and restart
+   Home Assistant.
+
+Removing the entry stops polling and removes its devices and entities. Recorder
+history is retained by Home Assistant until it is deleted separately.
+
+## Troubleshooting
+
+- Verify that Home Assistant can reach the ISG on the configured host and port.
+- Confirm that Modbus TCP is enabled and that no firewall or VLAN rule blocks
+  the connection.
+- Reserve the ISG address in DHCP, or use **Reconfigure** after an address
+  change.
+- If the integration fails to start with _Unsupported controller model_,
+  include the controller ID from that error and the relevant Home Assistant log
+  in a GitHub issue.
+- For an entry that loads successfully, include a diagnostics download with the
+  issue. Diagnostics redact the configured host.
+- A register that is not exposed by a controller remains unavailable. This is
+  preferable to reporting a plausible but stale value.
+
+The integration polls locally every 30 seconds. A failed update marks entities
+unavailable; it does not keep presenting cached values as current.
+Write errors are returned to the Home Assistant action that initiated them.
+
+The integration cannot update ISG firmware. Firmware updates are handled
+through Stiebel Eltron support. It also cannot make a register writable when
+the connected controller or firmware exposes it as read-only.
 
 ## Upgrading to 2026.7
 
@@ -73,29 +145,23 @@ automatically is linking them to a differently named replacement. Renaming an en
 inside Home Assistant is the one path that carries its statistics along, because the
 recorder migrates the statistic id on a rename but has no hook for a removal.
 
-Raw energy entities whose names end in `Today` are disabled by default for new
-installations. Their ISG registers reset at midnight to a non-zero fractional
-remainder. Treating that value as `TOTAL_INCREASING` makes Home Assistant interpret
-the reset incorrectly and causes long-term sums to drift. Existing registry entries
-stay enabled after the update, but no longer expose a state class.
+Raw energy entities whose names end in `Today` are disabled by default for new installations.
+Their ISG registers reset at midnight to a non-zero fractional remainder.
+Treating that value as `TOTAL_INCREASING` makes Home Assistant interpret the reset incorrectly and causes long-term sums to drift.
+Existing registry entries stay enabled after the update, but no longer expose a state class.
 
-If a `Today` entity is configured in the Energy dashboard, replace it with the
-corresponding enabled cumulative entity. For example, replace **Produced Heating
-Today** with **Produced Heating**. This preferred `day_and_total` counter includes
-the current day's fractional energy while remaining cumulative. **Produced Heating
-Total** is also cumulative but is the whole-kWh lifetime counter updated when the
-day value is transferred. The same naming pattern applies to consumed and
-water-heating energy. Entity ids depend on the installation and language, so select
-by the entity name under **Settings → Devices & services → Entities**. Statistics
-already stored under the old `Today` entity are not transferred to the replacement.
+If a `Today` entity is configured in the Energy dashboard, replace it with the corresponding enabled cumulative entity.
+For example, replace **Produced Heating Today** with **Produced Heating**.
+This preferred `day_and_total` counter includes the current day's fractional energy while remaining cumulative.
+**Produced Heating Total** is also cumulative but is the whole-kWh lifetime counter updated when the day value is transferred.
+The same naming pattern applies to consumed and water-heating energy.
+Entity IDs depend on the installation and language, so select by the entity name under **Settings → Devices & services → Entities**.
+Statistics already stored under the old `Today` entity are not transferred to the replacement.
 
-Home Assistant may offer a fixable `state_class_removed` issue under **Developer
-Tools → Statistics** for a `Today` entity that previously generated statistics.
-Deleting that invalid statistic removes its long-term statistics, not the entity's
-ordinary state history. To derive a daily value, create a Home Assistant
-`utility_meter` helper with a daily cycle from the cumulative source. Users who
-still need the raw operational `Today` value can enable it manually under
-**Settings → Devices & services → Entities**.
+Home Assistant may offer a fixable `state_class_removed` issue under **Developer Tools → Statistics** for a `Today` entity that previously generated statistics.
+Deleting that invalid statistic removes its long-term statistics, not the entity's ordinary state history.
+To derive a daily value, create a Home Assistant `utility_meter` helper with a daily cycle from the cumulative source.
+Users who still need the raw operational `Today` value can enable it manually under **Settings → Devices & services → Entities**.
 
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be
@@ -141,4 +207,3 @@ If you want to contribute to this please read the [Contribution guidelines](CONT
 [maintenance-shield]: https://img.shields.io/badge/maintainer-Paul%20Frank-green
 [releases-shield]: https://img.shields.io/github/v/release/pail23/stiebel_eltron_isg_component
 [releases]: https://github.com/pail23/stiebel_eltron_isg_component/releases
-

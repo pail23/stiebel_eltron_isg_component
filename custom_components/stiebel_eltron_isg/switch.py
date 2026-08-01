@@ -113,25 +113,25 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        if self.write_component is None or self.write_field is None:
-            return
-
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            1,
-        )
-        await self.async_update()
+        await self._async_set_state(1)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
+        await self._async_set_state(0)
+
+    async def _async_set_state(self, value: int) -> None:
+        """Write a changed switch state and refresh its read-back value."""
         if self.write_component is None or self.write_field is None:
+            return
+
+        current = self.coordinator.get_value(self.modbus_register)
+        if current is not None and bool(current) == bool(value):
             return
 
         await self.coordinator.write_component_value(
             self.write_component,
             self.write_field,
-            0,
+            value,
         )
         await self.async_update()
 
