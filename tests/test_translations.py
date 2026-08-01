@@ -129,6 +129,22 @@ def _load_json(file: pathlib.Path):
     )
 
 
+def test_load_json_rejects_duplicate_keys(tmp_path: pathlib.Path) -> None:
+    """A strict load must report the file and duplicated key."""
+    file = tmp_path / "duplicate.json"
+    file.write_text(
+        '{"duplicate": 1, "duplicate": 2}',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="duplicate key 'duplicate'") as exc_info:
+        _load_json(file)
+
+    message = str(exc_info.value)
+    assert str(file) in message
+    assert "duplicate key 'duplicate'" in message
+
+
 def _entity_names(file: pathlib.Path) -> dict[str, dict[str, dict]]:
     """Return the ``entity`` section of a translation file."""
     return _load_json(file).get("entity", {})
