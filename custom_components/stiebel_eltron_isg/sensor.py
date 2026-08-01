@@ -244,7 +244,6 @@ def create_daily_energy_entity_description(
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         icon="mdi:meter-electric",
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.MEASUREMENT,
         entity_registry_visible_default=visible_default,
         modbus_register=modbus_register,
     )
