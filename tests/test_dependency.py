@@ -49,7 +49,7 @@ def test_integration_does_not_wrap_dependency_io_in_executor() -> None:
     """Reject HA executor wrappers without claiming all sync calls are harmless."""
     occurrences = [
         f"{path.relative_to(ROOT)}:{line_number}"
-        for path in sorted(INTEGRATION_DIR.glob("*.py"))
+        for path in sorted(INTEGRATION_DIR.rglob("*.py"))
         for line_number, line in enumerate(
             path.read_text(encoding="utf-8").splitlines(),
             start=1,
@@ -57,7 +57,6 @@ def test_integration_does_not_wrap_dependency_io_in_executor() -> None:
         if "async_add_executor_job" in line
     ]
 
-    assert not occurrences, (
-        "Dependency I/O must remain natively async; found executor wrappers at "
-        + ", ".join(occurrences)
+    assert not occurrences, "Found Home Assistant executor wrappers at " + ", ".join(
+        occurrences
     )

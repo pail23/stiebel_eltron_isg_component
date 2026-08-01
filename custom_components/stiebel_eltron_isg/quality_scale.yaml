@@ -1,6 +1,8 @@
 # This is a custom integration self-assessment, not a claim of an official
 # Home Assistant quality tier. Neither hassfest nor HACS evaluates this file as
 # a Home Assistant Core quality-scale file. Open rules remain explicit todos.
+# README.md and info.md provide the local documentation evidence because this
+# custom integration has no page on home-assistant.io.
 #
 # The 54-rule inventory is pinned to Home Assistant Core 2026.7.4 at commit
 # a4feaf06248c529f60021fc8be93ee69bc9b3084, retrieved on 2026-08-01.
@@ -12,7 +14,9 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow-test-coverage: done
+  config-flow-test-coverage:
+    status: done
+    comment: config_flow.py measures 100% coverage; fail-closed per-module enforcement remains in PR #624.
   config-flow: done
   dependency-transparency: done
   docs-actions:
@@ -63,7 +67,7 @@ rules:
     comment: Local Modbus TCP does not use authentication.
   test-coverage:
     status: todo
-    comment: Per-module fail-closed coverage enforcement remains in PR #624.
+    comment: Aggregate coverage is 99%, but the rule requires every module above 95%; fail-closed per-module enforcement remains in PR #624.
 
   # Gold
   devices: done
@@ -74,11 +78,11 @@ rules:
     status: done
     comment: See README.md#troubleshooting for polling and unavailable behavior.
   docs-examples:
-    status: done
-    comment: See README.md#energy-and-long-term-statistics.
+    status: todo
+    comment: The README explains statistics but does not yet provide a reusable automation example.
   docs-known-limitations:
     status: done
-    comment: See README.md#troubleshooting.
+    comment: See the limitations described under README.md#troubleshooting.
   docs-supported-devices:
     status: done
     comment: See README.md#what-this-integration-does.
@@ -119,7 +123,7 @@ rules:
   # Platinum
   async-dependency:
     status: done
-    comment: Connect, close, controller detection, model refresh, and component writes expose coroutine APIs and are awaited directly.
+    comment: Connect, close, controller detection, model refresh, and component writes expose coroutine APIs used without Home Assistant executor wrappers.
   inject-websession:
     status: exempt
     comment: The local Modbus TCP dependency does not use HTTP.

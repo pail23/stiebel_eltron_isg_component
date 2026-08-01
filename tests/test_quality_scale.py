@@ -2,6 +2,7 @@
 
 import json
 from pathlib import Path
+import re
 from typing import Any
 
 import pytest
@@ -12,7 +13,16 @@ ROOT = Path(__file__).parent.parent
 INTEGRATION_DIR = ROOT / "custom_components" / "stiebel_eltron_isg"
 QUALITY_SCALE_FILE = INTEGRATION_DIR / "quality_scale.yaml"
 MANIFEST_FILE = INTEGRATION_DIR / "manifest.json"
+DOCUMENTATION_FILES = {
+    "README.md": ROOT / "README.md",
+    "info.md": ROOT / "info.md",
+}
+DOCUMENTATION_REFERENCE = re.compile(
+    r"\b(?P<file>README\.md|info\.md)#(?P<anchor>[a-z0-9-]+)"
+)
+MARKDOWN_HEADING = re.compile(r"^#{1,6}\s+(?P<title>.+?)\s*#*$")
 
+# Keep this fixed inventory in sync with the pinned source named in the YAML header.
 PINNED_RULES = frozenset({
     "action-exceptions",
     "action-setup",
@@ -75,8 +85,6 @@ VALID_STATUSES = frozenset({"done", "todo", "exempt"})
 @pytest.fixture
 def raw_quality_scale() -> str:
     """Return the raw custom quality evidence."""
-    if not QUALITY_SCALE_FILE.is_file():
-        pytest.skip("quality_scale.yaml has not been implemented yet")
     return QUALITY_SCALE_FILE.read_text(encoding="utf-8")
 
 
@@ -103,6 +111,26 @@ def _mapping_keys(node: MappingNode) -> list[str]:
     return keys
 
 
+def _github_heading_anchors(path: Path) -> set[str]:
+    """Return GitHub-style anchors for the ATX headings in a Markdown file."""
+    anchors: set[str] = set()
+    occurrences: dict[str, int] = {}
+    for line in path.read_text(encoding="utf-8").splitlines():
+        match = MARKDOWN_HEADING.match(line)
+        if match is None:
+            continue
+
+        anchor = re.sub(
+            r"[^a-z0-9 _-]",
+            "",
+            match.group("title").lower(),
+        ).replace(" ", "-")
+        occurrence = occurrences.get(anchor, 0)
+        occurrences[anchor] = occurrence + 1
+        anchors.add(anchor if occurrence == 0 else f"{anchor}-{occurrence}")
+    return anchors
+
+
 def test_quality_scale_file_exists() -> None:
     """Require the repository to publish its custom quality evidence."""
     assert QUALITY_SCALE_FILE.is_file()
@@ -126,6 +154,12 @@ def test_quality_scale_defines_each_rule_once(raw_quality_scale: str) -> None:
     rule_keys = _mapping_keys(rules_node)
     assert len(rule_keys) == len(set(rule_keys))
 
+    for _, value_node in rules_node.value:
+        if not isinstance(value_node, MappingNode):
+            continue
+        value_keys = _mapping_keys(value_node)
+        assert len(value_keys) == len(set(value_keys))
+
 
 def test_quality_scale_entries_match_custom_schema(
     quality_rules: dict[str, Any],
@@ -146,23 +180,32 @@ def test_quality_scale_entries_match_custom_schema(
 def test_completed_documentation_rules_cite_local_evidence(
     quality_rules: dict[str, Any],
 ) -> None:
-    """Point completed documentation rules at a concrete local heading."""
+    """Resolve each completed documentation rule to a local heading."""
+    anchors_by_file = {
+        name: _github_heading_anchors(path)
+        for name, path in DOCUMENTATION_FILES.items()
+    }
     for rule, value in quality_rules.items():
         if not rule.startswith("docs-") or _status(value) != "done":
             continue
 
         assert isinstance(value, dict), rule
-        comment = value["comment"]
-        assert "README.md#" in comment or "info.md#" in comment, rule
+        references = DOCUMENTATION_REFERENCE.findall(value["comment"])
+        assert references, rule
+        for filename, anchor in references:
+            assert anchor in anchors_by_file[filename], rule
 
 
 def test_quality_scale_is_explicitly_a_custom_self_assessment(
     raw_quality_scale: str,
 ) -> None:
     """Avoid presenting the checklist as an official Home Assistant tier."""
-    assert "custom integration" in raw_quality_scale.lower()
-    assert "self-assessment" in raw_quality_scale.lower()
-    assert "Home Assistant Core 2026.7.4" in raw_quality_scale
+    header, separator, _ = raw_quality_scale.partition("rules:")
+    assert separator
+    assert "custom integration" in header.lower()
+    assert "self-assessment" in header.lower()
+    assert "Home Assistant Core 2026.7.4" in header
+    assert "a4feaf06248c529f60021fc8be93ee69bc9b3084" in header
 
 
 def test_manifest_does_not_claim_an_official_quality_tier() -> None:
