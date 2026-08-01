@@ -24,6 +24,7 @@ other means one of them is stale, so both directions are compared as well.
 
 import json
 import pathlib
+from string import Formatter
 from types import ModuleType
 
 from homeassistant.helpers.entity import EntityDescription
@@ -48,6 +49,20 @@ _COMPONENT_DIR = (
 _STRINGS_FILE = _COMPONENT_DIR / "strings.json"
 _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
+
+
+def _runtime_repair_translation_files() -> list[pathlib.Path]:
+    """Return runtime files that ship repair text."""
+    return [
+        file
+        for file in sorted(_TRANSLATIONS_DIR.glob("*.json"))
+        if "issues" in json.loads(file.read_text(encoding="utf-8"))
+    ]
+
+
+def _repair_translation_files() -> list[pathlib.Path]:
+    """Return source and runtime files that ship repair text."""
+    return [_STRINGS_FILE, *_runtime_repair_translation_files()]
 
 
 def _platform(module: ModuleType) -> str:
@@ -156,6 +171,43 @@ def test_english_config_flow_matches_strings() -> None:
     english = json.loads(_RUNTIME_FILE.read_text(encoding="utf-8"))["config"]
 
     assert _key_tree(english) == _key_tree(strings)
+
+
+@pytest.mark.parametrize(
+    "translation_file",
+    _runtime_repair_translation_files(),
+    ids=lambda file: file.name,
+)
+def test_runtime_repair_issues_match_strings(
+    translation_file: pathlib.Path,
+) -> None:
+    """Every runtime file with repair text must carry each declared field."""
+    strings = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["issues"]
+    runtime = json.loads(translation_file.read_text(encoding="utf-8"))["issues"]
+
+    assert _key_tree(runtime) == _key_tree(strings)
+
+
+@pytest.mark.parametrize(
+    "translation_file",
+    _repair_translation_files(),
+    ids=lambda file: file.name,
+)
+def test_controller_repair_uses_model_id_placeholder(
+    translation_file: pathlib.Path,
+) -> None:
+    """Every shipped repair text must preserve its runtime placeholder."""
+    issue = json.loads(translation_file.read_text(encoding="utf-8"))["issues"][
+        "unsupported_controller"
+    ]
+    placeholders = {
+        field
+        for text in issue.values()
+        for _, field, _, _ in Formatter().parse(text)
+        if field is not None
+    }
+
+    assert placeholders == {"model_id"}
 
 
 def test_config_flow_strings_match_runtime_fields() -> None:
