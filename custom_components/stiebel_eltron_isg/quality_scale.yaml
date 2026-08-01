@@ -1,0 +1,128 @@
+# This is a custom integration self-assessment, not a claim of an official
+# Home Assistant quality tier. Neither hassfest nor HACS evaluates this file as
+# a Home Assistant Core quality-scale file. Open rules remain explicit todos.
+#
+# The 54-rule inventory is pinned to Home Assistant Core 2026.7.4 at commit
+# a4feaf06248c529f60021fc8be93ee69bc9b3084, retrieved on 2026-08-01.
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide custom conditions.
+  docs-high-level-description:
+    status: done
+    comment: See README.md#what-this-integration-does.
+  docs-installation-instructions:
+    status: done
+    comment: See README.md#installation.
+  docs-removal-instructions:
+    status: done
+    comment: See README.md#removing-the-integration.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide custom triggers.
+  entity-event-setup:
+    status: exempt
+    comment: Integration entities do not explicitly subscribe to events.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide custom service actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not expose an options flow or runtime options.
+  docs-installation-parameters:
+    status: done
+    comment: See README.md#configuration.
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow:
+    status: exempt
+    comment: Local Modbus TCP does not use authentication.
+  test-coverage:
+    status: todo
+    comment: Per-module fail-closed coverage enforcement remains in PR #624.
+
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
+  docs-data-update:
+    status: done
+    comment: See README.md#troubleshooting for polling and unavailable behavior.
+  docs-examples:
+    status: done
+    comment: See README.md#energy-and-long-term-statistics.
+  docs-known-limitations:
+    status: done
+    comment: See README.md#troubleshooting.
+  docs-supported-devices:
+    status: done
+    comment: See README.md#what-this-integration-does.
+  docs-supported-functions:
+    status: done
+    comment: See README.md#what-this-integration-does.
+  docs-troubleshooting:
+    status: done
+    comment: See README.md#troubleshooting.
+  docs-use-cases:
+    status: done
+    comment: See README.md#energy-and-long-term-statistics.
+  dynamic-devices:
+    status: exempt
+    comment: One fixed controller device exists per config entry, matching the Home Assistant Core 2026.7.4 precedent used by idasen_desk, energieleser, and iron_os.
+  entity-category:
+    status: todo
+    comment: Entity metadata review remains in PR #632.
+  entity-device-class:
+    status: todo
+    comment: Entity metadata review remains in PR #632.
+  entity-disabled-by-default:
+    status: todo
+    comment: Default-disabled diagnostic and noisy entities remain in PR #639.
+  entity-translations: done
+  exception-translations: done
+  icon-translations:
+    status: todo
+    comment: State and range icon translations remain in PR #633.
+  reconfiguration-flow: done
+  repair-issues:
+    status: todo
+    comment: Actionable repair flows remain in PR #638.
+  stale-devices:
+    status: exempt
+    comment: One fixed controller device exists per config entry, matching the Home Assistant Core 2026.7.4 precedent used by idasen_desk, energieleser, and iron_os.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: Connect, close, controller detection, model refresh, and component writes expose coroutine APIs and are awaited directly.
+  inject-websession:
+    status: exempt
+    comment: The local Modbus TCP dependency does not use HTTP.
+  strict-typing:
+    status: todo
+    comment: pystiebeleltron 0.6.2 lacks py.typed, so the temporary mypy override remains until a typed dependency release is available.
