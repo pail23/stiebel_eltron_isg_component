@@ -191,17 +191,16 @@ def _write_field_cases() -> list[Any]:
                 if field is not None
             ]
             if component is None:
-                assert not write_fields, (
-                    f"{list_name}-{model}-{description.key} carries a write field "
-                    "without a write component"
-                )
                 continue
             cases.extend(
                 pytest.param(
                     model,
                     component,
                     field,
-                    id=(f"{list_name}-{model}-{description.key}-{attribute}-{field}"),
+                    id=(
+                        f"{list_name}-{model}-{description.key}-{attribute}"
+                        f"-{component}.{field}"
+                    ),
                 )
                 for attribute, field in write_fields
             )
@@ -216,6 +215,21 @@ def test_write_field_inventory_matches_reviewed_snapshot() -> None:
         "write fields changed; verify the targets and update "
         "tests/capability_write_fields.txt"
     )
+
+
+def test_write_fields_have_components() -> None:
+    """A write field without its owning component is an invalid contract."""
+    missing = {
+        f"{list_name}-{model}-{description.key}-{attribute}-{field}"
+        for list_name, model, descriptions in _DESCRIPTION_LISTS
+        for description in descriptions
+        if getattr(description, "write_component", None) is None
+        for attribute in _WRITE_FIELD_ATTRIBUTES
+        for field in [getattr(description, attribute, None)]
+        if field is not None
+    }
+
+    assert not missing, f"write fields without a write component: {sorted(missing)}"
 
 
 def test_number_type_sets_are_non_empty() -> None:
