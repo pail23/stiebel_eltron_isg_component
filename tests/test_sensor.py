@@ -126,7 +126,8 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
         for description in flow_sensors
     )
     assert any(
-        description.native_unit_of_measurement == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
+        description.native_unit_of_measurement
+        == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
         for description in flow_sensors
     )
     assert all(
