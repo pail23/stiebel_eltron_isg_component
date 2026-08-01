@@ -1,13 +1,21 @@
 """StiebelEltronISGEntity class."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+
+# At runtime this must remain ``object``: concrete entities place the mixin
+# before StiebelEltronISGEntity so ``super()`` reaches CoordinatorEntity.
+if TYPE_CHECKING:
+    _OptimisticValueMixinBase = CoordinatorEntity[StiebelEltronDataCoordinator]
+else:
+    _OptimisticValueMixinBase = object
 
 
 def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
@@ -22,7 +30,7 @@ class StiebelEltronEntityDescription(EntityDescription):
     modbus_register: Any
 
 
-class OptimisticValueMixin:
+class OptimisticValueMixin(_OptimisticValueMixinBase):
     """Report a written value right away, until the device reports its own.
 
     A write travels ISG to CAN to heat pump and needs a moment to be reflected
@@ -64,6 +72,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
     """stiebel_eltron_isg entity base class."""
 
     _attr_has_entity_name = True
+    modbus_register: Callable[[Any], float | int | None]
 
     def __init__(
         self,

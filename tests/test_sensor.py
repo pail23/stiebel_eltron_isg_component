@@ -24,33 +24,43 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
+    CONSUMED_HEATING,
     CONSUMED_HEATING_12M,
     CONSUMED_HEATING_LAST_24H,
     CONSUMED_HEATING_PREV_12M,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
     CONSUMED_WATER_HEATING_12M,
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
+    CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
     PRODUCED_SOLAR_HEATING_TOTAL,
     PRODUCED_SOLAR_WATER_HEATING,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TOTAL,
     SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
+    ENERGY_DAILY_SENSOR_TYPES,
+    LWZ_ENERGY_DAILY_SENSOR_TYPES,
     LWZ_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
-    StiebelEltronISGEnergySensor,
     StiebelEltronISGSensor,
     StiebelEltronSensorEntityDescription,
+    async_setup_entry,
 )
 
 
@@ -108,18 +118,36 @@ def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
     ]
 
     assert flow_sensors
+
+    allowed_units = {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+
     assert all(
+        description.native_unit_of_measurement in allowed_units
+        for description in flow_sensors
+    )
+
+    # Ensure both canonical flow units are represented so unit handling
+    # and metadata coverage are properly exercised.
+    assert any(
+        description.native_unit_of_measurement == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+        for description in flow_sensors
+    )
+    assert any(
         description.native_unit_of_measurement
-        in {
-            UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-            UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
-        }
+        == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
         for description in flow_sensors
     )
     assert all(
         description.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
         for description in flow_sensors
     )
+    assert {description.native_unit_of_measurement for description in flow_sensors} == {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
 
 
 def test_runtime_sensors_use_duration_device_class() -> None:
@@ -182,22 +210,12 @@ async def test_setup_uses_wpm_3i_sensor_lists() -> None:
     )
     add_entities = MagicMock()
 
-    with (
-        patch.object(
-            sensor_module,
-            "StiebelEltronISGSensor",
-            side_effect=lambda coordinator, config_entry, description: (
-                "sensor",
-                description.key,
-            ),
-        ),
-        patch.object(
-            sensor_module,
-            "StiebelEltronISGEnergySensor",
-            side_effect=lambda coordinator, config_entry, description: (
-                "energy",
-                description.key,
-            ),
+    with patch.object(
+        sensor_module,
+        "StiebelEltronISGSensor",
+        side_effect=lambda coordinator, config_entry, description: (
+            "sensor",
+            description.key,
         ),
     ):
         await sensor_module.async_setup_entry(None, entry, add_entities)
@@ -206,7 +224,7 @@ async def test_setup_uses_wpm_3i_sensor_lists() -> None:
     assert entities == [
         *[("sensor", description.key) for description in WPM_3I_SENSOR_TYPES],
         *[
-            ("energy", description.key)
+            ("sensor", description.key)
             for description in sensor_module.ENERGY_DAILY_SENSOR_TYPES
         ],
     ]
@@ -230,37 +248,6 @@ def test_sensor_native_value_formats_active_errors(key: str, value, expected) ->
     entity.coordinator = SimpleNamespace(get_value=lambda accessor: value)
 
     assert entity.native_value == expected
-
-
-@pytest.mark.parametrize(
-    ("has_value", "value", "expected_reset"),
-    [
-        (False, None, False),
-        (True, 1, False),
-        (True, 0, True),
-    ],
-)
-def test_energy_sensor_reset_time(
-    has_value: bool,
-    value,
-    expected_reset: bool,
-) -> None:
-    """Only an available counter that reads zero reports a reset."""
-    entity = StiebelEltronISGEnergySensor.__new__(StiebelEltronISGEnergySensor)
-    entity.modbus_register = lambda api: None
-    entity.coordinator = SimpleNamespace(
-        has_value=lambda accessor: has_value,
-        get_value=lambda accessor: value,
-    )
-    reset_time = object()
-
-    with patch.object(sensor_module.dt_util, "utcnow", return_value=reset_time):
-        result = entity.last_reset
-
-    if expected_reset:
-        assert result is reset_time
-    else:
-        assert result is None
 
 
 def test_wpm_exposes_compressor_runtime_hours() -> None:
@@ -362,6 +349,75 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.device_class == SensorDeviceClass.ENERGY
         # Rolling windows reset, so they must not be TOTAL_INCREASING.
         assert desc.state_class == SensorStateClass.TOTAL
+
+
+@pytest.mark.parametrize(
+    "descriptions", [ENERGY_DAILY_SENSOR_TYPES, LWZ_ENERGY_DAILY_SENSOR_TYPES]
+)
+def test_daily_energy_sensors_do_not_generate_long_term_sums(descriptions) -> None:
+    """Day-register residue makes zero-based long-term sums inaccurate."""
+    for description in descriptions:
+        assert description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+        assert description.device_class == SensorDeviceClass.ENERGY
+        assert description.state_class is None
+
+
+CUMULATIVE_ENERGY_KEYS = {
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TOTAL,
+    CONSUMED_HEATING,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_TOTAL,
+}
+
+
+@pytest.mark.parametrize(
+    "descriptions", [WPM_3I_SENSOR_TYPES, WPM_SENSOR_TYPES, LWZ_SENSOR_TYPES]
+)
+def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None:
+    """Cumulative alternatives remain suitable for long-term energy sums."""
+    descriptions_by_key = {description.key: description for description in descriptions}
+    assert descriptions_by_key.keys() >= CUMULATIVE_ENERGY_KEYS
+
+    for key in CUMULATIVE_ENERGY_KEYS:
+        assert descriptions_by_key[key].state_class == SensorStateClass.TOTAL_INCREASING
+
+
+@pytest.mark.parametrize(
+    ("model", "daily_descriptions"),
+    [
+        (ControllerModel.WPM_3i, ENERGY_DAILY_SENSOR_TYPES),
+        (ControllerModel.WPM_3, ENERGY_DAILY_SENSOR_TYPES),
+        (ControllerModel.LWZ, LWZ_ENERGY_DAILY_SENSOR_TYPES),
+    ],
+)
+async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
+    model, daily_descriptions
+) -> None:
+    """Day registers must not invent a new reset timestamp on each zero poll."""
+    coordinator = SimpleNamespace(model=model, device_info={})
+    entry = SimpleNamespace(runtime_data=coordinator, entry_id="test")
+    entities = []
+
+    await async_setup_entry(None, entry, entities.extend)
+
+    daily_description_keys = {description.key for description in daily_descriptions}
+    daily_entities = [
+        entity
+        for entity in entities
+        if entity.entity_description.key in daily_description_keys
+    ]
+    daily_entity_keys = [entity.entity_description.key for entity in daily_entities]
+
+    assert daily_description_keys
+    assert len(daily_description_keys) == len(daily_descriptions)
+    assert len(daily_entity_keys) == len(daily_description_keys)
+    assert set(daily_entity_keys) == daily_description_keys
+    assert all(type(entity) is StiebelEltronISGSensor for entity in daily_entities)
+    assert all(entity.last_reset is None for entity in daily_entities)
 
 
 test_wpm_exposes_electrical_booster_energy_test_data = [_wpm, _wpm_3i]

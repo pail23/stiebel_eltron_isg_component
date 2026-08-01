@@ -197,6 +197,13 @@ def _write_field_cases() -> list[Any]:
     return cases
 
 
+def test_number_type_sets_are_non_empty() -> None:
+    """Ensure configuration-category tests always run against non-empty entity sets."""
+    assert number.NUMBER_TYPES_WPM
+    assert number.NUMBER_TYPES_WPM_3I
+    assert number.NUMBER_TYPES_LWZ
+
+
 @pytest.mark.parametrize(
     "description",
     [
@@ -209,6 +216,13 @@ def _write_field_cases() -> list[Any]:
 def test_number_settings_are_configuration_entities(description: Any) -> None:
     """Persistent controller parameters belong in the device configuration."""
     assert description.entity_category is EntityCategory.CONFIG
+
+
+def test_every_controller_family_has_number_settings() -> None:
+    """The category contract must exercise settings for every model family."""
+    assert number.NUMBER_TYPES_WPM
+    assert number.NUMBER_TYPES_WPM_3I
+    assert number.NUMBER_TYPES_LWZ
 
 
 def test_number_description_defaults_to_configuration_category() -> None:

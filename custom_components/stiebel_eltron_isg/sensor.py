@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
 import logging
 from typing import Any
 
@@ -25,7 +24,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 from pystiebeleltron import ControllerModel
 
 from .const import (
@@ -230,12 +228,18 @@ def create_daily_energy_entity_description(
     modbus_register: StiebelEltronModbusRegister,
     visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
-    """Create an entry description for a energy sensor."""
+    """Create a sensor for an ISG day register.
+
+    At midnight the device transfers only whole kWh to its total register and
+    retains the fractional residue here. A state class would make Home Assistant
+    compile a misleading long-term sum: a detected reset assumes a zero baseline
+    and counts the retained residue again. The day register remains useful as an
+    operational value; the separate cumulative sensors provide energy statistics.
+    """
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
         modbus_register=modbus_register,
@@ -1147,7 +1151,7 @@ async def async_setup_entry(
             for description in WPM_3I_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGEnergySensor(
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
@@ -1169,7 +1173,7 @@ async def async_setup_entry(
             for description in WPM_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGEnergySensor(
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
@@ -1196,7 +1200,7 @@ async def async_setup_entry(
             for description in LWZ_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGEnergySensor(
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
@@ -1233,26 +1237,3 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
                 return "no error"
             return f"error {error}"
         return self.coordinator.get_value(self.modbus_register)
-
-
-class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):
-    """stiebel_eltron_isg Energy Sensor class."""
-
-    def __init__(
-        self,
-        coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronConfigEntry,
-        description: StiebelEltronSensorEntityDescription,
-    ):
-        """Initialize the sensor."""
-        super().__init__(coordinator, config_entry, description)
-
-    @property
-    def last_reset(self) -> datetime.datetime | None:
-        """Set Last Reset to now, if value is 0."""
-        if (
-            self.coordinator.has_value(self.modbus_register)
-            and self.coordinator.get_value(self.modbus_register) == 0
-        ):
-            return dt_util.utcnow()
-        return None

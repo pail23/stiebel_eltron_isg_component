@@ -1,5 +1,6 @@
 """Tests for coordinator write actions."""
 
+import logging
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -12,10 +13,16 @@ import pytest
 from custom_components.stiebel_eltron_isg import coordinator as coordinator_module
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.coordinator import (
+    StiebelEltronConnectionParams,
     StiebelEltronDataCoordinator,
+    coordinator_display_name,
 )
 from custom_components.stiebel_eltron_isg.lwz_coordinator import (
     StiebelEltronModbusLWZDataCoordinator,
+)
+from custom_components.stiebel_eltron_isg.sensor import (
+    StiebelEltronISGSensor,
+    StiebelEltronSensorEntityDescription,
 )
 from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
     StiebelEltronModbusWPM3iDataCoordinator,
@@ -27,6 +34,120 @@ def _coordinator(api) -> StiebelEltronDataCoordinator:
     coordinator = StiebelEltronDataCoordinator.__new__(StiebelEltronDataCoordinator)
     coordinator._api = api
     return coordinator
+
+
+async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
+    hass,
+    mock_config_entry,
+    mock_modbus_connection,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """One outage log and one recovery log accompany entity availability."""
+
+    class SequencedApi:
+        value = 21.5
+
+        def __init__(self) -> None:
+            self._updates = [
+                None,
+                ModbusError("offline"),
+                ModbusError("still offline"),
+                None,
+            ]
+
+        async def async_update(self) -> None:
+            outcome = self._updates.pop(0)
+            if outcome is not None:
+                raise outcome
+            if not self._updates:
+                self.value = 22.0
+
+    api = SequencedApi()
+    display_name = coordinator_display_name(ControllerModel.WPM_3)
+    coordinator = StiebelEltronDataCoordinator(
+        hass,
+        mock_config_entry,
+        api,
+        StiebelEltronConnectionParams(
+            host="isg.local",
+            model=ControllerModel.WPM_3,
+            connection=mock_modbus_connection,
+        ),
+    )
+    entity = StiebelEltronISGSensor(
+        coordinator,
+        mock_config_entry,
+        StiebelEltronSensorEntityDescription(
+            key="outdoor_temperature",
+            modbus_register=lambda client: client.value,
+        ),
+    )
+    caplog.set_level(logging.INFO, logger="custom_components.stiebel_eltron_isg")
+
+    await coordinator.async_refresh()
+    assert entity.available is True
+
+    await coordinator.async_refresh()
+    assert entity.available is False
+
+    await coordinator.async_refresh()
+    assert entity.available is False
+
+    await coordinator.async_refresh()
+    assert entity.available is True
+    assert entity.native_value == 22.0
+
+    # These messages come from DataUpdateCoordinator. Keeping them here pins the
+    # ModbusError -> UpdateFailed translation: returning stale data quietly
+    # would leave the entity available and suppress both transition messages.
+    outage_logs = [
+        record
+        for record in caplog.records
+        if f"Error fetching {display_name} data" in record.getMessage()
+    ]
+    recovery_logs = [
+        record
+        for record in caplog.records
+        if record.getMessage() == f"Fetching {display_name} data recovered"
+    ]
+    assert len(outage_logs) == 1
+    assert len(recovery_logs) == 1
+
+
+async def test_equal_data_refreshes_still_notify_entities(
+    hass,
+    mock_config_entry,
+    mock_modbus_connection,
+) -> None:
+    """Every successful device poll must notify entities.
+
+    Register values are cached on the API client while coordinator data is
+    always an empty dict. Disabling ``always_update`` would therefore suppress
+    every listener update after the first successful poll.
+    """
+    api = SimpleNamespace(async_update=AsyncMock())
+    coordinator = StiebelEltronDataCoordinator(
+        hass,
+        mock_config_entry,
+        api,
+        StiebelEltronConnectionParams(
+            host="isg.local",
+            model=ControllerModel.WPM_3,
+            connection=mock_modbus_connection,
+        ),
+    )
+    listener = MagicMock()
+    remove_listener = coordinator.async_add_listener(listener)
+
+    try:
+        await coordinator.async_refresh()
+        await coordinator.async_refresh()
+
+        assert coordinator.data == {}
+        assert api.async_update.await_count == 2
+        assert listener.call_count == 2
+    finally:
+        remove_listener()
 
 
 def test_for_unit_uses_the_active_connection() -> None:
