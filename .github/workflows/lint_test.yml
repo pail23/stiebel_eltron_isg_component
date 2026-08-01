@@ -8,26 +8,33 @@ on:
     branches:
       - "main"
 
+permissions:
+  contents: read
+
 jobs:
   hassfest: # https://developers.home-assistant.io/blog/2020/04/16/hassfest
     name: "Hassfest Validation"
     runs-on: "ubuntu-latest"
     steps:
         - name: "Checkout the repository"
-          uses: "actions/checkout@v7.0.1"
+          uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          with:
+            persist-credentials: false
 
         - name: "Run hassfest validation"
-          uses: "home-assistant/actions/hassfest@master"
+          uses: home-assistant/actions/hassfest@ab22029681aa532bfe7de5774a9972d67bfbd2c0 # master @ 2026-07-30
 
   hacs: # https://github.com/hacs/action
     name: "HACS Validation"
     runs-on: "ubuntu-latest"
     steps:
         - name: "Checkout the repository"
-          uses: "actions/checkout@v7.0.1"
+          uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          with:
+            persist-credentials: false
 
         - name: "Run HACS validation"
-          uses: "hacs/action@main"
+          uses: hacs/action@1ebf01c408f29afcb6406bd431bc98fd8cbb15aa # main @ 2026-07-30
           with:
             category: "integration"
             # Remove this 'ignore' key when you have added brand images for your integration to https://github.com/home-assistant/brands
@@ -38,7 +45,9 @@ jobs:
     runs-on: "ubuntu-latest"
     steps:
         - name: "Checkout the repository"
-          uses: "actions/checkout@v7.0.1"
+          uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+          with:
+            persist-credentials: false
 
         - name: Install uv
           uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v6
@@ -62,7 +71,9 @@ jobs:
     name: Run tests
     steps:
       - name: Check out code from GitHub
-        uses: "actions/checkout@v7.0.1"
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
       - name: Install uv
         uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v6
         with:

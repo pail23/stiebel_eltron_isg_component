@@ -145,6 +145,24 @@ automatically is linking them to a differently named replacement. Renaming an en
 inside Home Assistant is the one path that carries its statistics along, because the
 recorder migrates the statistic id on a rename but has no hook for a removal.
 
+Flow-rate sensors now use Home Assistant's canonical `L/min` unit and volume-flow
+device class instead of the legacy `l/min` string. Home Assistant may flag the unit
+metadata of an existing long-term statistic after the update. The old spelling is
+not a unit Home Assistant can automatically convert to `L/min`, despite the values
+having the same meaning. Open **Developer Tools → Statistics** and review the repair
+options for the affected entity. Depending on the Home Assistant version and stored
+metadata, removing the old statistic may be the only offered repair; that deletes
+its long-term statistics history. Back up the database before choosing that option.
+
+Pressure sensors now use Home Assistant's pressure device class. On US customary
+installations, Home Assistant therefore displays their native `bar` values as
+`psi`. Ventilation flow-rate sensors keep their native `m³/h` values.
+
+Writable number entities are now grouped under **Configuration** on the device
+page. Existing entity IDs and manually configured dashboards or automations are not
+changed. These settings may no longer appear in automatically generated dashboards
+or default voice-assistant exposure.
+
 Raw energy entities whose names end in `Today` are disabled by default for new installations.
 Their ISG registers reset at midnight to a non-zero fractional remainder.
 Treating that value as `TOTAL_INCREASING` makes Home Assistant interpret the reset incorrectly and causes long-term sums to drift.

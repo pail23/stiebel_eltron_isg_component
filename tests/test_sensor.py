@@ -4,7 +4,14 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
@@ -33,6 +40,8 @@ from custom_components.stiebel_eltron_isg.const import (
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
     DOMAIN,
+    ELECTRICAL_BOOSTER_HEATING,
+    ELECTRICAL_BOOSTER_HEATING_WATER,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
@@ -44,6 +53,7 @@ from custom_components.stiebel_eltron_isg.const import (
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
     PRODUCED_WATER_HEATING,
     PRODUCED_WATER_HEATING_TOTAL,
+    SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
 )
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
@@ -70,6 +80,124 @@ def _wpm_3i(key: str):
 
 def _lwz(key: str):
     return next(d for d in LWZ_SENSOR_TYPES if d.key == key)
+
+
+def test_pressure_sensors_use_the_pressure_device_class() -> None:
+    """Every bar-valued sensor must expose Home Assistant pressure semantics."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    pressure_sensors = [
+        description
+        for description in descriptions
+        if description.native_unit_of_measurement == UnitOfPressure.BAR
+    ]
+
+    assert pressure_sensors
+    assert all(
+        description.device_class is SensorDeviceClass.PRESSURE
+        for description in pressure_sensors
+    )
+
+
+def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
+    """Flow sensors use HA units so conversions and dashboards understand them."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    # Keep the legacy lowercase literal in the input set deliberately. The
+    # implementation must replace it with HA's canonical ``L/min`` unit; that
+    # metadata change can require a one-time Statistics repair after upgrading.
+    flow_units = {
+        "l/min",
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+    flow_sensors = [
+        description
+        for description in descriptions
+        if description.native_unit_of_measurement in flow_units
+    ]
+
+    assert flow_sensors
+
+    allowed_units = {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+
+    assert all(
+        description.native_unit_of_measurement in allowed_units
+        for description in flow_sensors
+    )
+
+    # Ensure both canonical flow units are represented so unit handling
+    # and metadata coverage are properly exercised.
+    assert any(
+        description.native_unit_of_measurement == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+        for description in flow_sensors
+    )
+    assert any(
+        description.native_unit_of_measurement
+        == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
+        for description in flow_sensors
+    )
+    assert all(
+        description.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
+        for description in flow_sensors
+    )
+    assert {description.native_unit_of_measurement for description in flow_sensors} == {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+
+
+def test_runtime_sensors_use_duration_device_class() -> None:
+    """Hour-valued runtime sensors expose canonical duration semantics."""
+    expected_model_keys = {
+        ("wpm_3i", COMPRESSOR_HEATING),
+        ("wpm_3i", COMPRESSOR_HEATING_WATER),
+        ("wpm_3i", COOLING_RUNTIME),
+        ("wpm", COMPRESSOR_HEATING),
+        ("wpm", COMPRESSOR_HEATING_WATER),
+        ("wpm", COOLING_RUNTIME),
+        ("wpm", SOLAR_RUNTIME),
+        ("lwz", COMPRESSOR_HEATING),
+        ("lwz", COMPRESSOR_HEATING_WATER),
+        ("lwz", ELECTRICAL_BOOSTER_HEATING),
+        ("lwz", ELECTRICAL_BOOSTER_HEATING_WATER),
+    }
+    runtime_sensors = [
+        (model, description)
+        for model, descriptions in (
+            ("wpm_3i", WPM_3I_SENSOR_TYPES),
+            ("wpm", WPM_SENSOR_TYPES),
+            ("lwz", LWZ_SENSOR_TYPES),
+        )
+        for description in descriptions
+        if description.native_unit_of_measurement == UnitOfTime.HOURS
+    ]
+
+    assert len(runtime_sensors) == len(expected_model_keys)
+    assert {
+        (model, description.translation_key) for model, description in runtime_sensors
+    } == expected_model_keys
+    assert all(
+        description.native_unit_of_measurement is UnitOfTime.HOURS
+        for _, description in runtime_sensors
+    )
+    assert all(
+        description.device_class is SensorDeviceClass.DURATION
+        for _, description in runtime_sensors
+    )
+    assert all(
+        description.state_class is SensorStateClass.MEASUREMENT
+        for _, description in runtime_sensors
+    )
 
 
 def test_sensor_description_rejects_non_callable_register() -> None:
