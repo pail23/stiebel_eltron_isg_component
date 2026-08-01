@@ -43,6 +43,7 @@ The library's `api/*.csv` files already record:
 The library generator additionally owns component boundaries and optional-block handling.
 Corrections to those facts belong upstream in the CSV or generator configuration and reach every library consumer.
 If the capability inventory needs another reusable protocol fact, the library format is extended first.
+If a known correction is not available in a released library yet, this integration waits for that release instead of carrying a local protocol override.
 
 The integration consumes the pinned library release and reads the generated descriptors.
 It does not maintain another copy of addresses, ranges, scaling or writability.
@@ -137,26 +138,12 @@ Conflicting evidence remains visible.
 It is resolved by the most specific applicable source, not by overwriting the weaker source.
 Equal-scope conflicts fail validation and require review.
 
-## Pilot findings
-
-The existing pilot demonstrates why model columns, object-database evidence and live behavior must remain distinct.
-
-| Model | Documented address | Result | Interpretation |
-| --- | ---: | --- | --- |
-| `WPM_3` | 1551 to 1553 | Library CSV marks the HK3 controls for WPMsystem only | documented model refutation |
-| `WPMsystem` | 1515 and 1518 | Single-register reads returned exception 2 on one consented sample | measured sample refutation, consistent with the CSV |
-| `WPMsystem` | 1551 to 1553 | Reads returned `0x8000` on a plant without HK3 | configuration-dependent, not a model refutation |
-| `WPMsystem` | 1509 | Exact WPM 4 object row and live value support the field although the general table omits it | model-specific evidence outranks the table |
-
-These findings are not runtime gates in this PR.
-A later correction that removes or narrows an existing entity needs its own migration and user-impact review.
-
 ## Current groundwork
 
 This PR implements only two fail-closed integration inventories:
 
-- `tests/capability_write_fields.txt` pins every writable entity dispatch by model, description list, entity key and write attribute.
-- `tests/capability_write_ranges.txt` pins every Home Assistant write range and both advertised endpoints.
+- `tests/capability_write_fields.txt` pins every write field carried by an entity description, including its API family, description list, entity key, attribute and actual library target.
+- `tests/capability_write_ranges.txt` pins every Number and Climate write range and both advertised endpoints.
 
 The tests also require each target to resolve to a library descriptor with a supported write contract.
 Callable library validators must accept both Home Assistant endpoints.

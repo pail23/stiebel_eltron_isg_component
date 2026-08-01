@@ -4,12 +4,17 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
-from homeassistant.components.climate.const import DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
+from homeassistant.components.climate import ClimateEntityDescription
+from homeassistant.components.number import NumberEntityDescription
 from pystiebeleltron.lwz import LwzSystemParameters
 from pystiebeleltron.wpm import WpmSystemParameters
 from pystiebeleltron.wpm3i import Wpm3iSystemParameters
 import pytest
 
+from custom_components.stiebel_eltron_isg import (
+    climate as climate_platform,
+    number as number_platform,
+)
 from custom_components.stiebel_eltron_isg.climate import (
     LWZ_CLIMATE_TYPES,
     WPM_3I_CLIMATE_TYPES,
@@ -23,21 +28,21 @@ from custom_components.stiebel_eltron_isg.number import (
 )
 
 _NUMBER_DESCRIPTION_LISTS = (
-    ("NUMBER_TYPES_LWZ", (LwzSystemParameters,), NUMBER_TYPES_LWZ),
-    ("NUMBER_TYPES_WPM", (WpmSystemParameters,), NUMBER_TYPES_WPM),
+    ("NUMBER_TYPES_LWZ", LwzSystemParameters, NUMBER_TYPES_LWZ),
+    ("NUMBER_TYPES_WPM", WpmSystemParameters, NUMBER_TYPES_WPM),
     (
         "NUMBER_TYPES_WPM_3I",
-        (Wpm3iSystemParameters, WpmSystemParameters),
+        Wpm3iSystemParameters,
         NUMBER_TYPES_WPM_3I,
     ),
 )
 
 _CLIMATE_DESCRIPTION_LISTS = (
-    ("LWZ_CLIMATE_TYPES", (LwzSystemParameters,), LWZ_CLIMATE_TYPES),
-    ("WPM_CLIMATE_TYPES", (WpmSystemParameters,), WPM_CLIMATE_TYPES),
+    ("LWZ_CLIMATE_TYPES", LwzSystemParameters, LWZ_CLIMATE_TYPES),
+    ("WPM_CLIMATE_TYPES", WpmSystemParameters, WPM_CLIMATE_TYPES),
     (
         "WPM_3I_CLIMATE_TYPES",
-        (Wpm3iSystemParameters, WpmSystemParameters),
+        Wpm3iSystemParameters,
         WPM_3I_CLIMATE_TYPES,
     ),
 )
@@ -53,27 +58,29 @@ _BOUNDS_UNVERIFIED = frozenset({
 })
 
 
-def _field_descriptor(component_classes: tuple[type, ...], field: str) -> Any:
-    """Return a field declared by the model, falling back for WPM 3i fields."""
-    for component_class in component_classes:
-        if field in component_class.__dict__:
-            return component_class.__dict__[field]
-    raise AssertionError(f"{field} is not declared by any expected component class")
+def _field_descriptor(component_class: type[Any], field: str) -> Any:
+    """Return a field declared by the model-specific component class."""
+    if field in component_class.__dict__:
+        return component_class.__dict__[field]
+    raise AssertionError(f"{field} is not declared by {component_class.__name__}")
 
 
 def _write_range_cases() -> list[Any]:
     """Return every advertised writable range and its library descriptor."""
-    cases = []
+    cases: list[Any] = []
 
-    for list_name, component_classes, descriptions in _NUMBER_DESCRIPTION_LISTS:
-        for description in descriptions:
-            if description.write_field is None:
+    for list_name, component_class, descriptions in _NUMBER_DESCRIPTION_LISTS:
+        for number_description in descriptions:
+            if number_description.write_field is None:
                 continue
-            minimum = description.native_min_value
-            maximum = description.native_max_value
-            field = _field_descriptor(component_classes, description.write_field)
+            minimum = number_description.native_min_value
+            maximum = number_description.native_max_value
+            field = _field_descriptor(
+                component_class,
+                number_description.write_field,
+            )
             case_id = (
-                f"{list_name}-{description.key}-{description.write_field}"
+                f"{list_name}-{number_description.key}-{number_description.write_field}"
                 f"-{minimum}..{maximum}"
             )
             cases.append(
@@ -85,16 +92,19 @@ def _write_range_cases() -> list[Any]:
                 )
             )
 
-    for list_name, component_classes, descriptions in _CLIMATE_DESCRIPTION_LISTS:
-        for description in descriptions:
-            minimum = getattr(description, "min_temp", DEFAULT_MIN_TEMP)
-            maximum = getattr(description, "max_temp", DEFAULT_MAX_TEMP)
+    for list_name, component_class, descriptions in _CLIMATE_DESCRIPTION_LISTS:
+        for climate_description in descriptions:
+            minimum = climate_description.min_temp
+            maximum = climate_description.max_temp
             for write_field_attribute in _CLIMATE_WRITE_FIELDS:
-                field = getattr(description, write_field_attribute)
+                field = getattr(climate_description, write_field_attribute)
                 if field is None:
                     continue
-                descriptor = _field_descriptor(component_classes, field)
-                case_id = f"{list_name}-{description.key}-{field}-{minimum}..{maximum}"
+                descriptor = _field_descriptor(component_class, field)
+                case_id = (
+                    f"{list_name}-{climate_description.key}-{field}"
+                    f"-{minimum}..{maximum}"
+                )
                 cases.append(
                     pytest.param(
                         descriptor,
@@ -105,6 +115,48 @@ def _write_range_cases() -> list[Any]:
                 )
 
     return cases
+
+
+def _uncovered_descriptions(
+    module: Any,
+    description_type: type[Any],
+    covered: set[int],
+) -> set[str]:
+    """Return module-level descriptions missing from the range sweep."""
+    return {
+        f"{name}: {description.key}"
+        for name, value in vars(module).items()
+        if isinstance(value, (list, tuple))
+        and value
+        and all(isinstance(item, description_type) for item in value)
+        for description in value
+        if id(description) not in covered
+    }
+
+
+def test_every_ranged_description_is_covered() -> None:
+    """A new Number or Climate description must not escape range validation."""
+    number_covered = {
+        id(description)
+        for _, _, descriptions in _NUMBER_DESCRIPTION_LISTS
+        for description in descriptions
+    }
+    climate_covered = {
+        id(description)
+        for _, _, descriptions in _CLIMATE_DESCRIPTION_LISTS
+        for description in descriptions
+    }
+    missing = _uncovered_descriptions(
+        number_platform,
+        NumberEntityDescription,
+        number_covered,
+    ) | _uncovered_descriptions(
+        climate_platform,
+        ClimateEntityDescription,
+        climate_covered,
+    )
+
+    assert not missing, f"descriptions missing from write-range validation: {missing}"
 
 
 def test_write_range_inventory_matches_reviewed_snapshot() -> None:

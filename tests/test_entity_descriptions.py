@@ -5,11 +5,10 @@ All platforms declare their entities as descriptions holding lambda accessors
 ``write_component_value`` writes to. A description used for a model whose API
 does not have that field breaks only at runtime: the accessor raises
 ``AttributeError`` (the coordinator only catches ``StiebelEltronModbusError``)
-and the write silently no-ops (``write_component_value`` guards with
-``hasattr``). The tests below therefore resolve every accessor and every write
-field of every model specific description list against the API class the
-coordinator really builds for that model, and check that no description list
-escapes that sweep.
+and the write raises a translated ``write_unsupported`` error. The tests below
+therefore resolve every accessor and every write field of every model specific
+description list against the API class the coordinator really builds for that
+model, and check that no description list escapes that sweep.
 """
 
 from functools import cache
@@ -158,7 +157,7 @@ def _module_description_lists(module: ModuleType) -> list[tuple[str, list[Any]]]
 
 def _accessor_cases() -> list[Any]:
     """Return a param per accessor of every description, carrying its test id."""
-    cases = []
+    cases: list[Any] = []
     for list_name, model, descriptions in _DESCRIPTION_LISTS:
         for description in descriptions:
             for attribute in _ACCESSOR_ATTRIBUTES:
@@ -181,7 +180,7 @@ def _accessor_cases() -> list[Any]:
 
 def _write_field_cases() -> list[Any]:
     """Return a param per write field of every description, with its test id."""
-    cases = []
+    cases: list[Any] = []
     for list_name, model, descriptions in _DESCRIPTION_LISTS:
         for description in descriptions:
             component = getattr(description, "write_component", None)
@@ -191,11 +190,12 @@ def _write_field_cases() -> list[Any]:
                 pytest.param(
                     model,
                     component,
-                    getattr(description, attribute),
-                    id=f"{list_name}-{model}-{description.key}-{attribute}",
+                    field,
+                    id=(f"{list_name}-{model}-{description.key}-{attribute}-{field}"),
                 )
                 for attribute in _WRITE_FIELD_ATTRIBUTES
-                if getattr(description, attribute, None) is not None
+                for field in [getattr(description, attribute, None)]
+                if field is not None
             )
     return cases
 
@@ -204,7 +204,10 @@ def test_write_field_inventory_matches_reviewed_snapshot() -> None:
     """Write-field drift must identify every added or removed case."""
     expected = _EXPECTED_WRITE_FIELD_CASES.read_text(encoding="utf-8").splitlines()
 
-    assert sorted(case.id for case in _write_field_cases()) == expected
+    assert sorted(case.id for case in _write_field_cases()) == expected, (
+        "write fields changed; verify the targets and update "
+        "tests/capability_write_fields.txt"
+    )
 
 
 def test_number_type_sets_are_non_empty() -> None:
