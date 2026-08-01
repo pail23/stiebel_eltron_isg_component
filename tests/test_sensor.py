@@ -4,9 +4,19 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
-from homeassistant.const import UnitOfEnergy, UnitOfFrequency, UnitOfPower
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfFrequency,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTime,
+    UnitOfVolumeFlowRate,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import sensor as sensor_module
 from custom_components.stiebel_eltron_isg.const import (
@@ -17,30 +27,46 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
+    CONSUMED_HEATING,
     CONSUMED_HEATING_12M,
     CONSUMED_HEATING_LAST_24H,
     CONSUMED_HEATING_PREV_12M,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
     CONSUMED_WATER_HEATING_12M,
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
+    CONSUMED_WATER_HEATING_TOTAL,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
+    DOMAIN,
+    ELECTRICAL_BOOSTER_HEATING,
+    ELECTRICAL_BOOSTER_HEATING_WATER,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TODAY,
+    PRODUCED_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
     PRODUCED_SOLAR_HEATING_TOTAL,
     PRODUCED_SOLAR_WATER_HEATING,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TOTAL,
+    SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
 )
+from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import (
+    ENERGY_DAILY_SENSOR_TYPES,
+    LWZ_ENERGY_DAILY_SENSOR_TYPES,
     LWZ_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
-    StiebelEltronISGEnergySensor,
     StiebelEltronISGSensor,
     StiebelEltronSensorEntityDescription,
+    async_setup_entry,
 )
 
 
@@ -54,6 +80,124 @@ def _wpm_3i(key: str):
 
 def _lwz(key: str):
     return next(d for d in LWZ_SENSOR_TYPES if d.key == key)
+
+
+def test_pressure_sensors_use_the_pressure_device_class() -> None:
+    """Every bar-valued sensor must expose Home Assistant pressure semantics."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    pressure_sensors = [
+        description
+        for description in descriptions
+        if description.native_unit_of_measurement == UnitOfPressure.BAR
+    ]
+
+    assert pressure_sensors
+    assert all(
+        description.device_class is SensorDeviceClass.PRESSURE
+        for description in pressure_sensors
+    )
+
+
+def test_volume_flow_sensors_use_canonical_units_and_device_class() -> None:
+    """Flow sensors use HA units so conversions and dashboards understand them."""
+    descriptions = [
+        *WPM_3I_SENSOR_TYPES,
+        *WPM_SENSOR_TYPES,
+        *LWZ_SENSOR_TYPES,
+    ]
+    # Keep the legacy lowercase literal in the input set deliberately. The
+    # implementation must replace it with HA's canonical ``L/min`` unit; that
+    # metadata change can require a one-time Statistics repair after upgrading.
+    flow_units = {
+        "l/min",
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+    flow_sensors = [
+        description
+        for description in descriptions
+        if description.native_unit_of_measurement in flow_units
+    ]
+
+    assert flow_sensors
+
+    allowed_units = {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+
+    assert all(
+        description.native_unit_of_measurement in allowed_units
+        for description in flow_sensors
+    )
+
+    # Ensure both canonical flow units are represented so unit handling
+    # and metadata coverage are properly exercised.
+    assert any(
+        description.native_unit_of_measurement == UnitOfVolumeFlowRate.LITERS_PER_MINUTE
+        for description in flow_sensors
+    )
+    assert any(
+        description.native_unit_of_measurement
+        == UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR
+        for description in flow_sensors
+    )
+    assert all(
+        description.device_class is SensorDeviceClass.VOLUME_FLOW_RATE
+        for description in flow_sensors
+    )
+    assert {description.native_unit_of_measurement for description in flow_sensors} == {
+        UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+    }
+
+
+def test_runtime_sensors_use_duration_device_class() -> None:
+    """Hour-valued runtime sensors expose canonical duration semantics."""
+    expected_model_keys = {
+        ("wpm_3i", COMPRESSOR_HEATING),
+        ("wpm_3i", COMPRESSOR_HEATING_WATER),
+        ("wpm_3i", COOLING_RUNTIME),
+        ("wpm", COMPRESSOR_HEATING),
+        ("wpm", COMPRESSOR_HEATING_WATER),
+        ("wpm", COOLING_RUNTIME),
+        ("wpm", SOLAR_RUNTIME),
+        ("lwz", COMPRESSOR_HEATING),
+        ("lwz", COMPRESSOR_HEATING_WATER),
+        ("lwz", ELECTRICAL_BOOSTER_HEATING),
+        ("lwz", ELECTRICAL_BOOSTER_HEATING_WATER),
+    }
+    runtime_sensors = [
+        (model, description)
+        for model, descriptions in (
+            ("wpm_3i", WPM_3I_SENSOR_TYPES),
+            ("wpm", WPM_SENSOR_TYPES),
+            ("lwz", LWZ_SENSOR_TYPES),
+        )
+        for description in descriptions
+        if description.native_unit_of_measurement == UnitOfTime.HOURS
+    ]
+
+    assert len(runtime_sensors) == len(expected_model_keys)
+    assert {
+        (model, description.translation_key) for model, description in runtime_sensors
+    } == expected_model_keys
+    assert all(
+        description.native_unit_of_measurement is UnitOfTime.HOURS
+        for _, description in runtime_sensors
+    )
+    assert all(
+        description.device_class is SensorDeviceClass.DURATION
+        for _, description in runtime_sensors
+    )
+    assert all(
+        description.state_class is SensorStateClass.MEASUREMENT
+        for _, description in runtime_sensors
+    )
 
 
 def test_sensor_description_rejects_non_callable_register() -> None:
@@ -72,22 +216,12 @@ async def test_setup_uses_wpm_3i_sensor_lists() -> None:
     )
     add_entities = MagicMock()
 
-    with (
-        patch.object(
-            sensor_module,
-            "StiebelEltronISGSensor",
-            side_effect=lambda coordinator, config_entry, description: (
-                "sensor",
-                description.key,
-            ),
-        ),
-        patch.object(
-            sensor_module,
-            "StiebelEltronISGEnergySensor",
-            side_effect=lambda coordinator, config_entry, description: (
-                "energy",
-                description.key,
-            ),
+    with patch.object(
+        sensor_module,
+        "StiebelEltronISGSensor",
+        side_effect=lambda coordinator, config_entry, description: (
+            "sensor",
+            description.key,
         ),
     ):
         await sensor_module.async_setup_entry(None, entry, add_entities)
@@ -96,7 +230,7 @@ async def test_setup_uses_wpm_3i_sensor_lists() -> None:
     assert entities == [
         *[("sensor", description.key) for description in WPM_3I_SENSOR_TYPES],
         *[
-            ("energy", description.key)
+            ("sensor", description.key)
             for description in sensor_module.ENERGY_DAILY_SENSOR_TYPES
         ],
     ]
@@ -120,37 +254,6 @@ def test_sensor_native_value_formats_active_errors(key: str, value, expected) ->
     entity.coordinator = SimpleNamespace(get_value=lambda accessor: value)
 
     assert entity.native_value == expected
-
-
-@pytest.mark.parametrize(
-    ("has_value", "value", "expected_reset"),
-    [
-        (False, None, False),
-        (True, 1, False),
-        (True, 0, True),
-    ],
-)
-def test_energy_sensor_reset_time(
-    has_value: bool,
-    value,
-    expected_reset: bool,
-) -> None:
-    """Only an available counter that reads zero reports a reset."""
-    entity = StiebelEltronISGEnergySensor.__new__(StiebelEltronISGEnergySensor)
-    entity.modbus_register = lambda api: None
-    entity.coordinator = SimpleNamespace(
-        has_value=lambda accessor: has_value,
-        get_value=lambda accessor: value,
-    )
-    reset_time = object()
-
-    with patch.object(sensor_module.dt_util, "utcnow", return_value=reset_time):
-        result = entity.last_reset
-
-    if expected_reset:
-        assert result is reset_time
-    else:
-        assert result is None
 
 
 def test_wpm_exposes_compressor_runtime_hours() -> None:
@@ -252,6 +355,165 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.device_class == SensorDeviceClass.ENERGY
         # Rolling windows reset, so they must not be TOTAL_INCREASING.
         assert desc.state_class == SensorStateClass.TOTAL
+
+
+@pytest.mark.parametrize(
+    "descriptions", [ENERGY_DAILY_SENSOR_TYPES, LWZ_ENERGY_DAILY_SENSOR_TYPES]
+)
+def test_daily_energy_sensors_are_opt_in_and_excluded_from_statistics(
+    descriptions,
+) -> None:
+    """Raw day registers stay opt-in and out of long-term statistics."""
+    for description in descriptions:
+        assert description.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+        assert description.device_class == SensorDeviceClass.ENERGY
+        assert description.state_class is None
+        assert description.entity_registry_enabled_default is False
+        assert description.entity_registry_visible_default is True
+
+
+def test_every_today_energy_description_uses_the_opt_in_contract() -> None:
+    """No inline Today description may bypass the shared statistics contract."""
+
+    def descriptions_in(value):
+        if isinstance(value, sensor_module.StiebelEltronSensorEntityDescription):
+            yield value
+        elif isinstance(value, dict):
+            for child in value.values():
+                yield from descriptions_in(child)
+        elif isinstance(value, (list, tuple, set, frozenset)):
+            for child in value:
+                yield from descriptions_in(child)
+
+    expected = {
+        description.key
+        for description in (
+            *ENERGY_DAILY_SENSOR_TYPES,
+            *LWZ_ENERGY_DAILY_SENSOR_TYPES,
+        )
+    }
+    discovered = [
+        description
+        for name, value in vars(sensor_module).items()
+        if name.isupper()
+        for description in descriptions_in(value)
+        if description.key.endswith("_today")
+    ]
+
+    assert {description.key for description in discovered} == expected
+    for description in discovered:
+        assert description.state_class is None
+        assert description.entity_registry_enabled_default is False
+        assert description.entity_registry_visible_default is True
+
+
+async def test_existing_daily_energy_registry_entry_stays_enabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The new default must not disable an entity a user already has."""
+    mock_config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    existing = registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, PRODUCED_HEATING_TODAY),
+        config_entry=mock_config_entry,
+        suggested_object_id="produced_heating_today",
+    )
+    assert existing.disabled_by is None
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    current = registry.async_get(existing.entity_id)
+    assert current is not None
+    assert current.disabled_by is None
+    state = hass.states.get(current.entity_id)
+    assert state is not None
+    assert "state_class" not in state.attributes
+
+
+async def test_new_daily_energy_registry_entry_is_disabled(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A fresh Today entity is registered but not added to the state machine."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    current = registry.async_get_entity_id(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, PRODUCED_HEATING_TODAY),
+    )
+    assert current is not None
+    entry = registry.async_get(current)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert hass.states.get(entry.entity_id) is None
+
+
+CUMULATIVE_ENERGY_KEYS = {
+    PRODUCED_HEATING,
+    PRODUCED_HEATING_TOTAL,
+    PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_TOTAL,
+    CONSUMED_HEATING,
+    CONSUMED_HEATING_TOTAL,
+    CONSUMED_WATER_HEATING,
+    CONSUMED_WATER_HEATING_TOTAL,
+}
+
+
+@pytest.mark.parametrize(
+    "descriptions", [WPM_3I_SENSOR_TYPES, WPM_SENSOR_TYPES, LWZ_SENSOR_TYPES]
+)
+def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None:
+    """Cumulative alternatives remain suitable for long-term energy sums."""
+    descriptions_by_key = {description.key: description for description in descriptions}
+    assert descriptions_by_key.keys() >= CUMULATIVE_ENERGY_KEYS
+
+    for key in CUMULATIVE_ENERGY_KEYS:
+        assert descriptions_by_key[key].state_class == SensorStateClass.TOTAL_INCREASING
+        assert descriptions_by_key[key].entity_registry_enabled_default is True
+
+
+@pytest.mark.parametrize(
+    ("model", "daily_descriptions"),
+    [
+        (ControllerModel.WPM_3i, ENERGY_DAILY_SENSOR_TYPES),
+        (ControllerModel.WPM_3, ENERGY_DAILY_SENSOR_TYPES),
+        (ControllerModel.LWZ, LWZ_ENERGY_DAILY_SENSOR_TYPES),
+    ],
+)
+async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
+    model, daily_descriptions
+) -> None:
+    """Day registers must not invent a new reset timestamp on each zero poll."""
+    coordinator = SimpleNamespace(model=model, device_info={})
+    entry = SimpleNamespace(runtime_data=coordinator, entry_id="test")
+    entities = []
+
+    await async_setup_entry(None, entry, entities.extend)
+
+    daily_description_keys = {description.key for description in daily_descriptions}
+    daily_entities = [
+        entity
+        for entity in entities
+        if entity.entity_description.key in daily_description_keys
+    ]
+    daily_entity_keys = [entity.entity_description.key for entity in daily_entities]
+
+    assert daily_description_keys
+    assert len(daily_description_keys) == len(daily_descriptions)
+    assert len(daily_entity_keys) == len(daily_description_keys)
+    assert set(daily_entity_keys) == daily_description_keys
+    assert all(type(entity) is StiebelEltronISGSensor for entity in daily_entities)
+    assert all(entity.last_reset is None for entity in daily_entities)
 
 
 test_wpm_exposes_electrical_booster_energy_test_data = [_wpm, _wpm_3i]

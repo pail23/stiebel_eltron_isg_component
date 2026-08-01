@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-import datetime
 import logging
 from typing import Any
 
@@ -20,11 +19,11 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
 from pystiebeleltron import ControllerModel
 
 from .const import (
@@ -170,7 +169,6 @@ def create_temperature_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         modbus_register=modbus_register,
@@ -187,7 +185,6 @@ def create_energy_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:meter-electric",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
@@ -220,7 +217,6 @@ def create_power_consumption_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=native_unit,
-        icon="mdi:meter-electric",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
         modbus_register=modbus_register,
@@ -230,17 +226,22 @@ def create_power_consumption_entity_description(
 def create_daily_energy_entity_description(
     key: str,
     modbus_register: StiebelEltronModbusRegister,
-    visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
-    """Create an entry description for a energy sensor."""
+    """Create a sensor for an ISG day register.
+
+    At midnight the device transfers only whole kWh to its total register and
+    retains the fractional residue here. A state class would make Home Assistant
+    compile a misleading long-term sum: a detected reset assumes a zero baseline
+    and counts the retained residue again. The day register remains useful as an
+    opt-in operational value; the separate cumulative sensors are enabled by
+    default and provide energy statistics.
+    """
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:meter-electric",
-        state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
-        entity_registry_visible_default=visible_default,
+        entity_registry_enabled_default=False,
         modbus_register=modbus_register,
     )
 
@@ -253,7 +254,6 @@ def create_humidity_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         modbus_register=modbus_register,
@@ -268,8 +268,8 @@ def create_pressure_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfPressure.BAR,
-        icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
         modbus_register=modbus_register,
     )
 
@@ -281,9 +281,23 @@ def create_volume_stream_entity_description(
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
-        native_unit_of_measurement="l/min",
-        icon="mdi:gauge",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        modbus_register=modbus_register,
+    )
+
+
+def create_runtime_entity_description(
+    key: str, modbus_register: StiebelEltronModbusRegister
+) -> StiebelEltronSensorEntityDescription:
+    """Create an entry description for an operating-duration sensor."""
+    return StiebelEltronSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
         modbus_register=modbus_register,
     )
 
@@ -413,7 +427,6 @@ WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
         key=ACTIVE_ERROR,
         translation_key=ACTIVE_ERROR,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:alert-circle",
         modbus_register=lambda api: api.system_state.active_error,
     ),
 ]
@@ -514,13 +527,9 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         SOLAR_CYLINDER_TEMPERATURE,
         lambda api: api.system_values.cylinder_temperature,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=SOLAR_RUNTIME,
-        translation_key=SOLAR_RUNTIME,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.system_values.runtime,
+    create_runtime_entity_description(
+        SOLAR_RUNTIME,
+        lambda api: api.system_values.runtime,
     ),
     create_temperature_entity_description(
         ACTUAL_ROOM_TEMPERATURE_HK1,
@@ -663,7 +672,6 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         key=ACTIVE_ERROR,
         translation_key=ACTIVE_ERROR,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:alert-circle",
         modbus_register=lambda api: api.system_state.active_error,
     ),
 ]
@@ -765,7 +773,6 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=SG_READY_STATE,
         translation_key=SG_READY_STATE,
-        icon="mdi:solar-power",
         modbus_register=lambda api: (
             api.energy_system_information.sg_ready_operating_state
         ),
@@ -937,49 +944,31 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_STARTS,
         translation_key=COMPRESSOR_STARTS,
-        icon="mdi:restart",
         modbus_register=lambda api: api.system_values.compressor_starts,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_SPEED,
         translation_key=COMPRESSOR_SPEED,
-        icon="mdi:sine-wave",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.compressor_speed,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING,
-        translation_key=COMPRESSOR_HEATING,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.compressor_heating,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING,
+        lambda api: api.energy_data.compressor_heating,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING_WATER,
-        translation_key=COMPRESSOR_HEATING_WATER,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.compressor_dhw,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING_WATER,
+        lambda api: api.energy_data.compressor_dhw,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=ELECTRICAL_BOOSTER_HEATING,
-        translation_key=ELECTRICAL_BOOSTER_HEATING,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.elec_booster_heating,
+    create_runtime_entity_description(
+        ELECTRICAL_BOOSTER_HEATING,
+        lambda api: api.energy_data.elec_booster_heating,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=ELECTRICAL_BOOSTER_HEATING_WATER,
-        translation_key=ELECTRICAL_BOOSTER_HEATING_WATER,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.elec_booster_dhw,
+    create_runtime_entity_description(
+        ELECTRICAL_BOOSTER_HEATING_WATER,
+        lambda api: api.energy_data.elec_booster_dhw,
     ),
 ]
 
@@ -987,7 +976,6 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
         translation_key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -996,15 +984,14 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_TARGET_FLOW_RATE,
         translation_key=VENTILATION_AIR_TARGET_FLOW_RATE,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.ventilation_air_set_flow_rate,
     ),
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
         translation_key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1013,8 +1000,8 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_TARGET_FLOW_RATE,
         translation_key=EXTRACT_AIR_TARGET_FLOW_RATE,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.extract_air_set_flow_rate,
     ),
@@ -1034,32 +1021,20 @@ LWZ_VENTILATION_SENSOR_TYPES = [
 
 
 WPM_COMPRESSOR_SENSOR_TYPES = [
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING,
-        translation_key=COMPRESSOR_HEATING,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.vd_heating,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING,
+        lambda api: api.energy_data.vd_heating,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING_WATER,
-        translation_key=COMPRESSOR_HEATING_WATER,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.vd_dhw,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING_WATER,
+        lambda api: api.energy_data.vd_dhw,
     ),
-    StiebelEltronSensorEntityDescription(
-        # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling
-        # is passive (no compressor runs), so this counts cooling operation
-        # hours rather than compressor hours - hence the neutral name.
-        key=COOLING_RUNTIME,
-        translation_key=COOLING_RUNTIME,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.vd_cooling,
+    # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling is
+    # passive (no compressor runs), so this counts cooling operation hours
+    # rather than compressor hours - hence the neutral name.
+    create_runtime_entity_description(
+        COOLING_RUNTIME,
+        lambda api: api.energy_data.vd_cooling,
     ),
 ]
 
@@ -1127,7 +1102,6 @@ WPM_INVERTER_POWER_SENSOR_TYPES = [
         key=CURRENT_POWER_CONSUMPTION,
         translation_key=CURRENT_POWER_CONSUMPTION,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        icon="mdi:flash",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         modbus_register=lambda api: api.extended_energy_data.inverter_power_iws_1,
@@ -1177,7 +1151,7 @@ async def async_setup_entry(
             for description in WPM_3I_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGEnergySensor(
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
@@ -1199,7 +1173,7 @@ async def async_setup_entry(
             for description in WPM_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGEnergySensor(
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
@@ -1226,7 +1200,7 @@ async def async_setup_entry(
             for description in LWZ_SENSOR_TYPES
         ]
         daily_energy_entities = [
-            StiebelEltronISGEnergySensor(
+            StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
@@ -1263,26 +1237,3 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
                 return "no error"
             return f"error {error}"
         return self.coordinator.get_value(self.modbus_register)
-
-
-class StiebelEltronISGEnergySensor(StiebelEltronISGSensor):
-    """stiebel_eltron_isg Energy Sensor class."""
-
-    def __init__(
-        self,
-        coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronConfigEntry,
-        description: StiebelEltronSensorEntityDescription,
-    ):
-        """Initialize the sensor."""
-        super().__init__(coordinator, config_entry, description)
-
-    @property
-    def last_reset(self) -> datetime.datetime | None:
-        """Set Last Reset to now, if value is 0."""
-        if (
-            self.coordinator.has_value(self.modbus_register)
-            and self.coordinator.get_value(self.modbus_register) == 0
-        ):
-            return dt_util.utcnow()
-        return None

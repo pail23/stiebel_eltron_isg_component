@@ -17,6 +17,7 @@ from pathlib import Path
 from types import ModuleType
 from typing import Any
 
+from homeassistant.const import EntityCategory
 from homeassistant.helpers.entity import EntityDescription
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
@@ -204,6 +205,44 @@ def test_write_field_inventory_matches_reviewed_snapshot() -> None:
     expected = _EXPECTED_WRITE_FIELD_CASES.read_text(encoding="utf-8").splitlines()
 
     assert sorted(case.id for case in _write_field_cases()) == expected
+
+
+def test_number_type_sets_are_non_empty() -> None:
+    """Ensure configuration-category tests always run against non-empty entity sets."""
+    assert number.NUMBER_TYPES_WPM
+    assert number.NUMBER_TYPES_WPM_3I
+    assert number.NUMBER_TYPES_LWZ
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        *number.NUMBER_TYPES_WPM,
+        *number.NUMBER_TYPES_WPM_3I,
+        *number.NUMBER_TYPES_LWZ,
+    ],
+    ids=lambda description: description.key,
+)
+def test_number_settings_are_configuration_entities(description: Any) -> None:
+    """Persistent controller parameters belong in the device configuration."""
+    assert description.entity_category is EntityCategory.CONFIG
+
+
+def test_every_controller_family_has_number_settings() -> None:
+    """The category contract must exercise settings for every model family."""
+    assert number.NUMBER_TYPES_WPM
+    assert number.NUMBER_TYPES_WPM_3I
+    assert number.NUMBER_TYPES_LWZ
+
+
+def test_number_description_defaults_to_configuration_category() -> None:
+    """New Number descriptions inherit the reviewed configuration category."""
+    assert (
+        number.StiebelEltronNumberEntityDescription.__dataclass_fields__[
+            "entity_category"
+        ].default
+        is EntityCategory.CONFIG
+    )
 
 
 @pytest.mark.parametrize(("model", "accessor"), _accessor_cases())

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
@@ -175,6 +175,12 @@ async def test_async_setup_entry_cannot_connect(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_async_setup_entry_modbus_error(
@@ -190,14 +196,22 @@ async def test_async_setup_entry_modbus_error(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+        )
+        is None
+    )
 
 
 async def test_async_setup_entry_unknown_model(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Setup fails cleanly (no retry) when the controller model is unknown."""
+    assert mock_modbus_connection.connected is True
     mock_config_entry.add_to_hass(hass)
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
 
@@ -205,21 +219,99 @@ async def test_async_setup_entry_unknown_model(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hasattr(mock_config_entry, "runtime_data")
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable is False
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.translation_key == "unsupported_controller"
+    assert issue.translation_placeholders == {"model_id": "165"}
+    assert (
+        issue.learn_more_url
+        == "https://github.com/pail23/stiebel_eltron_isg_component/issues"
+    )
+    assert mock_modbus_connection.connected is False
+
+
+async def test_supported_model_clears_a_previous_controller_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A library update that recognizes the model resolves the repair."""
+    issue_id = f"unsupported_controller_{mock_config_entry.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="unsupported_controller",
+        translation_placeholders={"model_id": "165"},
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_async_setup_entry_rejects_unhandled_model(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """A detected model without a coordinator must fail without retries."""
-    mock_get_controller_model.return_value = SimpleNamespace(name="FUTURE")
+    """A detected model without a coordinator must fail with a repair."""
+    assert mock_modbus_connection.connected is True
+    mock_get_controller_model.return_value = SimpleNamespace(name="FUTURE", value=166)
     mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    with (
+        patch(
+            "custom_components.stiebel_eltron_isg.async_migrate_device_identifier"
+        ) as migrate_device,
+        patch(
+            "custom_components.stiebel_eltron_isg.async_migrate_unique_ids",
+            new_callable=AsyncMock,
+        ) as migrate_entities,
+        patch(
+            "custom_components.stiebel_eltron_isg."
+            "async_remove_legacy_circulation_pump_switch"
+        ) as remove_legacy,
+    ):
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert not hasattr(mock_config_entry, "runtime_data")
+    migrate_device.assert_not_called()
+    migrate_entities.assert_not_awaited()
+    remove_legacy.assert_not_called()
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders == {"model_id": "166"}
+    assert mock_modbus_connection.connected is False
+
+
+async def test_removing_entry_clears_controller_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Deleting a failed entry must not leave an orphaned repair."""
+    issue_id = f"unsupported_controller_{mock_config_entry.entry_id}"
+    mock_get_controller_model.side_effect = UnknownControllerModelError(165)
+    mock_config_entry.add_to_hass(hass)
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+
+    await hass.config_entries.async_remove(mock_config_entry.entry_id)
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_async_setup_entry_coordinator_update_fails(
