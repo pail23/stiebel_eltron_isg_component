@@ -171,7 +171,7 @@ Existing registry entries stay enabled after the update, but no longer expose a 
 If a `Today` entity is configured in the Energy dashboard, replace it with the corresponding enabled cumulative entity.
 For example, replace **Produced Heating Today** with **Produced Heating**.
 This preferred `day_and_total` counter includes the current day's fractional energy while remaining cumulative.
-**Produced Heating Total** is also cumulative but is the whole-kWh lifetime counter updated when the day value is transferred.
+**Produced Heating Total** is also cumulative but is the whole-kWh lifetime counter that is updated when the day value is transferred.
 The same naming pattern applies to consumed and water-heating energy.
 Entity IDs depend on the installation and language, so select by the entity name under **Settings → Devices & services → Entities**.
 Statistics already stored under the old `Today` entity are not transferred to the replacement.
