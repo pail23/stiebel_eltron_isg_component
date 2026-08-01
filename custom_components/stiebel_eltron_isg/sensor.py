@@ -169,7 +169,6 @@ def create_temperature_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon="mdi:thermometer",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         modbus_register=modbus_register,
@@ -186,7 +185,6 @@ def create_energy_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:meter-electric",
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
@@ -219,7 +217,6 @@ def create_power_consumption_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=native_unit,
-        icon="mdi:meter-electric",
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
         modbus_register=modbus_register,
@@ -243,7 +240,6 @@ def create_daily_energy_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        icon="mdi:meter-electric",
         device_class=SensorDeviceClass.ENERGY,
         entity_registry_visible_default=visible_default,
         modbus_register=modbus_register,
@@ -258,7 +254,6 @@ def create_humidity_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=PERCENTAGE,
-        icon="mdi:water-percent",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.HUMIDITY,
         modbus_register=modbus_register,
@@ -273,7 +268,6 @@ def create_pressure_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfPressure.BAR,
-        icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.PRESSURE,
         modbus_register=modbus_register,
@@ -288,7 +282,6 @@ def create_volume_stream_entity_description(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
-        icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         modbus_register=modbus_register,
@@ -434,7 +427,6 @@ WPM_3I_SYSTEM_VALUES_SENSOR_TYPES = [
         key=ACTIVE_ERROR,
         translation_key=ACTIVE_ERROR,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:alert-circle",
         modbus_register=lambda api: api.system_state.active_error,
     ),
 ]
@@ -680,7 +672,6 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         key=ACTIVE_ERROR,
         translation_key=ACTIVE_ERROR,
         entity_category=EntityCategory.DIAGNOSTIC,
-        icon="mdi:alert-circle",
         modbus_register=lambda api: api.system_state.active_error,
     ),
 ]
@@ -782,7 +773,6 @@ ENERGYMANAGEMENT_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=SG_READY_STATE,
         translation_key=SG_READY_STATE,
-        icon="mdi:solar-power",
         modbus_register=lambda api: (
             api.energy_system_information.sg_ready_operating_state
         ),
@@ -954,13 +944,11 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_STARTS,
         translation_key=COMPRESSOR_STARTS,
-        icon="mdi:restart",
         modbus_register=lambda api: api.system_values.compressor_starts,
     ),
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_SPEED,
         translation_key=COMPRESSOR_SPEED,
-        icon="mdi:sine-wave",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -988,7 +976,6 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
         translation_key=VENTILATION_AIR_ACTUAL_FAN_SPEED,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -997,7 +984,6 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=VENTILATION_AIR_TARGET_FLOW_RATE,
         translation_key=VENTILATION_AIR_TARGET_FLOW_RATE,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1006,7 +992,6 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
         translation_key=EXTRACT_AIR_ACTUAL_FAN_SPEED,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1015,7 +1000,6 @@ LWZ_VENTILATION_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=EXTRACT_AIR_TARGET_FLOW_RATE,
         translation_key=EXTRACT_AIR_TARGET_FLOW_RATE,
-        icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
@@ -1118,7 +1102,6 @@ WPM_INVERTER_POWER_SENSOR_TYPES = [
         key=CURRENT_POWER_CONSUMPTION,
         translation_key=CURRENT_POWER_CONSUMPTION,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        icon="mdi:flash",
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         modbus_register=lambda api: api.extended_energy_data.inverter_power_iws_1,

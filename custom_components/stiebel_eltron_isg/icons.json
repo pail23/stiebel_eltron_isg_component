@@ -1,5 +1,175 @@
 {
     "entity": {
+        "binary_sensor": {
+            "buffer_1_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "buffer_2_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "buffer_3_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "buffer_4_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "buffer_5_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "buffer_6_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "compressor_on": {
+                "default": "mdi:heat-pump"
+            },
+            "cooling_mode": {
+                "default": "mdi:snowflake"
+            },
+            "dhw_charging_pump": {
+                "default": "mdi:pump"
+            },
+            "diff_controller_1_pump": {
+                "default": "mdi:pump"
+            },
+            "diff_controller_2_pump": {
+                "default": "mdi:pump"
+            },
+            "electric_reheating": {
+                "default": "mdi:fence-electric"
+            },
+            "emergency_heating_1": {
+                "default": "mdi:fence-electric"
+            },
+            "emergency_heating_1_2": {
+                "default": "mdi:fence-electric"
+            },
+            "emergency_heating_2": {
+                "default": "mdi:fence-electric"
+            },
+            "error_status": {
+                "default": "mdi:alert"
+            },
+            "evaporator_defrost": {
+                "default": "mdi:snowflake-melt"
+            },
+            "filter": {
+                "default": "mdi:air-filter"
+            },
+            "filter_extract_air": {
+                "default": "mdi:air-filter"
+            },
+            "filter_ventilation_air": {
+                "default": "mdi:air-filter"
+            },
+            "heat_pump_1_on": {
+                "default": "mdi:heat-pump"
+            },
+            "heat_pump_2_on": {
+                "default": "mdi:heat-pump"
+            },
+            "heat_pump_3_on": {
+                "default": "mdi:heat-pump"
+            },
+            "heat_pump_4_on": {
+                "default": "mdi:heat-pump"
+            },
+            "heat_pump_5_on": {
+                "default": "mdi:heat-pump"
+            },
+            "heat_pump_6_on": {
+                "default": "mdi:heat-pump"
+            },
+            "heat_up_program": {
+                "default": "mdi:clock-outline"
+            },
+            "heating_circuit_1_pump": {
+                "default": "mdi:pump"
+            },
+            "heating_circuit_2_pump": {
+                "default": "mdi:pump"
+            },
+            "heating_circuit_3_pump": {
+                "default": "mdi:pump"
+            },
+            "heating_circuit_4_pump": {
+                "default": "mdi:pump"
+            },
+            "heating_circuit_5_pump": {
+                "default": "mdi:pump"
+            },
+            "is_cooling": {
+                "default": "mdi:snowflake"
+            },
+            "is_heating": {
+                "default": "mdi:heat-wave"
+            },
+            "is_heating_water": {
+                "default": "mdi:water-boiler"
+            },
+            "is_summer_mode": {
+                "default": "mdi:weather-sunny"
+            },
+            "mixer_close_htg_circuit_2": {
+                "default": "mdi:valve-closed"
+            },
+            "mixer_close_htg_circuit_3": {
+                "default": "mdi:valve-closed"
+            },
+            "mixer_close_htg_circuit_4": {
+                "default": "mdi:valve-closed"
+            },
+            "mixer_close_htg_circuit_5": {
+                "default": "mdi:valve-closed"
+            },
+            "mixer_open_htg_circuit_2": {
+                "default": "mdi:valve-open"
+            },
+            "mixer_open_htg_circuit_3": {
+                "default": "mdi:valve-open"
+            },
+            "mixer_open_htg_circuit_4": {
+                "default": "mdi:valve-open"
+            },
+            "mixer_open_htg_circuit_5": {
+                "default": "mdi:valve-open"
+            },
+            "nhz_stages_running": {
+                "default": "mdi:fence-electric"
+            },
+            "pool_primary_pump": {
+                "default": "mdi:pump"
+            },
+            "pool_secondary_pump": {
+                "default": "mdi:pump"
+            },
+            "power_off": {
+                "default": "mdi:power-off"
+            },
+            "pump_on_hk1": {
+                "default": "mdi:pump"
+            },
+            "pump_on_hk2": {
+                "default": "mdi:pump"
+            },
+            "second_generator_dhw": {
+                "default": "mdi:water-boiler"
+            },
+            "second_generator_heating": {
+                "default": "mdi:water-boiler"
+            },
+            "service": {
+                "default": "mdi:account-wrench"
+            },
+            "source_pump": {
+                "default": "mdi:pump"
+            },
+            "switching_program_enabled": {
+                "default": "mdi:clock-outline"
+            },
+            "ventilation": {
+                "default": "mdi:fan"
+            }
+        },
         "climate": {
             "climate": {
                 "state_attributes": {
@@ -13,6 +183,118 @@
                         }
                     }
                 }
+            }
+        },
+        "number": {
+            "area_cooling_flow_temperature_hysteresis": {
+                "default": "mdi:thermometer-lines"
+            },
+            "area_cooling_target_flow_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "area_cooling_target_room_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "comfort_cooling_temperature_target_hk1": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "comfort_cooling_temperature_target_hk2": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "comfort_temperature_target_hk1": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_temperature_target_hk2": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_temperature_target_hk3": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_water_temperature_target": {
+                "default": "mdi:thermometer-high"
+            },
+            "dualmode_temperature_hzg": {
+                "default": "mdi:thermometer-off"
+            },
+            "dualmode_temperature_ww": {
+                "default": "mdi:thermometer-off"
+            },
+            "eco_cooling_temperature_target_hk1": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "eco_cooling_temperature_target_hk2": {
+                "default": "mdi:snowflake-thermometer"
+            },
+            "eco_temperature_target_hk1": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_temperature_target_hk2": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_temperature_target_hk3": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_water_temperature_target": {
+                "default": "mdi:thermometer-low"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "default": "mdi:thermometer-lines"
+            },
+            "fan_cooling_target_flow_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "fan_cooling_target_room_temperature": {
+                "default": "mdi:thermometer-check"
+            },
+            "fan_level_comfort": {
+                "default": "mdi:fan"
+            },
+            "fan_level_eco": {
+                "default": "mdi:fan"
+            },
+            "fan_level_manual": {
+                "default": "mdi:fan"
+            },
+            "fan_level_party": {
+                "default": "mdi:fan"
+            },
+            "heating_curve_low_end_hk1": {
+                "default": "mdi:chart-sankey"
+            },
+            "heating_curve_low_end_hk2": {
+                "default": "mdi:chart-sankey"
+            },
+            "heating_curve_rise_hk1": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "heating_curve_rise_hk2": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "heating_curve_rise_hk3": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            }
+        },
+        "sensor": {
+            "active_error": {
+                "default": "mdi:alert-circle"
+            },
+            "compressor_starts": {
+                "default": "mdi:restart"
+            },
+            "extract_air_actual": {
+                "default": "mdi:fan"
+            },
+            "extract_air_target_flowrate": {
+                "default": "mdi:fan"
+            },
+            "sg_ready_state": {
+                "default": "mdi:solar-power"
+            },
+            "ventilation_air_actual_fan_speed": {
+                "default": "mdi:fan"
+            },
+            "ventilation_air_target_flow_rate": {
+                "default": "mdi:fan"
             }
         }
     }
