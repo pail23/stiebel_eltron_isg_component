@@ -19,6 +19,7 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
+    UnitOfTime,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
@@ -274,6 +275,7 @@ def create_pressure_entity_description(
         native_unit_of_measurement=UnitOfPressure.BAR,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.PRESSURE,
         modbus_register=modbus_register,
     )
 
@@ -285,9 +287,24 @@ def create_volume_stream_entity_description(
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
-        native_unit_of_measurement="l/min",
+        native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         icon="mdi:gauge",
         state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        modbus_register=modbus_register,
+    )
+
+
+def create_runtime_entity_description(
+    key: str, modbus_register: StiebelEltronModbusRegister
+) -> StiebelEltronSensorEntityDescription:
+    """Create an entry description for an operating-duration sensor."""
+    return StiebelEltronSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DURATION,
         modbus_register=modbus_register,
     )
 
@@ -518,13 +535,9 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         SOLAR_CYLINDER_TEMPERATURE,
         lambda api: api.system_values.cylinder_temperature,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=SOLAR_RUNTIME,
-        translation_key=SOLAR_RUNTIME,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.system_values.runtime,
+    create_runtime_entity_description(
+        SOLAR_RUNTIME,
+        lambda api: api.system_values.runtime,
     ),
     create_temperature_entity_description(
         ACTUAL_ROOM_TEMPERATURE_HK1,
@@ -953,37 +966,21 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.compressor_speed,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING,
-        translation_key=COMPRESSOR_HEATING,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.compressor_heating,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING,
+        lambda api: api.energy_data.compressor_heating,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING_WATER,
-        translation_key=COMPRESSOR_HEATING_WATER,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.compressor_dhw,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING_WATER,
+        lambda api: api.energy_data.compressor_dhw,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=ELECTRICAL_BOOSTER_HEATING,
-        translation_key=ELECTRICAL_BOOSTER_HEATING,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.elec_booster_heating,
+    create_runtime_entity_description(
+        ELECTRICAL_BOOSTER_HEATING,
+        lambda api: api.energy_data.elec_booster_heating,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=ELECTRICAL_BOOSTER_HEATING_WATER,
-        translation_key=ELECTRICAL_BOOSTER_HEATING_WATER,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.elec_booster_dhw,
+    create_runtime_entity_description(
+        ELECTRICAL_BOOSTER_HEATING_WATER,
+        lambda api: api.energy_data.elec_booster_dhw,
     ),
 ]
 
@@ -1002,6 +999,7 @@ LWZ_VENTILATION_SENSOR_TYPES = [
         translation_key=VENTILATION_AIR_TARGET_FLOW_RATE,
         icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.ventilation_air_set_flow_rate,
     ),
@@ -1019,6 +1017,7 @@ LWZ_VENTILATION_SENSOR_TYPES = [
         translation_key=EXTRACT_AIR_TARGET_FLOW_RATE,
         icon="mdi:fan",
         native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=lambda api: api.system_values.extract_air_set_flow_rate,
     ),
@@ -1038,32 +1037,20 @@ LWZ_VENTILATION_SENSOR_TYPES = [
 
 
 WPM_COMPRESSOR_SENSOR_TYPES = [
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING,
-        translation_key=COMPRESSOR_HEATING,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.vd_heating,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING,
+        lambda api: api.energy_data.vd_heating,
     ),
-    StiebelEltronSensorEntityDescription(
-        key=COMPRESSOR_HEATING_WATER,
-        translation_key=COMPRESSOR_HEATING_WATER,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.vd_dhw,
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING_WATER,
+        lambda api: api.energy_data.vd_dhw,
     ),
-    StiebelEltronSensorEntityDescription(
-        # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling
-        # is passive (no compressor runs), so this counts cooling operation
-        # hours rather than compressor hours - hence the neutral name.
-        key=COOLING_RUNTIME,
-        translation_key=COOLING_RUNTIME,
-        icon="mdi:hours-24",
-        native_unit_of_measurement="h",
-        state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.energy_data.vd_cooling,
+    # Firmware register "VD KÜHLEN". On brine/ground-source systems cooling is
+    # passive (no compressor runs), so this counts cooling operation hours
+    # rather than compressor hours - hence the neutral name.
+    create_runtime_entity_description(
+        COOLING_RUNTIME,
+        lambda api: api.energy_data.vd_cooling,
     ),
 ]
 

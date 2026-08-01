@@ -6,7 +6,7 @@ import math
 from typing import Any
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
@@ -54,6 +54,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
+    entity_category: EntityCategory | None = EntityCategory.CONFIG
     modbus_register: Any
     write_component: str = "system_parameters"
     write_field: str | None = None
