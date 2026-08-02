@@ -151,7 +151,7 @@ The hot water maximum follows the range the library documents for the whole LWZ 
 Individual controllers document a higher one, and correcting that belongs in the library rather than in the entity description.
 
 The domestic hot water circulation pump is a read-only operating status on
-WPM system and LWZ R290. It is therefore exposed as
+WPMsystem and LWZ R290. It is therefore exposed as
 `binary_sensor.<device>_circulation_pump`, not as a switch. Existing
 automations and dashboards that reference the former switch entity need to use
 the binary sensor instead; switch actions must be removed because the register
