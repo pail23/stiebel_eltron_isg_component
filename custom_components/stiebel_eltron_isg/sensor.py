@@ -238,10 +238,15 @@ def create_efficiency_entity_description(
     key: str,
     modbus_register: StiebelEltronModbusRegister,
 ) -> StiebelEltronSensorEntityDescription:
-    """Create a sensor for an efficiency window value."""
+    """Create a sensor for an efficiency window value.
+
+    The LWZ API reports these as COP-style ratios, so they are intentionally
+    unitless but labeled explicitly as COP for UI clarity.
+    """
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
+        native_unit_of_measurement="COP",
         state_class=SensorStateClass.MEASUREMENT,
         modbus_register=modbus_register,
     )

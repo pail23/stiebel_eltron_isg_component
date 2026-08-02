@@ -481,6 +481,7 @@ async def test_new_daily_energy_registry_entry_is_disabled(
 
 
 CUMULATIVE_ENERGY_KEYS = {
+    CONSUMED_COOLING_TOTAL,
     PRODUCED_HEATING,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING,
@@ -493,14 +494,18 @@ CUMULATIVE_ENERGY_KEYS = {
 
 
 @pytest.mark.parametrize(
-    "descriptions", [WPM_3I_SENSOR_TYPES, WPM_SENSOR_TYPES, LWZ_SENSOR_TYPES]
+    ("descriptions", "required_keys"),
+    [
+        (WPM_3I_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {CONSUMED_COOLING_TOTAL}),
+        (WPM_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {CONSUMED_COOLING_TOTAL}),
+        (LWZ_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS),
+    ],
 )
-def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None:
+def test_cumulative_energy_sensors_remain_total_increasing(
+    descriptions, required_keys
+) -> None:
     """Cumulative alternatives remain suitable for long-term energy sums."""
     descriptions_by_key = {description.key: description for description in descriptions}
-    required_keys = set(CUMULATIVE_ENERGY_KEYS)
-    if descriptions is LWZ_SENSOR_TYPES:
-        required_keys.add(CONSUMED_COOLING_TOTAL)
     assert descriptions_by_key.keys() >= required_keys
 
     for key in required_keys:
@@ -638,6 +643,8 @@ def test_lwz_exposes_efficiency_statistics() -> None:
     for key, value in expected.items():
         desc = _lwz(key)
         assert desc.modbus_register(api) == value
+        assert desc.native_unit_of_measurement == "COP"
+        assert desc.device_class is None
         assert desc.state_class == SensorStateClass.MEASUREMENT
 
 
