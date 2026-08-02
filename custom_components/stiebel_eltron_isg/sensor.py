@@ -44,6 +44,7 @@ from .const import (
     ACTUAL_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_HK3,
     ACTUAL_TEMPERATURE_WATER,
+    COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_SPEED,
@@ -51,6 +52,7 @@ from .const import (
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
+    CONSUMED_COOLING_TOTAL,
     CONSUMED_HEATING,
     CONSUMED_HEATING_12M,
     CONSUMED_HEATING_LAST_24H,
@@ -69,6 +71,15 @@ from .const import (
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
     DEWPOINT_TEMPERATURE_HK3,
+    EFFICIENCY_COOLING_1_12_M,
+    EFFICIENCY_COOLING_1_24_H,
+    EFFICIENCY_COOLING_13_24_M,
+    EFFICIENCY_DHW_1_12_M,
+    EFFICIENCY_DHW_1_24_H,
+    EFFICIENCY_DHW_13_24_M,
+    EFFICIENCY_HEATING_1_12_M,
+    EFFICIENCY_HEATING_1_24_H,
+    EFFICIENCY_HEATING_13_24_M,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
@@ -219,6 +230,19 @@ def create_power_consumption_entity_description(
         native_unit_of_measurement=native_unit,
         state_class=SensorStateClass.TOTAL,
         device_class=SensorDeviceClass.ENERGY,
+        modbus_register=modbus_register,
+    )
+
+
+def create_efficiency_entity_description(
+    key: str,
+    modbus_register: StiebelEltronModbusRegister,
+) -> StiebelEltronSensorEntityDescription:
+    """Create a sensor for an efficiency window value."""
+    return StiebelEltronSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        state_class=SensorStateClass.MEASUREMENT,
         modbus_register=modbus_register,
     )
 
@@ -856,6 +880,10 @@ LWZ_ENERGY_SENSOR_TYPES = [
         lambda api: api.energy_data.pwr_con_dhw_day_and_total,
     ),
     create_energy_entity_description(
+        CONSUMED_COOLING_TOTAL,
+        lambda api: api.energy_data.hm_cooling_total,
+    ),
+    create_energy_entity_description(
         PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
         lambda api: api.energy_data.heat_m_boost_htg_ttl,
     ),
@@ -886,6 +914,45 @@ LWZ_ENERGY_SENSOR_TYPES = [
     create_energy_entity_description(
         PRODUCED_SOLAR_WATER_HEATING,
         lambda api: api.energy_data.hm_solar_dhw_day_and_total,
+    ),
+]
+
+LWZ_EXTENDED_ENERGY_SENSOR_TYPES = [
+    create_efficiency_entity_description(
+        EFFICIENCY_HEATING_1_24_H,
+        lambda api: api.extended_energy_data.efficiency_heating_1_24_h,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_HEATING_1_12_M,
+        lambda api: api.extended_energy_data.efficiency_heating_1_12_m,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_HEATING_13_24_M,
+        lambda api: api.extended_energy_data.efficiency_heating_13_24_m,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_1_24_H,
+        lambda api: api.extended_energy_data.efficiency_cooling_1_24_h,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_1_12_M,
+        lambda api: api.extended_energy_data.efficiency_cooling_1_12_m,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_13_24_M,
+        lambda api: api.extended_energy_data.efficiency_cooling_13_24_m,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_DHW_1_24_H,
+        lambda api: api.extended_energy_data.efficiency_dhw_1_24_h,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_DHW_1_12_M,
+        lambda api: api.extended_energy_data.efficiency_dhw_1_12_m,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_DHW_13_24_M,
+        lambda api: api.extended_energy_data.efficiency_dhw_13_24_m,
     ),
 ]
 
@@ -961,6 +1028,10 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
     create_runtime_entity_description(
         COMPRESSOR_HEATING_WATER,
         lambda api: api.energy_data.compressor_dhw,
+    ),
+    create_runtime_entity_description(
+        COMPRESSOR_COOLING,
+        lambda api: api.energy_data.compressor_cooling,
     ),
     create_runtime_entity_description(
         ELECTRICAL_BOOSTER_HEATING,
@@ -1128,6 +1199,7 @@ LWZ_SENSOR_TYPES = (
     LWZ_SYSTEM_VALUES_SENSOR_TYPES
     + ENERGYMANAGEMENT_SENSOR_TYPES
     + LWZ_ENERGY_SENSOR_TYPES
+    + LWZ_EXTENDED_ENERGY_SENSOR_TYPES
     + LWZ_COMPRESSOR_SENSOR_TYPES
     + LWZ_VENTILATION_SENSOR_TYPES
 )
