@@ -125,6 +125,71 @@ The integration cannot update ISG firmware. Firmware updates are handled
 through Stiebel Eltron support. It also cannot make a register writable when
 the connected controller or firmware exposes it as read-only.
 
+## Upgrading to 2026.8
+
+Release 2026.8 needs no reconfiguration of the integration entry, but six things change for an existing installation.
+Three of them can ask something of you: an automation, a dashboard or an Energy dashboard source.
+The rest is metadata.
+
+Writable temperature entities now carry the range the library accepts.
+They used to offer a wider one, so a value outside the library's range was accepted by the interface and refused further down, with a `ValueError` in the log and no useful message in the interface.
+
+| Entities | Offered before | Offered now | Library accepts |
+|---|---|---|---|
+| Climate on WPM, WPM 3i and LWZ R290 | 7 to 35 °C | 5 to 30 °C | 5 to 30 °C |
+| Climate on the other LWZ controllers | 7 to 35 °C | 10 to 30 °C | 10 to 30 °C |
+| The four room temperature settings, same controllers | from 5 °C | from 10 °C | from 10 °C |
+| The two hot water settings, same controllers | up to 60 °C | up to 55 °C | up to 55 °C |
+
+LWZ R290 is served by the WPM entity set on both platforms, so it follows the first row rather than the LWZ ones.
+
+A write outside the range failed before this release as well, so no automation that used to succeed starts failing.
+What changes is where it fails: Home Assistant now rejects a `climate.set_temperature` outside `min_temp` and `max_temp` with a `ServiceValidationError` that names the allowed range, instead of the write travelling as far as the library.
+On WPM the lower end also moves down, so 5 to 7 °C can be set for the first time.
+
+The hot water maximum follows the range the library documents for the whole LWZ family.
+Individual controllers document a higher one, and correcting that belongs in the library rather than in the entity description.
+
+The domestic hot water circulation pump is a read-only operating status on
+WPMsystem and LWZ R290. It is therefore exposed as
+`binary_sensor.<device>_circulation_pump`, not as a switch. Existing
+automations and dashboards that reference the former switch entity need to use
+the binary sensor instead; switch actions must be removed because the register
+was never writable.
+
+Raw energy entities whose names end in `Today` are disabled by default for new installations.
+Their ISG registers reset at midnight to a non-zero fractional remainder.
+Treating that value as `TOTAL_INCREASING` makes Home Assistant interpret the reset incorrectly and causes long-term sums to drift.
+Existing registry entries stay enabled after the update, but no longer expose a state class.
+
+If a `Today` entity is configured in the Energy dashboard, replace it with the corresponding enabled cumulative entity.
+For example, replace **Produced Heating Today** with **Produced Heating**.
+This preferred `day_and_total` counter includes the current day's fractional energy while remaining cumulative.
+**Produced Heating Total** is also cumulative but is the whole-kWh lifetime counter that is updated when the day value is transferred.
+The same naming pattern applies to consumed and water-heating energy.
+Entity IDs depend on the installation and language, so select by the entity name under **Settings → Devices & services → Entities**.
+Statistics already stored under the old `Today` entity are not transferred to the replacement.
+
+Home Assistant may offer a fixable `state_class_removed` issue under **Developer Tools → Statistics** for a `Today` entity that previously generated statistics.
+Deleting that invalid statistic removes its long-term statistics, not the entity's ordinary state history.
+To derive a daily value, create a Home Assistant `utility_meter` helper with a daily cycle from the cumulative source.
+Users who still need the raw operational `Today` value can enable it manually under **Settings → Devices & services → Entities**.
+
+Flow-rate sensors now use Home Assistant's canonical `L/min` unit and volume-flow device class instead of the legacy `l/min` string.
+To the recorder those two spellings are different units, so it reports a `units_changed` issue for an existing long-term statistic and stops extending it until the issue is resolved.
+Open **Developer Tools → Statistics** and apply the offered fix.
+Choose the option that updates the stored unit, which keeps the entire history; the other one deletes the statistic.
+No values change either way, `L/min` and `l/min` are the same quantity.
+
+Pressure sensors now use Home Assistant's pressure device class. On US customary
+installations, Home Assistant therefore displays their native `bar` values as
+`psi`. Ventilation flow-rate sensors keep their native `m³/h` values.
+
+Writable number entities are now grouped under **Configuration** on the device
+page. Existing entity IDs and manually configured dashboards or automations are not
+changed. These settings may no longer appear in automatically generated dashboards
+or default voice-assistant exposure.
+
 ## Upgrading to 2026.7
 
 Release 2026.7 is a significant refactoring of the integration.
@@ -145,52 +210,9 @@ automatically is linking them to a differently named replacement. Renaming an en
 inside Home Assistant is the one path that carries its statistics along, because the
 recorder migrates the statistic id on a rename but has no hook for a removal.
 
-Flow-rate sensors now use Home Assistant's canonical `L/min` unit and volume-flow
-device class instead of the legacy `l/min` string. Home Assistant may flag the unit
-metadata of an existing long-term statistic after the update. The old spelling is
-not a unit Home Assistant can automatically convert to `L/min`, despite the values
-having the same meaning. Open **Developer Tools → Statistics** and review the repair
-options for the affected entity. Depending on the Home Assistant version and stored
-metadata, removing the old statistic may be the only offered repair; that deletes
-its long-term statistics history. Back up the database before choosing that option.
-
-Pressure sensors now use Home Assistant's pressure device class. On US customary
-installations, Home Assistant therefore displays their native `bar` values as
-`psi`. Ventilation flow-rate sensors keep their native `m³/h` values.
-
-Writable number entities are now grouped under **Configuration** on the device
-page. Existing entity IDs and manually configured dashboards or automations are not
-changed. These settings may no longer appear in automatically generated dashboards
-or default voice-assistant exposure.
-
-Raw energy entities whose names end in `Today` are disabled by default for new installations.
-Their ISG registers reset at midnight to a non-zero fractional remainder.
-Treating that value as `TOTAL_INCREASING` makes Home Assistant interpret the reset incorrectly and causes long-term sums to drift.
-Existing registry entries stay enabled after the update, but no longer expose a state class.
-
-If a `Today` entity is configured in the Energy dashboard, replace it with the corresponding enabled cumulative entity.
-For example, replace **Produced Heating Today** with **Produced Heating**.
-This preferred `day_and_total` counter includes the current day's fractional energy while remaining cumulative.
-**Produced Heating Total** is also cumulative but is the whole-kWh lifetime counter that is updated when the day value is transferred.
-The same naming pattern applies to consumed and water-heating energy.
-Entity IDs depend on the installation and language, so select by the entity name under **Settings → Devices & services → Entities**.
-Statistics already stored under the old `Today` entity are not transferred to the replacement.
-
-Home Assistant may offer a fixable `state_class_removed` issue under **Developer Tools → Statistics** for a `Today` entity that previously generated statistics.
-Deleting that invalid statistic removes its long-term statistics, not the entity's ordinary state history.
-To derive a daily value, create a Home Assistant `utility_meter` helper with a daily cycle from the cumulative source.
-Users who still need the raw operational `Today` value can enable it manually under **Settings → Devices & services → Entities**.
-
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be
 matched up afterwards.
-
-The domestic hot water circulation pump is a read-only operating status on
-WPMsystem and LWZ R290. It is therefore exposed as
-`binary_sensor.<device>_circulation_pump`, not as a switch. Existing
-automations and dashboards that reference the former switch entity need to use
-the binary sensor instead; switch actions must be removed because the register
-was never writable.
 
 For contributors, the transition the earlier migration notes described is complete.
 The compatibility shims are gone, along with `probe.py` and `client_bridge.py`:
