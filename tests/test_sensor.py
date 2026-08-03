@@ -28,7 +28,7 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
-    CONSUMED_COOLING_TOTAL,
+    PRODUCED_COOLING_TOTAL,
     CONSUMED_HEATING,
     CONSUMED_HEATING_12M,
     CONSUMED_HEATING_LAST_24H,
@@ -481,7 +481,7 @@ async def test_new_daily_energy_registry_entry_is_disabled(
 
 
 CUMULATIVE_ENERGY_KEYS = {
-    CONSUMED_COOLING_TOTAL,
+    PRODUCED_COOLING_TOTAL,
     PRODUCED_HEATING,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING,
@@ -496,8 +496,8 @@ CUMULATIVE_ENERGY_KEYS = {
 @pytest.mark.parametrize(
     ("descriptions", "required_keys"),
     [
-        (WPM_3I_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {CONSUMED_COOLING_TOTAL}),
-        (WPM_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {CONSUMED_COOLING_TOTAL}),
+        (WPM_3I_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {PRODUCED_COOLING_TOTAL}),
+        (WPM_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {PRODUCED_COOLING_TOTAL}),
         (LWZ_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS),
     ],
 )
@@ -605,7 +605,7 @@ def test_lwz_exposes_cooling_total_energy() -> None:
     """LWZ cooling total reads energy_data.hm_cooling_total as a cumulative kWh."""
     api = SimpleNamespace(energy_data=SimpleNamespace(hm_cooling_total=345))
 
-    desc = _lwz(CONSUMED_COOLING_TOTAL)
+    desc = _lwz(PRODUCED_COOLING_TOTAL)
     assert desc.modbus_register(api) == 345
     assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
     assert desc.device_class == SensorDeviceClass.ENERGY

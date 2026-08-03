@@ -52,7 +52,7 @@ from .const import (
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
     CONSUMED_COOLING_PREV_12M,
-    CONSUMED_COOLING_TOTAL,
+    PRODUCED_COOLING_TOTAL,
     CONSUMED_HEATING,
     CONSUMED_HEATING_12M,
     CONSUMED_HEATING_LAST_24H,
@@ -246,8 +246,8 @@ def create_efficiency_entity_description(
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
-        native_unit_of_measurement="COP",
-        state_class=SensorStateClass.MEASUREMENT,
+        # TODO: Uncomment the following line once we are sure the values are correct
+        # state_class=SensorStateClass.MEASUREMENT,
         modbus_register=modbus_register,
     )
 
@@ -885,7 +885,7 @@ LWZ_ENERGY_SENSOR_TYPES = [
         lambda api: api.energy_data.pwr_con_dhw_day_and_total,
     ),
     create_energy_entity_description(
-        CONSUMED_COOLING_TOTAL,
+        PRODUCED_COOLING_TOTAL,
         lambda api: api.energy_data.hm_cooling_total,
     ),
     create_energy_entity_description(

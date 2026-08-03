@@ -12,6 +12,9 @@
                     "port": "Modbus TCP port ISG (predvolené: 502)."
                 }
             },
+            "discovery_confirm": {
+                "description": "Do you want to set up the Stiebel Eltron ISG at {host}?"
+            },
             "reconfigure": {
                 "description": "Aktualizujte prihlasovacie údaje pre vaše tepelné čerpadlo Stiebel Eltron ISG.",
                 "data": {
@@ -32,6 +35,23 @@
         "abort": {
             "already_configured": "Zariadenie je už nakonfigurované",
             "reconfigure_successful": "Podrobnosti o pripojení boli úspešne aktualizované."
+        }
+    },
+    "exceptions": {
+        "write_unsupported": {
+            "message": "The setting {field} cannot be written on the connected controller."
+        },
+        "invalid_write_value": {
+            "message": "The value {value} is not valid for the setting {field}."
+        },
+        "write_failed": {
+            "message": "The setting {field} could not be written because communication with the heat pump failed."
+        }
+    },
+    "issues": {
+        "unsupported_controller": {
+            "title": "Unsupported controller model",
+            "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and reload the entry. If it remains unavailable, support has not yet been released in both the device library and this integration; report the model ID in the project issue tracker."
         }
     },
     "entity": {
@@ -246,6 +266,63 @@
             "consumed_water_heating": {
                 "name": "Spotrebovaná energia TÚV"
             },
+            "consumed_heating_last_24h": {
+                "name": "Consumed Heating Last 24h"
+            },
+            "consumed_heating_12m": {
+                "name": "Consumed Heating Last 12 Months"
+            },
+            "consumed_heating_prev_12m": {
+                "name": "Consumed Heating Previous 12 Months"
+            },
+            "consumed_cooling_last_24h": {
+                "name": "Consumed Cooling Last 24h"
+            },
+            "consumed_cooling_12m": {
+                "name": "Consumed Cooling Last 12 Months"
+            },
+            "consumed_cooling_prev_12m": {
+                "name": "Consumed Cooling Previous 12 Months"
+            },
+            "consumed_cooling_total": {
+                "name": "Consumed Cooling Total"
+            },
+            "consumed_water_heating_last_24h": {
+                "name": "Consumed Water Heating Last 24h"
+            },
+            "consumed_water_heating_12m": {
+                "name": "Consumed Water Heating Last 12 Months"
+            },
+            "consumed_water_heating_prev_12m": {
+                "name": "Consumed Water Heating Previous 12 Months"
+            },
+            "efficiency_heating_1_24_h": {
+                "name": "Efficiency Heating 1-24 h"
+            },
+            "efficiency_heating_1_12_m": {
+                "name": "Efficiency Heating 1-12 m"
+            },
+            "efficiency_heating_13_24_m": {
+                "name": "Efficiency Heating 13-24 m"
+            },
+            "efficiency_cooling_1_24_h": {
+                "name": "Efficiency Cooling 1-24 h"
+            },
+            "efficiency_cooling_1_12_m": {
+                "name": "Efficiency Cooling 1-12 m"
+            },
+            "efficiency_cooling_13_24_m": {
+                "name": "Efficiency Cooling 13-24 m"
+            },
+            "efficiency_dhw_1_24_h": {
+                "name": "Efficiency DHW 1-24 h"
+            },
+            "efficiency_dhw_1_12_m": {
+                "name": "Efficiency DHW 1-12 m"
+            },
+            "efficiency_dhw_13_24_m": {
+                "name": "Efficiency DHW 13-24 m"
+            },
             "produced_electrical_booster_heating_total": {
                 "name": "Vyrobené teplo el. dohrev celkom"
             },
@@ -302,6 +379,15 @@
             },
             "compressor_heating_water": {
                 "name": "Kompresor TÚV"
+            },
+            "compressor_cooling": {
+                "name": "Compressor Cooling"
+            },
+            "cooling_runtime": {
+                "name": "Cooling Runtime"
+            },
+            "current_power_consumption": {
+                "name": "Inverter Power Consumption"
             },
             "electrical_booster_heating": {
                 "name": "Elektrický dohrev vykurovanie"
@@ -541,11 +627,17 @@
             "area_cooling_target_flow_temperature": {
                 "name": "Výstupná teplota Soll plošné chladenie"
             },
+            "area_cooling_flow_temperature_hysteresis": {
+                "name": "Area Cooling Flow Temperature Hysteresis"
+            },
             "fan_cooling_target_room_temperature": {
                 "name": "Izbová teplota Soll fancoil chladenie"
             },
             "fan_cooling_target_flow_temperature": {
                 "name": "Výstupná teplota Soll fancoil chladenie"
+            },
+            "fan_cooling_flow_temperature_hysteresis": {
+                "name": "Fan Cooling Flow Temperature Hysteresis"
             },
             "heating_curve_rise_hk1": {
                 "name": "Sklon vykurovacej krivky TO 1"
@@ -561,6 +653,12 @@
             },
             "fan_level_eco": {
                 "name": "Stupeň ventilátora noc"
+            },
+            "fan_level_party": {
+                "name": "Fan Level Party"
+            },
+            "fan_level_manual": {
+                "name": "Fan Level Manual"
             },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Denná teplota chladenia Soll TO 1"
