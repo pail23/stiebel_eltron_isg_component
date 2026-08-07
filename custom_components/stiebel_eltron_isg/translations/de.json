@@ -48,7 +48,6 @@
     "issues": {
         "duplicate_entities": {
             "title": "Nicht verfügbare doppelte Entitäten",
-            "description": "{count} doppelte Entitäten aus der Unique-ID-Umstellung in Version 2026.7 werden nicht mehr bereitgestellt: {entities}. Die Integration hat die älteren funktionierenden Entitäten beibehalten, weil Dashboards, Automatisierungen, Verlauf und Langzeitstatistiken normalerweise auf sie verweisen.",
             "fix_flow": {
                 "step": {
                     "confirm": {

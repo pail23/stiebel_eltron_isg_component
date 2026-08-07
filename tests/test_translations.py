@@ -396,7 +396,7 @@ def test_controller_repair_uses_model_id_placeholder(
 def test_duplicate_entity_repair_preserves_safety_placeholders(
     translation_file: pathlib.Path,
 ) -> None:
-    """Runtime copy must identify the exact entries at both decision points."""
+    """A fixable Repair must identify exact entries without a competing description."""
     issue = json.loads(translation_file.read_text(encoding="utf-8"))["issues"][
         "duplicate_entities"
     ]
@@ -406,7 +406,7 @@ def test_duplicate_entity_repair_preserves_safety_placeholders(
             field for _, field, _, _ in Formatter().parse(text) if field is not None
         }
 
-    assert placeholders(issue["description"]) == {"count", "entities"}
+    assert "description" not in issue
     assert placeholders(issue["fix_flow"]["step"]["confirm"]["description"]) == {
         "count",
         "entities",

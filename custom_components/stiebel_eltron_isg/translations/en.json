@@ -51,7 +51,6 @@
     "issues": {
         "duplicate_entities": {
             "title": "Unavailable duplicate entities",
-            "description": "{count} duplicate entities from the 2026.7 unique-ID transition are no longer provided: {entities}. The integration kept the older working entities because dashboards, automations, history, and long-term statistics normally refer to them.",
             "fix_flow": {
                 "step": {
                     "confirm": {
