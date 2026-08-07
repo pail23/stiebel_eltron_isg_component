@@ -16,7 +16,11 @@ from typing import Any
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from pystiebeleltron import ControllerModel
 
 from .const import CIRCULATION_PUMP, DOMAIN, HEATER_PRESSURE
@@ -31,6 +35,11 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 # entity would be migrated to an id that no entity description produces and stay
 # orphaned for the second time.
 _RENAMED_KEYS = {"heating_pressure": HEATER_PRESSURE}
+
+
+def duplicate_entity_issue_id(entry: StiebelEltronConfigEntry) -> str:
+    """Return the stable duplicate-entity Repair id for a config entry."""
+    return f"duplicate_entities_{entry.entry_id}"
 
 
 @callback
@@ -163,6 +172,53 @@ def _plan_migration(
 
 
 @callback
+def async_get_duplicate_entities(
+    hass: HomeAssistant,
+    entry: StiebelEltronConfigEntry,
+    model: ControllerModel,
+) -> list[er.RegistryEntry]:
+    """Return registry entries that still lose a unique-id collision."""
+    entries = er.async_entries_for_config_entry(er.async_get(hass), entry.entry_id)
+    _, losers = _plan_migration(
+        entries,
+        _legacy_prefixes(entry, model),
+        build_unique_id(entry, ""),
+    )
+    return losers
+
+
+@callback
+def async_sync_duplicate_entity_issue(
+    hass: HomeAssistant,
+    entry: StiebelEltronConfigEntry,
+    model: ControllerModel,
+    losers: list[er.RegistryEntry],
+) -> None:
+    """Keep the config entry's duplicate-entity Repair in sync."""
+    issue_id = duplicate_entity_issue_id(entry)
+    if not losers:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        return
+
+    entity_ids = sorted(registry_entry.entity_id for registry_entry in losers)
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        data={"entry_id": entry.entry_id, "model_id": model.value},
+        is_fixable=True,
+        is_persistent=True,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="duplicate_entities",
+        translation_placeholders={
+            "count": str(len(entity_ids)),
+            "entities": ", ".join(entity_ids),
+        },
+    )
+
+
+@callback
 def async_migrate_device_identifier(
     hass: HomeAssistant, entry: StiebelEltronConfigEntry
 ) -> None:
@@ -263,10 +319,11 @@ async def async_migrate_unique_ids(
         _legacy_prefixes(entry, model),
         build_unique_id(entry, ""),
     )
+    async_sync_duplicate_entity_issue(hass, entry, model, losers)
 
     if not planned:
-        # Nothing left to migrate. A duplicate that was reported by an earlier
-        # run is still there, but it has been reported already.
+        # Nothing left to migrate. Any duplicate left by an earlier run is
+        # still reported through the persistent Repair synchronized above.
         return
 
     @callback
@@ -283,8 +340,9 @@ async def async_migrate_unique_ids(
         _LOGGER.warning(
             "%s entities were created twice, once before and once after the "
             "unique id change, so the following duplicates keep their old unique "
-            "id and stay unavailable: %s. Their recorded history can only be "
-            "merged manually, in Developer Tools under Statistics",
+            "id and stay unavailable: %s. Their recorded long-term statistics "
+            "remain separate after registry removal and can be removed deliberately "
+            "in Developer Tools under Statistics",
             len(losers),
             ", ".join(sorted(registry_entry.entity_id for registry_entry in losers)),
         )
