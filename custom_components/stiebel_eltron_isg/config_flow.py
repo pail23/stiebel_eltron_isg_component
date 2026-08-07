@@ -64,7 +64,10 @@ async def check_controller_model(host: str, port: int) -> ControllerCheckResult:
             "unsupported_controller",
             MappingProxyType({"model_id": str(exception.model_id)}),
         )
-    except StiebelEltronModbusError, ModbusError:
+    except StiebelEltronModbusError:
+        _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
+        return ControllerCheckResult("cannot_connect")
+    except ModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return ControllerCheckResult("cannot_connect")
     except Exception:

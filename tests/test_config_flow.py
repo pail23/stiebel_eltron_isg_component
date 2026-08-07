@@ -8,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from modbus_connection import ModbusError
+from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
     ControllerModel,
     StiebelEltronModbusError,
@@ -119,6 +120,7 @@ async def test_form_unknown_exception(
 async def test_form_reports_unsupported_controller(
     hass: HomeAssistant,
     mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Test the user form reports an unsupported controller and its model ID."""
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
@@ -134,6 +136,14 @@ async def test_form_reports_unsupported_controller(
     assert result["errors"] == {"base": "unsupported_controller"}
     assert result["description_placeholders"] == {"model_id": "165"}
     assert hass.config_entries.async_entries(DOMAIN) == []
+    assert mock_modbus_connection.connected is False
+
+    mock_get_controller_model.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_reconfigure_flow(
@@ -227,6 +237,19 @@ async def test_reconfigure_reports_unsupported_controller(
     assert result["errors"] == {"base": "unsupported_controller"}
     assert result["description_placeholders"] == {"model_id": "165"}
     assert dict(mock_config_entry.data) == original_data
+
+    mock_get_controller_model.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert dict(mock_config_entry.data) == RECONFIGURE_INPUT
+
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 async def test_reconfigure_flow_already_configured(
