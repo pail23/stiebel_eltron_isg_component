@@ -53,7 +53,7 @@
                 "step": {
                     "confirm": {
                         "title": "Nicht verfügbare Dubletten entfernen",
-                        "description": "Die folgenden {count} Einträge werden aus der Entitätsregistrierung entfernt: {entities}. Prüfen Sie vorher, dass kein Dashboard und keine Automatisierung diese Entitäts-IDs verwendet. Separate Langzeitstatistiken werden nicht zusammengeführt oder automatisch gelöscht."
+                        "description": "Die folgenden {count} Einträge werden aus der Entitätsregistrierung entfernt:\n\n{entities}\n\nPrüfen Sie vorher, dass kein Dashboard und keine Automatisierung diese Entitäts-IDs verwendet. Separate Langzeitstatistiken werden weder zusammengeführt noch automatisch gelöscht."
                     }
                 },
                 "abort": {

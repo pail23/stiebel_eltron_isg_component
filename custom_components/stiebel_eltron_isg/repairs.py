@@ -33,7 +33,9 @@ class DuplicateEntityRepairFlow(RepairsFlow):
         user_input: dict[str, Any] | None = None,
     ) -> RepairsFlowResult:
         """Start the Repair flow."""
-        return await self.async_step_confirm(user_input)
+        # The Repairs flow manager passes its own init data as user_input. It is
+        # context, not a user's confirmation of the destructive step.
+        return await self.async_step_confirm()
 
     async def async_step_confirm(
         self,
@@ -79,6 +81,8 @@ async def async_create_fix_flow(
 
     entry_id = data.get("entry_id")
     model_id = data.get("model_id")
+    # Use an exact int check so bool, which is an int subclass, cannot select a
+    # controller model accidentally.
     if not isinstance(entry_id, str) or type(model_id) is not int:
         return ConfirmRepairFlow()
 

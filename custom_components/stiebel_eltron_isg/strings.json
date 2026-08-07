@@ -56,7 +56,7 @@
                 "step": {
                     "confirm": {
                         "title": "Remove unavailable duplicate entities",
-                        "description": "The following {count} entries will be removed from the entity registry: {entities}. Before continuing, make sure no dashboard or automation references these entity IDs. Separate long-term statistics are not merged or deleted automatically."
+                        "description": "The following {count} entries will be removed from the entity registry:\n\n{entities}\n\nBefore continuing, make sure no dashboard or automation references these entity IDs. Separate long-term statistics are not merged or deleted automatically."
                     }
                 },
                 "abort": {

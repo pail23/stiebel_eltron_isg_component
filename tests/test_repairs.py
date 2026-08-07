@@ -7,6 +7,7 @@ from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 from pystiebeleltron import ControllerModel
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -117,6 +118,33 @@ async def test_confirmed_repair_removes_only_current_duplicate_losers(
         )
         is None
     )
+
+
+async def test_opening_repair_through_flow_manager_never_confirms_removal(
+    hass: HomeAssistant,
+    legacy_config_entry: MockConfigEntry,
+) -> None:
+    """The manager's init data must not be mistaken for user confirmation."""
+    winner, loser = _register_duplicate_pair(hass, legacy_config_entry)
+    _create_duplicate_issue(hass, legacy_config_entry)
+    assert await async_setup_component(hass, DOMAIN, {})
+    assert await async_setup_component(hass, "repairs", {})
+
+    flow_manager = hass.data["repairs"]["flow_manager"]
+    result = await flow_manager.async_init(
+        DOMAIN,
+        data={"issue_id": duplicate_entity_issue_id(legacy_config_entry)},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm"
+    assert result["description_placeholders"] == {
+        "count": "1",
+        "entities": f"- `{loser.entity_id}`",
+    }
+    registry = er.async_get(hass)
+    assert registry.async_get(winner.entity_id) is not None
+    assert registry.async_get(loser.entity_id) is not None
 
 
 async def test_repair_revalidates_losers_before_removing_anything(
