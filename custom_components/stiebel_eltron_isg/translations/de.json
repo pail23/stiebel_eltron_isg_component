@@ -46,6 +46,21 @@
         }
     },
     "issues": {
+        "duplicate_entities": {
+            "title": "Nicht verfügbare doppelte Entitäten",
+            "description": "{count} doppelte Entitäten aus der Unique-ID-Umstellung in Version 2026.7 werden nicht mehr bereitgestellt: {entities}. Die Integration hat die älteren funktionierenden Entitäten beibehalten, weil Dashboards, Automatisierungen, Verlauf und Langzeitstatistiken normalerweise auf sie verweisen.",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Nicht verfügbare Dubletten entfernen",
+                        "description": "Die folgenden {count} Einträge werden aus der Entitätsregistrierung entfernt: {entities}. Prüfen Sie vorher, dass kein Dashboard und keine Automatisierung diese Entitäts-IDs verwendet. Separate Langzeitstatistiken werden nicht zusammengeführt oder automatisch gelöscht."
+                    }
+                },
+                "abort": {
+                    "no_duplicates": "Die doppelten Entitäten wurden bereits entfernt."
+                }
+            }
+        },
         "unsupported_controller": {
             "title": "Nicht unterstütztes Reglermodell",
             "description": "Das ISG meldet die Reglermodell-ID {model_id}, die von dieser Version der Integration nicht unterstützt wird. Aktualisieren Sie die Integration und laden Sie den Eintrag erneut. Falls er weiterhin nicht verfügbar ist, wurde die Unterstützung noch nicht in der Gerätebibliothek und dieser Integration veröffentlicht; melden Sie die Modell-ID im Issue-Tracker des Projekts."

@@ -198,17 +198,17 @@ For users:
 
 1. Update the integration and restart Home Assistant.
 2. If entities show as unavailable, reload the integration once from the UI.
-3. Some entities were renamed in the refactoring. If you end up with unavailable
-   leftovers, remove those entities individually, or delete the integration entry and
-   add it again for a completely clean set.
+3. Some installations briefly created replacement entities during the unique-ID transition.
+   If Home Assistant reports unavailable duplicates, open the Repair and review the exact entity IDs before confirming their removal.
+   If the Repair is not available, remove only an unavailable leftover that has a working counterpart and is no longer referenced by a dashboard or automation.
+   Removing and adding the integration again is not the preferred cleanup because it can change entity IDs and require references to be updated.
 
 A note on history, because it is easy to get wrong in both directions. Removing an
 entity does not delete its recorded history: the long term statistics stay behind
 under the old entity id and show up in Developer Tools, Statistics as no longer
-provided, where you can delete them deliberately. What does not happen
-automatically is linking them to a differently named replacement. Renaming an entity
-inside Home Assistant is the one path that carries its statistics along, because the
-recorder migrates the statistic id on a rename but has no hook for a removal.
+provided, where you can delete them deliberately.
+Home Assistant does not merge that separate series into the working entity automatically.
+Renaming an entity inside Home Assistant is the one path that carries its statistics along, because the recorder migrates the statistic id on a rename but has no hook for a removal.
 
 To change the IP address or port of the ISG, use **Reconfigure** in the three-dot
 menu of the integration entry. It leaves the entities untouched, so nothing has to be

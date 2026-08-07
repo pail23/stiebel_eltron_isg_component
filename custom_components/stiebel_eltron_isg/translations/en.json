@@ -49,6 +49,21 @@
         }
     },
     "issues": {
+        "duplicate_entities": {
+            "title": "Unavailable duplicate entities",
+            "description": "{count} duplicate entities from the 2026.7 unique-ID transition are no longer provided: {entities}. The integration kept the older working entities because dashboards, automations, history, and long-term statistics normally refer to them.",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Remove unavailable duplicate entities",
+                        "description": "The following {count} entries will be removed from the entity registry: {entities}. Before continuing, make sure no dashboard or automation references these entity IDs. Separate long-term statistics are not merged or deleted automatically."
+                    }
+                },
+                "abort": {
+                    "no_duplicates": "The duplicate entities have already been removed."
+                }
+            }
+        },
         "unsupported_controller": {
             "title": "Unsupported controller model",
             "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and reload the entry. If it remains unavailable, support has not yet been released in both the device library and this integration; report the model ID in the project issue tracker."
