@@ -8,7 +8,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from modbus_connection import ModbusError
-from pystiebeleltron import ControllerModel, StiebelEltronModbusError
+from pystiebeleltron import (
+    ControllerModel,
+    StiebelEltronModbusError,
+    UnknownControllerModelError,
+)
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -112,6 +116,26 @@ async def test_form_unknown_exception(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+async def test_form_reports_unsupported_controller(
+    hass: HomeAssistant,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Test the user form reports an unsupported controller and its model ID."""
+    mock_get_controller_model.side_effect = UnknownControllerModelError(165)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_controller"}
+    assert result["description_placeholders"] == {"model_id": "165"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -181,6 +205,30 @@ async def test_reconfigure_flow_errors(
     await hass.async_block_till_done()
 
 
+async def test_reconfigure_reports_unsupported_controller(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Test reconfiguration preserves data for an unsupported controller."""
+    original_data = dict(mock_config_entry.data)
+    mock_config_entry.add_to_hass(hass)
+    mock_get_controller_model.side_effect = UnknownControllerModelError(165)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], RECONFIGURE_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_controller"}
+    assert result["description_placeholders"] == {"model_id": "165"}
+    assert dict(mock_config_entry.data) == original_data
+
+
 async def test_reconfigure_flow_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -242,6 +290,23 @@ async def test_dhcp_discovery_flow(hass: HomeAssistant) -> None:
     assert result["title"] == "Stiebel Eltron"
     assert result["data"] == {CONF_HOST: "1.1.1.2", CONF_PORT: 502}
     assert result["result"].unique_id == "00:00:00:00:00:01"
+
+
+async def test_dhcp_aborts_for_unsupported_controller(
+    hass: HomeAssistant,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Test DHCP discovery reports an unsupported controller and its model ID."""
+    mock_get_controller_model.side_effect = UnknownControllerModelError(165)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unsupported_controller"
+    assert result["description_placeholders"] == {"model_id": "165"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
 
 
 async def test_dhcp_discovery_updates_host(hass: HomeAssistant) -> None:
