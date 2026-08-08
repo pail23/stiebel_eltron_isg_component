@@ -1,9 +1,7 @@
 """Config flow for the STIEBEL ELTRON integration."""
 
-from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import logging
-from types import MappingProxyType
 from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -45,9 +43,7 @@ class ControllerCheckResult:
     """Result of validating a controller during a config flow."""
 
     error: str | None = None
-    description_placeholders: Mapping[str, str] = field(
-        default_factory=lambda: MappingProxyType({})
-    )
+    description_placeholders: dict[str, str] | None = None
 
 
 async def check_controller_model(host: str, port: int) -> ControllerCheckResult:
@@ -62,7 +58,7 @@ async def check_controller_model(host: str, port: int) -> ControllerCheckResult:
         _LOGGER.debug("Unsupported controller model %s", exception.model_id)
         return ControllerCheckResult(
             "unsupported_controller",
-            MappingProxyType({"model_id": str(exception.model_id)}),
+            {"model_id": str(exception.model_id)},
         )
     except StiebelEltronModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
@@ -96,7 +92,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         if check_result.error is not None:
             return self.async_abort(
                 reason=check_result.error,
-                description_placeholders=dict(check_result.description_placeholders),
+                description_placeholders=check_result.description_placeholders,
             )
 
         self._discovered_host = discovery_info.ip
@@ -125,7 +121,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             self._async_abort_entries_match({
                 CONF_HOST: user_input[CONF_HOST],
@@ -136,7 +132,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if check_result.error is not None:
                 errors["base"] = check_result.error
-                description_placeholders = dict(check_result.description_placeholders)
+                description_placeholders = check_result.description_placeholders
             else:
                 return self.async_create_entry(title="Stiebel Eltron", data=user_input)
 
@@ -154,7 +150,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._get_reconfigure_entry()
 
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             self._async_abort_entries_match({
                 CONF_HOST: user_input[CONF_HOST],
@@ -165,7 +161,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             if check_result.error is not None:
                 errors["base"] = check_result.error
-                description_placeholders = dict(check_result.description_placeholders)
+                description_placeholders = check_result.description_placeholders
             else:
                 return self.async_update_reload_and_abort(
                     config_entry,
