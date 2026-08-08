@@ -3,7 +3,11 @@
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from pystiebeleltron import ControllerModel
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -247,6 +251,24 @@ async def test_configured_name_wins_over_the_replacement_entity(
         == f"{DOMAIN}_{MODEL_NAME}_{KEY}"
     )
     assert replacement.entity_id in caplog.text
+    assert "remain separate" in caplog.text
+    assert "merged manually" not in caplog.text
+
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"duplicate_entities_{config_entry_with_name.entry_id}"
+    )
+    assert issue is not None
+    assert issue.is_fixable is True
+    assert issue.is_persistent is True
+    assert issue.severity is ir.IssueSeverity.WARNING
+    assert issue.data == {
+        "entry_id": config_entry_with_name.entry_id,
+        "model_id": ControllerModel.WPM_3.value,
+    }
+    assert issue.translation_placeholders == {
+        "count": "1",
+        "entities": replacement.entity_id,
+    }
 
 
 async def test_reload_with_a_leftover_duplicate_does_not_fail(
@@ -289,6 +311,40 @@ async def test_reload_with_a_leftover_duplicate_does_not_fail(
         registry.async_get(replacement.entity_id).unique_id
         == f"{DOMAIN}_{MODEL_NAME}_{KEY}"
     )
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, f"duplicate_entities_{config_entry_with_name.entry_id}"
+        )
+        is not None
+    )
+
+
+async def test_setup_clears_a_stale_duplicate_entity_repair(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+) -> None:
+    """A Repair must disappear after every duplicate has been removed."""
+    issue_id = f"duplicate_entities_{config_entry_with_name.entry_id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        data={
+            "entry_id": config_entry_with_name.entry_id,
+            "model_id": ControllerModel.WPM_3.value,
+        },
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="duplicate_entities",
+        translation_placeholders={"count": "1", "entities": "sensor.duplicate"},
+    )
+    config_entry_with_name.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
+    await hass.async_block_till_done()
+
+    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_migrates_the_title_of_an_entry_without_a_configured_name(

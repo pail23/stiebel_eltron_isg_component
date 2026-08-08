@@ -27,6 +27,7 @@ from .migration import (
     async_migrate_device_identifier,
     async_migrate_unique_ids,
     async_remove_legacy_circulation_pump_switch,
+    duplicate_entity_issue_id,
 )
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
@@ -173,3 +174,4 @@ async def async_remove_entry(
 ) -> None:
     """Remove repairs that belong to a deleted config entry."""
     ir.async_delete_issue(hass, DOMAIN, _unsupported_controller_issue_id(entry))
+    ir.async_delete_issue(hass, DOMAIN, duplicate_entity_issue_id(entry))

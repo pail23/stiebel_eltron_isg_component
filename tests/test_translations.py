@@ -388,6 +388,32 @@ def test_controller_repair_uses_model_id_placeholder(
     assert placeholders == {"model_id"}
 
 
+@pytest.mark.parametrize(
+    "translation_file",
+    _repair_translation_files(),
+    ids=lambda file: file.name,
+)
+def test_duplicate_entity_repair_preserves_safety_placeholders(
+    translation_file: pathlib.Path,
+) -> None:
+    """A fixable Repair must identify exact entries without a competing description."""
+    issue = json.loads(translation_file.read_text(encoding="utf-8"))["issues"][
+        "duplicate_entities"
+    ]
+
+    def placeholders(text: str) -> set[str]:
+        return {
+            field for _, field, _, _ in Formatter().parse(text) if field is not None
+        }
+
+    assert "description" not in issue
+    assert placeholders(issue["fix_flow"]["step"]["confirm"]["description"]) == {
+        "count",
+        "entities",
+    }
+    assert placeholders(issue["fix_flow"]["abort"]["no_duplicates"]) == set()
+
+
 def test_config_flow_strings_match_runtime_fields() -> None:
     """Config-flow strings must describe the fields and forms users can open."""
     steps = json.loads(_STRINGS_FILE.read_text(encoding="utf-8"))["config"]["step"]
