@@ -49,6 +49,20 @@
         }
     },
     "issues": {
+        "duplicate_entities": {
+            "title": "Entidades duplicadas indisponíveis",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Remover entidades duplicadas indisponíveis",
+                        "description": "As seguintes {count} entradas serão removidas do registo de entidades:\n\n{entities}\n\nAntes de continuar, certifique-se de que nenhum painel ou automatização referencia estes IDs de entidade. Estatísticas de longo prazo separadas não são mescladas nem eliminadas automaticamente."
+                    }
+                },
+                "abort": {
+                    "no_duplicates": "As entidades duplicadas já foram removidas."
+                }
+            }
+        },
         "unsupported_controller": {
             "title": "Unsupported controller model",
             "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and reload the entry. If it remains unavailable, support has not yet been released in both the device library and this integration; report the model ID in the project issue tracker."

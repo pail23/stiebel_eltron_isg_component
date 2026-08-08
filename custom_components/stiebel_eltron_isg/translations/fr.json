@@ -49,6 +49,20 @@
         }
     },
     "issues": {
+        "duplicate_entities": {
+            "title": "Entités en double non disponibles",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Supprimer les entités en double non disponibles",
+                        "description": "Les {count} entrées suivantes seront supprimées du registre des entités :\n\n{entities}\n\nAvant de continuer, assurez-vous qu'aucun tableau de bord ou automatisation ne référence ces ID d'entités. Les statistiques à long terme distinctes ne sont ni fusionnées ni supprimées automatiquement."
+                    }
+                },
+                "abort": {
+                    "no_duplicates": "Les entités en double ont déjà été supprimées."
+                }
+            }
+        },
         "unsupported_controller": {
             "title": "Unsupported controller model",
             "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and reload the entry. If it remains unavailable, support has not yet been released in both the device library and this integration; report the model ID in the project issue tracker."

@@ -49,6 +49,20 @@
         }
     },
     "issues": {
+        "duplicate_entities": {
+            "title": "Nedostupné duplicitní entity",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Odebrat nedostupné duplicitní entity",
+                        "description": "Následující {count} položky budou odebrány z registru entit:\n\n{entities}\n\nPřed pokračováním se ujistěte, že žádný dashboard ani automatizace neodkazuje na tyto ID entit. Samostatné dlouhodobé statistiky nejsou automaticky sloučeny ani smazány."
+                    }
+                },
+                "abort": {
+                    "no_duplicates": "Duplicitní entity byly již odebrány."
+                }
+            }
+        },
         "unsupported_controller": {
             "title": "Unsupported controller model",
             "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and reload the entry. If it remains unavailable, support has not yet been released in both the device library and this integration; report the model ID in the project issue tracker."
