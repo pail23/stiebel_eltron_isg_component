@@ -50,6 +50,11 @@ _STRINGS_FILE = _COMPONENT_DIR / "strings.json"
 _ICONS_FILE = _COMPONENT_DIR / "icons.json"
 _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
+_CONTROLLER_VALIDATION_REASONS = {
+    "cannot_connect",
+    "unknown",
+    "unsupported_controller",
+}
 
 # This explicit snapshot keeps the small set of reviewed custom sensor icons
 # stable. The fan overrides preserve useful equipment context that the generic
@@ -170,6 +175,31 @@ def _key_tree(value):
 def test_translation_json_has_no_duplicate_keys(json_file: pathlib.Path) -> None:
     """Duplicate JSON keys must not be silently replaced by the parser."""
     _load_json(json_file)
+
+
+@pytest.mark.parametrize(
+    "json_file",
+    [_STRINGS_FILE, _RUNTIME_FILE],
+    ids=lambda file: file.name,
+)
+def test_controller_validation_reasons_have_flow_translations(
+    json_file: pathlib.Path,
+) -> None:
+    """Every validation result must render in forms and DHCP aborts."""
+    config = _load_json(json_file)["config"]
+    missing = {
+        section: sorted(
+            reason
+            for reason in _CONTROLLER_VALIDATION_REASONS
+            if not config[section].get(reason)
+        )
+        for section in ("error", "abort")
+        if any(
+            not config[section].get(reason) for reason in _CONTROLLER_VALIDATION_REASONS
+        )
+    }
+
+    assert not missing, f"{json_file.name} lacks config-flow translations: {missing}"
 
 
 @pytest.mark.parametrize("module", _PLATFORM_MODULES, ids=_platform)
