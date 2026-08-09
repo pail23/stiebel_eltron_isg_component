@@ -351,6 +351,22 @@ def test_english_config_flow_matches_strings() -> None:
     assert _key_tree(english) == _key_tree(strings)
 
 
+@pytest.mark.parametrize("translation_file", [_STRINGS_FILE, _RUNTIME_FILE])
+@pytest.mark.parametrize("section", ["error", "abort"])
+def test_unsupported_controller_flow_uses_model_id_placeholder(
+    translation_file: pathlib.Path,
+    section: str,
+) -> None:
+    """Unsupported-controller flow text must include the reported model ID."""
+    config = _load_json(translation_file)["config"]
+    text = config[section]["unsupported_controller"]
+    placeholders = {
+        field for _, field, _, _ in Formatter().parse(text) if field is not None
+    }
+
+    assert placeholders == {"model_id"}
+
+
 @pytest.mark.parametrize(
     "translation_file",
     _runtime_repair_translation_files(),
