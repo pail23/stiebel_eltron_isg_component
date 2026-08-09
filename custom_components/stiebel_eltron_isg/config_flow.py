@@ -138,7 +138,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
             description_placeholders=description_placeholders,
         )
@@ -174,7 +176,8 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, config_entry.data
+                STEP_USER_DATA_SCHEMA,
+                user_input if user_input is not None else config_entry.data,
             ),
             errors=errors,
             description_placeholders=description_placeholders,
