@@ -31,11 +31,14 @@
             "already_configured": "The device is already configured.",
             "invalid_host_IP": "Invalid host address",
             "cannot_connect": "Cannot connect to the device. Please check the host and port.",
+            "unknown": "Unexpected error",
             "unsupported_controller": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Check for an integration update. If the model remains unsupported, report this model ID in the project issue tracker."
         },
         "abort": {
             "already_configured": "The device is already configured.",
+            "cannot_connect": "Cannot connect to the device. Please check the host and port.",
             "reconfigure_successful": "Connection details updated successfully.",
+            "unknown": "Unexpected error",
             "unsupported_controller": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Check for an integration update. If the model remains unsupported, report this model ID in the project issue tracker."
         }
     },

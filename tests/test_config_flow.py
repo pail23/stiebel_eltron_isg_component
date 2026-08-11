@@ -28,6 +28,16 @@ DHCP_DISCOVERY = DhcpServiceInfo(
 )
 
 
+def assert_suggested_values(result, expected: dict[str, object]) -> None:
+    """Assert the values Home Assistant will suggest in a config-flow form."""
+    suggested_values = {
+        key.schema: key.description["suggested_value"]
+        for key in result["data_schema"].schema
+        if key.description is not None and "suggested_value" in key.description
+    }
+    assert suggested_values == expected
+
+
 async def test_full_flow(hass: HomeAssistant) -> None:
     """Test the full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -76,6 +86,7 @@ async def test_form_cannot_connect(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
+    assert_suggested_values(result, USER_INPUT)
 
     failing_mock.side_effect = None
 
@@ -105,6 +116,7 @@ async def test_form_unknown_exception(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
+    assert_suggested_values(result, USER_INPUT)
 
     mock_get_controller_model.side_effect = None
     mock_get_controller_model.return_value = ControllerModel.LWZ  # Valid model (LWZ)
@@ -135,6 +147,7 @@ async def test_form_reports_unsupported_controller(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unsupported_controller"}
     assert result["description_placeholders"] == {"model_id": "165"}
+    assert_suggested_values(result, USER_INPUT)
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert mock_modbus_connection.connected is False
 
@@ -158,6 +171,7 @@ async def test_reconfigure_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
+    assert_suggested_values(result, mock_config_entry.data)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -201,6 +215,7 @@ async def test_reconfigure_flow_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": expected_error}
+    assert_suggested_values(result, RECONFIGURE_INPUT)
 
     mock_get_controller_model.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -236,6 +251,7 @@ async def test_reconfigure_reports_unsupported_controller(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unsupported_controller"}
     assert result["description_placeholders"] == {"model_id": "165"}
+    assert_suggested_values(result, RECONFIGURE_INPUT)
     assert dict(mock_config_entry.data) == original_data
 
     mock_get_controller_model.side_effect = None
