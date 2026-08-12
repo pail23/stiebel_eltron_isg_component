@@ -1,5 +1,6 @@
 """Tests for the migration of legacy entity unique ids."""
 
+import attr
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -859,12 +860,16 @@ async def test_a_shared_replacement_device_is_left_alone(
 ) -> None:
     """A device another config entry also belongs to is never removed.
 
-    Nothing here creates a device that can be shared, so this is insurance
-    rather than a known case, but removing it would take somebody else's device
-    with it.
+    Home Assistant 2026.8 splits a shared device into one device per config
+    entry and synthesizes the former shared device from those splits. Older
+    releases store the config entries directly on one device. Removing either
+    representation would take somebody else's device with it.
     """
     config_entry_with_name.add_to_hass(hass)
-    stranger = MockConfigEntry(domain="demo", title="Something else")
+    # Identifier lookups prefer config entries whose domain matches the
+    # identifier. Use two entries of this integration so Home Assistant can
+    # resolve their split devices back to the shared composite.
+    stranger = MockConfigEntry(domain=DOMAIN, title="Something else")
     stranger.add_to_hass(hass)
     device_registry = dr.async_get(hass)
     legacy = device_registry.async_get_or_create(
@@ -877,14 +882,47 @@ async def test_a_shared_replacement_device_is_left_alone(
         identifiers={(DOMAIN, config_entry_with_name.entry_id)},
         name=MODEL_NAME,
     )
-    device_registry.async_update_device(
-        replacement.id, add_config_entry_id=stranger.entry_id
+    expected_shared_id = replacement.id
+    protected_device_ids = {replacement.id}
+    if hasattr(dr.DeviceEntry, "composite_device_id"):
+        stranger_replacement = device_registry.async_get_or_create(
+            config_entry_id=stranger.entry_id,
+            identifiers={(DOMAIN, f"{config_entry_with_name.entry_id}_stranger")},
+            name=MODEL_NAME,
+        )
+        composite_id = "pre_split_replacement_device"
+        expected_shared_id = composite_id
+        device_registry.devices[replacement.id] = attr.evolve(
+            replacement, composite_device_id=composite_id
+        )
+        device_registry.devices[stranger_replacement.id] = attr.evolve(
+            stranger_replacement,
+            composite_device_id=composite_id,
+            identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        )
+        protected_device_ids.add(stranger_replacement.id)
+    else:
+        device_registry.async_update_device(
+            replacement.id, add_config_entry_id=stranger.entry_id
+        )
+
+    shared_replacement = device_registry.async_get_device(
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
     )
+    assert shared_replacement is not None
+    assert shared_replacement.id == expected_shared_id
+    assert shared_replacement.config_entries == {
+        config_entry_with_name.entry_id,
+        stranger.entry_id,
+    }
 
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get(replacement.id) is not None
+    assert all(
+        device_registry.async_get(device_id) is not None
+        for device_id in protected_device_ids
+    )
     assert device_registry.async_get(legacy.id) is not None
     assert "shared with" in caplog.text
 
