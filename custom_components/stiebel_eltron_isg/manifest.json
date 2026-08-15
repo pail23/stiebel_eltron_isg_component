@@ -19,7 +19,7 @@
     "pystiebeleltron"
   ],
   "requirements": [
-    "pystiebeleltron==0.6.3"
+    "pystiebeleltron==0.7.0"
   ],
   "version": "2025.7.0"
 }
