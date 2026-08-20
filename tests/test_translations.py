@@ -50,6 +50,11 @@ _STRINGS_FILE = _COMPONENT_DIR / "strings.json"
 _ICONS_FILE = _COMPONENT_DIR / "icons.json"
 _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
+_CONTROLLER_VALIDATION_REASONS = {
+    "cannot_connect",
+    "unknown",
+    "unsupported_controller",
+}
 
 # This explicit snapshot keeps the small set of reviewed custom sensor icons
 # stable. The fan overrides preserve useful equipment context that the generic
@@ -170,6 +175,31 @@ def _key_tree(value):
 def test_translation_json_has_no_duplicate_keys(json_file: pathlib.Path) -> None:
     """Duplicate JSON keys must not be silently replaced by the parser."""
     _load_json(json_file)
+
+
+@pytest.mark.parametrize(
+    "json_file",
+    [_STRINGS_FILE, _RUNTIME_FILE],
+    ids=lambda file: file.name,
+)
+def test_controller_validation_reasons_have_flow_translations(
+    json_file: pathlib.Path,
+) -> None:
+    """Every validation result must render in forms and DHCP aborts."""
+    config = _load_json(json_file)["config"]
+    missing = {
+        section: sorted(
+            reason
+            for reason in _CONTROLLER_VALIDATION_REASONS
+            if not config[section].get(reason)
+        )
+        for section in ("error", "abort")
+        if any(
+            not config[section].get(reason) for reason in _CONTROLLER_VALIDATION_REASONS
+        )
+    }
+
+    assert not missing, f"{json_file.name} lacks config-flow translations: {missing}"
 
 
 @pytest.mark.parametrize("module", _PLATFORM_MODULES, ids=_platform)
@@ -351,6 +381,22 @@ def test_english_config_flow_matches_strings() -> None:
     assert _key_tree(english) == _key_tree(strings)
 
 
+@pytest.mark.parametrize("translation_file", [_STRINGS_FILE, _RUNTIME_FILE])
+@pytest.mark.parametrize("section", ["error", "abort"])
+def test_unsupported_controller_flow_uses_model_id_placeholder(
+    translation_file: pathlib.Path,
+    section: str,
+) -> None:
+    """Unsupported-controller flow text must include the reported model ID."""
+    config = _load_json(translation_file)["config"]
+    text = config[section]["unsupported_controller"]
+    placeholders = {
+        field for _, field, _, _ in Formatter().parse(text) if field is not None
+    }
+
+    assert placeholders == {"model_id"}
+
+
 @pytest.mark.parametrize(
     "translation_file",
     _runtime_repair_translation_files(),
@@ -386,6 +432,32 @@ def test_controller_repair_uses_model_id_placeholder(
     }
 
     assert placeholders == {"model_id"}
+
+
+@pytest.mark.parametrize(
+    "translation_file",
+    _repair_translation_files(),
+    ids=lambda file: file.name,
+)
+def test_duplicate_entity_repair_preserves_safety_placeholders(
+    translation_file: pathlib.Path,
+) -> None:
+    """A fixable Repair must identify exact entries without a competing description."""
+    issue = json.loads(translation_file.read_text(encoding="utf-8"))["issues"][
+        "duplicate_entities"
+    ]
+
+    def placeholders(text: str) -> set[str]:
+        return {
+            field for _, field, _, _ in Formatter().parse(text) if field is not None
+        }
+
+    assert "description" not in issue
+    assert placeholders(issue["fix_flow"]["step"]["confirm"]["description"]) == {
+        "count",
+        "entities",
+    }
+    assert placeholders(issue["fix_flow"]["abort"]["no_duplicates"]) == set()
 
 
 def test_config_flow_strings_match_runtime_fields() -> None:

@@ -1,6 +1,6 @@
 """Common fixtures for the STIEBEL ELTRON tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 from homeassistant.const import CONF_HOST, CONF_PORT
@@ -38,6 +38,16 @@ pytest_plugins = "pytest_homeassistant_custom_component"
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable loading custom integrations in all tests."""
     return
+
+
+@pytest.fixture
+async def mock_modbus_connection() -> AsyncGenerator[MockModbusConnection]:
+    """Provide a connected in-memory Modbus connection for each test."""
+    connection = MockModbusConnection()
+    await connection.connect()
+    yield connection
+    if connection.connected:
+        await connection.close()
 
 
 @pytest.fixture(autouse=True)

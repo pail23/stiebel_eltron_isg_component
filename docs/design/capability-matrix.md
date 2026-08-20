@@ -30,6 +30,9 @@ Each fact has exactly one authoritative owner.
 
 ### 1. Protocol facts belong to `python-stiebel-eltron`
 
+`python-stiebel-eltron` is the source repository name.
+The published distribution and import package are named `pystiebeleltron`.
+
 The library's `api/*.csv` files already record:
 
 - documented Modbus address;
@@ -121,8 +124,8 @@ Controller identities used by different sources remain separate:
 - ISG object-database model.
 
 A mapping between them is accepted only with an explicit source and scope.
-For WPM codes 390, 391 and 449, the Modbus and firmware identities have exact evidence.
-The same equivalence is not generalized to other WPM codes and is refuted for the LWZ family.
+Numerically matching identities are not assumed to be equivalent.
+Every accepted mapping retains the source that establishes it and stays scoped to the controller family that source covers.
 
 Evidence has two independent properties:
 
@@ -140,7 +143,7 @@ Equal-scope conflicts fail validation and require review.
 
 ## Current groundwork
 
-This PR implements only two fail-closed integration inventories:
+The initial groundwork consists of two fail-closed integration inventories:
 
 - `tests/capability_write_fields.txt` pins every write field carried by an entity description, including its API family, description list, entity key, attribute and actual library target.
 - `tests/capability_write_ranges.txt` pins every Number and Climate write range and both advertised endpoints.

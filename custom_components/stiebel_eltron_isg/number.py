@@ -42,7 +42,7 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     HEATING_CURVE_RISE_HK3,
 )
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -497,7 +497,7 @@ class StiebelEltronISGNumberEntity(
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronNumberEntityDescription,
     ):

@@ -19,6 +19,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import CURRENT_POWER_CONSUMPTION, DOMAIN
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
+from custom_components.stiebel_eltron_isg.migration import duplicate_entity_issue_id
 from custom_components.stiebel_eltron_isg.sensor import WPM_SENSOR_TYPES
 from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
     StiebelEltronModbusWPM3iDataCoordinator,
@@ -297,21 +298,38 @@ async def test_async_setup_entry_rejects_unhandled_model(
     assert mock_modbus_connection.connected is False
 
 
-async def test_removing_entry_clears_controller_repair(
+async def test_removing_entry_clears_its_repairs(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
 ) -> None:
-    """Deleting a failed entry must not leave an orphaned repair."""
-    issue_id = f"unsupported_controller_{mock_config_entry.entry_id}"
+    """Deleting an entry must not leave either Repair orphaned."""
+    controller_issue_id = f"unsupported_controller_{mock_config_entry.entry_id}"
+    duplicate_issue_id = duplicate_entity_issue_id(mock_config_entry)
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
     mock_config_entry.add_to_hass(hass)
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is not None
+    assert ir.async_get(hass).async_get_issue(DOMAIN, controller_issue_id) is not None
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        duplicate_issue_id,
+        data={
+            "entry_id": mock_config_entry.entry_id,
+            "model_id": ControllerModel.WPM_3.value,
+        },
+        is_fixable=True,
+        is_persistent=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="duplicate_entities",
+        translation_placeholders={"count": "1", "entities": "sensor.duplicate"},
+    )
 
     await hass.config_entries.async_remove(mock_config_entry.entry_id)
 
-    assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, controller_issue_id) is None
+    assert issue_registry.async_get_issue(DOMAIN, duplicate_issue_id) is None
 
 
 async def test_async_setup_entry_coordinator_update_fails(

@@ -72,7 +72,7 @@ from .const import (
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
 )
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import StiebelEltronISGEntity
 
 PARALLEL_UPDATES = 1
@@ -534,7 +534,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronBinarySensorEntityDescription,
     ) -> None:

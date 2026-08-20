@@ -21,12 +21,13 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
     async_migrate_device_identifier,
     async_migrate_unique_ids,
     async_remove_legacy_circulation_pump_switch,
+    duplicate_entity_issue_id,
 )
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
@@ -102,7 +103,7 @@ async def async_setup_entry(
             f"Unsupported controller model: {exception}"
         ) from exception
 
-    coordinator: StiebelEltronDataCoordinator
+    coordinator: AnyStiebelEltronDataCoordinator
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(
@@ -173,3 +174,4 @@ async def async_remove_entry(
 ) -> None:
     """Remove repairs that belong to a deleted config entry."""
     ir.async_delete_issue(hass, DOMAIN, _unsupported_controller_issue_id(entry))
+    ir.async_delete_issue(hass, DOMAIN, duplicate_entity_issue_id(entry))

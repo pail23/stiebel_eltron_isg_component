@@ -1,5 +1,6 @@
 """Config flow for the STIEBEL ELTRON integration."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, override
 
@@ -15,7 +16,11 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from modbus_connection import ModbusError
 from modbus_connection.pymodbus import connect_tcp
-from pystiebeleltron import StiebelEltronModbusError, get_controller_model
+from pystiebeleltron import (
+    StiebelEltronModbusError,
+    UnknownControllerModelError,
+    get_controller_model,
+)
 import voluptuous as vol
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
@@ -33,7 +38,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema({
 })
 
 
-async def check_controller_model(host: str, port: int) -> str | None:
+@dataclass(frozen=True)
+class ControllerCheckResult:
+    """Result of validating a controller during a config flow."""
+
+    error: str | None = None
+    description_placeholders: dict[str, str] | None = None
+
+
+async def check_controller_model(host: str, port: int) -> ControllerCheckResult:
     """Check if the controller model is valid."""
     try:
         connection = await connect_tcp(host, port=port)
@@ -41,16 +54,22 @@ async def check_controller_model(host: str, port: int) -> str | None:
             await get_controller_model(connection.for_unit(UNIT_ID))
         finally:
             await connection.close()
+    except UnknownControllerModelError as exception:
+        _LOGGER.debug("Unsupported controller model %s", exception.model_id)
+        return ControllerCheckResult(
+            "unsupported_controller",
+            {"model_id": str(exception.model_id)},
+        )
     except StiebelEltronModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
-        return "cannot_connect"
+        return ControllerCheckResult("cannot_connect")
     except ModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
-        return "cannot_connect"
+        return ControllerCheckResult("cannot_connect")
     except Exception:
         _LOGGER.exception("Unexpected exception")
-        return "unknown"
-    return None
+        return ControllerCheckResult("unknown")
+    return ControllerCheckResult()
 
 
 class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -69,9 +88,12 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
-        error = await check_controller_model(discovery_info.ip, DEFAULT_PORT)
-        if error is not None:
-            return self.async_abort(reason=error)
+        check_result = await check_controller_model(discovery_info.ip, DEFAULT_PORT)
+        if check_result.error is not None:
+            return self.async_abort(
+                reason=check_result.error,
+                description_placeholders=check_result.description_placeholders,
+            )
 
         self._discovered_host = discovery_info.ip
         self.context["title_placeholders"] = {CONF_HOST: discovery_info.ip}
@@ -99,23 +121,28 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             self._async_abort_entries_match({
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
             })
-            error = await check_controller_model(
+            check_result = await check_controller_model(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
-            if error is not None:
-                errors["base"] = error
+            if check_result.error is not None:
+                errors["base"] = check_result.error
+                description_placeholders = check_result.description_placeholders
             else:
                 return self.async_create_entry(title="Stiebel Eltron", data=user_input)
 
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_USER_DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )
 
     async def async_step_reconfigure(
@@ -125,16 +152,18 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._get_reconfigure_entry()
 
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] | None = None
         if user_input is not None:
             self._async_abort_entries_match({
                 CONF_HOST: user_input[CONF_HOST],
                 CONF_PORT: user_input[CONF_PORT],
             })
-            error = await check_controller_model(
+            check_result = await check_controller_model(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
-            if error is not None:
-                errors["base"] = error
+            if check_result.error is not None:
+                errors["base"] = check_result.error
+                description_placeholders = check_result.description_placeholders
             else:
                 return self.async_update_reload_and_abort(
                     config_entry,
@@ -147,7 +176,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, config_entry.data
+                STEP_USER_DATA_SCHEMA,
+                user_input if user_input is not None else config_entry.data,
             ),
             errors=errors,
+            description_placeholders=description_placeholders,
         )

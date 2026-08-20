@@ -15,9 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from modbus_connection import ModbusConnection, ModbusUnit
+from modbus_connection import ModbusConnection, ModbusError, ModbusUnit
 from modbus_connection.cli_helper import field_rows
-from pystiebeleltron import ControllerModel, ModbusError, StiebelEltronModbusError
+from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 
 from custom_components.stiebel_eltron_isg.const import (
     ATTR_MANUFACTURER,
@@ -27,7 +27,11 @@ from custom_components.stiebel_eltron_isg.const import (
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-type StiebelEltronConfigEntry = ConfigEntry[StiebelEltronDataCoordinator]
+# Entity accessors reach model-specific API attributes that the shared protocol
+# cannot express. Keep that erasure at the shared coordinator/config-entry
+# boundary while the coordinator's own interface and data remain typed.
+type AnyStiebelEltronDataCoordinator = StiebelEltronDataCoordinator[Any]
+type StiebelEltronConfigEntry = ConfigEntry[AnyStiebelEltronDataCoordinator]
 
 
 def _is_read_only_write_error(err: AttributeError, field: str) -> bool:
@@ -65,7 +69,9 @@ class StiebelEltronConnectionParams:
     connection: ModbusConnection
 
 
-class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
+class StiebelEltronDataCoordinator[T: StiebelEltronApi](
+    DataUpdateCoordinator[dict[str, float | int | None]]
+):
     """Data coordinator base class for stiebel eltron isg."""
 
     def __init__(
@@ -144,15 +150,15 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](DataUpdateCoordinator):
         # Fall back to the enum name for a clear, readable representation
         return f"other model ({self._model.name})"
 
-    def get_raw_data(self) -> dict:
+    def get_raw_data(self) -> dict[str, Any]:
         """Return the raw data from the heat pump."""
-        result: dict = {}
+        result: dict[str, Any] = {}
         for component in vars(self._api).values():
             component_result = dict(field_rows(component))
             result = {**result, **component_result}
         return result
 
-    async def _async_update_data(self) -> dict[Any, float | int | None]:
+    async def _async_update_data(self) -> dict[str, float | int | None]:
         """Time to update."""
         self._refresh_generation += 1
         generation = self._refresh_generation

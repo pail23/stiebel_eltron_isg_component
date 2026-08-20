@@ -30,11 +30,16 @@
         "error": {
             "already_configured": "The device is already configured.",
             "invalid_host_IP": "Invalid host address",
-            "cannot_connect": "Cannot connect to the device. Please check the host and port."
+            "cannot_connect": "Cannot connect to the device. Please check the host and port.",
+            "unknown": "Unexpected error",
+            "unsupported_controller": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Check for an integration update. If the model remains unsupported, report this model ID in the project issue tracker."
         },
         "abort": {
             "already_configured": "The device is already configured.",
-            "reconfigure_successful": "Connection details updated successfully."
+            "cannot_connect": "Cannot connect to the device. Please check the host and port.",
+            "reconfigure_successful": "Connection details updated successfully.",
+            "unknown": "Unexpected error",
+            "unsupported_controller": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Check for an integration update. If the model remains unsupported, report this model ID in the project issue tracker."
         }
     },
     "exceptions": {
@@ -49,6 +54,20 @@
         }
     },
     "issues": {
+        "duplicate_entities": {
+            "title": "Unavailable duplicate entities",
+            "fix_flow": {
+                "step": {
+                    "confirm": {
+                        "title": "Remove unavailable duplicate entities",
+                        "description": "The following {count} entries will be removed from the entity registry:\n\n{entities}\n\nBefore continuing, make sure no dashboard or automation references these entity IDs. Separate long-term statistics are not merged or deleted automatically."
+                    }
+                },
+                "abort": {
+                    "no_duplicates": "The duplicate entities have already been removed."
+                }
+            }
+        },
         "unsupported_controller": {
             "title": "Unsupported controller model",
             "description": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Update the integration and reload the entry. If it remains unavailable, support has not yet been released in both the device library and this integration; report the model ID in the project issue tracker."
@@ -284,6 +303,9 @@
             "consumed_cooling_prev_12m": {
                 "name": "Consumed Cooling Previous 12 Months"
             },
+            "consumed_cooling_total": {
+                "name": "Consumed Cooling Total"
+            },
             "consumed_water_heating_last_24h": {
                 "name": "Consumed Water Heating Last 24h"
             },
@@ -292,6 +314,33 @@
             },
             "consumed_water_heating_prev_12m": {
                 "name": "Consumed Water Heating Previous 12 Months"
+            },
+            "efficiency_heating_1_24_h": {
+                "name": "Efficiency Heating 1-24 h"
+            },
+            "efficiency_heating_1_12_m": {
+                "name": "Efficiency Heating 1-12 m"
+            },
+            "efficiency_heating_13_24_m": {
+                "name": "Efficiency Heating 13-24 m"
+            },
+            "efficiency_cooling_1_24_h": {
+                "name": "Efficiency Cooling 1-24 h"
+            },
+            "efficiency_cooling_1_12_m": {
+                "name": "Efficiency Cooling 1-12 m"
+            },
+            "efficiency_cooling_13_24_m": {
+                "name": "Efficiency Cooling 13-24 m"
+            },
+            "efficiency_dhw_1_24_h": {
+                "name": "Efficiency DHW 1-24 h"
+            },
+            "efficiency_dhw_1_12_m": {
+                "name": "Efficiency DHW 1-12 m"
+            },
+            "efficiency_dhw_13_24_m": {
+                "name": "Efficiency DHW 13-24 m"
             },
             "produced_electrical_booster_heating_total": {
                 "name": "Produced Electrical Booster Heating Total"
@@ -349,6 +398,9 @@
             },
             "compressor_heating_water": {
                 "name": "Compressor Heating Water"
+            },
+            "compressor_cooling": {
+                "name": "Compressor Cooling"
             },
             "cooling_runtime": {
                 "name": "Cooling Runtime"

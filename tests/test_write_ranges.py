@@ -1,5 +1,6 @@
 """Verify that entity write ranges are accepted by the library."""
 
+from difflib import unified_diff
 from functools import cache
 from pathlib import Path
 from types import SimpleNamespace
@@ -187,8 +188,18 @@ def test_write_range_inventory_matches_reviewed_snapshot() -> None:
     """Range changes must name the exact reviewed entity and endpoints."""
     cases = _write_range_cases()
     expected = _EXPECTED_WRITE_RANGE_CASES.read_text(encoding="utf-8").splitlines()
+    actual = sorted(case.id for case in cases)
+    diff = "\n".join(
+        unified_diff(
+            expected,
+            actual,
+            fromfile=_EXPECTED_WRITE_RANGE_CASES.name,
+            tofile="current write-range inventory",
+            lineterm="",
+        )
+    )
 
-    assert sorted(case.id for case in cases) == expected
+    assert not diff, f"write ranges changed; verify and update the snapshot:\n{diff}"
 
     bounds_unverified = {case.id for case in cases if case.values[0].writable is True}
     assert bounds_unverified == _BOUNDS_UNVERIFIED, (

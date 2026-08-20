@@ -21,6 +21,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.stiebel_eltron_isg import sensor as sensor_module
 from custom_components.stiebel_eltron_isg.const import (
     ACTIVE_ERROR,
+    COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_SPEED,
@@ -40,8 +41,18 @@ from custom_components.stiebel_eltron_isg.const import (
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
     DOMAIN,
+    EFFICIENCY_COOLING_1_12_M,
+    EFFICIENCY_COOLING_1_24_H,
+    EFFICIENCY_COOLING_13_24_M,
+    EFFICIENCY_DHW_1_12_M,
+    EFFICIENCY_DHW_1_24_H,
+    EFFICIENCY_DHW_13_24_M,
+    EFFICIENCY_HEATING_1_12_M,
+    EFFICIENCY_HEATING_1_24_H,
+    EFFICIENCY_HEATING_13_24_M,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
+    PRODUCED_COOLING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
@@ -168,6 +179,7 @@ def test_runtime_sensors_use_duration_device_class() -> None:
         ("wpm", SOLAR_RUNTIME),
         ("lwz", COMPRESSOR_HEATING),
         ("lwz", COMPRESSOR_HEATING_WATER),
+        ("lwz", COMPRESSOR_COOLING),
         ("lwz", ELECTRICAL_BOOSTER_HEATING),
         ("lwz", ELECTRICAL_BOOSTER_HEATING_WATER),
     }
@@ -308,6 +320,17 @@ def test_lwz_exposes_compressor_frequency() -> None:
     assert speed.modbus_register(api) == 31.0
     assert speed.native_unit_of_measurement == UnitOfFrequency.HERTZ
     assert speed.device_class == SensorDeviceClass.FREQUENCY
+
+
+def test_lwz_exposes_compressor_cooling_runtime_hours() -> None:
+    """LWZ compressor cooling runtime reads energy_data.compressor_cooling."""
+    api = SimpleNamespace(energy_data=SimpleNamespace(compressor_cooling=888))
+
+    cooling = _lwz(COMPRESSOR_COOLING)
+    assert cooling.modbus_register(api) == 888
+    assert cooling.native_unit_of_measurement == UnitOfTime.HOURS
+    assert cooling.device_class == SensorDeviceClass.DURATION
+    assert cooling.state_class == SensorStateClass.MEASUREMENT
 
 
 def test_wpm_exposes_power_consumption_statistics() -> None:
@@ -458,6 +481,7 @@ async def test_new_daily_energy_registry_entry_is_disabled(
 
 
 CUMULATIVE_ENERGY_KEYS = {
+    PRODUCED_COOLING_TOTAL,
     PRODUCED_HEATING,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_WATER_HEATING,
@@ -470,14 +494,21 @@ CUMULATIVE_ENERGY_KEYS = {
 
 
 @pytest.mark.parametrize(
-    "descriptions", [WPM_3I_SENSOR_TYPES, WPM_SENSOR_TYPES, LWZ_SENSOR_TYPES]
+    ("descriptions", "required_keys"),
+    [
+        (WPM_3I_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {PRODUCED_COOLING_TOTAL}),
+        (WPM_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS - {PRODUCED_COOLING_TOTAL}),
+        (LWZ_SENSOR_TYPES, CUMULATIVE_ENERGY_KEYS),
+    ],
 )
-def test_cumulative_energy_sensors_remain_total_increasing(descriptions) -> None:
+def test_cumulative_energy_sensors_remain_total_increasing(
+    descriptions, required_keys
+) -> None:
     """Cumulative alternatives remain suitable for long-term energy sums."""
     descriptions_by_key = {description.key: description for description in descriptions}
-    assert descriptions_by_key.keys() >= CUMULATIVE_ENERGY_KEYS
+    assert descriptions_by_key.keys() >= required_keys
 
-    for key in CUMULATIVE_ENERGY_KEYS:
+    for key in required_keys:
         assert descriptions_by_key[key].state_class == SensorStateClass.TOTAL_INCREASING
         assert descriptions_by_key[key].entity_registry_enabled_default is True
 
@@ -568,6 +599,53 @@ def test_lwz_solar_sensors_are_not_duplicates() -> None:
     assert values == expected
     # A duplicated accessor would collapse two of the four sensors.
     assert len(set(values.values())) == 4
+
+
+def test_lwz_exposes_cooling_total_energy() -> None:
+    """LWZ cooling total reads energy_data.hm_cooling_total as a cumulative kWh."""
+    api = SimpleNamespace(energy_data=SimpleNamespace(hm_cooling_total=345))
+
+    desc = _lwz(PRODUCED_COOLING_TOTAL)
+    assert desc.modbus_register(api) == 345
+    assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
+    assert desc.device_class == SensorDeviceClass.ENERGY
+    assert desc.state_class == SensorStateClass.TOTAL_INCREASING
+
+
+def test_lwz_exposes_efficiency_statistics() -> None:
+    """LWZ efficiency windows read the matching extended_energy_data fields."""
+    api = SimpleNamespace(
+        extended_energy_data=SimpleNamespace(
+            efficiency_heating_1_24_h=2.1,
+            efficiency_heating_1_12_m=3.2,
+            efficiency_heating_13_24_m=4.3,
+            efficiency_cooling_1_24_h=5.4,
+            efficiency_cooling_1_12_m=6.5,
+            efficiency_cooling_13_24_m=7.6,
+            efficiency_dhw_1_24_h=8.7,
+            efficiency_dhw_1_12_m=9.8,
+            efficiency_dhw_13_24_m=10.9,
+        )
+    )
+
+    expected = {
+        EFFICIENCY_HEATING_1_24_H: 2.1,
+        EFFICIENCY_HEATING_1_12_M: 3.2,
+        EFFICIENCY_HEATING_13_24_M: 4.3,
+        EFFICIENCY_COOLING_1_24_H: 5.4,
+        EFFICIENCY_COOLING_1_12_M: 6.5,
+        EFFICIENCY_COOLING_13_24_M: 7.6,
+        EFFICIENCY_DHW_1_24_H: 8.7,
+        EFFICIENCY_DHW_1_12_M: 9.8,
+        EFFICIENCY_DHW_13_24_M: 10.9,
+    }
+
+    for key, value in expected.items():
+        desc = _lwz(key)
+        assert desc.modbus_register(api) == value
+        assert desc.device_class is None
+        # TODO: Add this test once the values are verified to be correct.
+        # assert desc.state_class == SensorStateClass.MEASUREMENT
 
 
 def test_inverter_power_reads_the_measured_field() -> None:

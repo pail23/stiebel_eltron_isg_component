@@ -11,6 +11,7 @@ description list against the API class the coordinator really builds for that
 model, and check that no description list escapes that sweep.
 """
 
+from difflib import unified_diff
 from functools import cache
 from pathlib import Path
 from types import ModuleType
@@ -210,11 +211,18 @@ def _write_field_cases() -> list[Any]:
 def test_write_field_inventory_matches_reviewed_snapshot() -> None:
     """Write-field drift must identify every added or removed case."""
     expected = _EXPECTED_WRITE_FIELD_CASES.read_text(encoding="utf-8").splitlines()
-
-    assert sorted(case.id for case in _write_field_cases()) == expected, (
-        "write fields changed; verify the targets and update "
-        "tests/capability_write_fields.txt"
+    actual = sorted(case.id for case in _write_field_cases())
+    diff = "\n".join(
+        unified_diff(
+            expected,
+            actual,
+            fromfile=_EXPECTED_WRITE_FIELD_CASES.name,
+            tofile="current write-field inventory",
+            lineterm="",
+        )
     )
+
+    assert not diff, f"write fields changed; verify and update the snapshot:\n{diff}"
 
 
 def test_write_fields_have_components() -> None:

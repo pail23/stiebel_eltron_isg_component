@@ -7,6 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusError
+import pystiebeleltron
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 import pytest
 
@@ -27,6 +28,11 @@ from custom_components.stiebel_eltron_isg.sensor import (
 from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
     StiebelEltronModbusWPM3iDataCoordinator,
 )
+
+
+def test_library_modbus_error_is_the_transport_error() -> None:
+    """The direct transport import must catch the library's re-exported error."""
+    assert pystiebeleltron.ModbusError is ModbusError
 
 
 def _coordinator(api) -> StiebelEltronDataCoordinator:
