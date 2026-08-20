@@ -5,14 +5,15 @@ All platforms declare their entities as descriptions holding lambda accessors
 ``write_component_value`` writes to. A description used for a model whose API
 does not have that field breaks only at runtime: the accessor raises
 ``AttributeError`` (the coordinator only catches ``StiebelEltronModbusError``)
-and the write silently no-ops (``write_component_value`` guards with
-``hasattr``). The tests below therefore resolve every accessor and every write
-field of every model specific description list against the API class the
-coordinator really builds for that model, and check that no description list
-escapes that sweep.
+and the write raises a translated ``write_unsupported`` error. The tests below
+therefore resolve every accessor and every write field of every model specific
+description list against the API class the coordinator really builds for that
+model, and check that no description list escapes that sweep.
 """
 
+from difflib import unified_diff
 from functools import cache
+from pathlib import Path
 from types import ModuleType
 from typing import Any
 
@@ -63,6 +64,8 @@ _WRITE_FIELD_ATTRIBUTES = (
     "eco_target_temp_write_field",
     "comfort_target_temp_write_field",
 )
+
+_EXPECTED_WRITE_FIELD_CASES = Path(__file__).with_name("capability_write_fields.txt")
 
 # Every description list a platform hands to a model, with that model. Lists
 # used by more than one model appear once per model. Lists that only exist to
@@ -155,7 +158,7 @@ def _module_description_lists(module: ModuleType) -> list[tuple[str, list[Any]]]
 
 def _accessor_cases() -> list[Any]:
     """Return a param per accessor of every description, carrying its test id."""
-    cases = []
+    cases: list[Any] = []
     for list_name, model, descriptions in _DESCRIPTION_LISTS:
         for description in descriptions:
             for attribute in _ACCESSOR_ATTRIBUTES:
@@ -178,23 +181,63 @@ def _accessor_cases() -> list[Any]:
 
 def _write_field_cases() -> list[Any]:
     """Return a param per write field of every description, with its test id."""
-    cases = []
+    cases: list[Any] = []
     for list_name, model, descriptions in _DESCRIPTION_LISTS:
         for description in descriptions:
             component = getattr(description, "write_component", None)
+            write_fields = [
+                (attribute, field)
+                for attribute in _WRITE_FIELD_ATTRIBUTES
+                for field in [getattr(description, attribute, None)]
+                if field is not None
+            ]
             if component is None:
                 continue
             cases.extend(
                 pytest.param(
                     model,
                     component,
-                    getattr(description, attribute),
-                    id=f"{list_name}-{model}-{description.key}-{attribute}",
+                    field,
+                    id=(
+                        f"{list_name}-{model}-{description.key}-{attribute}"
+                        f"-{component}.{field}"
+                    ),
                 )
-                for attribute in _WRITE_FIELD_ATTRIBUTES
-                if getattr(description, attribute, None) is not None
+                for attribute, field in write_fields
             )
     return cases
+
+
+def test_write_field_inventory_matches_reviewed_snapshot() -> None:
+    """Write-field drift must identify every added or removed case."""
+    expected = _EXPECTED_WRITE_FIELD_CASES.read_text(encoding="utf-8").splitlines()
+    actual = sorted(case.id for case in _write_field_cases())
+    diff = "\n".join(
+        unified_diff(
+            expected,
+            actual,
+            fromfile=_EXPECTED_WRITE_FIELD_CASES.name,
+            tofile="current write-field inventory",
+            lineterm="",
+        )
+    )
+
+    assert not diff, f"write fields changed; verify and update the snapshot:\n{diff}"
+
+
+def test_write_fields_have_components() -> None:
+    """A write field without its owning component is an invalid contract."""
+    missing = {
+        f"{list_name}-{model}-{description.key}-{attribute}-{field}"
+        for list_name, model, descriptions in _DESCRIPTION_LISTS
+        for description in descriptions
+        if getattr(description, "write_component", None) is None
+        for attribute in _WRITE_FIELD_ATTRIBUTES
+        for field in [getattr(description, attribute, None)]
+        if field is not None
+    }
+
+    assert not missing, f"write fields without a write component: {sorted(missing)}"
 
 
 def test_number_type_sets_are_non_empty() -> None:
@@ -245,12 +288,20 @@ def test_description_accessor_resolves(model: str, accessor: Any) -> None:
 def test_description_write_field_resolves(
     model: str, component: str, field: str
 ) -> None:
-    """Every write field must exist on the component of the model using it."""
+    """Every write field must exist and be writable for the model using it."""
     component_object = getattr(_api(model), component, None)
 
     assert component_object is not None, f"{model} api has no component {component}"
     assert hasattr(component_object, field), (
         f"{type(component_object).__name__} has no field {field}"
+    )
+    field_descriptor = getattr(type(component_object), field, None)
+    assert field_descriptor is not None, (
+        f"{type(component_object).__name__}.{field} is not a field descriptor"
+    )
+    write_contract = getattr(field_descriptor, "writable", None)
+    assert write_contract is True or callable(write_contract), (
+        f"{type(component_object).__name__}.{field} has no supported write contract"
     )
 
 
