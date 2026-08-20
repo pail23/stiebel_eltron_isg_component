@@ -10,7 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
 from .const import OPERATION_MODE
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -127,7 +127,7 @@ class StiebelEltronISGSelectEntity(
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSelectEntityDescription,
     ):

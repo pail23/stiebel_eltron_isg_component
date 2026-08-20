@@ -21,7 +21,7 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
     async_migrate_device_identifier,
@@ -103,7 +103,7 @@ async def async_setup_entry(
             f"Unsupported controller model: {exception}"
         ) from exception
 
-    coordinator: StiebelEltronDataCoordinator
+    coordinator: AnyStiebelEltronDataCoordinator
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(

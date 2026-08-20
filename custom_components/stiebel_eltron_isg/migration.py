@@ -12,7 +12,7 @@ rename can change again.
 """
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -81,7 +81,7 @@ def _legacy_name(entry: StiebelEltronConfigEntry) -> str:
     instead of guessed. The title is the same fallback the setup code used for
     an entry without a configured name.
     """
-    return entry.data.get(CONF_NAME, entry.title)
+    return cast(str, entry.data.get(CONF_NAME, entry.title))
 
 
 def _legacy_prefixes(

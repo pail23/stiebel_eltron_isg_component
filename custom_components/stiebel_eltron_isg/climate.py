@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -336,7 +336,7 @@ class StiebelEltronISGClimateEntity(
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
@@ -459,7 +459,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
@@ -510,7 +510,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
