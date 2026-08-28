@@ -3,8 +3,8 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.modbus import async_get_temporary_unit, async_get_unit
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -16,7 +16,13 @@ from pystiebeleltron import (
     UnknownControllerModelError,
 )
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant_custom_component.common import (
+    MockConfigEntry,
+    MockModule,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 from custom_components.stiebel_eltron_isg.const import (
     CURRENT_POWER_CONSUMPTION,
@@ -41,6 +47,7 @@ async def test_async_setup_entry_success(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "modbus" in hass.config.components
 
 
 async def test_async_setup_entry_selects_wpm_3i_coordinator(
@@ -414,6 +421,53 @@ async def test_unload_keeps_connection_held_by_temporary_consumer(
         await hass.async_block_till_done()
         assert mock_modbus_connection.connected is True
 
+    assert mock_modbus_connection.connected is False
+
+
+async def test_shares_connection_with_another_config_entry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+    mock_modbus_connection_class: MagicMock,
+) -> None:
+    """Share one connection with another integration using the same device."""
+    params = ModbusTcpParams(host="1.1.1.1", port=502)
+    other_domain = "other_modbus_consumer"
+
+    class OtherConfigFlow(ConfigFlow):
+        """Stand in for another integration's config flow."""
+
+    async def async_setup_other_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        async_get_unit(hass, entry, params, UNIT_ID)
+        return True
+
+    async def async_unload_other_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        return True
+
+    mock_integration(
+        hass,
+        MockModule(
+            other_domain,
+            async_setup_entry=async_setup_other_entry,
+            async_unload_entry=async_unload_other_entry,
+        ),
+    )
+    mock_platform(hass, f"{other_domain}.config_flow")
+    other_entry = MockConfigEntry(domain=other_domain)
+    with mock_config_flow(other_domain, OtherConfigFlow):
+        other_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(other_entry.entry_id)
+
+        mock_config_entry.add_to_hass(hass)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        mock_modbus_connection_class.assert_called_once_with(params)
+
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_modbus_connection.connected is True
+
+        assert await hass.config_entries.async_unload(other_entry.entry_id)
+        await hass.async_block_till_done()
     assert mock_modbus_connection.connected is False
 
 
