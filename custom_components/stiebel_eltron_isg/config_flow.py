@@ -4,8 +4,11 @@ from dataclasses import dataclass
 import logging
 from typing import Any, override
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -14,8 +17,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from modbus_connection import ModbusError
-from modbus_connection.pymodbus import connect_tcp
+from modbus_connection import ModbusError, ModbusTcpParams
 from pystiebeleltron import (
     StiebelEltronModbusError,
     UnknownControllerModelError,
@@ -46,14 +48,17 @@ class ControllerCheckResult:
     description_placeholders: dict[str, str] | None = None
 
 
-async def check_controller_model(host: str, port: int) -> ControllerCheckResult:
+async def check_controller_model(
+    hass: HomeAssistant, host: str, port: int
+) -> ControllerCheckResult:
     """Check if the controller model is valid."""
     try:
-        connection = await connect_tcp(host, port=port)
-        try:
-            await get_controller_model(connection.for_unit(UNIT_ID))
-        finally:
-            await connection.close()
+        async with async_get_temporary_unit(
+            hass,
+            ModbusTcpParams(host=host, port=port),
+            UNIT_ID,
+        ) as unit:
+            await get_controller_model(unit)
     except UnknownControllerModelError as exception:
         _LOGGER.debug("Unsupported controller model %s", exception.model_id)
         return ControllerCheckResult(
@@ -63,7 +68,7 @@ async def check_controller_model(host: str, port: int) -> ControllerCheckResult:
     except StiebelEltronModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return ControllerCheckResult("cannot_connect")
-    except ModbusError:
+    except ModbusError, HomeAssistantError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return ControllerCheckResult("cannot_connect")
     except Exception:
@@ -88,7 +93,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
-        check_result = await check_controller_model(discovery_info.ip, DEFAULT_PORT)
+        check_result = await check_controller_model(
+            self.hass, discovery_info.ip, DEFAULT_PORT
+        )
         if check_result.error is not None:
             return self.async_abort(
                 reason=check_result.error,
@@ -128,7 +135,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: user_input[CONF_PORT],
             })
             check_result = await check_controller_model(
-                user_input[CONF_HOST], user_input[CONF_PORT]
+                self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
             )
             if check_result.error is not None:
                 errors["base"] = check_result.error
@@ -159,7 +166,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_PORT: user_input[CONF_PORT],
             })
             check_result = await check_controller_model(
-                user_input[CONF_HOST], user_input[CONF_PORT]
+                self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
             )
             if check_result.error is not None:
                 errors["base"] = check_result.error

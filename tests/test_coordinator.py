@@ -77,7 +77,6 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
         StiebelEltronConnectionParams(
             host="isg.local",
             model=ControllerModel.WPM_3,
-            connection=mock_modbus_connection,
         ),
     )
     entity = StiebelEltronISGSensor(
@@ -139,7 +138,6 @@ async def test_equal_data_refreshes_still_notify_entities(
         StiebelEltronConnectionParams(
             host="isg.local",
             model=ControllerModel.WPM_3,
-            connection=mock_modbus_connection,
         ),
     )
     listener = MagicMock()
@@ -154,41 +152,6 @@ async def test_equal_data_refreshes_still_notify_entities(
         assert listener.call_count == 2
     finally:
         remove_listener()
-
-
-def test_for_unit_uses_the_active_connection() -> None:
-    """Unit access must be delegated to the shared connection."""
-    coordinator = _coordinator(SimpleNamespace())
-    connection = MagicMock()
-    coordinator._connection = connection
-
-    assert coordinator._for_unit(1) is connection.for_unit.return_value
-    connection.for_unit.assert_called_once_with(1)
-
-
-def test_for_unit_rejects_a_missing_connection() -> None:
-    """Access without a connection must fail explicitly."""
-    coordinator = _coordinator(SimpleNamespace())
-    coordinator._connection = None
-
-    with pytest.raises(RuntimeError, match="Connection not established"):
-        coordinator._for_unit(1)
-
-
-@pytest.mark.parametrize(
-    ("connection", "expected"),
-    [
-        (None, False),
-        (SimpleNamespace(connected=False), False),
-        (SimpleNamespace(connected=True), True),
-    ],
-)
-def test_is_connected_reflects_the_connection(connection, expected: bool) -> None:
-    """Connection state must include the not-yet-connected case."""
-    coordinator = _coordinator(SimpleNamespace())
-    coordinator._connection = connection
-
-    assert coordinator.is_connected is expected
 
 
 def test_host_returns_the_configured_address() -> None:
@@ -468,7 +431,7 @@ def test_wpm_3i_coordinator_initializes_model_specific_api(
         hass,
         mock_config_entry,
         ControllerModel.WPM_3i,
-        mock_modbus_connection,
+        mock_modbus_connection.for_unit(1),
         "isg.local",
     )
 

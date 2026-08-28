@@ -6,8 +6,9 @@ from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from modbus_connection import ModbusError
+from modbus_connection import ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
     ControllerModel,
@@ -17,7 +18,7 @@ from pystiebeleltron import (
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.stiebel_eltron_isg.const import DOMAIN
+from custom_components.stiebel_eltron_isg.const import DOMAIN, UNIT_ID
 
 USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
 RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}
@@ -62,7 +63,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         pytest.param(
             "mock_get_controller_model", StiebelEltronModbusError, id="model_read"
         ),
-        pytest.param("mock_connect_tcp", ModbusError, id="connect"),
     ],
 )
 async def test_form_cannot_connect(
@@ -96,6 +96,27 @@ async def test_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_cannot_acquire_shared_connection(
+    hass: HomeAssistant,
+    mock_get_temporary_unit: MagicMock,
+) -> None:
+    """Test a conflict in Home Assistant's shared connection is reported."""
+    mock_get_temporary_unit.side_effect = HomeAssistantError(
+        "conflicting link settings"
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
 
 async def test_form_unknown_exception(
@@ -133,6 +154,7 @@ async def test_form_reports_unsupported_controller(
     hass: HomeAssistant,
     mock_get_controller_model: MagicMock,
     mock_modbus_connection: MockModbusConnection,
+    mock_get_temporary_unit: MagicMock,
 ) -> None:
     """Test the user form reports an unsupported controller and its model ID."""
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
@@ -149,7 +171,12 @@ async def test_form_reports_unsupported_controller(
     assert result["description_placeholders"] == {"model_id": "165"}
     assert_suggested_values(result, USER_INPUT)
     assert hass.config_entries.async_entries(DOMAIN) == []
-    assert mock_modbus_connection.connected is False
+    assert mock_modbus_connection.connected is True
+    mock_get_temporary_unit.assert_called_once_with(
+        hass,
+        ModbusTcpParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT]),
+        UNIT_ID,
+    )
 
     mock_get_controller_model.side_effect = None
     result = await hass.config_entries.flow.async_configure(

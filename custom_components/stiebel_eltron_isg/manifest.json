@@ -11,12 +11,16 @@
     }
   ],
   "documentation": "https://github.com/pail23/stiebel_eltron_isg_component",
+  "dependencies": [
+    "modbus"
+  ],
   "integration_type": "device",
   "iot_class": "local_polling",
   "issue_tracker": "https://github.com/pail23/stiebel_eltron_isg_component/issues",
   "loggers": [
-    "pymodbus",
-    "pystiebeleltron"
+    "modbus_connection",
+    "pystiebeleltron",
+    "tmodbus"
   ],
   "requirements": [
     "pystiebeleltron==0.7.0"

@@ -6,8 +6,9 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from modbus_connection import ModbusError, ModbusTimeoutError
+from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
     ControllerModel,
@@ -17,7 +18,11 @@ from pystiebeleltron import (
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.stiebel_eltron_isg.const import CURRENT_POWER_CONSUMPTION, DOMAIN
+from custom_components.stiebel_eltron_isg.const import (
+    CURRENT_POWER_CONSUMPTION,
+    DOMAIN,
+    UNIT_ID,
+)
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.migration import duplicate_entity_issue_id
 from custom_components.stiebel_eltron_isg.sensor import WPM_SENSOR_TYPES
@@ -129,7 +134,7 @@ async def test_inverter_power_is_created_for_wpmsystem_only(
 
 async def test_async_setup_entry_with_custom_port(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_get_unit: MagicMock,
 ) -> None:
     """Test setup with custom port."""
     config_entry = MockConfigEntry(
@@ -142,12 +147,17 @@ async def test_async_setup_entry_with_custom_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=5020)
+    mock_get_unit.assert_called_once_with(
+        hass,
+        config_entry,
+        ModbusTcpParams(host="192.168.1.100", port=5020),
+        UNIT_ID,
+    )
 
 
 async def test_async_setup_entry_without_port(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_get_unit: MagicMock,
 ) -> None:
     """Test setup without port (should use default)."""
     config_entry = MockConfigEntry(
@@ -160,16 +170,21 @@ async def test_async_setup_entry_without_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=502)
+    mock_get_unit.assert_called_once_with(
+        hass,
+        config_entry,
+        ModbusTcpParams(host="192.168.1.100", port=502),
+        UNIT_ID,
+    )
 
 
 async def test_async_setup_entry_cannot_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connect_tcp: AsyncMock,
+    mock_get_unit: MagicMock,
 ) -> None:
-    """Test setup retries when the connection cannot be opened."""
-    mock_connect_tcp.side_effect = ModbusTimeoutError("could not connect")
+    """Test setup retries when Home Assistant cannot provide the shared unit."""
+    mock_get_unit.side_effect = HomeAssistantError("conflicting link settings")
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -349,12 +364,12 @@ async def test_async_setup_entry_coordinator_update_fails(
     assert mock_modbus_connection.connected is False
 
 
-async def test_connection_lost_reloads_entry(
+async def test_connection_lost_does_not_reload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test a lost connection schedules a reload of the config entry."""
+    """Let Home Assistant's shared connection reconnect without entry reload."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -364,7 +379,7 @@ async def test_connection_lost_reloads_entry(
     ) as mock_schedule_reload:
         mock_modbus_connection.simulate_connection_lost()
 
-    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+    mock_schedule_reload.assert_not_called()
 
 
 async def test_unload_entry_closes_connection(

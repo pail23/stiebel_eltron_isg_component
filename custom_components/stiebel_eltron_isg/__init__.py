@@ -6,13 +6,17 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
+from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
-from modbus_connection import ModbusError
-from modbus_connection.pymodbus import connect_tcp
+from modbus_connection import ModbusTcpParams
 from pystiebeleltron import (
     ControllerModel,
     StiebelEltronModbusError,
@@ -85,12 +89,15 @@ async def async_setup_entry(
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
     try:
-        connection = await connect_tcp(host, port=port)
-    except ModbusError as exception:
-        raise ConfigEntryNotReady("Could not connect to device") from exception
-    entry.async_on_unload(connection.close)
-    try:
-        model = await get_controller_model(connection.for_unit(UNIT_ID))
+        unit = async_get_unit(
+            hass,
+            entry,
+            ModbusTcpParams(host=host, port=port),
+            UNIT_ID,
+        )
+        model = await get_controller_model(unit)
+    except HomeAssistantError as exception:
+        raise ConfigEntryNotReady("Could not acquire Modbus connection") from exception
     except StiebelEltronModbusError as exception:
         raise ConfigEntryNotReady("Could not read controller model") from exception
     except UnknownControllerModelError as exception:
@@ -107,7 +114,7 @@ async def async_setup_entry(
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(
-            hass, entry, model, connection, host
+            hass, entry, model, unit, host
         )
     elif model in (
         ControllerModel.WPMsystem,
@@ -115,7 +122,7 @@ async def async_setup_entry(
         ControllerModel.LWZ_R290,
     ):
         coordinator = StiebelEltronModbusWPMDataCoordinator(
-            hass, entry, model, connection, host
+            hass, entry, model, unit, host
         )
     elif model in (
         ControllerModel.LWZ,
@@ -125,7 +132,7 @@ async def async_setup_entry(
             hass,
             entry,
             model,
-            connection,
+            unit,
             host,
         )
     else:
@@ -148,12 +155,6 @@ async def async_setup_entry(
     entry.runtime_data = coordinator
 
     await coordinator.async_config_entry_first_refresh()
-
-    entry.async_on_unload(
-        connection.on_connection_lost(
-            lambda: hass.config_entries.async_schedule_reload(entry.entry_id)
-        )
-    )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

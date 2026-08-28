@@ -1,7 +1,8 @@
 """Common fixtures for the STIEBEL ELTRON tests."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from contextlib import asynccontextmanager
+from unittest.mock import MagicMock, PropertyMock, patch
 
 from homeassistant.const import CONF_HOST, CONF_PORT
 from modbus_connection.mock import MockModbusConnection
@@ -68,19 +69,36 @@ def mock_get_controller_model() -> Generator[MagicMock]:
 
 
 @pytest.fixture(autouse=True)
-def mock_connect_tcp(
+def mock_get_unit(
     mock_modbus_connection: MockModbusConnection,
-) -> Generator[AsyncMock]:
-    """Patch connect_tcp to return the in-memory mock connection."""
-    connect = AsyncMock(return_value=mock_modbus_connection)
-    with (
-        patch("custom_components.stiebel_eltron_isg.connect_tcp", new=connect),
-        patch(
-            "custom_components.stiebel_eltron_isg.config_flow.connect_tcp",
-            new=connect,
-        ),
+) -> Generator[MagicMock]:
+    """Patch Home Assistant unit acquisition for config entry setup."""
+
+    def get_unit(hass, entry, params, unit_id):
+        entry.async_on_unload(mock_modbus_connection.close)
+        return mock_modbus_connection.for_unit(unit_id)
+
+    getter = MagicMock(side_effect=get_unit)
+    with patch("custom_components.stiebel_eltron_isg.async_get_unit", new=getter):
+        yield getter
+
+
+@pytest.fixture(autouse=True)
+def mock_get_temporary_unit(
+    mock_modbus_connection: MockModbusConnection,
+) -> Generator[MagicMock]:
+    """Patch temporary unit acquisition for config-flow probes."""
+
+    @asynccontextmanager
+    async def get_temporary_unit(hass, params, unit_id):
+        yield mock_modbus_connection.for_unit(unit_id)
+
+    getter = MagicMock(side_effect=get_temporary_unit)
+    with patch(
+        "custom_components.stiebel_eltron_isg.config_flow.async_get_temporary_unit",
+        new=getter,
     ):
-        yield connect
+        yield getter
 
 
 @pytest.fixture(autouse=True)
