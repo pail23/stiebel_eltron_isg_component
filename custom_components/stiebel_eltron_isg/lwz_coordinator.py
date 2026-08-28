@@ -23,7 +23,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class StiebelEltronModbusLWZDataCoordinator(
     StiebelEltronDataCoordinator[LwzStiebelEltronAPI]
 ):
-    """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
+    """Coordinate an LWZ or LWA controller over a shared Modbus unit."""
 
     def __init__(
         self,

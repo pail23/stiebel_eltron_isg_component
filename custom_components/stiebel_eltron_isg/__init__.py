@@ -95,9 +95,11 @@ async def async_setup_entry(
             ModbusTcpParams(host=host, port=port),
             UNIT_ID,
         )
-        model = await get_controller_model(unit)
     except HomeAssistantError as exception:
-        raise ConfigEntryNotReady("Could not acquire Modbus connection") from exception
+        raise ConfigEntryError(str(exception)) from exception
+
+    try:
+        model = await get_controller_model(unit)
     except StiebelEltronModbusError as exception:
         raise ConfigEntryNotReady("Could not read controller model") from exception
     except UnknownControllerModelError as exception:

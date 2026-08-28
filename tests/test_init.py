@@ -3,10 +3,10 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
@@ -134,7 +134,7 @@ async def test_inverter_power_is_created_for_wpmsystem_only(
 
 async def test_async_setup_entry_with_custom_port(
     hass: HomeAssistant,
-    mock_get_unit: MagicMock,
+    mock_modbus_connection_class: MagicMock,
 ) -> None:
     """Test setup with custom port."""
     config_entry = MockConfigEntry(
@@ -147,17 +147,14 @@ async def test_async_setup_entry_with_custom_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_get_unit.assert_called_once_with(
-        hass,
-        config_entry,
-        ModbusTcpParams(host="192.168.1.100", port=5020),
-        UNIT_ID,
+    mock_modbus_connection_class.assert_called_once_with(
+        ModbusTcpParams(host="192.168.1.100", port=5020)
     )
 
 
 async def test_async_setup_entry_without_port(
     hass: HomeAssistant,
-    mock_get_unit: MagicMock,
+    mock_modbus_connection_class: MagicMock,
 ) -> None:
     """Test setup without port (should use default)."""
     config_entry = MockConfigEntry(
@@ -170,27 +167,27 @@ async def test_async_setup_entry_without_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_get_unit.assert_called_once_with(
-        hass,
-        config_entry,
-        ModbusTcpParams(host="192.168.1.100", port=502),
-        UNIT_ID,
+    mock_modbus_connection_class.assert_called_once_with(
+        ModbusTcpParams(host="192.168.1.100", port=502)
     )
 
 
-async def test_async_setup_entry_cannot_connect(
+async def test_async_setup_entry_conflicting_link_settings(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_unit: MagicMock,
 ) -> None:
-    """Test setup retries when Home Assistant cannot provide the shared unit."""
-    mock_get_unit.side_effect = HomeAssistantError("conflicting link settings")
-    mock_config_entry.add_to_hass(hass)
+    """Test setup fails permanently for incompatible shared link settings."""
+    async with async_get_temporary_unit(
+        hass,
+        ModbusTcpParams(host="1.1.1.1", port=502, framer="rtu"),
+        UNIT_ID,
+    ):
+        mock_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert result is False
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert (
         ir.async_get(hass).async_get_issue(
             DOMAIN, f"unsupported_controller_{mock_config_entry.entry_id}"
@@ -397,6 +394,26 @@ async def test_unload_entry_closes_connection(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert mock_modbus_connection.connected is False
+
+
+async def test_unload_keeps_connection_held_by_temporary_consumer(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_connection: MockModbusConnection,
+    mock_modbus_connection_class: MagicMock,
+) -> None:
+    """Keep a shared connection open until its temporary hold exits."""
+    params = ModbusTcpParams(host="1.1.1.1", port=502)
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_modbus_connection_class.assert_called_once_with(params)
+
+    async with async_get_temporary_unit(hass, params, UNIT_ID):
+        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert mock_modbus_connection.connected is True
+
     assert mock_modbus_connection.connected is False
 
 

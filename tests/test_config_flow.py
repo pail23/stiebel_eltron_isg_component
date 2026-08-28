@@ -2,11 +2,11 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from modbus_connection import ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
@@ -100,20 +100,23 @@ async def test_form_cannot_connect(
 
 async def test_form_cannot_acquire_shared_connection(
     hass: HomeAssistant,
-    mock_get_temporary_unit: MagicMock,
 ) -> None:
     """Test a conflict in Home Assistant's shared connection is reported."""
-    mock_get_temporary_unit.side_effect = HomeAssistantError(
-        "conflicting link settings"
-    )
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
+    async with async_get_temporary_unit(
+        hass,
+        ModbusTcpParams(
+            host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT], framer="rtu"
+        ),
+        UNIT_ID,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
 
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        USER_INPUT,
-    )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
@@ -154,7 +157,7 @@ async def test_form_reports_unsupported_controller(
     hass: HomeAssistant,
     mock_get_controller_model: MagicMock,
     mock_modbus_connection: MockModbusConnection,
-    mock_get_temporary_unit: MagicMock,
+    mock_modbus_connection_class: MagicMock,
 ) -> None:
     """Test the user form reports an unsupported controller and its model ID."""
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
@@ -171,11 +174,9 @@ async def test_form_reports_unsupported_controller(
     assert result["description_placeholders"] == {"model_id": "165"}
     assert_suggested_values(result, USER_INPUT)
     assert hass.config_entries.async_entries(DOMAIN) == []
-    assert mock_modbus_connection.connected is True
-    mock_get_temporary_unit.assert_called_once_with(
-        hass,
-        ModbusTcpParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT]),
-        UNIT_ID,
+    assert mock_modbus_connection.connected is False
+    mock_modbus_connection_class.assert_called_once_with(
+        ModbusTcpParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT])
     )
 
     mock_get_controller_model.side_effect = None
