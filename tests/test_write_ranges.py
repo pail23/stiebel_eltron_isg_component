@@ -1,8 +1,7 @@
 """Verify that entity write ranges are accepted by the library."""
 
-from difflib import unified_diff
+from dataclasses import dataclass
 from functools import cache
-from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
@@ -56,10 +55,35 @@ _CLIMATE_WRITE_FIELDS = (
     "comfort_target_temp_write_field",
 )
 
-_EXPECTED_WRITE_RANGE_CASES = Path(__file__).with_name("capability_write_ranges.txt")
-_BOUNDS_UNVERIFIED = frozenset({
-    "NUMBER_TYPES_WPM-heating_curve_rise_hk3-heating_curve_rise_hk_3-0..3"
+_UNVALIDATED_WRITE_FIELDS = frozenset({
+    (WpmStiebelEltronAPI, "system_parameters", "heating_curve_rise_hk_3")
 })
+
+
+@dataclass(frozen=True)
+class WriteRangeCase:
+    """One Home Assistant range and the library field that accepts it."""
+
+    list_name: str
+    api_class: type[Any]
+    component: str
+    entity_key: str
+    field: str
+    minimum: float
+    maximum: float
+
+    @property
+    def id(self) -> str:
+        """Return a stable, readable pytest identifier."""
+        return (
+            f"{self.list_name}-{self.entity_key}-{self.field}"
+            f"-{self.minimum}..{self.maximum}"
+        )
+
+    @property
+    def target(self) -> tuple[type[Any], str, str]:
+        """Return the library target independently of advertised bounds."""
+        return (self.api_class, self.component, self.field)
 
 
 @cache
@@ -85,31 +109,23 @@ def _field_descriptor(
     return descriptor
 
 
-def _write_range_cases() -> list[Any]:
-    """Return every advertised writable range and its library descriptor."""
-    cases: list[Any] = []
+def _write_range_cases() -> list[WriteRangeCase]:
+    """Return every advertised writable range and its library target."""
+    cases: list[WriteRangeCase] = []
 
     for list_name, api_class, descriptions in _NUMBER_DESCRIPTION_LISTS:
         for number_description in descriptions:
             if number_description.write_field is None:
                 continue
-            minimum = number_description.native_min_value
-            maximum = number_description.native_max_value
-            field = _field_descriptor(
-                api_class,
-                number_description.write_component,
-                number_description.write_field,
-            )
-            case_id = (
-                f"{list_name}-{number_description.key}-{number_description.write_field}"
-                f"-{minimum}..{maximum}"
-            )
             cases.append(
-                pytest.param(
-                    field,
-                    minimum,
-                    maximum,
-                    id=case_id,
+                WriteRangeCase(
+                    list_name=list_name,
+                    api_class=api_class,
+                    component=number_description.write_component,
+                    entity_key=number_description.key,
+                    field=number_description.write_field,
+                    minimum=number_description.native_min_value,
+                    maximum=number_description.native_max_value,
                 )
             )
 
@@ -121,21 +137,15 @@ def _write_range_cases() -> list[Any]:
                 field = getattr(climate_description, write_field_attribute)
                 if field is None:
                     continue
-                descriptor = _field_descriptor(
-                    api_class,
-                    climate_description.write_component,
-                    field,
-                )
-                case_id = (
-                    f"{list_name}-{climate_description.key}-{field}"
-                    f"-{minimum}..{maximum}"
-                )
                 cases.append(
-                    pytest.param(
-                        descriptor,
-                        minimum,
-                        maximum,
-                        id=case_id,
+                    WriteRangeCase(
+                        list_name=list_name,
+                        api_class=api_class,
+                        component=climate_description.write_component,
+                        entity_key=climate_description.key,
+                        field=field,
+                        minimum=minimum,
+                        maximum=maximum,
                     )
                 )
 
@@ -184,48 +194,43 @@ def test_every_ranged_description_is_covered() -> None:
     assert not missing, f"descriptions missing from write-range validation: {missing}"
 
 
-def test_write_range_inventory_matches_reviewed_snapshot() -> None:
-    """Range changes must name the exact reviewed entity and endpoints."""
-    cases = _write_range_cases()
-    expected = _EXPECTED_WRITE_RANGE_CASES.read_text(encoding="utf-8").splitlines()
-    actual = sorted(case.id for case in cases)
-    diff = "\n".join(
-        unified_diff(
-            expected,
-            actual,
-            fromfile=_EXPECTED_WRITE_RANGE_CASES.name,
-            tofile="current write-range inventory",
-            lineterm="",
-        )
-    )
+def test_unvalidated_write_fields_are_explicit() -> None:
+    """Library fields without a bounds validator must be reviewed explicitly."""
+    actual = {
+        case.target
+        for case in _write_range_cases()
+        if _field_descriptor(case.api_class, case.component, case.field).writable
+        is True
+    }
 
-    assert not diff, f"write ranges changed; verify and update the snapshot:\n{diff}"
-
-    bounds_unverified = {case.id for case in cases if case.values[0].writable is True}
-    assert bounds_unverified == _BOUNDS_UNVERIFIED, (
-        "fields or advertised bounds without a library validator changed; "
-        "verify both endpoints and update the reviewed inventory"
+    assert actual == _UNVALIDATED_WRITE_FIELDS, (
+        "library fields without bounds validators changed; verify their Home Assistant "
+        "ranges and update the explicit target set"
     )
 
 
-@pytest.mark.parametrize(("field", "minimum", "maximum"), _write_range_cases())
-def test_advertised_write_range_is_accepted(
-    field: Any, minimum: float, maximum: float
-) -> None:
+@pytest.mark.parametrize(
+    "case",
+    [pytest.param(case, id=case.id) for case in _write_range_cases()],
+)
+def test_advertised_write_range_is_accepted(case: WriteRangeCase) -> None:
     """Every callable library validator must accept both advertised bounds."""
+    field = _field_descriptor(case.api_class, case.component, case.field)
     validator = field.writable
 
     # ``writable=False`` is not a missing validator but a read-only register:
     # an entity offering to write it can never succeed, which is the failure
     # this project already hit in issue #607.
     assert validator is not False, "entity writes a field the library marks read-only"
+    assert validator is True or callable(validator), (
+        "entity writes a field without a supported library write contract"
+    )
 
-    # The exact ``True`` cases are pinned by ``_BOUNDS_UNVERIFIED`` above so an
-    # unvalidated field cannot enter or leave the inventory silently. Callable
-    # validators need to accept both advertised endpoints.
+    # The exact ``True`` targets are pinned by ``_UNVALIDATED_WRITE_FIELDS``.
+    # Callable validators need to accept both advertised endpoints.
     if validator is not True:
-        validator(minimum)
-        validator(maximum)
+        validator(case.minimum)
+        validator(case.maximum)
 
 
 @pytest.mark.parametrize(

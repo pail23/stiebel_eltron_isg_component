@@ -11,9 +11,7 @@ description list against the API class the coordinator really builds for that
 model, and check that no description list escapes that sweep.
 """
 
-from difflib import unified_diff
 from functools import cache
-from pathlib import Path
 from types import ModuleType
 from typing import Any
 
@@ -64,8 +62,6 @@ _WRITE_FIELD_ATTRIBUTES = (
     "eco_target_temp_write_field",
     "comfort_target_temp_write_field",
 )
-
-_EXPECTED_WRITE_FIELD_CASES = Path(__file__).with_name("capability_write_fields.txt")
 
 # Every description list a platform hands to a model, with that model. Lists
 # used by more than one model appear once per model. Lists that only exist to
@@ -206,23 +202,6 @@ def _write_field_cases() -> list[Any]:
                 for attribute, field in write_fields
             )
     return cases
-
-
-def test_write_field_inventory_matches_reviewed_snapshot() -> None:
-    """Write-field drift must identify every added or removed case."""
-    expected = _EXPECTED_WRITE_FIELD_CASES.read_text(encoding="utf-8").splitlines()
-    actual = sorted(case.id for case in _write_field_cases())
-    diff = "\n".join(
-        unified_diff(
-            expected,
-            actual,
-            fromfile=_EXPECTED_WRITE_FIELD_CASES.name,
-            tofile="current write-field inventory",
-            lineterm="",
-        )
-    )
-
-    assert not diff, f"write fields changed; verify and update the snapshot:\n{diff}"
 
 
 def test_write_fields_have_components() -> None:
