@@ -230,14 +230,18 @@ def async_migrate_device_identifier(
     left behind on an empty predecessor.
     """
     registry = dr.async_get(hass)
-    legacy = registry.async_get_device(identifiers={(DOMAIN, _legacy_name(entry))})
+    legacy = _async_get_device_by_identifier(
+        registry, (DOMAIN, _legacy_name(entry)), entry.entry_id
+    )
     if legacy is None or entry.entry_id not in legacy.config_entries:
         # Nothing to migrate, or the name belongs to a second installation that
-        # happens to be called the same. Identifiers are global, so that has to
-        # be checked rather than assumed.
+        # happens to be called the same. Before Home Assistant 2026.8 identifiers
+        # are global, so ownership has to be checked rather than assumed.
         return
 
-    replacement = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    replacement = _async_get_device_by_identifier(
+        registry, (DOMAIN, entry.entry_id), entry.entry_id
+    )
     if replacement is not None and replacement.config_entries != {entry.entry_id}:
         # Nothing here creates a device that another config entry can share, so
         # this should not happen. If it ever does, leaving both devices alone is
@@ -258,6 +262,23 @@ def async_migrate_device_identifier(
 
     registry.async_update_device(legacy.id, new_identifiers={(DOMAIN, entry.entry_id)})
     _LOGGER.info("Migrated the device identifier of %s", legacy.name)
+
+
+@callback
+def _async_get_device_by_identifier(
+    registry: dr.DeviceRegistry,
+    identifier: tuple[str, str],
+    config_entry_id: str,
+) -> dr.DeviceEntry | None:
+    """Look up one entry's device across supported Home Assistant versions."""
+    # Remove this compatibility helper once the minimum supported Home Assistant
+    # version provides the config-entry-scoped lookup.
+    if hasattr(registry, "async_get_device_by_identifier"):
+        return registry.async_get_device_by_identifier(identifier, config_entry_id)
+
+    # Home Assistant before 2026.8 only has the global identifier lookup. The
+    # caller still verifies ownership before changing the returned device.
+    return registry.async_get_device(identifiers={identifier})
 
 
 @callback
