@@ -43,6 +43,17 @@ class _LegacyDeviceRegistry:
         return self.device
 
 
+def _get_device_by_identifier(
+    registry: dr.DeviceRegistry,
+    identifier: tuple[str, str],
+    config_entry_id: str,
+) -> dr.DeviceEntry | None:
+    """Look up a test device across supported Home Assistant versions."""
+    if hasattr(registry, "async_get_device_by_identifier"):
+        return registry.async_get_device_by_identifier(identifier, config_entry_id)
+    return registry.async_get_device(identifiers={identifier})
+
+
 @pytest.fixture
 def config_entry_with_name() -> MockConfigEntry:
     """Return an entry as it was created before 2026.7, with a configured name."""
@@ -621,8 +632,10 @@ async def test_a_whole_installation_keeps_every_entity_id(
             entity_id,
             new_unique_id=legacy_prefix + unique_id.removeprefix(target_prefix),
         )
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+    device = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     device_registry.async_update_device(
         device.id, new_identifiers={(DOMAIN, "My Heatpump")}
@@ -652,8 +665,10 @@ async def test_a_whole_installation_keeps_every_entity_id(
     }
     assert after == provided | stale
     assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+        _get_device_by_identifier(
+            device_registry,
+            (DOMAIN, config_entry_with_name.entry_id),
+            config_entry_with_name.entry_id,
         ).id
         == device.id
     )
@@ -688,16 +703,18 @@ async def test_the_device_is_renamed_rather_than_replaced(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    migrated = device_registry.async_get_device_by_identifier(
-        (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+    migrated = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert migrated is not None
     assert migrated.id == legacy.id
     assert migrated.name_by_user == "Waermepumpe Keller"
     # No second device is left behind.
     assert (
-        device_registry.async_get_device_by_identifier(
-            (DOMAIN, "My Heatpump"), config_entry_with_name.entry_id
+        _get_device_by_identifier(
+            device_registry, (DOMAIN, "My Heatpump"), config_entry_with_name.entry_id
         )
         is None
     )
@@ -744,8 +761,10 @@ async def test_a_device_of_another_entry_with_the_same_name_is_left_alone(
     assert still_theirs.config_entries == {other_entry.entry_id}
     assert (DOMAIN, config_entry_with_name.entry_id) not in still_theirs.identifiers
     # Our own entry got a device of its own rather than adopting theirs.
-    ours = device_registry.async_get_device_by_identifier(
-        (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+    ours = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert ours is not None
     assert ours.id != foreign.id
@@ -847,8 +866,10 @@ async def test_labels_of_the_replacement_device_are_kept(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    restored = device_registry.async_get_device_by_identifier(
-        (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+    restored = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert restored.id == legacy.id
     assert restored.labels == {"keller", "waermepumpe"}
@@ -881,8 +902,10 @@ async def test_a_disabled_replacement_device_does_not_disable_the_original(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    restored = device_registry.async_get_device_by_identifier(
-        (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+    restored = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert restored.id == legacy.id
     assert restored.disabled_by is None
@@ -1008,8 +1031,10 @@ async def test_an_area_set_after_the_update_is_carried_over(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    restored = device_registry.async_get_device_by_identifier(
-        (DOMAIN, config_entry_with_name.entry_id), config_entry_with_name.entry_id
+    restored = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert restored.id == legacy.id
     assert restored.area_id == "heizungskeller"
