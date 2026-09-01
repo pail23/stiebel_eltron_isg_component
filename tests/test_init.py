@@ -207,6 +207,7 @@ async def test_async_setup_entry_modbus_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
 ) -> None:
     """Test setup retries when reading the controller model fails."""
     mock_config_entry.add_to_hass(hass)
@@ -222,6 +223,7 @@ async def test_async_setup_entry_modbus_error(
         )
         is None
     )
+    assert mock_modbus_connection.connected is False
 
 
 async def test_async_setup_entry_unknown_model(
@@ -368,22 +370,36 @@ async def test_async_setup_entry_coordinator_update_fails(
     assert mock_modbus_connection.connected is False
 
 
-async def test_connection_lost_does_not_reload_entry(
+async def test_connection_lost_reconnects_without_entry_reload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_connection: MockModbusConnection,
+    mock_wpm_api: MagicMock,
 ) -> None:
-    """Let Home Assistant's shared connection reconnect without entry reload."""
+    """Reconnect on the next update without reloading the config entry."""
+    unit = mock_modbus_connection.for_unit(UNIT_ID)
+    unit.load_raw({"input": {0: 42}})
+
+    async def update_through_shared_unit() -> None:
+        assert await unit.read_input_registers(0, 1) == [42]
+
+    mock_wpm_api.async_update.side_effect = update_through_shared_unit
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
         mock_modbus_connection.simulate_connection_lost()
+        assert mock_modbus_connection.connected is False
+
+        await mock_config_entry.runtime_data.async_refresh()
 
     mock_schedule_reload.assert_not_called()
+    assert mock_config_entry.runtime_data.last_update_success is True
+    assert mock_modbus_connection.connected is True
+    assert len(unit.read_events) == 2
 
 
 async def test_unload_entry_closes_connection(
