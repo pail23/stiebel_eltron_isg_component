@@ -6,12 +6,12 @@ readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
     "colorlog>=6.12.0",
-    # Mirror HA 2026.9's Modbus requirements for shared-unit tests.
+    # Add HA 2026.9's shared Modbus backend for integration tests.
     "modbus-connection[tmodbus]==4.10.0",
     "pytest-homeassistant-custom-component>=0.13.359",
     "pystiebeleltron==0.7.0",
     "pymodbus>=3.15.0",
-    "tmodbus==0.6.1",
+    "tmodbus==0.6.2",
 ]
 
 [dependency-groups]
