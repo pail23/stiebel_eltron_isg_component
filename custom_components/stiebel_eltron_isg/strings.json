@@ -31,12 +31,14 @@
             "already_configured": "Device is already configured",
             "invalid_host_IP": "Invalid host IP",
             "cannot_connect": "Cannot connect to the device. Please check the host and port.",
+            "link_conflict": "Another integration is already using this Modbus device with incompatible connection settings. Reconfigure that integration or remove the conflicting connection.",
             "unknown": "Unexpected error",
             "unsupported_controller": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Check for an integration update. If the model remains unsupported, report this model ID in the project issue tracker."
         },
         "abort": {
             "already_configured": "Device is already configured",
             "cannot_connect": "Cannot connect to the device. Please check the host and port.",
+            "link_conflict": "Another integration is already using this Modbus device with incompatible connection settings. Reconfigure that integration or remove the conflicting connection.",
             "reconfigure_successful": "Connection details updated successfully.",
             "unknown": "Unexpected error",
             "unsupported_controller": "The ISG reports controller model ID {model_id}, which this version of the integration does not support. Check for an integration update. If the model remains unsupported, report this model ID in the project issue tracker."

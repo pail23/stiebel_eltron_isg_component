@@ -65,7 +65,12 @@ async def check_controller_model(
             "unsupported_controller",
             {"model_id": str(exception.model_id)},
         )
-    except StiebelEltronModbusError, ModbusError, HomeAssistantError:
+    except HomeAssistantError:
+        _LOGGER.debug(
+            "Conflicting Home Assistant Modbus connection settings", exc_info=True
+        )
+        return ControllerCheckResult("link_conflict")
+    except StiebelEltronModbusError, ModbusError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return ControllerCheckResult("cannot_connect")
     except Exception:

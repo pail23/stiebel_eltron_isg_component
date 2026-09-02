@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
+from modbus_connection.tmodbus import ModbusConnection as TmodbusConnection
 from pystiebeleltron import (
     ControllerModel,
     StiebelEltronModbusError,
@@ -400,6 +401,41 @@ async def test_connection_lost_reconnects_without_entry_reload(
     assert mock_config_entry.runtime_data.last_update_success is True
     assert mock_modbus_connection.connected is True
     assert len(unit.read_events) == 2
+
+
+async def test_tmodbus_unit_reconnects_after_connection_loss() -> None:
+    """Keep the backend reconnect contract the integration relies on."""
+    connection = TmodbusConnection(ModbusTcpParams(host="1.1.1.1", port=502))
+    first_unit_client = MagicMock()
+    first_unit_client.read_input_registers = AsyncMock(return_value=[41])
+    first_client = MagicMock()
+    first_client.for_unit_id.return_value = first_unit_client
+    first_client.disconnect = AsyncMock()
+
+    second_unit_client = MagicMock()
+    second_unit_client.read_input_registers = AsyncMock(return_value=[42])
+    second_client = MagicMock()
+    second_client.for_unit_id.return_value = second_unit_client
+    second_client.disconnect = AsyncMock()
+
+    with patch.object(
+        connection,
+        "_connect_client",
+        AsyncMock(side_effect=[first_client, second_client]),
+    ) as connect_client:
+        unit = connection.for_unit(UNIT_ID)
+        assert await unit.read_input_registers(0, 1) == [41]
+
+        connection._on_connection_lost(ConnectionError())
+        assert connection.connected is False
+
+        assert await unit.read_input_registers(0, 1) == [42]
+        assert connect_client.await_count == 2
+
+        await connection.close()
+
+    second_client.disconnect.assert_awaited_once()
+    first_client.disconnect.assert_not_awaited()
 
 
 async def test_unload_entry_closes_connection(

@@ -119,7 +119,8 @@ async def test_form_cannot_acquire_shared_connection(
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["errors"] == {"base": "link_conflict"}
+    assert_suggested_values(result, USER_INPUT)
 
 
 async def test_form_unknown_exception(
@@ -373,6 +374,24 @@ async def test_dhcp_aborts_for_unsupported_controller(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_controller"
     assert result["description_placeholders"] == {"model_id": "165"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+async def test_dhcp_aborts_for_shared_connection_conflict(
+    hass: HomeAssistant,
+) -> None:
+    """Test DHCP discovery reports incompatible shared link settings."""
+    async with async_get_temporary_unit(
+        hass,
+        ModbusTcpParams(host=DHCP_DISCOVERY.ip, port=502, framer="rtu"),
+        UNIT_ID,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "link_conflict"
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 
