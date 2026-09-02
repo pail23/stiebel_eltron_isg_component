@@ -7,6 +7,8 @@ import pytest
 
 from custom_components.stiebel_eltron_isg.const import (
     AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+    COMFORT_WATER_TEMPERATURE_TARGET,
+    ECO_WATER_TEMPERATURE_TARGET,
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_LEVEL_MANUAL,
     FAN_LEVEL_PARTY,
@@ -260,3 +262,21 @@ def test_lwz_fan_level_numbers_resolve_against_the_lwz_api() -> None:
         assert description.write_field == field
         assert (description.native_min_value, description.native_max_value) == (0, 3)
         assert description.native_step == 1
+
+
+@pytest.mark.parametrize(
+    ("key", "field"),
+    [
+        (COMFORT_WATER_TEMPERATURE_TARGET, "dhw_set_day"),
+        (ECO_WATER_TEMPERATURE_TARGET, "dhw_set_night"),
+    ],
+)
+def test_lwz_dhw_numbers_allow_the_library_range(key: str, field: str) -> None:
+    """LWZ DHW entities must expose the range accepted by the library."""
+    by_key = {description.key: description for description in NUMBER_TYPES_LWZ}
+    description = by_key[key]
+    api = SimpleNamespace(system_parameters=LwzSystemParameters)
+
+    assert description.modbus_register(api) is getattr(LwzSystemParameters, field)
+    assert description.write_field == field
+    assert (description.native_min_value, description.native_max_value) == (10, 65)
