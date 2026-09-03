@@ -7,11 +7,10 @@ https://github.com/pail23/stiebel_eltron_isg
 import logging
 
 from homeassistant.core import HomeAssistant
-from modbus_connection import ModbusConnection
+from modbus_connection import ModbusUnit
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 
-from .const import UNIT_ID
 from .coordinator import (
     StiebelEltronConfigEntry,
     StiebelEltronConnectionParams,
@@ -24,14 +23,14 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 class StiebelEltronModbusLWZDataCoordinator(
     StiebelEltronDataCoordinator[LwzStiebelEltronAPI]
 ):
-    """Thread safe wrapper class for pymodbus. Communicates with LWZ or LWA controller models."""
+    """Coordinate an LWZ or LWA controller over a shared Modbus unit."""
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: StiebelEltronConfigEntry,
         model: ControllerModel,
-        connection: ModbusConnection,
+        unit: ModbusUnit,
         host: str,
     ) -> None:
         """Initialize the Modbus hub."""
@@ -39,11 +38,10 @@ class StiebelEltronModbusLWZDataCoordinator(
         super().__init__(
             hass,
             entry,
-            LwzStiebelEltronAPI(connection.for_unit(UNIT_ID)),
+            LwzStiebelEltronAPI(unit),
             StiebelEltronConnectionParams(
                 host=host,
                 model=model,
-                connection=connection,
             ),
         )
 

@@ -30,10 +30,12 @@
         "error": {
             "already_configured": "Das Gerät ist bereits konfiguriert.",
             "invalid_host_IP": "Ungültige Host Adresse",
-            "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port."
+            "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port.",
+            "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung."
         },
         "abort": {
             "already_configured": "Das Gerät ist bereits konfiguriert.",
+            "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung.",
             "reconfigure_successful": "Verbindungsdaten erfolgreich aktualisiert."
         }
     },

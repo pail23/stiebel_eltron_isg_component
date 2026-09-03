@@ -30,10 +30,12 @@
         "error": {
             "already_configured": "Il dispositivo è già configurato",
             "invalid_host_IP": "Indirizzo IP host non valido",
-            "cannot_connect": "Impossibile connettersi al dispositivo. Controllare host e porta."
+            "cannot_connect": "Impossibile connettersi al dispositivo. Controllare host e porta.",
+            "link_conflict": "Un'altra integrazione sta già utilizzando questo dispositivo Modbus con impostazioni di connessione incompatibili. Riconfigurare tale integrazione o rimuovere la connessione in conflitto."
         },
         "abort": {
             "already_configured": "Il dispositivo è già configurato",
+            "link_conflict": "Un'altra integrazione sta già utilizzando questo dispositivo Modbus con impostazioni di connessione incompatibili. Riconfigurare tale integrazione o rimuovere la connessione in conflitto.",
             "reconfigure_successful": "Dettagli di connessione aggiornati correttamente."
         }
     },

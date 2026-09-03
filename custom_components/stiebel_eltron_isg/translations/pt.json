@@ -30,10 +30,12 @@
         "error": {
             "already_configured": "Equipamento já se encontra configurado.",
             "invalid_host_IP": "IP Inválido",
-            "cannot_connect": "Não foi possível ligar ao dispositivo. Por favor verifique o host e a porta."
+            "cannot_connect": "Não foi possível ligar ao dispositivo. Por favor verifique o host e a porta.",
+            "link_conflict": "Outra integração já está a utilizar este dispositivo Modbus com definições de ligação incompatíveis. Reconfigure essa integração ou remova a ligação em conflito."
         },
         "abort": {
             "already_configured": "Equipamento já se encontra configurado.",
+            "link_conflict": "Outra integração já está a utilizar este dispositivo Modbus com definições de ligação incompatíveis. Reconfigure essa integração ou remova a ligação em conflito.",
             "reconfigure_successful": "Detalhes de conexão atualizados com sucesso."
         }
     },

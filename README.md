@@ -125,6 +125,20 @@ The integration cannot update ISG firmware. Firmware updates are handled
 through Stiebel Eltron support. It also cannot make a register writable when
 the connected controller or firmware exposes it as read-only.
 
+## Upgrading to 2026.9
+
+Release 2026.9 requires Home Assistant 2026.9.0 or newer.
+No reconfiguration is needed for a normal installation.
+
+The integration now obtains its Modbus unit from Home Assistant's shared Modbus connection service instead of opening and owning a separate connection.
+Integrations using the same endpoint and compatible link settings therefore share one serialized connection.
+A lost network link is re-established by the shared backend on the next poll, so manually reloading the integration is normally unnecessary.
+
+If another integration already uses the same Modbus endpoint with incompatible link settings, setup stops and reports that conflict instead of opening a second managed connection.
+Align the connection settings or remove the conflicting configuration before trying again.
+
+Debug logging now comes from `modbus_connection`, `tmodbus`, and `pystiebeleltron` rather than `pymodbus`.
+
 ## Upgrading to 2026.8
 
 Release 2026.8 needs no reconfiguration of the integration entry, but six things change for an existing installation.
