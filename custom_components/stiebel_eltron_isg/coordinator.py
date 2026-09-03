@@ -15,7 +15,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from modbus_connection import ModbusConnection, ModbusError, ModbusUnit
+from modbus_connection import ModbusError
 from modbus_connection.cli_helper import field_rows
 from pystiebeleltron import ControllerModel, StiebelEltronModbusError
 
@@ -66,7 +66,6 @@ class StiebelEltronConnectionParams:
 
     host: str
     model: ControllerModel
-    connection: ModbusConnection
 
 
 class StiebelEltronDataCoordinator[T: StiebelEltronApi](
@@ -84,7 +83,6 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
         """Initialize the Modbus hub."""
         self._model: ControllerModel = params.model
         self._host = params.host
-        self._connection = params.connection
         self._api = api_client
         self._refresh_generation = 0
         self._last_successful_refresh_generation = 0
@@ -108,19 +106,6 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             model_id=str(self._model.value),
             manufacturer=ATTR_MANUFACTURER,
         )
-
-    def _for_unit(self, unit: int) -> ModbusUnit:
-        """Return a connection for a specific unit."""
-        if self._connection is None:
-            raise RuntimeError("Connection not established")
-        return self._connection.for_unit(unit)
-
-    @property
-    def is_connected(self) -> bool:
-        """Check modbus client connection status."""
-        if self._connection is None:
-            return False
-        return self._connection.connected
 
     @property
     def host(self) -> str:
