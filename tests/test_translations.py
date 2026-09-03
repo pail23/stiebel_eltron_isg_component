@@ -52,6 +52,7 @@ _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 _CONTROLLER_VALIDATION_REASONS = {
     "cannot_connect",
+    "link_conflict",
     "unknown",
     "unsupported_controller",
 }

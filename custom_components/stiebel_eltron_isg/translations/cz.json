@@ -30,10 +30,12 @@
         "error": {
             "already_configured": "Zařízení je už nakonfigurované.",
             "invalid_host_IP": "Neplatná adresa hostitele",
-            "cannot_connect": "Nelze se připojit k zařízení. Zkontrolujte prosím host a port."
+            "cannot_connect": "Nelze se připojit k zařízení. Zkontrolujte prosím host a port.",
+            "link_conflict": "Jiná integrace již používá toto zařízení Modbus s nekompatibilním nastavením připojení. Změňte konfiguraci uvedené integrace nebo odstraňte konfliktní připojení."
         },
         "abort": {
             "already_configured": "Zařízení je už nakonfigurované.",
+            "link_conflict": "Jiná integrace již používá toto zařízení Modbus s nekompatibilním nastavením připojení. Změňte konfiguraci uvedené integrace nebo odstraňte konfliktní připojení.",
             "reconfigure_successful": "Připojovací údaje byly úspěšně aktualizovány."
         }
     },
