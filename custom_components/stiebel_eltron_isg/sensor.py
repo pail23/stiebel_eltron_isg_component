@@ -1192,13 +1192,24 @@ WPM_3I_SENSOR_TYPES = (
     + WPM_COMPRESSOR_SENSOR_TYPES
 )
 
+WPM_BASE_SENSOR_TYPES = (
+    SYSTEM_VALUES_SENSOR_TYPES + ENERGYMANAGEMENT_SENSOR_TYPES + ENERGY_SENSOR_TYPES
+)
+
 WPM_SENSOR_TYPES = (
-    SYSTEM_VALUES_SENSOR_TYPES
-    + ENERGYMANAGEMENT_SENSOR_TYPES
-    + ENERGY_SENSOR_TYPES
+    WPM_BASE_SENSOR_TYPES
     + WPM_COMPRESSOR_SENSOR_TYPES
     + WPM_POWER_CONSUMPTION_SENSOR_TYPES
 )
+
+# The aggregate runtime wires 3516-3518 are declared for every WPM variant in
+# the library, but two measured WPMsystem installations do not serve them:
+# individual reads return Modbus exception 2 and the wider energy block returns
+# the unavailable marker, so those three sensor entities could never hold a
+# value there (issue #612). This hardware-backed correction is deliberately
+# limited to WPMsystem; WPM 3 and LWZ_R290 keep their existing entity surface
+# until equivalent measurements exist.
+WPMSYSTEM_SENSOR_TYPES = WPM_BASE_SENSOR_TYPES + WPM_POWER_CONSUMPTION_SENSOR_TYPES
 
 LWZ_SENSOR_TYPES = (
     LWZ_SYSTEM_VALUES_SENSOR_TYPES
@@ -1241,13 +1252,18 @@ async def async_setup_entry(
         ControllerModel.WPMsystem,
         ControllerModel.LWZ_R290,
     ):
+        sensor_types = (
+            WPMSYSTEM_SENSOR_TYPES
+            if coordinator.model == ControllerModel.WPMsystem
+            else WPM_SENSOR_TYPES
+        )
         entities = [
             StiebelEltronISGSensor(
                 coordinator,
                 entry,
                 description,
             )
-            for description in WPM_SENSOR_TYPES
+            for description in sensor_types
         ]
         daily_energy_entities = [
             StiebelEltronISGSensor(
