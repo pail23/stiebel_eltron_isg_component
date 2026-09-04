@@ -23,7 +23,14 @@ from homeassistant.helpers import (
 )
 from pystiebeleltron import ControllerModel
 
-from .const import CIRCULATION_PUMP, DOMAIN, HEATER_PRESSURE
+from .const import (
+    CIRCULATION_PUMP,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COOLING_RUNTIME,
+    DOMAIN,
+    HEATER_PRESSURE,
+)
 from .coordinator import StiebelEltronConfigEntry, coordinator_display_name
 from .entity import build_unique_id
 
@@ -69,6 +76,68 @@ def async_remove_legacy_circulation_pump_switch(
     if obsolete:
         _LOGGER.info(
             "Removed %s obsolete circulation pump switch entities",
+            len(obsolete),
+        )
+
+
+# The three aggregate runtime sensors a WPMsystem cannot serve, see issue #612.
+# Their registry entries survive the entity no longer being created, so without
+# this they stay behind as unavailable, which is the state the issue is about.
+_WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS = (
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COOLING_RUNTIME,
+)
+
+
+@callback
+def async_remove_unsupported_wpmsystem_runtime_sensors(
+    hass: HomeAssistant,
+    entry: StiebelEltronConfigEntry,
+    model: ControllerModel,
+) -> None:
+    """Remove the runtime sensors a WPMsystem never answers.
+
+    Nothing is lost. The registers reply with the unavailable marker on this
+    controller, so the entities never held a numeric state and no statistic was
+    recorded for them. Removing a registry entry does not discard recorder
+    history either, so a controller that was replaced by a WPMsystem keeps what
+    it had recorded before.
+    """
+    if model is not ControllerModel.WPMsystem:
+        return
+
+    registry = er.async_get(hass)
+    # Every model prefix, not only the one detected now: a controller that was
+    # replaced by a WPMsystem left ids carrying the name of the model it was
+    # detected as back then, and nothing will ever provide those entities again.
+    prefixes = _legacy_prefixes(entry, model) + [
+        f"{DOMAIN}_{coordinator_display_name(historical)}_"
+        for historical in ControllerModel
+    ]
+    obsolete_unique_ids = {
+        unique_id
+        for key in _WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS
+        for unique_id in (
+            build_unique_id(entry, key),
+            *(f"{prefix}{key}" for prefix in prefixes),
+        )
+    }
+    obsolete = [
+        registry_entry
+        for registry_entry in er.async_entries_for_config_entry(
+            registry,
+            entry.entry_id,
+        )
+        if registry_entry.domain == "sensor"
+        and registry_entry.unique_id in obsolete_unique_ids
+    ]
+    for registry_entry in obsolete:
+        registry.async_remove(registry_entry.entity_id)
+
+    if obsolete:
+        _LOGGER.info(
+            "Removed %s runtime sensor entities this controller does not serve",
             len(obsolete),
         )
 

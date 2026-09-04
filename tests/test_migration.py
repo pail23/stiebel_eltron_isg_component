@@ -14,8 +14,14 @@ from pystiebeleltron import ControllerModel
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.stiebel_eltron_isg import migration
-from custom_components.stiebel_eltron_isg.const import CIRCULATION_PUMP, DOMAIN
+from custom_components.stiebel_eltron_isg import migration, sensor
+from custom_components.stiebel_eltron_isg.const import (
+    CIRCULATION_PUMP,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COOLING_RUNTIME,
+    DOMAIN,
+)
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 
 # The model the mock_get_controller_model fixture reports, and the display name
@@ -1061,3 +1067,165 @@ async def test_migration_is_idempotent(
     migrated = er.async_get(hass).async_get(legacy.entity_id)
     assert migrated.entity_id == "sensor.stiebel_eltron_isg_outdoor_temperature"
     assert migrated.unique_id == f"{config_entry_with_name.entry_id}_{KEY}"
+
+
+def test_removes_unsupported_wpmsystem_runtime_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A WPMsystem must not keep the three sensors it can never serve."""
+    mock_config_entry.add_to_hass(hass)
+    obsolete = [
+        _register(
+            hass,
+            mock_config_entry,
+            build_unique_id(mock_config_entry, key),
+            key,
+        )
+        for key in (COMPRESSOR_HEATING, COMPRESSOR_HEATING_WATER, COOLING_RUNTIME)
+    ]
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    registry = er.async_get(hass)
+    assert [registry.async_get(entry.entity_id) for entry in obsolete] == [None] * 3
+
+
+def test_removes_unsupported_runtime_sensors_on_legacy_unique_ids(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An entry left on either historical unique-id scheme is removed too."""
+    mock_config_entry.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron_{COMPRESSOR_HEATING}",
+        "legacy_compressor_heating",
+    )
+    model_legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPMsystem_{COMPRESSOR_HEATING}",
+        "model_legacy_compressor_heating",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    registry = er.async_get(hass)
+    assert registry.async_get(legacy.entity_id) is None
+    assert registry.async_get(model_legacy.entity_id) is None
+
+
+def test_runtime_sensor_cleanup_leaves_other_models_untouched(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A WPM 3i answers these registers, so its entities have to survive."""
+    mock_config_entry.add_to_hass(hass)
+    kept = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, COMPRESSOR_HEATING),
+        COMPRESSOR_HEATING,
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3i,
+    )
+
+    assert er.async_get(hass).async_get(kept.entity_id) is not None
+
+
+def test_runtime_sensor_cleanup_leaves_unrelated_entities_untouched(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Neither another sensor nor a switch sharing the key may be removed."""
+    mock_config_entry.add_to_hass(hass)
+    other_sensor = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, KEY),
+        KEY,
+    )
+    same_key_switch = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, COMPRESSOR_HEATING),
+        "compressor_heating_switch",
+        domain="switch",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    registry = er.async_get(hass)
+    assert registry.async_get(other_sensor.entity_id) is not None
+    assert registry.async_get(same_key_switch.entity_id) is not None
+
+
+def test_removed_runtime_keys_match_the_sensors_wpmsystem_omits() -> None:
+    """The cleanup must cover exactly the keys the sensor platform drops."""
+    omitted = {description.key for description in sensor.WPM_SENSOR_TYPES} - {
+        description.key for description in sensor.WPMSYSTEM_SENSOR_TYPES
+    }
+
+    assert set(migration._WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS) == omitted
+
+
+def test_runtime_sensor_cleanup_covers_the_configured_name_scheme(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+) -> None:
+    """The oldest ids were built from the name the user had configured."""
+    config_entry_with_name.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{COOLING_RUNTIME}",
+        "legacy_cooling_runtime",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        config_entry_with_name,
+        ControllerModel.WPMsystem,
+    )
+
+    assert er.async_get(hass).async_get(legacy.entity_id) is None
+
+
+def test_runtime_sensor_cleanup_covers_a_previously_detected_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A controller swapped for a WPMsystem left ids naming the old model."""
+    mock_config_entry.add_to_hass(hass)
+    previous_model = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPM_3i_{COMPRESSOR_HEATING}",
+        "wpm_3i_compressor_heating",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    assert er.async_get(hass).async_get(previous_model.entity_id) is None

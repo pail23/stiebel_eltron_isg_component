@@ -1202,12 +1202,13 @@ WPM_SENSOR_TYPES = (
     + WPM_POWER_CONSUMPTION_SENSOR_TYPES
 )
 
-# The official register table assigns aggregate runtime wires 3516-3518 only
-# to WPM 3i. On the measured WPMsystem firmware, individual reads return
-# Modbus exception 2 and the wider energy block returns the unavailable marker,
-# so those three sensor entities could never hold a value there. This hardware-
-# backed correction is deliberately limited to WPMsystem; WPM 3 and LWZ_R290
-# keep their existing entity surface until equivalent measurements exist.
+# The aggregate runtime wires 3516-3518 are declared for every WPM variant in
+# the library, but two measured WPMsystem installations do not serve them:
+# individual reads return Modbus exception 2 and the wider energy block returns
+# the unavailable marker, so those three sensor entities could never hold a
+# value there (issue #612). This hardware-backed correction is deliberately
+# limited to WPMsystem; WPM 3 and LWZ_R290 keep their existing entity surface
+# until equivalent measurements exist.
 WPMSYSTEM_SENSOR_TYPES = WPM_BASE_SENSOR_TYPES + WPM_POWER_CONSUMPTION_SENSOR_TYPES
 
 LWZ_SENSOR_TYPES = (

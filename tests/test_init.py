@@ -26,6 +26,7 @@ from pytest_homeassistant_custom_component.common import (
 )
 
 from custom_components.stiebel_eltron_isg.const import (
+    COMPRESSOR_HEATING,
     CURRENT_POWER_CONSUMPTION,
     DOMAIN,
     UNIT_ID,
@@ -548,3 +549,55 @@ async def test_unload_entry_does_not_close_connection_if_platform_unload_fails(
     # so the deliberately failed unload does not leak resources from the test.
     await mock_config_entry.runtime_data.async_shutdown()
     await mock_modbus_connection.close()
+
+
+async def test_setup_removes_unsupported_wpmsystem_runtime_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """Setting up a WPMsystem clears a runtime sensor left by an earlier release."""
+    mock_get_controller_model.return_value = ControllerModel.WPMsystem
+    mock_config_entry.add_to_hass(hass)
+    stale = er.async_get(hass).async_get_or_create(
+        "sensor",
+        DOMAIN,
+        build_unique_id(mock_config_entry, COMPRESSOR_HEATING),
+        config_entry=mock_config_entry,
+        suggested_object_id=COMPRESSOR_HEATING,
+    )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id) is True
+    await hass.async_block_till_done()
+
+    assert er.async_get(hass).async_get(stale.entity_id) is None
+
+
+async def test_removed_runtime_sensor_raises_no_duplicate_repair(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """A sensor about to be deleted must not be reported as a duplicate first."""
+    mock_get_controller_model.return_value = ControllerModel.WPMsystem
+    mock_config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    for unique_id, object_id in (
+        (build_unique_id(mock_config_entry, COMPRESSOR_HEATING), COMPRESSOR_HEATING),
+        (f"{DOMAIN}_Stiebel Eltron_{COMPRESSOR_HEATING}", "legacy_compressor_heating"),
+    ):
+        registry.async_get_or_create(
+            "sensor",
+            DOMAIN,
+            unique_id,
+            config_entry=mock_config_entry,
+            suggested_object_id=object_id,
+        )
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id) is True
+    await hass.async_block_till_done()
+
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, duplicate_entity_issue_id(mock_config_entry)
+    )
+    assert issue is None

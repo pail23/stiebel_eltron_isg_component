@@ -31,6 +31,7 @@ from .migration import (
     async_migrate_device_identifier,
     async_migrate_unique_ids,
     async_remove_legacy_circulation_pump_switch,
+    async_remove_unsupported_wpmsystem_runtime_sensors,
     duplicate_entity_issue_id,
 )
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
@@ -153,6 +154,10 @@ async def async_setup_entry(
     # added to the registry entries and the device that already carry their new
     # identifiers.
     async_migrate_device_identifier(hass, entry)
+    # Before the unique id migration, so that an entity about to be deleted is
+    # never planned, never counted as a duplicate, and never reported by the
+    # Repair the migration raises for the duplicates it finds.
+    async_remove_unsupported_wpmsystem_runtime_sensors(hass, entry, model)
     await async_migrate_unique_ids(hass, entry, model)
     async_remove_legacy_circulation_pump_switch(hass, entry, model)
 
