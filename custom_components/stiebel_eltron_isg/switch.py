@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,7 +92,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSwitchEntityDescription,
     ):

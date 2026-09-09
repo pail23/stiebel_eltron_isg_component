@@ -72,7 +72,7 @@ from .const import (
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
 )
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import StiebelEltronISGEntity
 
 PARALLEL_UPDATES = 1
@@ -156,6 +156,7 @@ WPM_3I_BINARY_SENSOR_TYPES = [
     StiebelEltronBinarySensorEntityDescription(
         translation_key=ERROR_STATUS,
         key=ERROR_STATUS,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         modbus_register=lambda api: api.system_state.fault_status,
         bit_number=0,
@@ -465,6 +466,7 @@ LWZ_BINARY_SENSOR_TYPES = [
     StiebelEltronBinarySensorEntityDescription(
         translation_key=ERROR_STATUS,
         key=ERROR_STATUS,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         modbus_register=lambda api: api.system_state.fault_status,
     ),
@@ -534,7 +536,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronBinarySensorEntityDescription,
     ) -> None:

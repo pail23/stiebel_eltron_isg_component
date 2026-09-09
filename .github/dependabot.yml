@@ -13,3 +13,7 @@ updates:
     ignore:
       # Dependabot should not update Home Assistant as that should match the homeassistant key in hacs.json
       - dependency-name: "homeassistant"
+      # These versions must follow Home Assistant's Modbus manifest as one set.
+      - dependency-name: "modbus-connection"
+      - dependency-name: "pymodbus"
+      - dependency-name: "tmodbus"

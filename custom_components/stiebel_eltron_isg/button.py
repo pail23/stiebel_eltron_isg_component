@@ -3,6 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
+from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
@@ -10,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import RESET_HEATPUMP
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -22,7 +23,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronISGButtonDescriptionMixin:
     """Mixin to describe aStiebel Eltron ISG button."""
 
-    press_action: Callable[[StiebelEltronDataCoordinator], Coroutine]
+    press_action: Callable[[AnyStiebelEltronDataCoordinator], Coroutine[Any, Any, None]]
 
 
 @dataclass(frozen=True)
@@ -60,9 +61,11 @@ async def async_setup_entry(
 class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
     """stiebel_eltron_isg button class."""
 
+    entity_description: StiebelEltronISGButtonDescription
+
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronISGButtonDescription,
     ) -> None:
@@ -72,7 +75,7 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Trigger the button action."""
-        await self.entity_description.press_action(self.coordinator)  # type: ignore[attr-defined]
+        await self.entity_description.press_action(self.coordinator)
 
     @property
     def entity_registry_enabled_default(self) -> bool:

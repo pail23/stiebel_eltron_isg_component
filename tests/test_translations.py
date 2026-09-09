@@ -27,7 +27,9 @@ import pathlib
 from string import Formatter
 from types import ModuleType
 
+from homeassistant.generated.languages import LANGUAGES
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.translation import async_get_translations
 import pytest
 
 from custom_components.stiebel_eltron_isg import (
@@ -52,6 +54,7 @@ _TRANSLATIONS_DIR = _COMPONENT_DIR / "translations"
 _RUNTIME_FILE = _TRANSLATIONS_DIR / "en.json"
 _CONTROLLER_VALIDATION_REASONS = {
     "cannot_connect",
+    "link_conflict",
     "unknown",
     "unsupported_controller",
 }
@@ -495,4 +498,21 @@ def test_translation_invents_no_key(translation_file: pathlib.Path) -> None:
     assert not unknown, (
         f"{translation_file.name} has entity keys {_RUNTIME_FILE.name} "
         f"does not: {unknown}"
+    )
+
+
+def test_runtime_translation_filenames_are_supported_languages():
+    """Unknown locale filenames are silently ignored by Home Assistant."""
+    assert {path.stem for path in _TRANSLATIONS_DIR.glob("*.json")} <= LANGUAGES
+
+
+async def test_czech_translation_is_loaded_by_home_assistant(hass):
+    translations = await async_get_translations(
+        hass, "cs", "exceptions", {"stiebel_eltron_isg"}
+    )
+    assert (
+        translations[
+            "component.stiebel_eltron_isg.exceptions.unsupported_controller.message"
+        ]
+        == "Nepodporovaný model regulátoru: {model_id}"
     )

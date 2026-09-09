@@ -2,12 +2,13 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from modbus_connection import ModbusError
+from modbus_connection import ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
     ControllerModel,
@@ -17,7 +18,7 @@ from pystiebeleltron import (
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.stiebel_eltron_isg.const import DOMAIN
+from custom_components.stiebel_eltron_isg.const import DOMAIN, UNIT_ID
 
 USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
 RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}
@@ -62,7 +63,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
         pytest.param(
             "mock_get_controller_model", StiebelEltronModbusError, id="model_read"
         ),
-        pytest.param("mock_connect_tcp", ModbusError, id="connect"),
     ],
 )
 async def test_form_cannot_connect(
@@ -96,6 +96,31 @@ async def test_form_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_cannot_acquire_shared_connection(
+    hass: HomeAssistant,
+) -> None:
+    """Test a conflict in Home Assistant's shared connection is reported."""
+    async with async_get_temporary_unit(
+        hass,
+        ModbusTcpParams(
+            host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT], framer="rtu"
+        ),
+        UNIT_ID,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "link_conflict"}
+    assert_suggested_values(result, USER_INPUT)
 
 
 async def test_form_unknown_exception(
@@ -133,6 +158,7 @@ async def test_form_reports_unsupported_controller(
     hass: HomeAssistant,
     mock_get_controller_model: MagicMock,
     mock_modbus_connection: MockModbusConnection,
+    mock_modbus_connection_class: MagicMock,
 ) -> None:
     """Test the user form reports an unsupported controller and its model ID."""
     mock_get_controller_model.side_effect = UnknownControllerModelError(165)
@@ -150,6 +176,9 @@ async def test_form_reports_unsupported_controller(
     assert_suggested_values(result, USER_INPUT)
     assert hass.config_entries.async_entries(DOMAIN) == []
     assert mock_modbus_connection.connected is False
+    mock_modbus_connection_class.assert_called_once_with(
+        ModbusTcpParams(host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT])
+    )
 
     mock_get_controller_model.side_effect = None
     result = await hass.config_entries.flow.async_configure(
@@ -345,6 +374,24 @@ async def test_dhcp_aborts_for_unsupported_controller(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unsupported_controller"
     assert result["description_placeholders"] == {"model_id": "165"}
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
+
+async def test_dhcp_aborts_for_shared_connection_conflict(
+    hass: HomeAssistant,
+) -> None:
+    """Test DHCP discovery reports incompatible shared link settings."""
+    async with async_get_temporary_unit(
+        hass,
+        ModbusTcpParams(host=DHCP_DISCOVERY.ip, port=502, framer="rtu"),
+        UNIT_ID,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "link_conflict"
     assert hass.config_entries.async_entries(DOMAIN) == []
 
 

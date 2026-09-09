@@ -6,13 +6,17 @@ https://github.com/pail23/stiebel_eltron_isg
 
 import logging
 
+from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.exceptions import (
+    ConfigEntryError,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
-from modbus_connection import ModbusError
-from modbus_connection.pymodbus import connect_tcp
+from modbus_connection import ModbusTcpParams
 from pystiebeleltron import (
     ControllerModel,
     StiebelEltronModbusError,
@@ -21,18 +25,21 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
     async_migrate_device_identifier,
     async_migrate_unique_ids,
     async_remove_legacy_circulation_pump_switch,
+    async_remove_unsupported_wpmsystem_runtime_sensors,
     duplicate_entity_issue_id,
 )
 from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
 from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _PLATFORMS: list[Platform] = [
     Platform.BUTTON,
@@ -85,14 +92,27 @@ async def async_setup_entry(
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
     try:
-        connection = await connect_tcp(host, port=port)
-    except ModbusError as exception:
-        raise ConfigEntryNotReady("Could not connect to device") from exception
-    entry.async_on_unload(connection.close)
+        unit = async_get_unit(
+            hass,
+            entry,
+            ModbusTcpParams(host=host, port=port),
+            UNIT_ID,
+        )
+    except HomeAssistantError as exception:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="modbus_setup_failed",
+            translation_placeholders={"error": str(exception)},
+        ) from exception
+
     try:
-        model = await get_controller_model(connection.for_unit(UNIT_ID))
+        model = await get_controller_model(unit)
     except StiebelEltronModbusError as exception:
-        raise ConfigEntryNotReady("Could not read controller model") from exception
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="controller_read_failed",
+            translation_placeholders={"error": str(exception)},
+        ) from exception
     except UnknownControllerModelError as exception:
         # An unrecognised controller id is a permanent condition, not a
         # transient modbus glitch: fail cleanly instead of retrying forever.
@@ -100,14 +120,16 @@ async def async_setup_entry(
         # entry anyway.
         _create_unsupported_controller_issue(hass, entry, exception.model_id)
         raise ConfigEntryError(
-            f"Unsupported controller model: {exception}"
+            translation_domain=DOMAIN,
+            translation_key="unsupported_controller",
+            translation_placeholders={"model_id": str(exception.model_id)},
         ) from exception
 
-    coordinator: StiebelEltronDataCoordinator
+    coordinator: AnyStiebelEltronDataCoordinator
 
     if model == ControllerModel.WPM_3i:
         coordinator = StiebelEltronModbusWPM3iDataCoordinator(
-            hass, entry, model, connection, host
+            hass, entry, model, unit, host
         )
     elif model in (
         ControllerModel.WPMsystem,
@@ -115,7 +137,7 @@ async def async_setup_entry(
         ControllerModel.LWZ_R290,
     ):
         coordinator = StiebelEltronModbusWPMDataCoordinator(
-            hass, entry, model, connection, host
+            hass, entry, model, unit, host
         )
     elif model in (
         ControllerModel.LWZ,
@@ -125,14 +147,18 @@ async def async_setup_entry(
             hass,
             entry,
             model,
-            connection,
+            unit,
             host,
         )
     else:
         _create_unsupported_controller_issue(
             hass, entry, getattr(model, "value", model)
         )
-        raise ConfigEntryError(f"Unsupported controller model: {model}")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_controller",
+            translation_placeholders={"model_id": str(getattr(model, "value", model))},
+        )
 
     # A library and integration update can add the model while this repair still
     # exists from an earlier setup attempt.
@@ -142,18 +168,25 @@ async def async_setup_entry(
     # added to the registry entries and the device that already carry their new
     # identifiers.
     async_migrate_device_identifier(hass, entry)
+    # Before the unique id migration, so that an entity about to be deleted is
+    # never planned, never counted as a duplicate, and never reported by the
+    # Repair the migration raises for the duplicates it finds.
+    async_remove_unsupported_wpmsystem_runtime_sensors(hass, entry, model)
     await async_migrate_unique_ids(hass, entry, model)
     async_remove_legacy_circulation_pump_switch(hass, entry, model)
 
     entry.runtime_data = coordinator
 
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.async_on_unload(
-        connection.on_connection_lost(
-            lambda: hass.config_entries.async_schedule_reload(entry.entry_id)
-        )
-    )
+    try:
+        await coordinator.async_config_entry_first_refresh()
+    except ConfigEntryNotReady as exception:
+        # The coordinator wraps its first update failure without translation
+        # metadata. Keep the cause chain and expose a translated setup reason.
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="initial_read_failed",
+            translation_placeholders={"error": str(exception)},
+        ) from exception
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

@@ -42,7 +42,7 @@ from .const import (
     HEATING_CURVE_RISE_HK2,
     HEATING_CURVE_RISE_HK3,
 )
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -307,7 +307,7 @@ NUMBER_TYPES_LWZ = [
         translation_key=COMFORT_WATER_TEMPERATURE_TARGET,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=10,
-        native_max_value=55,
+        native_max_value=65,
         native_step=0.1,
         modbus_register=lambda api: api.system_parameters.dhw_set_day,
         write_field="dhw_set_day",
@@ -317,7 +317,7 @@ NUMBER_TYPES_LWZ = [
         translation_key=ECO_WATER_TEMPERATURE_TARGET,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=10,
-        native_max_value=55,
+        native_max_value=65,
         native_step=0.1,
         modbus_register=lambda api: api.system_parameters.dhw_set_night,
         write_field="dhw_set_night",
@@ -497,7 +497,7 @@ class StiebelEltronISGNumberEntity(
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronNumberEntityDescription,
     ):

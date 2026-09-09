@@ -30,14 +30,28 @@
         "error": {
             "already_configured": "Equipamento já se encontra configurado.",
             "invalid_host_IP": "IP Inválido",
-            "cannot_connect": "Não foi possível ligar ao dispositivo. Por favor verifique o host e a porta."
+            "cannot_connect": "Não foi possível ligar ao dispositivo. Por favor verifique o host e a porta.",
+            "link_conflict": "Outra integração já está a utilizar este dispositivo Modbus com definições de ligação incompatíveis. Reconfigure essa integração ou remova a ligação em conflito."
         },
         "abort": {
             "already_configured": "Equipamento já se encontra configurado.",
+            "link_conflict": "Outra integração já está a utilizar este dispositivo Modbus com definições de ligação incompatíveis. Reconfigure essa integração ou remova a ligação em conflito.",
             "reconfigure_successful": "Detalhes de conexão atualizados com sucesso."
         }
     },
     "exceptions": {
+        "modbus_setup_failed": {
+            "message": "Não foi possível configurar a ligação Modbus: {error}"
+        },
+        "controller_read_failed": {
+            "message": "Não foi possível ler o modelo do controlador: {error}"
+        },
+        "unsupported_controller": {
+            "message": "Modelo de controlador não suportado: {model_id}"
+        },
+        "initial_read_failed": {
+            "message": "Não foi possível ler os dados iniciais do dispositivo: {error}"
+        },
         "write_unsupported": {
             "message": "The setting {field} cannot be written on the connected controller."
         },

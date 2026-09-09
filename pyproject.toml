@@ -6,16 +6,20 @@ readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
     "colorlog>=6.12.0",
-    "pytest-homeassistant-custom-component>=0.13.355",
+    # Add HA 2026.9's shared Modbus backend for integration tests.
+    "modbus-connection[tmodbus]==4.10.0",
+    "pytest-homeassistant-custom-component>=0.13.359",
     "pystiebeleltron==0.7.1",
-    "pymodbus>=3.14.0",
+    # Keep the test stack aligned with Home Assistant's Modbus manifest.
+    "pymodbus==3.13.1",
+    "tmodbus==0.6.2",
 ]
 
 [dependency-groups]
 dev = [
     "mypy>=2.3.0,<3",
     "pytest>=9.0.3",
-    "ruff>=0.16.2",
+    "ruff>=0.16.3",
 ]
 
 [tool.pytest]
@@ -138,22 +142,7 @@ split-on-trailing-comma = false
 "tests/**" = ["D", "SLF001"]
 
 [tool.mypy]
-check_untyped_defs = true
-disallow_incomplete_defs = true
-disallow_untyped_defs = true
 files = ["custom_components/stiebel_eltron_isg"]
-ignore_missing_imports = false
-no_implicit_optional = true
-python_version = "3.14"
 native_parser = true
-warn_redundant_casts = true
-warn_unused_ignores = true
-
-[[tool.mypy.overrides]]
-# pystiebeleltron 0.6.2 has inline annotations but does not publish a py.typed
-# marker. Remove this override after the separately reviewed typed release.
-module = [
-  "pystiebeleltron",
-  "pystiebeleltron.*",
-]
-ignore_missing_imports = true
+python_version = "3.14"
+strict = true

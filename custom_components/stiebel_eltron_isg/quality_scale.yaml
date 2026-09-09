@@ -1,0 +1,185 @@
+# This is a custom integration self-assessment, not a claim of an official
+# Home Assistant quality tier. Neither hassfest nor HACS evaluates this file as
+# a Home Assistant Core quality-scale file.
+# README.md and info.md provide the local documentation evidence because this
+# custom integration has no page on home-assistant.io.
+#
+# The 54-rule inventory is pinned to Home Assistant Core 2026.9.1 at commit
+# fc034572d0216a04ed40a07154394908a594dfed, retrieved on 2026-09-06:
+# https://github.com/home-assistant/core/blob/fc034572d0216a04ed40a07154394908a594dfed/script/hassfest/quality_scale.py
+# On 2026-09-06, independent AST extraction of ALL_RULES from that source
+# confirmed all 54 names here and in tests/test_quality_scale.py. The offline
+# tests check local consistency; they do not fetch or verify the upstream source.
+# Repeat the source comparison when changing either inventory or the pin.
+# Rule guidance: https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/
+# Reassessed against integration main b10045f, including merged PRs #685-687 and #689.
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: No custom service actions are registered; entities use Home Assistant platform actions.
+  appropriate-polling:
+    status: done
+    comment: coordinator.py uses DEFAULT_SCAN_INTERVAL (30 seconds) from const.py; tests/test_coordinator.py covers refresh and recovery.
+  brands:
+    status: done
+    comment: The home-assistant/brands custom_integrations/stiebel_eltron_isg directory contains icon.png, icon@2x.png, logo.png and logo@2x.png (verified 2026-09-06 at b3f571eae752c39e78c7326b15ee50c31ee74ce8). The HACS workflow enables brands validation.
+  common-modules:
+    status: done
+    comment: const.py, coordinator.py and entity.py hold shared constants, I/O and entity behavior; platform modules reuse them.
+  config-flow-test-coverage:
+    status: done
+    comment: tests/test_config_flow.py covers manual setup, DHCP, reconfiguration and error paths; config_flow.py has full coverage in the reassessment run.
+  config-flow:
+    status: done
+    comment: config_flow.py provides UI setup for host and port; CONFIG_SCHEMA rejects YAML configuration and manifest.json enables config_flow.
+  dependency-transparency:
+    status: done
+    comment: manifest.json declares the open-source pystiebeleltron library and Home Assistant modbus dependency; the library implements device protocol I/O.
+  docs-actions:
+    status: exempt
+    comment: No custom service actions are provided; the integration uses standard platform actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not provide custom conditions.
+  docs-high-level-description:
+    status: done
+    comment: See README.md#what-this-integration-does.
+  docs-installation-instructions:
+    status: done
+    comment: See README.md#prerequisites and README.md#installation.
+  docs-removal-instructions:
+    status: done
+    comment: See README.md#removing-the-integration.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not provide custom triggers.
+  entity-event-setup:
+    status: done
+    comment: entity.py inherits CoordinatorEntity, which subscribes on async_added_to_hass and registers listener cleanup on removal; no additional entity event subscriptions are introduced.
+  entity-unique-id:
+    status: done
+    comment: entity.py derives unique IDs from config entry ID and description key; tests/test_entity.py and tests/test_migration.py cover stability and legacy migration.
+  has-entity-name:
+    status: done
+    comment: StiebelEltronISGEntity sets _attr_has_entity_name = True in entity.py.
+  runtime-data:
+    status: done
+    comment: __init__.py stores the coordinator in entry.runtime_data using the StiebelEltronConfigEntry type alias from coordinator.py.
+  test-before-configure:
+    status: done
+    comment: config_flow.py reads the controller model through a temporary shared Modbus unit before creating an entry; tests/test_config_flow.py covers failure paths.
+  test-before-setup:
+    status: done
+    comment: __init__.py detects the model and awaits async_config_entry_first_refresh before forwarding platforms; tests/test_init.py covers connection and first-refresh failures.
+  unique-config-entry:
+    status: done
+    comment: config_flow.py rejects matching host/port entries; DHCP also checks the MAC and host. tests/test_config_flow.py covers duplicate setup and discovery.
+
+  # Silver
+  action-exceptions:
+    status: done
+    comment: Platform writes go through coordinator.py, which raises ServiceValidationError for invalid values and HomeAssistantError for unsupported or failed writes; writable-platform tests cover failures.
+  config-entry-unloading:
+    status: done
+    comment: __init__.py unloads platforms; Home Assistant owns shared connection cleanup. tests/test_init.py checks unload, retained consumers and failed platform unload.
+  docs-configuration-parameters:
+    status: exempt
+    comment: There is no options flow or additional runtime configuration; host and port installation parameters and reconfiguration are covered in README.md#configuration.
+  docs-installation-parameters:
+    status: done
+    comment: See README.md#configuration for host and Modbus TCP port, including the default port.
+  entity-unavailable:
+    status: done
+    comment: entity.py requires a successful coordinator update and an available numeric register value; tests/test_coordinator.py and platform tests cover unavailable states and recovery.
+  integration-owner:
+    status: done
+    comment: manifest.json names pail23 as code owner and provides the public issue tracker.
+  log-when-unavailable:
+    status: done
+    comment: coordinator.py raises UpdateFailed and relies on DataUpdateCoordinator to log state transitions; tests/test_coordinator.py checks repeated failures and recovery without repeated error logs.
+  parallel-updates:
+    status: done
+    comment: Every entity platform declares PARALLEL_UPDATES = 1; Home Assistant's shared Modbus backend serializes access to the physical connection.
+  reauthentication-flow:
+    status: exempt
+    comment: Local Modbus TCP does not use authentication.
+  test-coverage:
+    status: done
+    comment: The lint_test.yml workflow measures all integration modules and runs scripts/check_module_coverage.py with target 95; the gate rejects reports without integration modules and coverage at or below 95 percent.
+
+  # Gold
+  devices:
+    status: done
+    comment: coordinator.py supplies DeviceInfo with a stable config-entry identifier, model, model ID and local configuration URL; platform entities share that device.
+  diagnostics:
+    status: done
+    comment: "PR #686 restricts get_raw_data to register components. tests/test_diagnostics.py exercises both diagnostics endpoints with real WPM, WPM3i and LWZ APIs, verifies decoded values and host redaction, and serializes the result as JSON."
+  discovery-update-info:
+    status: done
+    comment: config_flow.py updates the host when DHCP rediscovers a known MAC; tests/test_config_flow.py checks the existing entry is retained.
+  discovery:
+    status: done
+    comment: manifest.json declares servicewelt* DHCP discovery and config_flow.py validates and confirms discovered controllers.
+  docs-data-update:
+    status: done
+    comment: See README.md#troubleshooting for the 30-second polling interval and unavailable behavior.
+  docs-examples:
+    status: done
+    comment: "README.md#automation-example links the importable fault-notification blueprint and explains setup and limitations. tests/test_blueprint.py runs default and custom notification actions and checks entity selection for every supported model. For this custom integration, the blueprint is hosted in the integration repository rather than the Core documentation repository or forum."
+  docs-known-limitations:
+    status: done
+    comment: See README.md#troubleshooting and README.md#energy-and-long-term-statistics for register availability, firmware and statistics limitations.
+  docs-supported-devices:
+    status: done
+    comment: See README.md#what-this-integration-does for supported controller families and register-dependent availability.
+  docs-supported-functions:
+    status: done
+    comment: See README.md#what-this-integration-does for supported measurements, controls and modes.
+  docs-troubleshooting:
+    status: done
+    comment: See README.md#troubleshooting.
+  docs-use-cases:
+    status: done
+    comment: See README.md#energy-and-long-term-statistics for Energy Dashboard and cumulative sensor usage.
+  dynamic-devices:
+    status: exempt
+    comment: Each config entry represents one fixed ISG controller; no additional devices are discovered while that entry is running.
+  entity-category:
+    status: done
+    comment: number.py marks settings as CONFIG and sensor.py/binary_sensor.py/button.py mark diagnostic entities; tests/test_entity_descriptions.py and platform tests guard the assignments.
+  entity-device-class:
+    status: done
+    comment: Platform descriptions set device classes where applicable, including pressure, flow and duration; tests/test_sensor.py and tests/test_translations.py guard metadata consistency.
+  entity-disabled-by-default:
+    status: done
+    comment: Raw Today energy sensors are disabled by default for new entities; tests/test_sensor.py checks the description defaults and new-entity registration while preserving existing user choices. The diagnostic restart button remains enabled by default.
+  entity-translations:
+    status: done
+    comment: Description translation keys resolve through strings.json and translations/*.json; tests/test_translations.py rejects missing or orphaned entity names.
+  exception-translations:
+    status: done
+    comment: "PR #685 translates Modbus setup, controller detection, unsupported models and initial refresh failures in __init__.py while preserving causes and retry behavior. tests/test_setup_translations.py checks actual HA translation lookup and setup metadata; platform write failures remain translated in coordinator.py."
+  icon-translations:
+    status: done
+    comment: icons.json supplies translated entity icons, states and ranges; tests/test_translations.py checks keys and device-class consistency.
+  reconfiguration-flow:
+    status: done
+    comment: config_flow.py provides async_step_reconfigure with duplicate checks and input preservation; tests/test_config_flow.py covers success and errors.
+  repair-issues:
+    status: done
+    comment: __init__.py reports unsupported controllers and migration.py reports duplicate entities; repairs.py provides a fixable duplicate cleanup flow covered by tests/test_repairs.py.
+  stale-devices:
+    status: exempt
+    comment: Each entry owns one fixed controller device; it is removed with the entry by Home Assistant, with no independently disappearing child devices to track.
+
+  # Platinum
+  async-dependency:
+    status: done
+    comment: Home Assistant owns the shared Modbus connection; controller detection, model refresh and component writes expose coroutine APIs checked in tests/test_dependency.py, with shared-unit lifecycle behavior covered by tests/test_init.py.
+  inject-websession:
+    status: exempt
+    comment: The local Modbus TCP dependency does not use HTTP.
+  strict-typing:
+    status: done
+    comment: pyproject.toml enables mypy strict for every integration module with no per-module exclusion; pystiebeleltron 0.7.0 provides its py.typed marker.

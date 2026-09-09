@@ -8,12 +8,12 @@ from homeassistant.core import callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 
 # At runtime this must remain ``object``: concrete entities place the mixin
 # before StiebelEltronISGEntity so ``super()`` reaches CoordinatorEntity.
 if TYPE_CHECKING:
-    _OptimisticValueMixinBase = CoordinatorEntity[StiebelEltronDataCoordinator]
+    _OptimisticValueMixinBase = CoordinatorEntity[AnyStiebelEltronDataCoordinator]
 else:
     _OptimisticValueMixinBase = object
 
@@ -68,7 +68,7 @@ class OptimisticValueMixin(_OptimisticValueMixinBase):
         super()._handle_coordinator_update()
 
 
-class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
+class StiebelEltronISGEntity(CoordinatorEntity[AnyStiebelEltronDataCoordinator]):
     """stiebel_eltron_isg entity base class."""
 
     _attr_has_entity_name = True
@@ -76,7 +76,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
 
     def __init__(
         self,
-        coordinator: StiebelEltronDataCoordinator,
+        coordinator: AnyStiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
     ):
         """Initialize the entity base class."""

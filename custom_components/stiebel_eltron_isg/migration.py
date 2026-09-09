@@ -12,7 +12,7 @@ rename can change again.
 """
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -23,7 +23,14 @@ from homeassistant.helpers import (
 )
 from pystiebeleltron import ControllerModel
 
-from .const import CIRCULATION_PUMP, DOMAIN, HEATER_PRESSURE
+from .const import (
+    CIRCULATION_PUMP,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COOLING_RUNTIME,
+    DOMAIN,
+    HEATER_PRESSURE,
+)
 from .coordinator import StiebelEltronConfigEntry, coordinator_display_name
 from .entity import build_unique_id
 
@@ -73,6 +80,68 @@ def async_remove_legacy_circulation_pump_switch(
         )
 
 
+# The three aggregate runtime sensors a WPMsystem cannot serve, see issue #612.
+# Their registry entries survive the entity no longer being created, so without
+# this they stay behind as unavailable, which is the state the issue is about.
+_WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS = (
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COOLING_RUNTIME,
+)
+
+
+@callback
+def async_remove_unsupported_wpmsystem_runtime_sensors(
+    hass: HomeAssistant,
+    entry: StiebelEltronConfigEntry,
+    model: ControllerModel,
+) -> None:
+    """Remove the runtime sensors a WPMsystem never answers.
+
+    Nothing is lost. The registers reply with the unavailable marker on this
+    controller, so the entities never held a numeric state and no statistic was
+    recorded for them. Removing a registry entry does not discard recorder
+    history either, so a controller that was replaced by a WPMsystem keeps what
+    it had recorded before.
+    """
+    if model is not ControllerModel.WPMsystem:
+        return
+
+    registry = er.async_get(hass)
+    # Every model prefix, not only the one detected now: a controller that was
+    # replaced by a WPMsystem left ids carrying the name of the model it was
+    # detected as back then, and nothing will ever provide those entities again.
+    prefixes = _legacy_prefixes(entry, model) + [
+        f"{DOMAIN}_{coordinator_display_name(historical)}_"
+        for historical in ControllerModel
+    ]
+    obsolete_unique_ids = {
+        unique_id
+        for key in _WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS
+        for unique_id in (
+            build_unique_id(entry, key),
+            *(f"{prefix}{key}" for prefix in prefixes),
+        )
+    }
+    obsolete = [
+        registry_entry
+        for registry_entry in er.async_entries_for_config_entry(
+            registry,
+            entry.entry_id,
+        )
+        if registry_entry.domain == "sensor"
+        and registry_entry.unique_id in obsolete_unique_ids
+    ]
+    for registry_entry in obsolete:
+        registry.async_remove(registry_entry.entity_id)
+
+    if obsolete:
+        _LOGGER.info(
+            "Removed %s runtime sensor entities this controller does not serve",
+            len(obsolete),
+        )
+
+
 def _legacy_name(entry: StiebelEltronConfigEntry) -> str:
     """Return the display name an earlier release built its identifiers from.
 
@@ -81,7 +150,7 @@ def _legacy_name(entry: StiebelEltronConfigEntry) -> str:
     instead of guessed. The title is the same fallback the setup code used for
     an entry without a configured name.
     """
-    return entry.data.get(CONF_NAME, entry.title)
+    return cast(str, entry.data.get(CONF_NAME, entry.title))
 
 
 def _legacy_prefixes(
@@ -230,14 +299,18 @@ def async_migrate_device_identifier(
     left behind on an empty predecessor.
     """
     registry = dr.async_get(hass)
-    legacy = registry.async_get_device(identifiers={(DOMAIN, _legacy_name(entry))})
+    legacy = _async_get_device_by_identifier(
+        registry, (DOMAIN, _legacy_name(entry)), entry.entry_id
+    )
     if legacy is None or entry.entry_id not in legacy.config_entries:
         # Nothing to migrate, or the name belongs to a second installation that
-        # happens to be called the same. Identifiers are global, so that has to
-        # be checked rather than assumed.
+        # happens to be called the same. Before Home Assistant 2026.8 identifiers
+        # are global, so ownership has to be checked rather than assumed.
         return
 
-    replacement = registry.async_get_device(identifiers={(DOMAIN, entry.entry_id)})
+    replacement = _async_get_device_by_identifier(
+        registry, (DOMAIN, entry.entry_id), entry.entry_id
+    )
     if replacement is not None and replacement.config_entries != {entry.entry_id}:
         # Nothing here creates a device that another config entry can share, so
         # this should not happen. If it ever does, leaving both devices alone is
@@ -258,6 +331,23 @@ def async_migrate_device_identifier(
 
     registry.async_update_device(legacy.id, new_identifiers={(DOMAIN, entry.entry_id)})
     _LOGGER.info("Migrated the device identifier of %s", legacy.name)
+
+
+@callback
+def _async_get_device_by_identifier(
+    registry: dr.DeviceRegistry,
+    identifier: tuple[str, str],
+    config_entry_id: str,
+) -> dr.DeviceEntry | None:
+    """Look up one entry's device across supported Home Assistant versions."""
+    # Remove this compatibility helper once the minimum supported Home Assistant
+    # version provides the config-entry-scoped lookup.
+    if hasattr(registry, "async_get_device_by_identifier"):
+        return registry.async_get_device_by_identifier(identifier, config_entry_id)
+
+    # Home Assistant before 2026.8 only has the global identifier lookup. The
+    # caller still verifies ownership before changing the returned device.
+    return registry.async_get_device(identifiers={identifier})
 
 
 @callback

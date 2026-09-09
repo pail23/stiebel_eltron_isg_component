@@ -30,14 +30,28 @@
         "error": {
             "already_configured": "Périphérique déjà configuré",
             "invalid_host_IP": "IP hôte invalide",
-            "cannot_connect": "Impossible de se connecter au périphérique. Veuillez vérifier l'hôte et le port."
+            "cannot_connect": "Impossible de se connecter au périphérique. Veuillez vérifier l'hôte et le port.",
+            "link_conflict": "Une autre intégration utilise déjà cet appareil Modbus avec des paramètres de connexion incompatibles. Reconfigurez cette intégration ou supprimez la connexion en conflit."
         },
         "abort": {
             "already_configured": "Périphérique déjà configuré",
+            "link_conflict": "Une autre intégration utilise déjà cet appareil Modbus avec des paramètres de connexion incompatibles. Reconfigurez cette intégration ou supprimez la connexion en conflit.",
             "reconfigure_successful": "Les détails de connexion ont été mis à jour avec succès."
         }
     },
     "exceptions": {
+        "modbus_setup_failed": {
+            "message": "Impossible de configurer la connexion Modbus : {error}"
+        },
+        "controller_read_failed": {
+            "message": "Impossible de lire le modèle du régulateur : {error}"
+        },
+        "unsupported_controller": {
+            "message": "Modèle de régulateur non pris en charge : {model_id}"
+        },
+        "initial_read_failed": {
+            "message": "Impossible de lire les données initiales de l’appareil : {error}"
+        },
         "write_unsupported": {
             "message": "The setting {field} cannot be written on the connected controller."
         },

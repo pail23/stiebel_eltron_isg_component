@@ -75,6 +75,7 @@ from custom_components.stiebel_eltron_isg.sensor import (
     WPM_3I_SENSOR_TYPES,
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
+    WPMSYSTEM_SENSOR_TYPES,
     StiebelEltronISGSensor,
     StiebelEltronSensorEntityDescription,
     async_setup_entry,
@@ -221,13 +222,9 @@ def test_sensor_description_rejects_non_callable_register() -> None:
         )
 
 
-async def test_setup_uses_wpm_3i_sensor_lists() -> None:
-    """WPM 3i receives both its regular and daily energy sensors."""
-    entry = SimpleNamespace(
-        runtime_data=SimpleNamespace(model=ControllerModel.WPM_3i),
-    )
+async def _setup_sensor_keys(model: ControllerModel) -> list[str]:
+    entry = SimpleNamespace(runtime_data=SimpleNamespace(model=model))
     add_entities = MagicMock()
-
     with patch.object(
         sensor_module,
         "StiebelEltronISGSensor",
@@ -237,15 +234,49 @@ async def test_setup_uses_wpm_3i_sensor_lists() -> None:
         ),
     ):
         await sensor_module.async_setup_entry(None, entry, add_entities)
+    return [key for _, key in add_entities.call_args.args[0]]
 
-    entities = add_entities.call_args.args[0]
-    assert entities == [
-        *[("sensor", description.key) for description in WPM_3I_SENSOR_TYPES],
-        *[
-            ("sensor", description.key)
-            for description in sensor_module.ENERGY_DAILY_SENSOR_TYPES
-        ],
+
+async def test_setup_uses_wpm_3i_sensor_lists() -> None:
+    """WPM 3i receives both its regular and daily energy sensors."""
+    entity_keys = await _setup_sensor_keys(ControllerModel.WPM_3i)
+
+    assert entity_keys == [
+        *[description.key for description in WPM_3I_SENSOR_TYPES],
+        *[description.key for description in sensor_module.ENERGY_DAILY_SENSOR_TYPES],
     ]
+
+
+async def test_setup_omits_unsupported_wpmsystem_aggregate_runtime_sensors() -> None:
+    """WPMsystem must not create the WPM 3i-only aggregate runtime sensors."""
+    entity_keys = await _setup_sensor_keys(ControllerModel.WPMsystem)
+    unsupported_runtime_keys = {
+        COMPRESSOR_HEATING,
+        COMPRESSOR_HEATING_WATER,
+        COOLING_RUNTIME,
+    }
+    shared_keys = {description.key for description in WPM_SENSOR_TYPES}
+    wpmsystem_keys = {description.key for description in WPMSYSTEM_SENSOR_TYPES}
+
+    assert wpmsystem_keys < shared_keys
+    assert shared_keys - wpmsystem_keys == unsupported_runtime_keys
+    assert set(entity_keys) == (
+        wpmsystem_keys
+        | {description.key for description in ENERGY_DAILY_SENSOR_TYPES}
+        | {description.key for description in WPM_INVERTER_POWER_SENSOR_TYPES}
+    )
+    assert len(entity_keys) == len(set(entity_keys))
+
+
+@pytest.mark.parametrize("model", [ControllerModel.WPM_3, ControllerModel.LWZ_R290])
+async def test_wpmsystem_runtime_fix_does_not_change_unmeasured_models(model) -> None:
+    """Keep other model surfaces unchanged until their registers are measured."""
+    entity_keys = set(await _setup_sensor_keys(model))
+    assert {
+        COMPRESSOR_HEATING,
+        COMPRESSOR_HEATING_WATER,
+        COOLING_RUNTIME,
+    } <= entity_keys
 
 
 @pytest.mark.parametrize(

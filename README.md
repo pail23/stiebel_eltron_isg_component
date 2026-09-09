@@ -91,6 +91,21 @@ twice.
 The separate **Total** sensors remain cumulative alternatives. Which energy
 entities are available depends on the connected controller.
 
+## Automation example
+
+Use the [heat pump fault notification blueprint](blueprints/automation/heat_pump_fault.yaml)
+to receive a notification when the ISG **Error Status** binary sensor changes
+to **On**. In Home Assistant, go to **Settings → Automations & scenes → Blueprints**,
+choose **Import blueprint**, and paste the GitHub URL of the linked YAML file.
+Create an automation from it and select your heat pump's Error Status entity.
+
+The default action creates a persistent notification in Home Assistant. You can
+replace it with your preferred notification action, such as a phone notification.
+It does not change heat pump settings or periodically repeat alerts. An existing
+fault is reported only when the entity next changes to On; unknown and unavailable
+states do not trigger an alert. This is a convenience notification, not a substitute
+for the heat pump's own fault display.
+
 ## Removing the integration
 
 1. Open **Settings → Devices & services**.
@@ -124,6 +139,20 @@ Write errors are returned to the Home Assistant action that initiated them.
 The integration cannot update ISG firmware. Firmware updates are handled
 through Stiebel Eltron support. It also cannot make a register writable when
 the connected controller or firmware exposes it as read-only.
+
+## Upgrading to 2026.9
+
+Release 2026.9 requires Home Assistant 2026.9.0 or newer.
+No reconfiguration is needed for a normal installation.
+
+The integration now obtains its Modbus unit from Home Assistant's shared Modbus connection service instead of opening and owning a separate connection.
+Integrations using the same endpoint and compatible link settings therefore share one serialized connection.
+A lost network link is re-established by the shared backend on the next poll, so manually reloading the integration is normally unnecessary.
+
+If another integration already uses the same Modbus endpoint with incompatible link settings, setup stops and reports that conflict instead of opening a second managed connection.
+Align the connection settings or remove the conflicting configuration before trying again.
+
+Debug logging now comes from `modbus_connection`, `tmodbus`, and `pystiebeleltron` rather than `pymodbus`.
 
 ## Upgrading to 2026.8
 

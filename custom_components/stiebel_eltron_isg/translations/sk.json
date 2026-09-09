@@ -30,14 +30,28 @@
         "error": {
             "already_configured": "Zariadenie je už nakonfigurované",
             "invalid_host_IP": "Neplatná IP hostiteľa",
-            "cannot_connect": "Nie je možné pripojiť sa k zariadeniu. Skontrolujte prosím host a port."
+            "cannot_connect": "Nie je možné pripojiť sa k zariadeniu. Skontrolujte prosím host a port.",
+            "link_conflict": "Iná integrácia už používa toto zariadenie Modbus s nekompatibilnými nastaveniami pripojenia. Zmeňte konfiguráciu uvedenej integrácie alebo odstráňte konfliktné pripojenie."
         },
         "abort": {
             "already_configured": "Zariadenie je už nakonfigurované",
+            "link_conflict": "Iná integrácia už používa toto zariadenie Modbus s nekompatibilnými nastaveniami pripojenia. Zmeňte konfiguráciu uvedenej integrácie alebo odstráňte konfliktné pripojenie.",
             "reconfigure_successful": "Podrobnosti o pripojení boli úspešne aktualizované."
         }
     },
     "exceptions": {
+        "modbus_setup_failed": {
+            "message": "Nepodarilo sa nastaviť pripojenie Modbus: {error}"
+        },
+        "controller_read_failed": {
+            "message": "Nepodarilo sa prečítať model regulátora: {error}"
+        },
+        "unsupported_controller": {
+            "message": "Nepodporovaný model regulátora: {model_id}"
+        },
+        "initial_read_failed": {
+            "message": "Nepodarilo sa prečítať počiatočné údaje zariadenia: {error}"
+        },
         "write_unsupported": {
             "message": "The setting {field} cannot be written on the connected controller."
         },

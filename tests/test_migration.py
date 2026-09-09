@@ -1,6 +1,7 @@
 """Tests for the migration of legacy entity unique ids."""
 
-import attr
+from typing import cast
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -13,8 +14,14 @@ from pystiebeleltron import ControllerModel
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.stiebel_eltron_isg import migration
-from custom_components.stiebel_eltron_isg.const import CIRCULATION_PUMP, DOMAIN
+from custom_components.stiebel_eltron_isg import migration, sensor
+from custom_components.stiebel_eltron_isg.const import (
+    CIRCULATION_PUMP,
+    COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_WATER,
+    COOLING_RUNTIME,
+    DOMAIN,
+)
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 
 # The model the mock_get_controller_model fixture reports, and the display name
@@ -26,6 +33,33 @@ MODEL_NAME = "Stiebel Eltron WPM_3"
 KEY = "outdoor_temperature"
 
 
+class _LegacyDeviceRegistry:
+    """Model the identifier lookup available before Home Assistant 2026.8."""
+
+    def __init__(self, device: dr.DeviceEntry) -> None:
+        """Store the device returned by the legacy global lookup."""
+        self.device = device
+        self.identifiers: set[tuple[str, str]] | None = None
+
+    def async_get_device(
+        self, identifiers: set[tuple[str, str]] | None = None
+    ) -> dr.DeviceEntry:
+        """Return the configured device and record the requested identifiers."""
+        self.identifiers = identifiers
+        return self.device
+
+
+def _get_device_by_identifier(
+    registry: dr.DeviceRegistry,
+    identifier: tuple[str, str],
+    config_entry_id: str,
+) -> dr.DeviceEntry | None:
+    """Look up a test device across supported Home Assistant versions."""
+    if hasattr(registry, "async_get_device_by_identifier"):
+        return registry.async_get_device_by_identifier(identifier, config_entry_id)
+    return registry.async_get_device(identifiers={identifier})
+
+
 @pytest.fixture
 def config_entry_with_name() -> MockConfigEntry:
     """Return an entry as it was created before 2026.7, with a configured name."""
@@ -35,6 +69,21 @@ def config_entry_with_name() -> MockConfigEntry:
         data={CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_NAME: "My Heatpump"},
         entry_id="stiebel_eltron_002",
     )
+
+
+def test_device_lookup_falls_back_before_home_assistant_2026_8() -> None:
+    """The compatibility path keeps the HACS minimum version working."""
+    device = cast("dr.DeviceEntry", object())
+    legacy_registry = _LegacyDeviceRegistry(device)
+
+    result = migration._async_get_device_by_identifier(
+        cast("dr.DeviceRegistry", legacy_registry),
+        (DOMAIN, "My Heatpump"),
+        "stiebel_eltron_002",
+    )
+
+    assert result is device
+    assert legacy_registry.identifiers == {(DOMAIN, "My Heatpump")}
 
 
 def _register(
@@ -589,8 +638,10 @@ async def test_a_whole_installation_keeps_every_entity_id(
             entity_id,
             new_unique_id=legacy_prefix + unique_id.removeprefix(target_prefix),
         )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    device = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     device_registry.async_update_device(
         device.id, new_identifiers={(DOMAIN, "My Heatpump")}
@@ -620,8 +671,10 @@ async def test_a_whole_installation_keeps_every_entity_id(
     }
     assert after == provided | stale
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+        _get_device_by_identifier(
+            device_registry,
+            (DOMAIN, config_entry_with_name.entry_id),
+            config_entry_with_name.entry_id,
         ).id
         == device.id
     )
@@ -656,15 +709,20 @@ async def test_the_device_is_renamed_rather_than_replaced(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    migrated = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    migrated = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert migrated is not None
     assert migrated.id == legacy.id
     assert migrated.name_by_user == "Waermepumpe Keller"
     # No second device is left behind.
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "My Heatpump")}) is None
+        _get_device_by_identifier(
+            device_registry, (DOMAIN, "My Heatpump"), config_entry_with_name.entry_id
+        )
+        is None
     )
     assert (
         len(
@@ -679,7 +737,7 @@ async def test_the_device_is_renamed_rather_than_replaced(
 async def test_a_device_of_another_entry_with_the_same_name_is_left_alone(
     hass: HomeAssistant, config_entry_with_name: MockConfigEntry
 ) -> None:
-    """Device identifiers are global, so the owner has to be checked.
+    """Global identifiers before Home Assistant 2026.8 require an owner check.
 
     Two installations can carry the same configured name, and only one of them
     can own the device that name produced. Home Assistant sets up every config
@@ -709,8 +767,10 @@ async def test_a_device_of_another_entry_with_the_same_name_is_left_alone(
     assert still_theirs.config_entries == {other_entry.entry_id}
     assert (DOMAIN, config_entry_with_name.entry_id) not in still_theirs.identifiers
     # Our own entry got a device of its own rather than adopting theirs.
-    ours = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    ours = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert ours is not None
     assert ours.id != foreign.id
@@ -812,8 +872,10 @@ async def test_labels_of_the_replacement_device_are_kept(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    restored = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    restored = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert restored.id == legacy.id
     assert restored.labels == {"keller", "waermepumpe"}
@@ -846,8 +908,10 @@ async def test_a_disabled_replacement_device_does_not_disable_the_original(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    restored = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    restored = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert restored.id == legacy.id
     assert restored.disabled_by is None
@@ -860,15 +924,11 @@ async def test_a_shared_replacement_device_is_left_alone(
 ) -> None:
     """A device another config entry also belongs to is never removed.
 
-    Home Assistant 2026.8 splits a shared device into one device per config
-    entry and synthesizes the former shared device from those splits. Older
-    releases store the config entries directly on one device. Removing either
-    representation would take somebody else's device with it.
+    Home Assistant 2026.8 stores one device per config entry, so only this
+    entry's replacement may be adopted. Older releases store the config entries
+    directly on one device, which must remain untouched when it is shared.
     """
     config_entry_with_name.add_to_hass(hass)
-    # Identifier lookups prefer config entries whose domain matches the
-    # identifier. Use two entries of this integration so Home Assistant can
-    # resolve their split devices back to the shared composite.
     stranger = MockConfigEntry(domain=DOMAIN, title="Something else")
     stranger.add_to_hass(hass)
     device_registry = dr.async_get(hass)
@@ -882,49 +942,41 @@ async def test_a_shared_replacement_device_is_left_alone(
         identifiers={(DOMAIN, config_entry_with_name.entry_id)},
         name=MODEL_NAME,
     )
-    expected_shared_id = replacement.id
-    protected_device_ids = {replacement.id}
-    if hasattr(dr.DeviceEntry, "composite_device_id"):
+    if hasattr(device_registry, "async_get_device_by_identifier"):
         stranger_replacement = device_registry.async_get_or_create(
             config_entry_id=stranger.entry_id,
-            identifiers={(DOMAIN, f"{config_entry_with_name.entry_id}_stranger")},
+            identifiers={(DOMAIN, config_entry_with_name.entry_id)},
             name=MODEL_NAME,
         )
-        composite_id = "pre_split_replacement_device"
-        expected_shared_id = composite_id
-        device_registry.devices[replacement.id] = attr.evolve(
-            replacement, composite_device_id=composite_id
+        assert (
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, config_entry_with_name.entry_id),
+                config_entry_with_name.entry_id,
+            )
+            == replacement
         )
-        device_registry.devices[stranger_replacement.id] = attr.evolve(
-            stranger_replacement,
-            composite_device_id=composite_id,
-            identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        assert (
+            device_registry.async_get_device_by_identifier(
+                (DOMAIN, config_entry_with_name.entry_id), stranger.entry_id
+            )
+            == stranger_replacement
         )
-        protected_device_ids.add(stranger_replacement.id)
     else:
         device_registry.async_update_device(
             replacement.id, add_config_entry_id=stranger.entry_id
         )
-
-    shared_replacement = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
-    )
-    assert shared_replacement is not None
-    assert shared_replacement.id == expected_shared_id
-    assert shared_replacement.config_entries == {
-        config_entry_with_name.entry_id,
-        stranger.entry_id,
-    }
+        stranger_replacement = replacement
 
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    assert all(
-        device_registry.async_get(device_id) is not None
-        for device_id in protected_device_ids
-    )
+    assert device_registry.async_get(stranger_replacement.id) is not None
     assert device_registry.async_get(legacy.id) is not None
-    assert "shared with" in caplog.text
+    if stranger_replacement.id == replacement.id:
+        assert "shared with" in caplog.text
+    else:
+        assert device_registry.async_get(replacement.id) is None
+        assert "shared with" not in caplog.text
 
 
 async def test_a_disabled_or_customised_entity_keeps_everything(
@@ -985,8 +1037,10 @@ async def test_an_area_set_after_the_update_is_carried_over(
     assert await hass.config_entries.async_setup(config_entry_with_name.entry_id)
     await hass.async_block_till_done()
 
-    restored = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry_with_name.entry_id)}
+    restored = _get_device_by_identifier(
+        device_registry,
+        (DOMAIN, config_entry_with_name.entry_id),
+        config_entry_with_name.entry_id,
     )
     assert restored.id == legacy.id
     assert restored.area_id == "heizungskeller"
@@ -1013,3 +1067,165 @@ async def test_migration_is_idempotent(
     migrated = er.async_get(hass).async_get(legacy.entity_id)
     assert migrated.entity_id == "sensor.stiebel_eltron_isg_outdoor_temperature"
     assert migrated.unique_id == f"{config_entry_with_name.entry_id}_{KEY}"
+
+
+def test_removes_unsupported_wpmsystem_runtime_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A WPMsystem must not keep the three sensors it can never serve."""
+    mock_config_entry.add_to_hass(hass)
+    obsolete = [
+        _register(
+            hass,
+            mock_config_entry,
+            build_unique_id(mock_config_entry, key),
+            key,
+        )
+        for key in (COMPRESSOR_HEATING, COMPRESSOR_HEATING_WATER, COOLING_RUNTIME)
+    ]
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    registry = er.async_get(hass)
+    assert [registry.async_get(entry.entity_id) for entry in obsolete] == [None] * 3
+
+
+def test_removes_unsupported_runtime_sensors_on_legacy_unique_ids(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An entry left on either historical unique-id scheme is removed too."""
+    mock_config_entry.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron_{COMPRESSOR_HEATING}",
+        "legacy_compressor_heating",
+    )
+    model_legacy = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPMsystem_{COMPRESSOR_HEATING}",
+        "model_legacy_compressor_heating",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    registry = er.async_get(hass)
+    assert registry.async_get(legacy.entity_id) is None
+    assert registry.async_get(model_legacy.entity_id) is None
+
+
+def test_runtime_sensor_cleanup_leaves_other_models_untouched(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A WPM 3i answers these registers, so its entities have to survive."""
+    mock_config_entry.add_to_hass(hass)
+    kept = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, COMPRESSOR_HEATING),
+        COMPRESSOR_HEATING,
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPM_3i,
+    )
+
+    assert er.async_get(hass).async_get(kept.entity_id) is not None
+
+
+def test_runtime_sensor_cleanup_leaves_unrelated_entities_untouched(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Neither another sensor nor a switch sharing the key may be removed."""
+    mock_config_entry.add_to_hass(hass)
+    other_sensor = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, KEY),
+        KEY,
+    )
+    same_key_switch = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, COMPRESSOR_HEATING),
+        "compressor_heating_switch",
+        domain="switch",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    registry = er.async_get(hass)
+    assert registry.async_get(other_sensor.entity_id) is not None
+    assert registry.async_get(same_key_switch.entity_id) is not None
+
+
+def test_removed_runtime_keys_match_the_sensors_wpmsystem_omits() -> None:
+    """The cleanup must cover exactly the keys the sensor platform drops."""
+    omitted = {description.key for description in sensor.WPM_SENSOR_TYPES} - {
+        description.key for description in sensor.WPMSYSTEM_SENSOR_TYPES
+    }
+
+    assert set(migration._WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS) == omitted
+
+
+def test_runtime_sensor_cleanup_covers_the_configured_name_scheme(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+) -> None:
+    """The oldest ids were built from the name the user had configured."""
+    config_entry_with_name.add_to_hass(hass)
+    legacy = _register(
+        hass,
+        config_entry_with_name,
+        f"{DOMAIN}_My Heatpump_{COOLING_RUNTIME}",
+        "legacy_cooling_runtime",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        config_entry_with_name,
+        ControllerModel.WPMsystem,
+    )
+
+    assert er.async_get(hass).async_get(legacy.entity_id) is None
+
+
+def test_runtime_sensor_cleanup_covers_a_previously_detected_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A controller swapped for a WPMsystem left ids naming the old model."""
+    mock_config_entry.add_to_hass(hass)
+    previous_model = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPM_3i_{COMPRESSOR_HEATING}",
+        "wpm_3i_compressor_heating",
+    )
+
+    migration.async_remove_unsupported_wpmsystem_runtime_sensors(
+        hass,
+        mock_config_entry,
+        ControllerModel.WPMsystem,
+    )
+
+    assert er.async_get(hass).async_get(previous_model.entity_id) is None

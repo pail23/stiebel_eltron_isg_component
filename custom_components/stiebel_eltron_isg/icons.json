@@ -46,9 +46,6 @@
             "emergency_heating_2": {
                 "default": "mdi:fence-electric"
             },
-            "error_status": {
-                "default": "mdi:alert"
-            },
             "evaporator_defrost": {
                 "default": "mdi:snowflake-melt"
             },

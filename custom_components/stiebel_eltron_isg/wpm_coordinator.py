@@ -7,11 +7,9 @@ https://github.com/pail23/stiebel_eltron_isg
 import logging
 
 from homeassistant.core import HomeAssistant
-from modbus_connection import ModbusConnection
+from modbus_connection import ModbusUnit
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.wpm import WpmStiebelEltronAPI
-
-from custom_components.stiebel_eltron_isg.const import UNIT_ID
 
 from .coordinator import (
     StiebelEltronConfigEntry,
@@ -32,7 +30,7 @@ class StiebelEltronModbusWPMDataCoordinator(
         hass: HomeAssistant,
         entry: StiebelEltronConfigEntry,
         model: ControllerModel,
-        connection: ModbusConnection,
+        unit: ModbusUnit,
         host: str,
     ) -> None:
         """Initialize the Modbus hub."""
@@ -40,10 +38,9 @@ class StiebelEltronModbusWPMDataCoordinator(
         super().__init__(
             hass,
             entry,
-            WpmStiebelEltronAPI(connection.for_unit(UNIT_ID)),
+            WpmStiebelEltronAPI(unit),
             StiebelEltronConnectionParams(
                 host=host,
                 model=model,
-                connection=connection,
             ),
         )

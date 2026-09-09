@@ -19,6 +19,7 @@ import importlib.metadata
 import json
 from pathlib import Path
 
+from homeassistant.components import modbus as ha_modbus
 from packaging.requirements import Requirement
 import pytest
 
@@ -28,13 +29,14 @@ _MANIFEST = (
     / "stiebel_eltron_isg"
     / "manifest.json"
 )
+_HA_MODBUS_MANIFEST = Path(ha_modbus.__file__).with_name("manifest.json")
 
 
-def test_installed_versions_satisfy_manifest_requirements() -> None:
-    """Each active requirement is installed, at a version its specifier admits."""
-    requirements = json.loads(_MANIFEST.read_text())["requirements"]
+def _assert_manifest_requirements_are_installed(manifest: Path) -> None:
+    """Require the environment to satisfy one integration manifest."""
+    requirements = json.loads(manifest.read_text())["requirements"]
 
-    assert requirements, "manifest declares no requirements"
+    assert requirements, f"{manifest} declares no requirements"
 
     for entry in requirements:
         requirement = Requirement(entry)
@@ -48,13 +50,23 @@ def test_installed_versions_satisfy_manifest_requirements() -> None:
             installed = importlib.metadata.version(requirement.name)
         except importlib.metadata.PackageNotFoundError:
             pytest.fail(
-                f"manifest.json requires {entry} but {requirement.name} is not "
+                f"{manifest} requires {entry} but {requirement.name} is not "
                 f"installed in the test environment, so nothing here exercises "
                 f"the code that depends on it."
             )
 
         assert requirement.specifier.contains(installed, prereleases=True), (
-            f"manifest.json requires {entry} but the tests run against "
+            f"{manifest} requires {entry} but the tests run against "
             f"{requirement.name}=={installed}. Code relying on the installed "
             f"version would fail only on a real installation, never in CI."
         )
+
+
+def test_installed_versions_satisfy_manifest_requirements() -> None:
+    """Exercise the same library versions that this integration installs."""
+    _assert_manifest_requirements_are_installed(_MANIFEST)
+
+
+def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None:
+    """Keep the shared Modbus test stack aligned with Home Assistant Core."""
+    _assert_manifest_requirements_are_installed(_HA_MODBUS_MANIFEST)

@@ -1,0 +1,36 @@
+blueprint:
+  name: Stiebel Eltron ISG fault notification
+  description: >-
+    Notify when the selected ISG fault-status binary sensor changes to on.
+    The default action creates a persistent notification in Home Assistant.
+    Replace it with your preferred notification action if needed.
+    Unavailable and unknown states do not trigger notifications.
+  domain: automation
+  input:
+    fault_sensor:
+      name: Heat pump fault status
+      description: Select the Error Status entity of your Stiebel Eltron ISG.
+      selector:
+        entity:
+          filter:
+            - integration: stiebel_eltron_isg
+              domain: binary_sensor
+              device_class: problem
+    notification_action:
+      name: Notification action
+      description: Action to run when the heat pump reports a fault.
+      default:
+        - action: persistent_notification.create
+          data:
+            title: Heat pump fault
+            message: >-
+              Your Stiebel Eltron ISG reports a fault. Check the heat pump
+              display or Servicewelt for details.
+      selector:
+        action: {}
+triggers:
+  - trigger: state
+    entity_id: !input fault_sensor
+    to: "on"
+actions: !input notification_action
+mode: single

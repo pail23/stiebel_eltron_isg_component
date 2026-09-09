@@ -30,14 +30,28 @@
         "error": {
             "already_configured": "Das Gerät ist bereits konfiguriert.",
             "invalid_host_IP": "Ungültige Host Adresse",
-            "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port."
+            "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port.",
+            "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung."
         },
         "abort": {
             "already_configured": "Das Gerät ist bereits konfiguriert.",
+            "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung.",
             "reconfigure_successful": "Verbindungsdaten erfolgreich aktualisiert."
         }
     },
     "exceptions": {
+        "modbus_setup_failed": {
+            "message": "Die Modbus-Verbindung konnte nicht eingerichtet werden: {error}"
+        },
+        "controller_read_failed": {
+            "message": "Das Reglermodell konnte nicht gelesen werden: {error}"
+        },
+        "unsupported_controller": {
+            "message": "Nicht unterstütztes Reglermodell: {model_id}"
+        },
+        "initial_read_failed": {
+            "message": "Die Gerätedaten konnten beim Start nicht gelesen werden: {error}"
+        },
         "write_unsupported": {
             "message": "Die Einstellung {field} kann bei der verbundenen Regelung nicht geschrieben werden."
         },
