@@ -280,10 +280,10 @@ async def test_setup_omits_unsupported_wpmsystem_aggregate_runtime_sensors() -> 
     assert wpmsystem_keys < shared_keys
     assert shared_keys - wpmsystem_keys == unsupported_runtime_keys
     assert set(entity_keys) == (
-        wpmsystem_keys
+        {description.key for description in WPM_AMOUNT_OF_HEAT_SENSOR_TYPES}
+        | wpmsystem_keys
         | {description.key for description in ENERGY_DAILY_SENSOR_TYPES}
         | {description.key for description in WPM_INVERTER_POWER_SENSOR_TYPES}
-        | {description.key for description in WPM_AMOUNT_OF_HEAT_SENSOR_TYPES}
     )
     assert len(entity_keys) == len(set(entity_keys))
 
