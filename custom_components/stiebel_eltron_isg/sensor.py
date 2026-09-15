@@ -135,6 +135,7 @@ from .const import (
     TARGET_ROOM_TEMPERATURE_HK3,
     TARGET_TEMPERATURE,
     TARGET_TEMPERATURE_BUFFER,
+    TARGET_TEMPERATURE_COOLING_CIRCUIT_1_HK1,
     TARGET_TEMPERATURE_COOLING_FANCOIL,
     TARGET_TEMPERATURE_COOLING_SURFACE,
     TARGET_TEMPERATURE_FEK,
@@ -1184,6 +1185,17 @@ WPM_INVERTER_POWER_SENSOR_TYPES = [
     ),
 ]
 
+# WPMsystem exposes the cooling setpoint for cooling circuit 1 / heating
+# circuit 1 on holding register 1603. This is separate from the generic area
+# cooling target on register 1515. Keep it read-only until writes to this
+# controller- and firmware-specific field have been verified on hardware.
+WPMSYSTEM_COOLING_SENSOR_TYPES = [
+    create_temperature_entity_description(
+        TARGET_TEMPERATURE_COOLING_CIRCUIT_1_HK1,
+        lambda api: api.system_parameters.set_temperature_cc_1_hk_1,
+    ),
+]
+
 
 WPM_3I_SENSOR_TYPES = (
     WPM_3I_SYSTEM_VALUES_SENSOR_TYPES
@@ -1275,13 +1287,13 @@ async def async_setup_entry(
         ]
         entities.extend(daily_energy_entities)
         if coordinator.model == ControllerModel.WPMsystem:
-            # Only WPMsystem is measured to answer wire 3679. A WPM 3i refuses
-            # it outright, and nothing is known about WPM_3 or LWZ_R290, so the
-            # sensor stays off the shared list rather than risk an entity that
-            # can never hold a value.
+            # These extra fields are limited to WPMsystem; support on the
+            # other controller families has not been established.
             entities.extend(
                 StiebelEltronISGSensor(coordinator, entry, description)
-                for description in WPM_INVERTER_POWER_SENSOR_TYPES
+                for description in (
+                    WPM_INVERTER_POWER_SENSOR_TYPES + WPMSYSTEM_COOLING_SENSOR_TYPES
+                )
             )
     else:
         entities = [

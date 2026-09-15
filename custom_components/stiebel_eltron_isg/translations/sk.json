@@ -153,6 +153,9 @@
             "target_temperature_cooling_surface": {
                 "name": "Požadovaná teplota plošného chladenia"
             },
+            "target_temperature_cooling_circuit_1_hk1": {
+                "name": "Cooling Circuit 1 / HK1 Target Temperature"
+            },
             "solar_cylinder_temperature": {
                 "name": "Teplota solárneho zásobníka"
             },

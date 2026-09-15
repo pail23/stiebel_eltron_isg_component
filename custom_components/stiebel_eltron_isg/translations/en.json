@@ -158,6 +158,9 @@
             "target_temperature_cooling_surface": {
                 "name": "Target Temperature Cooling Surface"
             },
+            "target_temperature_cooling_circuit_1_hk1": {
+                "name": "Cooling Circuit 1 / HK1 Target Temperature"
+            },
             "solar_cylinder_temperature": {
                 "name": "Solar Cylinder Temperature"
             },
