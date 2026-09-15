@@ -64,6 +64,9 @@ from .const import (
     CONSUMED_WATER_HEATING_PREV_12M,
     CONSUMED_WATER_HEATING_TODAY,
     CONSUMED_WATER_HEATING_TOTAL,
+    COOLING_ENERGY_12M,
+    COOLING_ENERGY_LAST_24H,
+    COOLING_ENERGY_PREV_12M,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
     DEWPOINT_TEMPERATURE,
@@ -107,6 +110,9 @@ from .const import (
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
+    PRODUCED_HEATING_12M,
+    PRODUCED_HEATING_LAST_24H,
+    PRODUCED_HEATING_PREV_12M,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_RECOVERY,
@@ -119,6 +125,9 @@ from .const import (
     PRODUCED_SOLAR_WATER_HEATING_TODAY,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
     PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_12M,
+    PRODUCED_WATER_HEATING_LAST_24H,
+    PRODUCED_WATER_HEATING_PREV_12M,
     PRODUCED_WATER_HEATING_TODAY,
     PRODUCED_WATER_HEATING_TOTAL,
     RETURN_TEMPERATURE,
@@ -229,6 +238,22 @@ def create_power_consumption_entity_description(
         translation_key=key,
         native_unit_of_measurement=native_unit,
         state_class=SensorStateClass.TOTAL,
+        device_class=SensorDeviceClass.ENERGY,
+        modbus_register=modbus_register,
+    )
+
+
+def create_heat_window_entity_description(
+    key: str,
+    modbus_register: StiebelEltronModbusRegister,
+    native_unit: UnitOfEnergy = UnitOfEnergy.KILO_WATT_HOUR,
+) -> StiebelEltronSensorEntityDescription:
+    """Create a heat-window sensor without cumulative statistics."""
+    return StiebelEltronSensorEntityDescription(
+        key=key,
+        translation_key=key,
+        native_unit_of_measurement=native_unit,
+        state_class=None,
         device_class=SensorDeviceClass.ENERGY,
         modbus_register=modbus_register,
     )
@@ -1164,6 +1189,52 @@ WPM_POWER_CONSUMPTION_SENSOR_TYPES = [
     ),
 ]
 
+# Heat-quantity pairs start at wires 3689-3705 (documented 3690-3706).
+# They share the optional extended-energy poll with consumption windows.
+# Window decreases must not become negative energy in long-term sums,
+# so these new sensors have no state class.
+WPM_AMOUNT_OF_HEAT_SENSOR_TYPES = [
+    create_heat_window_entity_description(
+        PRODUCED_HEATING_LAST_24H,
+        lambda api: api.extended_energy_data.amount_of_heat_heating_1_24_h,
+        UnitOfEnergy.WATT_HOUR,
+    ),
+    create_heat_window_entity_description(
+        PRODUCED_HEATING_12M,
+        lambda api: api.extended_energy_data.amount_of_heat_heating_1_12,
+    ),
+    create_heat_window_entity_description(
+        PRODUCED_HEATING_PREV_12M,
+        lambda api: api.extended_energy_data.amount_of_heat_heating_13_24,
+    ),
+    create_heat_window_entity_description(
+        COOLING_ENERGY_LAST_24H,
+        lambda api: api.extended_energy_data.amount_of_heat_cooling_1_24_h,
+        UnitOfEnergy.WATT_HOUR,
+    ),
+    create_heat_window_entity_description(
+        COOLING_ENERGY_12M,
+        lambda api: api.extended_energy_data.amount_of_heat_cooling_1_12_m,
+    ),
+    create_heat_window_entity_description(
+        COOLING_ENERGY_PREV_12M,
+        lambda api: api.extended_energy_data.amount_of_heat_cooling_13_24,
+    ),
+    create_heat_window_entity_description(
+        PRODUCED_WATER_HEATING_LAST_24H,
+        lambda api: api.extended_energy_data.amount_of_heat_dhw_1_24_h__wh_wh,
+        UnitOfEnergy.WATT_HOUR,
+    ),
+    create_heat_window_entity_description(
+        PRODUCED_WATER_HEATING_12M,
+        lambda api: api.extended_energy_data.amount_of_heat_dhw_1_12_m,
+    ),
+    create_heat_window_entity_description(
+        PRODUCED_WATER_HEATING_PREV_12M,
+        lambda api: api.extended_energy_data.amount_of_heat_dhw_13_24_m,
+    ),
+]
+
 # Servicewelt "PROZESSDATEN" -> INVERTER AUFNAHMELEISTUNG, wire register 3679.
 # Verified against a WPMsystem while its compressor modulated: raw 6, 10 and 11
 # read 0.6, 1.0 and 1.1 kW on the ISG display in the same sample, which fixes
@@ -1274,6 +1345,11 @@ async def async_setup_entry(
             for description in ENERGY_DAILY_SENSOR_TYPES
         ]
         entities.extend(daily_energy_entities)
+        if coordinator.model in (ControllerModel.WPMsystem, ControllerModel.LWZ_R290):
+            entities.extend(
+                StiebelEltronISGSensor(coordinator, entry, description)
+                for description in WPM_AMOUNT_OF_HEAT_SENSOR_TYPES
+            )
         if coordinator.model == ControllerModel.WPMsystem:
             # Only WPMsystem is measured to answer wire 3679. A WPM 3i refuses
             # it outright, and nothing is known about WPM_3 or LWZ_R290, so the

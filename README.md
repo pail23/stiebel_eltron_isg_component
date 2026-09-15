@@ -91,6 +91,13 @@ twice.
 The separate **Total** sensors remain cumulative alternatives. Which energy
 entities are available depends on the connected controller.
 
+For efficiency calculations, compare heat and electricity over the same time
+interval and in the same unit. The Servicewelt heat-quantity windows (**Last
+24 hours**, **Last 12 months**, and **Previous 12 months**) are separate from
+calendar-day counters. They are exposed for WPMsystem and LWZ R290 controllers
+that provide the extended energy registers. These window sensors have no state class and therefore do not create
+long-term statistics.
+
 ## Automation example
 
 Use the [heat pump fault notification blueprint](blueprints/automation/heat_pump_fault.yaml)

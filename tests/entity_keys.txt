@@ -56,6 +56,9 @@ consumed_water_heating_last_24h
 consumed_water_heating_prev_12m
 consumed_water_heating_today
 consumed_water_heating_total
+cooling_energy_12m
+cooling_energy_last_24h
+cooling_energy_prev_12m
 cooling_mode
 cooling_runtime
 current_power_consumption
@@ -160,6 +163,9 @@ power_off
 produced_electrical_booster_heating_total
 produced_electrical_booster_water_heating_total
 produced_heating
+produced_heating_12m
+produced_heating_last_24h
+produced_heating_prev_12m
 produced_heating_today
 produced_heating_total
 produced_recovery
@@ -172,6 +178,9 @@ produced_solar_water_heating
 produced_solar_water_heating_today
 produced_solar_water_heating_total
 produced_water_heating
+produced_water_heating_12m
+produced_water_heating_last_24h
+produced_water_heating_prev_12m
 produced_water_heating_today
 produced_water_heating_total
 pump_on_hk1

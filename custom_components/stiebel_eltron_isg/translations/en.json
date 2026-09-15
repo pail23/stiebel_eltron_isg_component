@@ -329,6 +329,33 @@
             "consumed_water_heating_prev_12m": {
                 "name": "Consumed Water Heating Previous 12 Months"
             },
+            "produced_heating_last_24h": {
+                "name": "Produced Heating Last 24h"
+            },
+            "produced_heating_12m": {
+                "name": "Produced Heating Last 12 Months"
+            },
+            "produced_heating_prev_12m": {
+                "name": "Produced Heating Previous 12 Months"
+            },
+            "cooling_energy_last_24h": {
+                "name": "Cooling Energy Last 24h"
+            },
+            "cooling_energy_12m": {
+                "name": "Cooling Energy Last 12 Months"
+            },
+            "cooling_energy_prev_12m": {
+                "name": "Cooling Energy Previous 12 Months"
+            },
+            "produced_water_heating_last_24h": {
+                "name": "Produced Water Heating Last 24h"
+            },
+            "produced_water_heating_12m": {
+                "name": "Produced Water Heating Last 12 Months"
+            },
+            "produced_water_heating_prev_12m": {
+                "name": "Produced Water Heating Previous 12 Months"
+            },
             "efficiency_heating_1_24_h": {
                 "name": "Efficiency Heating 1-24 h"
             },

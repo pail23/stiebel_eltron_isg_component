@@ -137,6 +137,20 @@ CONSUMED_WATER_HEATING_LAST_24H = "consumed_water_heating_last_24h"
 CONSUMED_WATER_HEATING_12M = "consumed_water_heating_12m"
 CONSUMED_WATER_HEATING_PREV_12M = "consumed_water_heating_prev_12m"
 
+# WPM heat-quantity breakdown (Servicewelt "WÄRMEMENGE" screen, Modbus
+# registers 3690-3706): the produced counterpart of the block above, over the
+# same three windows. Cooling is named neutrally because the heat is carried
+# away rather than produced, and on a brine machine no compressor runs for it.
+PRODUCED_HEATING_LAST_24H = "produced_heating_last_24h"
+PRODUCED_HEATING_12M = "produced_heating_12m"
+PRODUCED_HEATING_PREV_12M = "produced_heating_prev_12m"
+COOLING_ENERGY_LAST_24H = "cooling_energy_last_24h"
+COOLING_ENERGY_12M = "cooling_energy_12m"
+COOLING_ENERGY_PREV_12M = "cooling_energy_prev_12m"
+PRODUCED_WATER_HEATING_LAST_24H = "produced_water_heating_last_24h"
+PRODUCED_WATER_HEATING_12M = "produced_water_heating_12m"
+PRODUCED_WATER_HEATING_PREV_12M = "produced_water_heating_prev_12m"
+
 EFFICIENCY_HEATING_1_24_H = "efficiency_heating_1_24_h"
 EFFICIENCY_HEATING_1_12_M = "efficiency_heating_1_12_m"
 EFFICIENCY_HEATING_13_24_M = "efficiency_heating_13_24_m"
