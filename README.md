@@ -25,6 +25,11 @@ climate controls, setpoints, operating modes and SG Ready inputs.
 Although the integration was created for Stiebel Eltron devices, it can also be
 used with compatible Tecalor devices.
 
+For read-only values available on the local Servicewelt pages but not through
+Modbus, the separate [Stiebel Eltron HTTP integration](https://github.com/pmq/stiebel-eltron-http)
+may provide additional sensors. It reads the local web pages and does not
+control the heat pump; available values depend on the ISG page layout.
+
 ## Prerequisites
 
 You need:
