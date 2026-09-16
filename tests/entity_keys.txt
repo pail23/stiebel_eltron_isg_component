@@ -199,6 +199,7 @@ target_room_temperature_hk2
 target_room_temperature_hk3
 target_temperature
 target_temperature_buffer
+target_temperature_cooling_circuit_1_hk1
 target_temperature_cooling_fancoil
 target_temperature_cooling_surface
 target_temperature_fek
