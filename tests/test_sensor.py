@@ -15,6 +15,11 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
+from pystiebeleltron.wpm import (
+    WPM_HOLDING_RANGES,
+    WPM_INPUT_RANGES,
+    WpmStiebelEltronAPI,
+)
 import pytest
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -38,6 +43,9 @@ from custom_components.stiebel_eltron_isg.const import (
     CONSUMED_WATER_HEATING_LAST_24H,
     CONSUMED_WATER_HEATING_PREV_12M,
     CONSUMED_WATER_HEATING_TOTAL,
+    COOLING_ENERGY_12M,
+    COOLING_ENERGY_LAST_24H,
+    COOLING_ENERGY_PREV_12M,
     COOLING_RUNTIME,
     CURRENT_POWER_CONSUMPTION,
     DOMAIN,
@@ -56,6 +64,9 @@ from custom_components.stiebel_eltron_isg.const import (
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
     PRODUCED_HEATING,
+    PRODUCED_HEATING_12M,
+    PRODUCED_HEATING_LAST_24H,
+    PRODUCED_HEATING_PREV_12M,
     PRODUCED_HEATING_TODAY,
     PRODUCED_HEATING_TOTAL,
     PRODUCED_SOLAR_HEATING,
@@ -63,6 +74,9 @@ from custom_components.stiebel_eltron_isg.const import (
     PRODUCED_SOLAR_WATER_HEATING,
     PRODUCED_SOLAR_WATER_HEATING_TOTAL,
     PRODUCED_WATER_HEATING,
+    PRODUCED_WATER_HEATING_12M,
+    PRODUCED_WATER_HEATING_LAST_24H,
+    PRODUCED_WATER_HEATING_PREV_12M,
     PRODUCED_WATER_HEATING_TOTAL,
     SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
@@ -73,6 +87,7 @@ from custom_components.stiebel_eltron_isg.sensor import (
     LWZ_ENERGY_DAILY_SENSOR_TYPES,
     LWZ_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
+    WPM_AMOUNT_OF_HEAT_SENSOR_TYPES,
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
     WPMSYSTEM_COOLING_SENSOR_TYPES,
@@ -85,6 +100,10 @@ from custom_components.stiebel_eltron_isg.sensor import (
 
 def _wpm(key: str):
     return next(d for d in WPM_SENSOR_TYPES if d.key == key)
+
+
+def _heat_window(key: str):
+    return next(d for d in WPM_AMOUNT_OF_HEAT_SENSOR_TYPES if d.key == key)
 
 
 def _wpm_3i(key: str):
@@ -262,7 +281,8 @@ async def test_setup_omits_unsupported_wpmsystem_aggregate_runtime_sensors() -> 
     assert wpmsystem_keys < shared_keys
     assert shared_keys - wpmsystem_keys == unsupported_runtime_keys
     assert set(entity_keys) == (
-        wpmsystem_keys
+        {description.key for description in WPM_AMOUNT_OF_HEAT_SENSOR_TYPES}
+        | wpmsystem_keys
         | {description.key for description in ENERGY_DAILY_SENSOR_TYPES}
         | {description.key for description in WPM_INVERTER_POWER_SENSOR_TYPES}
         | {description.key for description in WPMSYSTEM_COOLING_SENSOR_TYPES}
@@ -718,3 +738,88 @@ def test_inverter_power_stays_out_of_the_shared_lists() -> None:
     """
     for sensor_types in (WPM_SENSOR_TYPES, WPM_3I_SENSOR_TYPES, LWZ_SENSOR_TYPES):
         assert not [d for d in sensor_types if d.key == CURRENT_POWER_CONSUMPTION]
+
+
+def test_wpm_exposes_the_amount_of_heat_windows() -> None:
+    """The produced side of the Servicewelt windows, wires 3689-3705.
+
+    Same encoding as the POWER CONSUMPTION block next to it: the library sums
+    each register pair as ``low + high * 1000``, so a 24 h window carries Wh and
+    a 12-month window kWh. The 4886 below is the shape reported in issue #690,
+    where the ISG displayed "4,886 kWh" for HEIZEN 1-24 h. The remaining values
+    are synthetic; no hardware reading of this block has been recorded yet.
+    """
+    api = SimpleNamespace(
+        extended_energy_data=SimpleNamespace(
+            amount_of_heat_heating_1_24_h=4886,
+            amount_of_heat_heating_1_12=18715,
+            amount_of_heat_heating_13_24=1806,
+            amount_of_heat_cooling_1_24_h=310,
+            amount_of_heat_cooling_1_12_m=420,
+            amount_of_heat_cooling_13_24=390,
+            amount_of_heat_dhw_1_24_h__wh_wh=2100,
+            amount_of_heat_dhw_1_12_m=3400,
+            amount_of_heat_dhw_13_24_m=3300,
+        )
+    )
+    wh = UnitOfEnergy.WATT_HOUR
+    kwh = UnitOfEnergy.KILO_WATT_HOUR
+    expected = {
+        PRODUCED_HEATING_LAST_24H: (4886, wh),
+        PRODUCED_HEATING_12M: (18715, kwh),
+        PRODUCED_HEATING_PREV_12M: (1806, kwh),
+        COOLING_ENERGY_LAST_24H: (310, wh),
+        COOLING_ENERGY_12M: (420, kwh),
+        COOLING_ENERGY_PREV_12M: (390, kwh),
+        PRODUCED_WATER_HEATING_LAST_24H: (2100, wh),
+        PRODUCED_WATER_HEATING_12M: (3400, kwh),
+        PRODUCED_WATER_HEATING_PREV_12M: (3300, kwh),
+    }
+
+    for key, (value, unit) in expected.items():
+        desc = _heat_window(key)
+        assert desc.modbus_register(api) == value
+        assert desc.native_unit_of_measurement == unit
+        assert desc.device_class == SensorDeviceClass.ENERGY
+        assert desc.state_class is None
+
+
+async def test_amount_of_heat_windows_have_the_intended_model_surface() -> None:
+    """Only WPMsystem and LWZ R290 receive the new heat windows."""
+    new_keys = {d.key for d in WPM_AMOUNT_OF_HEAT_SENSOR_TYPES}
+    for model in (ControllerModel.WPMsystem, ControllerModel.LWZ_R290):
+        assert new_keys <= set(await _setup_sensor_keys(model))
+    for model in (ControllerModel.WPM_3, ControllerModel.WPM_3i):
+        assert not new_keys & set(await _setup_sensor_keys(model))
+
+    assert not new_keys & {d.key for d in WPM_SENSOR_TYPES}
+    assert not new_keys & {d.key for d in WPM_3I_SENSOR_TYPES}
+
+
+async def test_heat_window_pairs_decode_with_released_library(
+    mock_modbus_connection,
+) -> None:
+    """pystiebeleltron 0.7.1 decodes all nine register pairs."""
+    unit = mock_modbus_connection.for_unit(1)
+    raw = {
+        "input": {
+            address: 0
+            for start, end in WPM_INPUT_RANGES
+            for address in range(start, end + 1)
+        },
+        "holding": {
+            address: 0
+            for start, end in WPM_HOLDING_RANGES
+            for address in range(start, end + 1)
+        },
+    }
+    for index, wire in enumerate(range(3689, 3706, 2)):
+        raw["input"][wire] = 886 + index
+        raw["input"][wire + 1] = 4 + index
+    unit.load_raw(raw)
+    api = WpmStiebelEltronAPI(unit)
+    await api.async_update()
+
+    for index, description in enumerate(WPM_AMOUNT_OF_HEAT_SENSOR_TYPES):
+        assert description.modbus_register(api) == (4 + index) * 1000 + 886 + index
+        assert description.state_class is None

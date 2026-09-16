@@ -327,6 +327,33 @@
             "consumed_water_heating_prev_12m": {
                 "name": "Verbrauchte Warmwasserenergie vorherige 12 Monate"
             },
+            "produced_heating_last_24h": {
+                "name": "Erzeugte Heizwärme letzte 24 h"
+            },
+            "produced_heating_12m": {
+                "name": "Erzeugte Heizwärme letzte 12 Monate"
+            },
+            "produced_heating_prev_12m": {
+                "name": "Erzeugte Heizwärme vorherige 12 Monate"
+            },
+            "cooling_energy_last_24h": {
+                "name": "Abgeführte Kühlenergie letzte 24 h"
+            },
+            "cooling_energy_12m": {
+                "name": "Abgeführte Kühlenergie letzte 12 Monate"
+            },
+            "cooling_energy_prev_12m": {
+                "name": "Abgeführte Kühlenergie vorherige 12 Monate"
+            },
+            "produced_water_heating_last_24h": {
+                "name": "Erzeugte Warmwasserwärme letzte 24 h"
+            },
+            "produced_water_heating_12m": {
+                "name": "Erzeugte Warmwasserwärme letzte 12 Monate"
+            },
+            "produced_water_heating_prev_12m": {
+                "name": "Erzeugte Warmwasserwärme vorherige 12 Monate"
+            },
             "efficiency_heating_1_24_h": {
                 "name": "Efficiency Heating 1-24 h"
             },
