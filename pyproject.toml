@@ -9,7 +9,7 @@ dependencies = [
     # Add HA 2026.9's shared Modbus backend for integration tests.
     "modbus-connection[tmodbus]==4.10.0",
     "pytest-homeassistant-custom-component>=0.13.359",
-    "pystiebeleltron==0.7.1",
+    "pystiebeleltron[tmodbus]==0.8.0",
     # Keep the test stack aligned with Home Assistant's Modbus manifest.
     "pymodbus==3.13.1",
     "tmodbus==0.6.2",
