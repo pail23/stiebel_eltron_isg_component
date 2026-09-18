@@ -799,7 +799,7 @@ async def test_amount_of_heat_windows_have_the_intended_model_surface() -> None:
 async def test_heat_window_pairs_decode_with_released_library(
     mock_modbus_connection,
 ) -> None:
-    """pystiebeleltron 0.7.1 decodes all nine register pairs."""
+    """pystiebeleltron 0.8.0 decodes all nine register pairs."""
     unit = mock_modbus_connection.for_unit(1)
     raw = {
         "input": {

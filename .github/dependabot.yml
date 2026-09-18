@@ -15,5 +15,4 @@ updates:
       - dependency-name: "homeassistant"
       # These versions must follow Home Assistant's Modbus manifest as one set.
       - dependency-name: "modbus-connection"
-      - dependency-name: "pymodbus"
       - dependency-name: "tmodbus"

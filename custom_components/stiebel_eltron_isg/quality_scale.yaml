@@ -182,4 +182,4 @@ rules:
     comment: The local Modbus TCP dependency does not use HTTP.
   strict-typing:
     status: done
-    comment: pyproject.toml enables mypy strict for every integration module with no per-module exclusion; pystiebeleltron 0.7.0 provides its py.typed marker.
+    comment: pyproject.toml enables mypy strict for every integration module with no per-module exclusion; pystiebeleltron 0.8.0 provides its py.typed marker.

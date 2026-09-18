@@ -1525,9 +1525,6 @@ wheels = [
 ]
 
 [package.optional-dependencies]
-pymodbus = [
-    { name = "pymodbus", extra = ["serial"] },
-]
 tmodbus = [
     { name = "tmodbus", extra = ["async-serial"] },
 ]
@@ -2088,11 +2085,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/df/84/cdd3f6af834dac9e3bfaeca1f37c4dbfd305943305670c48499950e4e1cd/pymodbus-3.13.1-py3-none-any.whl", hash = "sha256:820167a9c6a13d698d7ff49e8420f8fbbdd8fec3f75aacd46a35f4ab9a000144", size = 166529, upload-time = "2026-06-13T17:02:08.374Z" },
 ]
 
-[package.optional-dependencies]
-serial = [
-    { name = "pyserial" },
-]
-
 [[package]]
 name = "pynacl"
 version = "1.6.2"
@@ -2215,25 +2207,20 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/08/64/a99f27d3b4347486c7bfc0aa516016c46dc4c0f380ffccbd742a61af1eda/PyRIC-0.1.6.3.tar.gz", hash = "sha256:b539b01cafebd2406c00097f94525ea0f8ecd1dd92f7731f43eac0ef16c2ccc9", size = 870401, upload-time = "2016-12-04T07:54:48.374Z" }
 
 [[package]]
-name = "pyserial"
-version = "3.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/1e/7d/ae3f0a63f41e4d2f6cb66a5b57197850f919f59e558159a4dd3a818f5082/pyserial-3.5.tar.gz", hash = "sha256:3c77e014170dfffbd816e6ffc205e9842efb10be9f58ec16d3e8675b4925cddb", size = 159125, upload-time = "2020-11-23T03:59:15.045Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/bc/587a445451b253b285629263eb51c2d8e9bcea4fc97826266d186f96f558/pyserial-3.5-py2.py3-none-any.whl", hash = "sha256:c4451db6ba391ca6ca299fb3ec7bae67a5c55dde170964c7a14ceefec02f2cf0", size = 90585, upload-time = "2020-11-23T03:59:13.41Z" },
-]
-
-[[package]]
 name = "pystiebeleltron"
-version = "0.7.1"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "modbus-connection", extra = ["pymodbus"] },
-    { name = "pymodbus" },
+    { name = "modbus-connection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/c0/48/5b2b948e24ca00c24f11cd01c803ef86eb431598df28d1a74c4e56592801/pystiebeleltron-0.7.1.tar.gz", hash = "sha256:b90fb0fd93b7abfcdac5b99327bbde24e2e3e8df5fa82ffa8e88bb45365ec37b", size = 17524, upload-time = "2026-09-07T19:04:12.719Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/df/97a950dadce154eff12b302b224c1c7e82466ad1d8b5e45c7f0ae57079b8/pystiebeleltron-0.8.0.tar.gz", hash = "sha256:1d9e7fb6ba77b599e295c34670fce288eb91e09e8353e3ce163acb9e37f8eb7f", size = 18179, upload-time = "2026-09-18T16:37:07.687Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/df/ee/3672f8389d06d63ff167d46834d3112c1fe3a39d8e0732d35ccd83458be6/pystiebeleltron-0.7.1-py3-none-any.whl", hash = "sha256:b62464c1adc55e9de436069fa570d3725213af7e82fec3630bbd17de676fa9f2", size = 21962, upload-time = "2026-09-07T19:04:11.501Z" },
+    { url = "https://files.pythonhosted.org/packages/48/f0/f7626cbdd1988c18263c7ed9719b7a6c02ca156f3dd48ea7f8bf3adb00fb/pystiebeleltron-0.8.0-py3-none-any.whl", hash = "sha256:6105f027508fd5f2f40810192e7f676e43128e40c45d48843d3d27e8e29ad378", size = 22588, upload-time = "2026-09-18T16:37:06.326Z" },
+]
+
+[package.optional-dependencies]
+tmodbus = [
+    { name = "modbus-connection", extra = ["tmodbus"] },
 ]
 
 [[package]]
@@ -2763,7 +2750,7 @@ dependencies = [
     { name = "colorlog" },
     { name = "modbus-connection", extra = ["tmodbus"] },
     { name = "pymodbus" },
-    { name = "pystiebeleltron" },
+    { name = "pystiebeleltron", extra = ["tmodbus"] },
     { name = "pytest-homeassistant-custom-component" },
     { name = "tmodbus" },
 ]
@@ -2780,7 +2767,7 @@ requires-dist = [
     { name = "colorlog", specifier = ">=6.12.0" },
     { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.10.0" },
     { name = "pymodbus", specifier = "==3.13.1" },
-    { name = "pystiebeleltron", specifier = "==0.7.1" },
+    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.8.0" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.359" },
     { name = "tmodbus", specifier = "==0.6.2" },
 ]
