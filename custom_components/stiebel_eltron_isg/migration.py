@@ -30,18 +30,19 @@ from .const import (
     COOLING_RUNTIME,
     DOMAIN,
     HEATER_PRESSURE,
+    PRODUCED_COOLING_TOTAL,
 )
 from .coordinator import StiebelEltronConfigEntry, coordinator_display_name
 from .entity import build_unique_id
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-# 2026.7 renamed exactly one entity key, verified by diffing the key constants
-# of 2026.2 against the current ones. An id from an earlier release carries the
-# old key, so it has to be translated before the new id is built, otherwise the
-# entity would be migrated to an id that no entity description produces and stay
-# orphaned for the second time.
-_RENAMED_KEYS = {"heating_pressure": HEATER_PRESSURE}
+# Map old keys before migrating unique ids. Keep the registry entry in place so
+# existing entity ids, dashboard references, and recorder statistics survive.
+_RENAMED_KEYS = {
+    "heating_pressure": HEATER_PRESSURE,
+    "consumed_cooling_total": PRODUCED_COOLING_TOTAL,
+}
 
 
 def duplicate_entity_issue_id(entry: StiebelEltronConfigEntry) -> str:
@@ -224,7 +225,11 @@ def _plan_migration(
         previous = winners.get(slot)
         if previous is None:
             winners[slot] = (priority, registry_entry)
-        elif priority < previous[0]:
+        elif priority < previous[0] or (
+            priority == previous[0]
+            and registry_entry.unique_id == f"{target_prefix}{key}"
+            and previous[1].unique_id != f"{target_prefix}{key}"
+        ):
             winners[slot] = (priority, registry_entry)
             losers.append(previous[1])
         else:

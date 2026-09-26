@@ -315,8 +315,8 @@
             "consumed_cooling_prev_12m": {
                 "name": "Verbrauchte Kühlenergie vorherige 12 Monate"
             },
-            "consumed_cooling_total": {
-                "name": "Consumed Cooling Total"
+            "produced_cooling_total": {
+                "name": "Abgeführte Kühlenergie gesamt"
             },
             "consumed_water_heating_last_24h": {
                 "name": "Verbrauchte Warmwasserenergie letzte 24 h"

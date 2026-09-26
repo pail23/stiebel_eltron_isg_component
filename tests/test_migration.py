@@ -21,6 +21,7 @@ from custom_components.stiebel_eltron_isg.const import (
     COMPRESSOR_HEATING_WATER,
     COOLING_RUNTIME,
     DOMAIN,
+    PRODUCED_COOLING_TOTAL,
 )
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 
@@ -84,6 +85,73 @@ def test_device_lookup_falls_back_before_home_assistant_2026_8() -> None:
 
     assert result is device
     assert legacy_registry.identifiers == {(DOMAIN, "My Heatpump")}
+
+
+@pytest.mark.parametrize(
+    "legacy_unique_id",
+    [
+        "stiebel_eltron_001_consumed_cooling_total",
+        "stiebel_eltron_isg_Stiebel Eltron_consumed_cooling_total",
+    ],
+)
+async def test_lwz_cooling_total_key_migrates_without_changing_entity_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    legacy_unique_id: str,
+) -> None:
+    """The corrected thermal key keeps the existing entity and its history."""
+    mock_config_entry.add_to_hass(hass)
+    existing = _register(
+        hass, mock_config_entry, legacy_unique_id, "consumed_cooling_total"
+    )
+
+    await migration.async_migrate_unique_ids(
+        hass, mock_config_entry, ControllerModel.LWZ_x04_SOL
+    )
+
+    migrated = er.async_get(hass).async_get(existing.entity_id)
+    assert migrated is not None
+    assert migrated.unique_id == build_unique_id(
+        mock_config_entry, PRODUCED_COOLING_TOTAL
+    )
+    assert migrated.entity_id == existing.entity_id
+
+
+async def test_existing_correct_cooling_key_wins_duplicate_without_setup_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A partial earlier migration must not collide with its target unique id."""
+    mock_config_entry.add_to_hass(hass)
+    old = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, "consumed_cooling_total"),
+        "consumed_cooling_total",
+    )
+    current = _register(
+        hass,
+        mock_config_entry,
+        build_unique_id(mock_config_entry, PRODUCED_COOLING_TOTAL),
+        "produced_cooling_total",
+    )
+
+    await migration.async_migrate_unique_ids(
+        hass, mock_config_entry, ControllerModel.LWZ_x04_SOL
+    )
+
+    registry = er.async_get(hass)
+    assert registry.async_get(current.entity_id) is not None
+    assert registry.async_get(old.entity_id) is not None
+    assert registry.async_get(old.entity_id).unique_id == build_unique_id(
+        mock_config_entry, "consumed_cooling_total"
+    )
+    assert (
+        ir.async_get(hass).async_get_issue(
+            DOMAIN, migration.duplicate_entity_issue_id(mock_config_entry)
+        )
+        is not None
+    )
 
 
 def _register(
