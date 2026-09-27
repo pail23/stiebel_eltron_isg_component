@@ -26,6 +26,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.stiebel_eltron_isg import sensor as sensor_module
 from custom_components.stiebel_eltron_isg.const import (
     ACTIVE_ERROR,
+    ACTUAL_TEMPERATURE_HK3,
     COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_WATER,
@@ -80,6 +81,7 @@ from custom_components.stiebel_eltron_isg.const import (
     PRODUCED_WATER_HEATING_TOTAL,
     SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
+    TARGET_TEMPERATURE_HK3,
 )
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import (
@@ -363,6 +365,29 @@ def test_wpm_3i_target_temperature_hk1_reads_the_shared_field() -> None:
     )
 
     assert _wpm_3i(TARGET_TEMPERATURE_HK1).modbus_register(api) == 23.4
+
+
+@pytest.mark.parametrize("has_extended_values", [False, True])
+def test_hk3_temperatures_follow_library_component(
+    has_extended_values: bool,
+) -> None:
+    """Read HK3 from its component in either supported library layout."""
+    api = SimpleNamespace(
+        system_values=SimpleNamespace(
+            actual_temperature_hk_3=11.1,
+            set_temperature_hk_3=22.2,
+        )
+    )
+    if has_extended_values:
+        api.extended_system_values = SimpleNamespace(
+            actual_temperature_hk_3=33.3,
+            set_temperature_hk_3=44.4,
+        )
+
+    expected_actual = 33.3 if has_extended_values else 11.1
+    expected_target = 44.4 if has_extended_values else 22.2
+    assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) == expected_actual
+    assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) == expected_target
 
 
 def test_lwz_exposes_compressor_frequency() -> None:
