@@ -601,15 +601,19 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     # Library PR #91 moves HK3 into an optional component; 0.8.0 keeps it here.
     create_temperature_entity_description(
         ACTUAL_TEMPERATURE_HK3,
-        lambda api: getattr(
-            api, "extended_system_values", api.system_values
-        ).actual_temperature_hk_3,
+        lambda api: (
+            getattr(
+                api, "extended_system_values", api.system_values
+            ).actual_temperature_hk_3
+        ),
     ),
     create_temperature_entity_description(
         TARGET_TEMPERATURE_HK3,
-        lambda api: getattr(
-            api, "extended_system_values", api.system_values
-        ).set_temperature_hk_3,
+        lambda api: (
+            getattr(
+                api, "extended_system_values", api.system_values
+            ).set_temperature_hk_3
+        ),
     ),
     create_temperature_entity_description(
         ACTUAL_TEMPERATURE_COOLING_FANCOIL,
