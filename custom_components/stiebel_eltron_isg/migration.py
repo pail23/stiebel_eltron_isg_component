@@ -39,6 +39,7 @@ _LOGGER: logging.Logger = logging.getLogger(__package__)
 
 # Map old keys before migrating unique ids. Keep the registry entry in place so
 # existing entity ids, dashboard references, and recorder statistics survive.
+# Source keys must not be reused for a new entity while this mapping exists.
 _RENAMED_KEYS = {
     "heating_pressure": HEATER_PRESSURE,
     "consumed_cooling_total": PRODUCED_COOLING_TOTAL,

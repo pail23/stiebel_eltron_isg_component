@@ -96,12 +96,12 @@ twice.
 The separate **Total** sensors remain cumulative alternatives. Which energy
 entities are available depends on the connected controller.
 
-On LWZ controllers, the cooling total reads the thermal heat meter, not
-electrical consumption. Its entity key is now `produced_cooling_total`. Existing
-entity IDs retain their old `consumed_cooling_total` suffix so automations and
-recorder history keep working. If you rename that entity ID manually, update
-your dashboards and automations. Do not use this thermal value as electrical
-cooling consumption in the Energy Dashboard.
+According to the LWZ register map, the cooling total comes from the thermal
+heat-meter block, not electrical consumption. Its entity key is now
+`produced_cooling_total`. Existing installations keep their entity IDs and
+recorder history, including any custom entity ID. Check any Energy Dashboard
+mapping of this entity: it must not count as electrical cooling consumption.
+If you rename the entity ID manually, update your dashboards and automations.
 
 For efficiency calculations, compare heat and electricity over the same time
 interval and in the same unit. The Servicewelt heat-quantity windows (**Last
