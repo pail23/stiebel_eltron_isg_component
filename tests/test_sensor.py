@@ -655,10 +655,11 @@ def test_lwz_solar_sensors_are_not_duplicates() -> None:
 
 
 def test_lwz_exposes_cooling_total_energy() -> None:
-    """LWZ cooling total reads energy_data.hm_cooling_total as a cumulative kWh."""
+    """LWZ cooling total exposes thermal energy under a produced-energy key."""
     api = SimpleNamespace(energy_data=SimpleNamespace(hm_cooling_total=345))
 
     desc = _lwz(PRODUCED_COOLING_TOTAL)
+    assert desc.key == "produced_cooling_total"
     assert desc.modbus_register(api) == 345
     assert desc.native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
     assert desc.device_class == SensorDeviceClass.ENERGY

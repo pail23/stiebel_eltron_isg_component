@@ -43,7 +43,7 @@ compressor_starts
 consumed_cooling_12m
 consumed_cooling_last_24h
 consumed_cooling_prev_12m
-consumed_cooling_total
+produced_cooling_total
 consumed_heating
 consumed_heating_12m
 consumed_heating_last_24h
