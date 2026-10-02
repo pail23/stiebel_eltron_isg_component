@@ -175,7 +175,22 @@ WPM_3I_CLIMATE_TYPES = [
         max_temp=30,
         eco_target_temp_write_field="eco_temperature_hk_1",
         comfort_target_temp_write_field="comfort_temperature_hk_1",
-    )
+    ),
+    StiebelEltronClimateEntityDescription(
+        key=CLIMATE_HK_2,
+        translation_key=CLIMATE_HK_2,
+        # The WPM 3i API exposes no room temperature or humidity assigned to HK2.
+        humidity_modbus_register=[],
+        actual_temperature_register=[],
+        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_2,
+        comfort_target_temp_register=lambda api: (
+            api.system_parameters.comfort_temperature_hk_2
+        ),
+        min_temp=5,
+        max_temp=30,
+        eco_target_temp_write_field="eco_temperature_hk_2",
+        comfort_target_temp_write_field="comfort_temperature_hk_2",
+    ),
 ]
 
 WPM_CLIMATE_TYPES = [
