@@ -269,8 +269,9 @@ The compatibility shims are gone, along with `probe.py` and `client_bridge.py`:
    `coordinator.write_component_value`.
 2. Entity descriptions address library fields directly, for example
    `modbus_register=lambda api: api.system_parameters.comfort_temperature_hk_1`.
-3. The pinned `pystiebeleltron` version is in
-   `custom_components/stiebel_eltron_isg/manifest.json`.
+3. The minimum `pystiebeleltron` version is declared in
+   `custom_components/stiebel_eltron_isg/manifest.json`. The test environment
+   pins the version in `pyproject.toml` and `uv.lock`.
 
 Note that the library uses wire addresses, which are one below the addresses in the
 Stiebel Eltron Modbus documentation. Documented register 1514 is `1513` in the

@@ -108,6 +108,12 @@
             "actual_humidity_hk3": {
                 "name": "Humidade CC 3"
             },
+            "actual_humidity_hk4": {
+                "name": "Humidade CC 4"
+            },
+            "actual_humidity_hk5": {
+                "name": "Humidade CC 5"
+            },
             "dew_point_temperature": {
                 "name": "Temperatura de ponto de orvalho"
             },
@@ -119,6 +125,12 @@
             },
             "dew_point_temperature_hk3": {
                 "name": "Temperatura ponto de orvalho CC 3"
+            },
+            "dew_point_temperature_hk4": {
+                "name": "Temperatura ponto de orvalho CC 4"
+            },
+            "dew_point_temperature_hk5": {
+                "name": "Temperatura ponto de orvalho CC 5"
             },
             "outdoor_temperature": {
                 "name": "Temperatura exterior"
@@ -177,8 +189,20 @@
             "actual_room_temperature_hk3": {
                 "name": "Temperatura ambiente actual CC 3"
             },
+            "actual_room_temperature_hk4": {
+                "name": "Temperatura ambiente actual CC 4"
+            },
+            "actual_room_temperature_hk5": {
+                "name": "Temperatura ambiente actual CC 5"
+            },
             "target_room_temperature_hk3": {
                 "name": "Temperatura ambiente alvo CC 3"
+            },
+            "target_room_temperature_hk4": {
+                "name": "Temperatura ambiente alvo CC 4"
+            },
+            "target_room_temperature_hk5": {
+                "name": "Temperatura ambiente alvo CC 5"
             },
             "flow_temperature_wp": {
                 "name": "Temperatura de saída BC"

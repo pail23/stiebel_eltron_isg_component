@@ -3,9 +3,13 @@ actual_humidity
 actual_humidity_hk1
 actual_humidity_hk2
 actual_humidity_hk3
+actual_humidity_hk4
+actual_humidity_hk5
 actual_room_temperature_hk1
 actual_room_temperature_hk2
 actual_room_temperature_hk3
+actual_room_temperature_hk4
+actual_room_temperature_hk5
 actual_temperature
 actual_temperature_buffer
 actual_temperature_cooling_fancoil
@@ -66,6 +70,8 @@ dew_point_temperature
 dew_point_temperature_hk1
 dew_point_temperature_hk2
 dew_point_temperature_hk3
+dew_point_temperature_hk4
+dew_point_temperature_hk5
 dhw_charging_pump
 diff_controller_1_pump
 diff_controller_2_pump
@@ -206,6 +212,8 @@ switching_program_enabled
 target_room_temperature_hk1
 target_room_temperature_hk2
 target_room_temperature_hk3
+target_room_temperature_hk4
+target_room_temperature_hk5
 target_temperature
 target_temperature_buffer
 target_temperature_cooling_circuit_1_hk1
