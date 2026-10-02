@@ -94,6 +94,9 @@ async def test_setup_registers_every_wpm_sensor(
     }
     stateless = []
     for description in WPM_SENSOR_TYPES:
+        if description.entity_registry_enabled_default is False:
+            # registered disabled, e.g. heating circuits 4 and 5: never added
+            continue
         entity_id = entity_ids.get(build_unique_id(mock_config_entry, description.key))
         if entity_id is None or hass.states.get(entity_id) is None:
             stateless.append(description.key)
