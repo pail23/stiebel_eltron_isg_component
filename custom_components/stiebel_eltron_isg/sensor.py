@@ -1,7 +1,7 @@
 """Sensor platform for stiebel_eltron_isg."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import logging
 from typing import Any
 
@@ -32,9 +32,13 @@ from .const import (
     ACTUAL_HUMIDITY_HK1,
     ACTUAL_HUMIDITY_HK2,
     ACTUAL_HUMIDITY_HK3,
+    ACTUAL_HUMIDITY_HK4,
+    ACTUAL_HUMIDITY_HK5,
     ACTUAL_ROOM_TEMPERATURE_HK1,
     ACTUAL_ROOM_TEMPERATURE_HK2,
     ACTUAL_ROOM_TEMPERATURE_HK3,
+    ACTUAL_ROOM_TEMPERATURE_HK4,
+    ACTUAL_ROOM_TEMPERATURE_HK5,
     ACTUAL_TEMPERATURE,
     ACTUAL_TEMPERATURE_BUFFER,
     ACTUAL_TEMPERATURE_COOLING_FANCOIL,
@@ -73,6 +77,8 @@ from .const import (
     DEWPOINT_TEMPERATURE_HK1,
     DEWPOINT_TEMPERATURE_HK2,
     DEWPOINT_TEMPERATURE_HK3,
+    DEWPOINT_TEMPERATURE_HK4,
+    DEWPOINT_TEMPERATURE_HK5,
     EFFICIENCY_COOLING_1_12_M,
     EFFICIENCY_COOLING_1_24_H,
     EFFICIENCY_COOLING_13_24_M,
@@ -142,6 +148,8 @@ from .const import (
     TARGET_ROOM_TEMPERATURE_HK1,
     TARGET_ROOM_TEMPERATURE_HK2,
     TARGET_ROOM_TEMPERATURE_HK3,
+    TARGET_ROOM_TEMPERATURE_HK4,
+    TARGET_ROOM_TEMPERATURE_HK5,
     TARGET_TEMPERATURE,
     TARGET_TEMPERATURE_BUFFER,
     TARGET_TEMPERATURE_COOLING_CIRCUIT_1_HK1,
@@ -313,6 +321,18 @@ def create_humidity_entity_description(
         device_class=SensorDeviceClass.HUMIDITY,
         modbus_register=modbus_register,
     )
+
+
+def optional_heating_circuit(
+    description: StiebelEltronSensorEntityDescription,
+) -> StiebelEltronSensorEntityDescription:
+    """Disable a sensor of heating circuit 4 or 5 by default.
+
+    Heating circuits 4 and 5 need the optional WPE extension module. Without it
+    their registers read the unavailable marker, and enabled entities would
+    stay unavailable on most installations. Owners of the module enable them.
+    """
+    return replace(description, entity_registry_enabled_default=False)
 
 
 def create_pressure_entity_description(
@@ -518,6 +538,18 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         ACTUAL_HUMIDITY_HK3,
         lambda api: api.system_values.room_temperatures[2].relative_humidity,
     ),
+    optional_heating_circuit(
+        create_humidity_entity_description(
+            ACTUAL_HUMIDITY_HK4,
+            lambda api: api.system_values.room_temperatures[3].relative_humidity,
+        )
+    ),
+    optional_heating_circuit(
+        create_humidity_entity_description(
+            ACTUAL_HUMIDITY_HK5,
+            lambda api: api.system_values.room_temperatures[4].relative_humidity,
+        )
+    ),
     create_temperature_entity_description(
         DEWPOINT_TEMPERATURE,
         lambda api: api.system_values.dew_point_temperature,
@@ -533,6 +565,18 @@ SYSTEM_VALUES_SENSOR_TYPES = [
     create_temperature_entity_description(
         DEWPOINT_TEMPERATURE_HK3,
         lambda api: api.system_values.room_temperatures[2].dew_point_temperature,
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            DEWPOINT_TEMPERATURE_HK4,
+            lambda api: api.system_values.room_temperatures[3].dew_point_temperature,
+        )
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            DEWPOINT_TEMPERATURE_HK5,
+            lambda api: api.system_values.room_temperatures[4].dew_point_temperature,
+        )
     ),
     create_temperature_entity_description(
         OUTDOOR_TEMPERATURE,
@@ -606,9 +650,33 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         ACTUAL_ROOM_TEMPERATURE_HK3,
         lambda api: api.system_values.room_temperatures[2].actual_temperature,
     ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            ACTUAL_ROOM_TEMPERATURE_HK4,
+            lambda api: api.system_values.room_temperatures[3].actual_temperature,
+        )
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            ACTUAL_ROOM_TEMPERATURE_HK5,
+            lambda api: api.system_values.room_temperatures[4].actual_temperature,
+        )
+    ),
     create_temperature_entity_description(
         TARGET_ROOM_TEMPERATURE_HK3,
         lambda api: api.system_values.room_temperatures[2].set_temperature,
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            TARGET_ROOM_TEMPERATURE_HK4,
+            lambda api: api.system_values.room_temperatures[3].set_temperature,
+        )
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            TARGET_ROOM_TEMPERATURE_HK5,
+            lambda api: api.system_values.room_temperatures[4].set_temperature,
+        )
     ),
     create_temperature_entity_description(
         FLOW_TEMPERATURE_WP,

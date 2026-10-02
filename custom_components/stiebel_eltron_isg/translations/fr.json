@@ -108,6 +108,12 @@
             "actual_humidity_hk3": {
                 "name": "Humidité CC 3"
             },
+            "actual_humidity_hk4": {
+                "name": "Humidité CC 4"
+            },
+            "actual_humidity_hk5": {
+                "name": "Humidité CC 5"
+            },
             "dew_point_temperature": {
                 "name": "Température de rosée"
             },
@@ -119,6 +125,12 @@
             },
             "dew_point_temperature_hk3": {
                 "name": "Température de rosée CC 3"
+            },
+            "dew_point_temperature_hk4": {
+                "name": "Température de rosée CC 4"
+            },
+            "dew_point_temperature_hk5": {
+                "name": "Température de rosée CC 5"
             },
             "outdoor_temperature": {
                 "name": "Température extérieure"
@@ -177,8 +189,20 @@
             "actual_room_temperature_hk3": {
                 "name": "Température ambiante actuelle CC 3"
             },
+            "actual_room_temperature_hk4": {
+                "name": "Température ambiante actuelle CC 4"
+            },
+            "actual_room_temperature_hk5": {
+                "name": "Température ambiante actuelle CC 5"
+            },
             "target_room_temperature_hk3": {
                 "name": "Température ambiante cible CC 3"
+            },
+            "target_room_temperature_hk4": {
+                "name": "Température ambiante cible CC 4"
+            },
+            "target_room_temperature_hk5": {
+                "name": "Température ambiante cible CC 5"
             },
             "flow_temperature_wp": {
                 "name": "Température de départ PAC"

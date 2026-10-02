@@ -108,6 +108,12 @@
             "actual_humidity_hk3": {
                 "name": "Vlhkost vzduchu TO 3"
             },
+            "actual_humidity_hk4": {
+                "name": "Vlhkost vzduchu TO 4"
+            },
+            "actual_humidity_hk5": {
+                "name": "Vlhkost vzduchu TO 5"
+            },
             "dew_point_temperature": {
                 "name": "Teplota rosného bodu"
             },
@@ -119,6 +125,12 @@
             },
             "dew_point_temperature_hk3": {
                 "name": "Teplota rosného bodu TO 3"
+            },
+            "dew_point_temperature_hk4": {
+                "name": "Teplota rosného bodu TO 4"
+            },
+            "dew_point_temperature_hk5": {
+                "name": "Teplota rosného bodu TO 5"
             },
             "outdoor_temperature": {
                 "name": "Venkovní teplota"
@@ -177,8 +189,20 @@
             "actual_room_temperature_hk3": {
                 "name": "Skutečná pokojová teplota TO 3"
             },
+            "actual_room_temperature_hk4": {
+                "name": "Skutečná pokojová teplota TO 4"
+            },
+            "actual_room_temperature_hk5": {
+                "name": "Skutečná pokojová teplota TO 5"
+            },
             "target_room_temperature_hk3": {
                 "name": "Požadovaná pokojová teplota TO 3"
+            },
+            "target_room_temperature_hk4": {
+                "name": "Požadovaná pokojová teplota TO 4"
+            },
+            "target_room_temperature_hk5": {
+                "name": "Požadovaná pokojová teplota TO 5"
             },
             "flow_temperature_wp": {
                 "name": "Teplota výstupu TČ"

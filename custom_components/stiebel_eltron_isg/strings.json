@@ -113,6 +113,12 @@
             "actual_humidity_hk3": {
                 "name": "Humidity HK 3"
             },
+            "actual_humidity_hk4": {
+                "name": "Humidity HK 4"
+            },
+            "actual_humidity_hk5": {
+                "name": "Humidity HK 5"
+            },
             "dew_point_temperature": {
                 "name": "Dew Point Temperature"
             },
@@ -124,6 +130,12 @@
             },
             "dew_point_temperature_hk3": {
                 "name": "Dew Point Temperature HK 3"
+            },
+            "dew_point_temperature_hk4": {
+                "name": "Dew Point Temperature HK 4"
+            },
+            "dew_point_temperature_hk5": {
+                "name": "Dew Point Temperature HK 5"
             },
             "outdoor_temperature": {
                 "name": "Outdoor Temperature"
@@ -182,8 +194,20 @@
             "actual_room_temperature_hk3": {
                 "name": "Actual Room Temperature HK 3"
             },
+            "actual_room_temperature_hk4": {
+                "name": "Actual Room Temperature HK 4"
+            },
+            "actual_room_temperature_hk5": {
+                "name": "Actual Room Temperature HK 5"
+            },
             "target_room_temperature_hk3": {
                 "name": "Target Room Temperature HK 3"
+            },
+            "target_room_temperature_hk4": {
+                "name": "Target Room Temperature HK 4"
+            },
+            "target_room_temperature_hk5": {
+                "name": "Target Room Temperature HK 5"
             },
             "flow_temperature_wp": {
                 "name": "Flow Temperature WP"
