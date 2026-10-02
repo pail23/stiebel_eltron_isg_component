@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.wpm import (
     WPM_HOLDING_RANGES,
@@ -388,6 +389,14 @@ def test_hk3_temperatures_follow_library_component(
     expected_target = 44.4 if has_extended_values else 22.2
     assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) == expected_actual
     assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) == expected_target
+
+
+def test_hk3_temperatures_resolve_on_installed_wpm_api() -> None:
+    """The installed library exposes the selected component on a real API object."""
+    api = WpmStiebelEltronAPI(MockModbusConnection().for_unit(1))
+
+    assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) is None
+    assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) is None
 
 
 def test_lwz_exposes_compressor_frequency() -> None:
