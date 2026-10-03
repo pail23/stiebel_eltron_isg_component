@@ -5,11 +5,19 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import FAN_HIGH, FAN_LOW, HVACMode
-from pystiebeleltron import ControllerModel
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from modbus_connection import ModbusError
+from modbus_connection.mock import MockModbusConnection, WriteEvent
+from pystiebeleltron import UNAVAILABLE, ControllerModel
+from pystiebeleltron.wpm3i import Wpm3iStiebelEltronAPI
 import pytest
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import climate as climate_module
 from custom_components.stiebel_eltron_isg.climate import (
+    CLIMATE_HK_2,
     ECO_MODE,
     LWZ_CLIMATE_TYPES,
     StiebelEltronClimateEntityDescription,
@@ -17,6 +25,8 @@ from custom_components.stiebel_eltron_isg.climate import (
     StiebelEltronLWZClimateEntity,
     StiebelEltronWPMClimateEntity,
 )
+from custom_components.stiebel_eltron_isg.const import DOMAIN, UNIT_ID
+from custom_components.stiebel_eltron_isg.entity import build_unique_id
 
 
 def test_climate_unavailable_when_last_update_failed() -> None:
@@ -175,6 +185,101 @@ async def test_setup_uses_wpm_3i_descriptions() -> None:
     assert add_entities.call_args.args[0] == [
         description.key for description in climate_module.WPM_3I_CLIMATE_TYPES
     ]
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        pytest.param((3, 19.0, 1504, UNAVAILABLE), id="comfort-no-room-sensor"),
+        pytest.param((ECO_MODE, 18.0, 1505, UNAVAILABLE), id="eco-no-room-sensor"),
+        pytest.param((3, 19.0, 1504, 215), id="comfort-with-room-sensor"),
+        pytest.param((ECO_MODE, 18.0, 1505, 215), id="eco-with-room-sensor"),
+    ],
+)
+async def test_wpm_3i_hk2_reads_and_writes_its_own_target(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
+    settings: tuple[int, float, int, int],
+) -> None:
+    """HK2 works through the real API without borrowing another room sensor."""
+    operating_mode, target_temperature, target_address, room_temperature_raw = settings
+    mock_get_controller_model.return_value = ControllerModel.WPM_3i
+    unit = mock_modbus_connection.for_unit(UNIT_ID)
+    unit.load_raw({
+        "input": {
+            500: room_temperature_raw,
+            502: room_temperature_raw,
+            504: 450,
+            508: UNAVAILABLE,
+            509: 50,
+            510: 350,
+            511: 205,
+        },
+        "holding": {1500: operating_mode, 1501: 50, 1502: 50, 1504: 190, 1505: 180},
+    })
+    writes: list[WriteEvent] = []
+    unit.on_write(writes.append)
+    mock_config_entry.add_to_hass(hass)
+    registry = er.async_get(hass)
+    existing_entity = registry.async_get_or_create(
+        "climate",
+        DOMAIN,
+        build_unique_id(mock_config_entry, CLIMATE_HK_2),
+        config_entry=mock_config_entry,
+        suggested_object_id="heat_circuit_2",
+    )
+
+    with patch(
+        "custom_components.stiebel_eltron_isg.wpm3i_coordinator.Wpm3iStiebelEltronAPI",
+        Wpm3iStiebelEltronAPI,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = registry.async_get_entity_id(
+        "climate", DOMAIN, build_unique_id(mock_config_entry, CLIMATE_HK_2)
+    )
+    assert entity_id == existing_entity.entity_id
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == HVACMode.AUTO
+    assert state.attributes["temperature"] == target_temperature
+    assert state.attributes["current_temperature"] is None
+    assert state.attributes.get("current_humidity") is None
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": entity_id, "temperature": 22.5},
+        blocking=True,
+    )
+    assert [(event.register_type, event.address, event.values) for event in writes] == [
+        ("holding", target_address, [225])
+    ]
+    assert unit.holding[1501] == unit.holding[1502] == 50
+    other_target_address = 1505 if target_address == 1504 else 1504
+    assert unit.holding[other_target_address] == (
+        180 if other_target_address == 1505 else 190
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    assert hass.states.get(entity_id).attributes["temperature"] == 22.5
+
+    unit.holding[target_address] = UNAVAILABLE
+    await coordinator.async_refresh()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    unit.holding[target_address] = int(target_temperature * 10)
+    await coordinator.async_refresh()
+    assert hass.states.get(entity_id).state == HVACMode.AUTO
+    assert hass.states.get(entity_id).attributes["temperature"] == target_temperature
+
+    unit.fail_requests(ModbusError("Simulated connection failure"))
+    await coordinator.async_refresh()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 def test_base_climate_operation_mode_is_abstract() -> None:
