@@ -8,7 +8,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from modbus_connection import ModbusTcpParams
+from modbus_connection import ModbusTcpParams, ModbusTlsParams
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import (
     ControllerModel,
@@ -104,8 +104,9 @@ async def test_form_cannot_acquire_shared_connection(
     """Test a conflict in Home Assistant's shared connection is reported."""
     async with async_get_temporary_unit(
         hass,
-        ModbusTcpParams(
-            host=USER_INPUT[CONF_HOST], port=USER_INPUT[CONF_PORT], framer="rtu"
+        ModbusTlsParams(
+            host=USER_INPUT[CONF_HOST],
+            port=USER_INPUT[CONF_PORT],
         ),
         UNIT_ID,
     ):
@@ -383,7 +384,7 @@ async def test_dhcp_aborts_for_shared_connection_conflict(
     """Test DHCP discovery reports incompatible shared link settings."""
     async with async_get_temporary_unit(
         hass,
-        ModbusTcpParams(host=DHCP_DISCOVERY.ip, port=502, framer="rtu"),
+        ModbusTlsParams(host=DHCP_DISCOVERY.ip, port=502),
         UNIT_ID,
     ):
         result = await hass.config_entries.flow.async_init(

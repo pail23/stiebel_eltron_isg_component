@@ -598,7 +598,7 @@ SYSTEM_VALUES_SENSOR_TYPES = [
         TARGET_TEMPERATURE_HK2,
         lambda api: api.system_values.set_temperature_hk_2,
     ),
-    # Library PR #91 moves HK3 into an optional component; 0.8.0 keeps it here.
+    # Library PR #91 moves HK3 into an optional component; support both layouts.
     create_temperature_entity_description(
         ACTUAL_TEMPERATURE_HK3,
         lambda api: (

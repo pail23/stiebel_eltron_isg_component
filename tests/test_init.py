@@ -8,7 +8,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFl
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection import ModbusError, ModbusTcpParams, ModbusTlsParams
 from modbus_connection.mock import MockModbusConnection
 from modbus_connection.tmodbus import ModbusConnection as TmodbusConnection
 from pystiebeleltron import (
@@ -191,7 +191,7 @@ async def test_async_setup_entry_conflicting_link_settings(
     """Test setup fails permanently for incompatible shared link settings."""
     async with async_get_temporary_unit(
         hass,
-        ModbusTcpParams(host="1.1.1.1", port=502, framer="rtu"),
+        ModbusTlsParams(host="1.1.1.1", port=502),
         UNIT_ID,
     ):
         mock_config_entry.add_to_hass(hass)
