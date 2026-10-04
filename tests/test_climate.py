@@ -450,7 +450,7 @@ def test_lwz_fan_mode_uses_night_stage_when_eco() -> None:
 
 
 def test_lwz_fan_mode_uses_day_stage_when_not_eco() -> None:
-    """Outside eco mode the fan mode must reflect the day stage."""
+    """In comfort mode the fan mode must reflect the day stage."""
     entity = _make_lwz_climate(operating_mode=3, day_stage=3, night_stage=1)
 
     assert entity.fan_mode == FAN_HIGH
@@ -466,7 +466,7 @@ async def test_lwz_set_fan_mode_writes_night_stage_when_eco() -> None:
 
 
 async def test_lwz_set_fan_mode_writes_day_stage_when_not_eco() -> None:
-    """Setting the fan mode outside eco mode must write the day stage field."""
+    """Setting the fan mode in comfort mode must write the day stage field."""
     entity = _make_lwz_climate(operating_mode=3, day_stage=1)
 
     await entity.async_set_fan_mode(FAN_HIGH)
@@ -505,7 +505,7 @@ async def test_lwz_writes_fan_mode_when_stage_is_unknown() -> None:
 
 
 async def test_lwz_writes_fan_mode_when_day_stage_is_unknown() -> None:
-    """An unknown day stage outside eco mode must not suppress a valid write."""
+    """An unknown day stage in comfort mode must not suppress a valid write."""
     entity = _make_lwz_climate(operating_mode=3, day_stage=None)
 
     await entity.async_set_fan_mode(FAN_LOW)
