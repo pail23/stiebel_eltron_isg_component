@@ -94,10 +94,12 @@ from custom_components.stiebel_eltron_isg.sensor import (
     WPM_INVERTER_POWER_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
     WPMSYSTEM_COOLING_SENSOR_TYPES,
+    WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES,
     WPMSYSTEM_SENSOR_TYPES,
     StiebelEltronISGSensor,
     StiebelEltronSensorEntityDescription,
     async_setup_entry,
+    heating_window_efficiency,
 )
 
 
@@ -289,6 +291,7 @@ async def test_setup_omits_unsupported_wpmsystem_aggregate_runtime_sensors() -> 
         | {description.key for description in ENERGY_DAILY_SENSOR_TYPES}
         | {description.key for description in WPM_INVERTER_POWER_SENSOR_TYPES}
         | {description.key for description in WPMSYSTEM_COOLING_SENSOR_TYPES}
+        | {description.key for description in WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES}
     )
     assert len(entity_keys) == len(set(entity_keys))
 
@@ -831,10 +834,68 @@ async def test_amount_of_heat_windows_have_the_intended_model_surface() -> None:
     assert not new_keys & {d.key for d in WPM_3I_SENSOR_TYPES}
 
 
+def test_wpmsystem_heating_efficiency_uses_matching_energy_windows() -> None:
+    """The ratios use the reporter's three heat/electricity window pairs."""
+    api = SimpleNamespace(
+        extended_energy_data=SimpleNamespace(
+            amount_of_heat_heating_1_24_h=3652,
+            heating_24h=780,
+            amount_of_heat_heating_1_12=18248,
+            heating_12m=5132,
+            amount_of_heat_heating_13_24=2458,
+            heating_13_24=499,
+        )
+    )
+    expected = {
+        EFFICIENCY_HEATING_1_24_H: 4.68,
+        EFFICIENCY_HEATING_1_12_M: 3.56,
+        EFFICIENCY_HEATING_13_24_M: 4.93,
+    }
+    for description in WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES:
+        assert description.modbus_register(api) == expected[description.key]
+        assert description.native_unit_of_measurement is None
+        assert description.state_class is None
+
+
+@pytest.mark.parametrize(
+    ("heat", "electricity"),
+    [
+        (None, 100),
+        (100, None),
+        (100, 0),
+        (100, -1),
+        (-1, 100),
+        (float("nan"), 100),
+        (float("inf"), 100),
+        (100, float("nan")),
+        (100, float("inf")),
+    ],
+)
+def test_heating_efficiency_is_unavailable_without_two_valid_windows(
+    heat, electricity
+) -> None:
+    assert heating_window_efficiency(heat, electricity) is None
+
+
+async def test_wpmsystem_efficiency_has_the_intended_model_surface() -> None:
+    """WPMsystem gets calculated ratios; other families keep their own sensors."""
+    new_keys = {d.key for d in WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES}
+    assert new_keys <= set(await _setup_sensor_keys(ControllerModel.WPMsystem))
+    for model in (
+        ControllerModel.WPM_3,
+        ControllerModel.WPM_3i,
+        ControllerModel.LWZ_R290,
+    ):
+        assert not new_keys & set(await _setup_sensor_keys(model))
+    assert not new_keys & {d.key for d in WPM_SENSOR_TYPES}
+    assert not new_keys & {d.key for d in WPM_3I_SENSOR_TYPES}
+    assert new_keys <= {d.key for d in LWZ_SENSOR_TYPES}
+
+
 async def test_heat_window_pairs_decode_with_released_library(
     mock_modbus_connection,
 ) -> None:
-    """pystiebeleltron 0.9.0 decodes all nine register pairs."""
+    """The pinned library decodes all nine register pairs."""
     unit = mock_modbus_connection.for_unit(1)
     raw = {
         "input": {
@@ -858,3 +919,42 @@ async def test_heat_window_pairs_decode_with_released_library(
     for index, description in enumerate(WPM_AMOUNT_OF_HEAT_SENSOR_TYPES):
         assert description.modbus_register(api) == (4 + index) * 1000 + 886 + index
         assert description.state_class is None
+
+
+async def test_wpmsystem_efficiency_decodes_real_library_sentinel(
+    mock_modbus_connection,
+) -> None:
+    """A 0x8000 in a paired register makes that ratio unavailable."""
+    unit = mock_modbus_connection.for_unit(1)
+    raw = {
+        "input": {
+            address: 0
+            for start, end in WPM_INPUT_RANGES
+            for address in range(start, end + 1)
+        },
+        "holding": {
+            address: 0
+            for start, end in WPM_HOLDING_RANGES
+            for address in range(start, end + 1)
+        },
+    }
+    raw["input"].update({
+        3689: 652,
+        3690: 3,
+        3707: 780,
+        3691: 248,
+        3692: 18,
+        3709: 132,
+        3710: 5,
+        3693: 458,
+        3694: 2,
+        3711: 0x8000,
+    })
+    unit.load_raw(raw)
+    api = WpmStiebelEltronAPI(unit)
+    await api.async_update()
+
+    descriptions = {d.key: d for d in WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES}
+    assert descriptions[EFFICIENCY_HEATING_1_24_H].modbus_register(api) == 4.68
+    assert descriptions[EFFICIENCY_HEATING_1_12_M].modbus_register(api) == 3.56
+    assert descriptions[EFFICIENCY_HEATING_13_24_M].modbus_register(api) is None
