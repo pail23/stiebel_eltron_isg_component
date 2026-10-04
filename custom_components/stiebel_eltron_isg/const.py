@@ -268,6 +268,7 @@ ECO_COOLING_TEMPERATURE_TARGET_HK3 = "eco_cooling_temperature_target_hk3"
 
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"
+MANUAL_WATER_TEMPERATURE_TARGET = "manual_water_temperature_target"
 DUALMODE_TEMPERATURE_WW = "dualmode_temperature_ww"
 
 AREA_COOLING_TARGET_ROOM_TEMPERATURE = "area_cooling_target_room_temperature"

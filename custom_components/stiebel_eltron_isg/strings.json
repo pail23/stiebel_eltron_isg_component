@@ -705,6 +705,9 @@
             "eco_water_temperature_target": {
                 "name": "Eco Water Temperature Target"
             },
+            "manual_water_temperature_target": {
+                "name": "Manual Water Temperature Target"
+            },
             "dualmode_temperature_ww": {
                 "name": "Dual Mode Temperature WW"
             },

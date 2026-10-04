@@ -700,6 +700,9 @@
             "eco_water_temperature_target": {
                 "name": "Consigne eau chaude nuit"
             },
+            "manual_water_temperature_target": {
+                "name": "Consigne eau chaude mode manuel"
+            },
             "dualmode_temperature_ww": {
                 "name": "Température bivalence eau chaude"
             },

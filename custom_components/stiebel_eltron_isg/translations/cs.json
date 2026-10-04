@@ -700,6 +700,9 @@
             "eco_water_temperature_target": {
                 "name": "Noční teplota TUV Soll"
             },
+            "manual_water_temperature_target": {
+                "name": "Ruční provoz teplota TUV Soll"
+            },
             "dualmode_temperature_ww": {
                 "name": "Bivalentní teplota TUV"
             },

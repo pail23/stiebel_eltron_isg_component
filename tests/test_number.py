@@ -12,6 +12,7 @@ from custom_components.stiebel_eltron_isg.const import (
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_LEVEL_MANUAL,
     FAN_LEVEL_PARTY,
+    MANUAL_WATER_TEMPERATURE_TARGET,
 )
 from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_LWZ,
@@ -269,6 +270,7 @@ def test_lwz_fan_level_numbers_resolve_against_the_lwz_api() -> None:
     [
         (COMFORT_WATER_TEMPERATURE_TARGET, "dhw_set_day"),
         (ECO_WATER_TEMPERATURE_TARGET, "dhw_set_night"),
+        (MANUAL_WATER_TEMPERATURE_TARGET, "dhw_set_manual"),
     ],
 )
 def test_lwz_dhw_numbers_allow_the_library_range(key: str, field: str) -> None:

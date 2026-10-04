@@ -41,6 +41,7 @@ from .const import (
     HEATING_CURVE_RISE_HK1,
     HEATING_CURVE_RISE_HK2,
     HEATING_CURVE_RISE_HK3,
+    MANUAL_WATER_TEMPERATURE_TARGET,
 )
 from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import OptimisticValueMixin, StiebelEltronISGEntity
@@ -321,6 +322,16 @@ NUMBER_TYPES_LWZ = [
         native_step=0.1,
         modbus_register=lambda api: api.system_parameters.dhw_set_night,
         write_field="dhw_set_night",
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=MANUAL_WATER_TEMPERATURE_TARGET,
+        translation_key=MANUAL_WATER_TEMPERATURE_TARGET,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        native_min_value=10,
+        native_max_value=65,
+        native_step=0.1,
+        modbus_register=lambda api: api.system_parameters.dhw_set_manual,
+        write_field="dhw_set_manual",
     ),
     StiebelEltronNumberEntityDescription(
         key=FAN_LEVEL_DAY,

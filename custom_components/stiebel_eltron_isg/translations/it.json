@@ -700,6 +700,9 @@
             "eco_water_temperature_target": {
                 "name": "Temperatura target acqua calda eco"
             },
+            "manual_water_temperature_target": {
+                "name": "Temperatura target acqua calda manuale"
+            },
             "dualmode_temperature_ww": {
                 "name": "Temperatura bivalenza acqua calda"
             },

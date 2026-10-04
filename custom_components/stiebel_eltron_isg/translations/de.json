@@ -700,6 +700,9 @@
             "eco_water_temperature_target": {
                 "name": "Absenkbetrieb Warmwasser Temperatursoll"
             },
+            "manual_water_temperature_target": {
+                "name": "Handbetrieb Warmwasser Temperatursoll"
+            },
             "dualmode_temperature_ww": {
                 "name": "Bivalenztemperatur Warmwasser"
             },

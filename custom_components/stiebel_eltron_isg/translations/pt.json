@@ -700,6 +700,9 @@
             "eco_water_temperature_target": {
                 "name": "Temperatura alvo AQS eco"
             },
+            "manual_water_temperature_target": {
+                "name": "Temperatura alvo AQS manual"
+            },
             "dualmode_temperature_ww": {
                 "name": "Temperatura de bivalência AQS"
             },
