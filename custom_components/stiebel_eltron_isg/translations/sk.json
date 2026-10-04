@@ -58,6 +58,9 @@
         "invalid_write_value": {
             "message": "The value {value} is not valid for the setting {field}."
         },
+        "invalid_write_step": {
+            "message": "Hodnota {value} nie je platná pre nastavenie {field}. Použite kroky po {step}."
+        },
         "write_failed": {
             "message": "The setting {field} could not be written because communication with the heat pump failed."
         }

@@ -58,6 +58,9 @@
         "invalid_write_value": {
             "message": "Der Wert {value} ist für die Einstellung {field} ungültig."
         },
+        "invalid_write_step": {
+            "message": "Der Wert {value} ist für die Einstellung {field} ungültig. Verwenden Sie Schritte von {step}."
+        },
         "write_failed": {
             "message": "Die Einstellung {field} konnte wegen eines Kommunikationsfehlers mit der Wärmepumpe nicht geschrieben werden."
         }
