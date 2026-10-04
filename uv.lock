@@ -1517,11 +1517,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/9a/02/cef85a80ff6d3092a
 
 [[package]]
 name = "modbus-connection"
-version = "4.12.3"
+version = "4.10.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d5/13/f7338f692f4ca5c9d5206e47d7ac4fdf358e45fc28445b7d223a08342151/modbus_connection-4.12.3.tar.gz", hash = "sha256:252213d5dac1fc7b2aadcb7fd105cf3657f6432225ae42c9c15eb84d62b9fb6d", size = 278311, upload-time = "2026-09-28T09:07:34.5Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/f1/29/701cb11593839b334c9a388e43dde4d61abdc8939d74003b4d60b546b812/modbus_connection-4.10.0.tar.gz", hash = "sha256:fb328d011c6268bd1e272a0600373794a07bc453d4e9358498789312e0c1e0f2", size = 256827, upload-time = "2026-08-25T09:47:12.384Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ff/5b/70976163d4b17ac645d3fb576a515ae08170bffc274b3e114178839d45a9/modbus_connection-4.12.3-py3-none-any.whl", hash = "sha256:3389426f0e71867e84cf74300439e268a4aa7bfefe798a608d04994e1483b9e6", size = 86603, upload-time = "2026-09-28T09:07:32.31Z" },
+    { url = "https://files.pythonhosted.org/packages/a1/07/39374fc700ecac019d23c65696748a3a75e7390c797c09b51c114b04289d/modbus_connection-4.10.0-py3-none-any.whl", hash = "sha256:1a2256de5d427f89d422d1bbf52fdeda1a58e6e4f97acdb226e581dcad263700", size = 78284, upload-time = "2026-08-25T09:47:11.18Z" },
 ]
 
 [package.optional-dependencies]
@@ -2208,14 +2208,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/08/64/a99f27d3b4347486c
 
 [[package]]
 name = "pystiebeleltron"
-version = "0.9.0"
+version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "modbus-connection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/2f/48/7dbc57bf45e2bf96e96d35907f5b79af3d9c2f492b7a6d06d213c42065cd/pystiebeleltron-0.9.0.tar.gz", hash = "sha256:136d107e0faca0b9c232024374a3d2ae64cee17f1620c940dde8d94e67db9e4d", size = 18491, upload-time = "2026-10-03T11:09:28.233Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5a/df/97a950dadce154eff12b302b224c1c7e82466ad1d8b5e45c7f0ae57079b8/pystiebeleltron-0.8.0.tar.gz", hash = "sha256:1d9e7fb6ba77b599e295c34670fce288eb91e09e8353e3ce163acb9e37f8eb7f", size = 18179, upload-time = "2026-09-18T16:37:07.687Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/00/42/7b1e83d1c45c490b12f107941d37fdc54ca4530b5a6eca0138718a1f3177/pystiebeleltron-0.9.0-py3-none-any.whl", hash = "sha256:868779e8f0a73563ea4ebdcd38102dfcb757a18c4fb682785855cbeff37223f2", size = 23012, upload-time = "2026-10-03T11:09:27.085Z" },
+    { url = "https://files.pythonhosted.org/packages/48/f0/f7626cbdd1988c18263c7ed9719b7a6c02ca156f3dd48ea7f8bf3adb00fb/pystiebeleltron-0.8.0-py3-none-any.whl", hash = "sha256:6105f027508fd5f2f40810192e7f676e43128e40c45d48843d3d27e8e29ad378", size = 22588, upload-time = "2026-09-18T16:37:06.326Z" },
 ]
 
 [package.optional-dependencies]
@@ -2765,9 +2765,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "colorlog", specifier = ">=6.12.0" },
-    { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.12.3" },
+    { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.10.0" },
     { name = "pymodbus", specifier = "==3.13.1" },
-    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.9.0" },
+    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.8.0" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.359" },
     { name = "tmodbus", specifier = "==0.6.2" },
 ]
