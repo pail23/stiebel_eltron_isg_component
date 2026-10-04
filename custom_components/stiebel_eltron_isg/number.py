@@ -8,6 +8,7 @@ from typing import Any
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
@@ -21,6 +22,7 @@ from .const import (
     COMFORT_TEMPERATURE_TARGET_HK2,
     COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_WATER_TEMPERATURE_TARGET,
+    DOMAIN,
     DUALMODE_TEMPERATURE_HZG,
     DUALMODE_TEMPERATURE_WW,
     ECO_COOLING_TEMPERATURE_TARGET_HK1,
@@ -61,6 +63,7 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     modbus_register: Any
     write_component: str = "system_parameters"
     write_field: str | None = None
+    enforce_step: bool = False
 
     def __post_init__(self) -> None:
         """Ensure value references are lambda-based."""
@@ -331,7 +334,8 @@ NUMBER_TYPES_LWZ = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=10,
         native_max_value=65,
-        native_step=0.1,
+        native_step=0.5,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.dhw_set_manual,
         write_field="dhw_set_manual",
     ),
@@ -341,7 +345,8 @@ NUMBER_TYPES_LWZ = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=10,
         native_max_value=65,
-        native_step=0.1,
+        native_step=0.5,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.manual_hc_set_hk1,
         write_field="manual_hc_set_hk1",
     ),
@@ -351,7 +356,8 @@ NUMBER_TYPES_LWZ = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         native_min_value=10,
         native_max_value=65,
-        native_step=0.1,
+        native_step=0.5,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.manual_hc_set_hk2,
         write_field="manual_hc_set_hk2",
     ),
@@ -528,6 +534,8 @@ class StiebelEltronISGNumberEntity(
 ):
     """stiebel_eltron_isg select class."""
 
+    entity_description: StiebelEltronNumberEntityDescription
+
     def __init__(
         self,
         coordinator: AnyStiebelEltronDataCoordinator,
@@ -555,6 +563,26 @@ class StiebelEltronISGNumberEntity(
         """
         if self.write_field is None:
             return
+
+        if self.entity_description.enforce_step:
+            # Home Assistant validates bounds but does not enforce native_step.
+            step = self.native_step
+            assert step is not None
+            steps = (value - self.native_min_value) / step
+            if not math.isfinite(steps) or not math.isclose(
+                steps, round(steps), rel_tol=0, abs_tol=1e-9
+            ):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_write_step",
+                    translation_placeholders={
+                        "value": str(value),
+                        "field": self.write_field,
+                        "step": str(step),
+                    },
+                )
+            # Remove only floating-point noise from an accepted step value.
+            value = self.native_min_value + round(steps) * step
 
         current = (
             self._optimistic_value

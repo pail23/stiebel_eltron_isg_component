@@ -42,6 +42,7 @@ class _StubCoordinator:
 
 def _make_number(current: float | None) -> StiebelEltronISGNumberEntity:
     entity = StiebelEltronISGNumberEntity.__new__(StiebelEltronISGNumberEntity)
+    entity.entity_description = NUMBER_TYPES_WPM[0]
     entity.coordinator = _StubCoordinator(current)
     entity.modbus_register = lambda api: None
     entity.write_component = "system_parameters"
@@ -298,9 +299,8 @@ def test_lwz_manual_heating_circuit_setpoints_resolve_against_the_lwz_api(
 ) -> None:
     """The manual heating circuit setpoints must exist on the LWZ system parameters.
 
-    In manual mode (operating mode 14) the controller heats to these flow
-    setpoints instead of the heating curve, so they are the only way to drive
-    heating from Home Assistant in that mode.
+    In manual mode (operating mode 14) the controller uses these heating circuit
+    setpoints instead of the heating curve.
     """
     by_key = {description.key: description for description in NUMBER_TYPES_LWZ}
     description = by_key[key]
@@ -309,3 +309,21 @@ def test_lwz_manual_heating_circuit_setpoints_resolve_against_the_lwz_api(
     assert description.modbus_register(api) is getattr(LwzSystemParameters, field)
     assert description.write_field == field
     assert (description.native_min_value, description.native_max_value) == (10, 65)
+
+
+@pytest.mark.parametrize(
+    "key",
+    [MANUAL_HC_SET_HK1, MANUAL_HC_SET_HK2, MANUAL_WATER_TEMPERATURE_TARGET],
+)
+def test_lwz_manual_temperature_targets_enforce_half_degree_steps(key: str) -> None:
+    description = next(d for d in NUMBER_TYPES_LWZ if d.key == key)
+    assert description.native_step == 0.5
+    assert description.enforce_step is True
+
+
+def test_other_lwz_temperature_target_keeps_tenth_degree_steps() -> None:
+    description = next(
+        d for d in NUMBER_TYPES_LWZ if d.key == COMFORT_WATER_TEMPERATURE_TARGET
+    )
+    assert description.native_step == 0.1
+    assert description.enforce_step is False
