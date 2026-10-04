@@ -703,6 +703,12 @@
             "manual_water_temperature_target": {
                 "name": "Handbetrieb Warmwasser Temperatursoll"
             },
+            "manual_hc_set_hk1": {
+                "name": "Heizkreis-Soll Handbetrieb HK 1"
+            },
+            "manual_hc_set_hk2": {
+                "name": "Heizkreis-Soll Handbetrieb HK 2"
+            },
             "dualmode_temperature_ww": {
                 "name": "Bivalenztemperatur Warmwasser"
             },

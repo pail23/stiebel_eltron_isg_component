@@ -12,6 +12,8 @@ from custom_components.stiebel_eltron_isg.const import (
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_LEVEL_MANUAL,
     FAN_LEVEL_PARTY,
+    MANUAL_HC_SET_HK1,
+    MANUAL_HC_SET_HK2,
     MANUAL_WATER_TEMPERATURE_TARGET,
 )
 from custom_components.stiebel_eltron_isg.number import (
@@ -275,6 +277,31 @@ def test_lwz_fan_level_numbers_resolve_against_the_lwz_api() -> None:
 )
 def test_lwz_dhw_numbers_allow_the_library_range(key: str, field: str) -> None:
     """LWZ DHW entities must expose the range accepted by the library."""
+    by_key = {description.key: description for description in NUMBER_TYPES_LWZ}
+    description = by_key[key]
+    api = SimpleNamespace(system_parameters=LwzSystemParameters)
+
+    assert description.modbus_register(api) is getattr(LwzSystemParameters, field)
+    assert description.write_field == field
+    assert (description.native_min_value, description.native_max_value) == (10, 65)
+
+
+@pytest.mark.parametrize(
+    ("key", "field"),
+    [
+        (MANUAL_HC_SET_HK1, "manual_hc_set_hk1"),
+        (MANUAL_HC_SET_HK2, "manual_hc_set_hk2"),
+    ],
+)
+def test_lwz_manual_heating_circuit_setpoints_resolve_against_the_lwz_api(
+    key: str, field: str
+) -> None:
+    """The manual heating circuit setpoints must exist on the LWZ system parameters.
+
+    In manual mode (operating mode 14) the controller heats to these flow
+    setpoints instead of the heating curve, so they are the only way to drive
+    heating from Home Assistant in that mode.
+    """
     by_key = {description.key: description for description in NUMBER_TYPES_LWZ}
     description = by_key[key]
     api = SimpleNamespace(system_parameters=LwzSystemParameters)

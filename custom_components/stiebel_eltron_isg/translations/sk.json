@@ -703,6 +703,12 @@
             "manual_water_temperature_target": {
                 "name": "Ručná prevádzka teplota TÚV Soll"
             },
+            "manual_hc_set_hk1": {
+                "name": "Ručná prevádzka teplota vykurovacieho okruhu HK1"
+            },
+            "manual_hc_set_hk2": {
+                "name": "Ručná prevádzka teplota vykurovacieho okruhu HK2"
+            },
             "dualmode_temperature_ww": {
                 "name": "Bivalentná teplota TÚV"
             },
