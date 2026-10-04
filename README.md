@@ -168,8 +168,9 @@ the connected controller or firmware exposes it as read-only.
 Release 2026.9 requires Home Assistant 2026.9.0 or newer.
 No reconfiguration is needed for a normal installation.
 
-This release keeps pystiebeleltron 0.8.0 for compatibility with Home Assistant 2026.9.
-The optional HK3 register handling from library 0.9.0 requires a newer shared Modbus backend; controllers that reject the required HK3 register block can still fail setup.
+This release uses pystiebeleltron 0.8.x for compatibility with Home Assistant 2026.9.
+Library 0.9 requires a newer shared Modbus backend and is excluded from the runtime range.
+The optional HK3 register handling from library 0.9.0 is therefore not included; controllers that reject the required HK3 register block can still fail setup.
 
 The integration now obtains its Modbus unit from Home Assistant's shared Modbus connection service instead of opening and owning a separate connection.
 Integrations using the same endpoint and compatible link settings therefore share one serialized connection.
