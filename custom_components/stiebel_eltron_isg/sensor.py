@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
+from math import isfinite
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -274,7 +275,7 @@ def create_efficiency_entity_description(
 ) -> StiebelEltronSensorEntityDescription:
     """Create a sensor for an efficiency window value.
 
-    The LWZ API reports these as COP-style ratios, so they are intentionally
+    These COP-style ratios are intentionally
     unitless but labeled explicitly as COP for UI clarity.
     """
     return StiebelEltronSensorEntityDescription(
@@ -284,6 +285,25 @@ def create_efficiency_entity_description(
         # state_class=SensorStateClass.MEASUREMENT,
         modbus_register=modbus_register,
     )
+
+
+def heating_window_efficiency(
+    heat: int | float | None, electricity: int | float | None
+) -> float | None:
+    """Calculate a heating ratio only from two valid values for the same window."""
+    if (
+        isinstance(heat, bool)
+        or not isinstance(heat, (int, float))
+        or not isfinite(heat)
+        or heat < 0
+        or isinstance(electricity, bool)
+        or not isinstance(electricity, (int, float))
+        or not isfinite(electricity)
+        or electricity <= 0
+    ):
+        return None
+    ratio = heat / electricity
+    return round(ratio, 2) if isfinite(ratio) else None
 
 
 def create_daily_energy_entity_description(
@@ -1313,6 +1333,34 @@ WPM_AMOUNT_OF_HEAT_SENSOR_TYPES = [
     ),
 ]
 
+# Use matching energy windows rather than assuming the decimal scale of
+# WPMsystem's raw efficiency registers. The 24 h values are both Wh, and
+# the 12-month values are both kWh.
+# Keep LWZ's existing direct efficiency readings separate.
+WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES = [
+    create_efficiency_entity_description(
+        EFFICIENCY_HEATING_1_24_H,
+        lambda api: heating_window_efficiency(
+            api.extended_energy_data.amount_of_heat_heating_1_24_h,
+            api.extended_energy_data.heating_24h,
+        ),
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_HEATING_1_12_M,
+        lambda api: heating_window_efficiency(
+            api.extended_energy_data.amount_of_heat_heating_1_12,
+            api.extended_energy_data.heating_12m,
+        ),
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_HEATING_13_24_M,
+        lambda api: heating_window_efficiency(
+            api.extended_energy_data.amount_of_heat_heating_13_24,
+            api.extended_energy_data.heating_13_24,
+        ),
+    ),
+]
+
 # Servicewelt "PROZESSDATEN" -> INVERTER AUFNAHMELEISTUNG, wire register 3679.
 # Verified against a WPMsystem while its compressor modulated: raw 6, 10 and 11
 # read 0.6, 1.0 and 1.1 kW on the ISG display in the same sample, which fixes
@@ -1445,7 +1493,9 @@ async def async_setup_entry(
             entities.extend(
                 StiebelEltronISGSensor(coordinator, entry, description)
                 for description in (
-                    WPM_INVERTER_POWER_SENSOR_TYPES + WPMSYSTEM_COOLING_SENSOR_TYPES
+                    WPM_INVERTER_POWER_SENSOR_TYPES
+                    + WPMSYSTEM_COOLING_SENSOR_TYPES
+                    + WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES
                 )
             )
     else:

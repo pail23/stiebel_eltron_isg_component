@@ -103,12 +103,16 @@ recorder history, including any custom entity ID. Check any Energy Dashboard
 mapping of this entity: it must not count as electrical cooling consumption.
 If you rename the entity ID manually, update your dashboards and automations.
 
-For efficiency calculations, compare heat and electricity over the same time
-interval and in the same unit. The Servicewelt heat-quantity windows (**Last
-24 hours**, **Last 12 months**, and **Previous 12 months**) are separate from
-calendar-day counters. They are exposed for WPMsystem and LWZ R290 controllers
-that provide the extended energy registers. These window sensors have no state class and therefore do not create
-long-term statistics.
+For WPMsystem, the three heating efficiency sensors are calculated as heat
+divided by electricity from the matching Servicewelt window (**Last 24 hours**,
+**Last 12 months**, or **Previous 12 months**). A missing value or zero
+electricity leaves the sensor unavailable. These are window ratios, not an
+instantaneous COP; they may differ from the device efficiency readings.
+The 24-hour values are both Wh;
+the 12-month values are both kWh. These windows differ from calendar-day
+counters. WPMsystem and LWZ R290 heat-window sensors require the extended
+energy registers and have no state class, so they create no long-term
+statistics.
 
 ## Automation example
 
@@ -163,6 +167,9 @@ the connected controller or firmware exposes it as read-only.
 
 Release 2026.9 requires Home Assistant 2026.9.0 or newer.
 No reconfiguration is needed for a normal installation.
+
+This release keeps pystiebeleltron 0.8.0 for compatibility with Home Assistant 2026.9.
+The optional HK3 register handling from library 0.9.0 requires a newer shared Modbus backend; controllers that reject the required HK3 register block can still fail setup.
 
 The integration now obtains its Modbus unit from Home Assistant's shared Modbus connection service instead of opening and owning a separate connection.
 Integrations using the same endpoint and compatible link settings therefore share one serialized connection.
