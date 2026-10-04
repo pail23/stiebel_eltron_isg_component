@@ -33,6 +33,7 @@ CLIMATE_HK_2 = "climate_hk_2"
 CLIMATE_HK_3 = "climate_hk_3"
 
 ECO_MODE = 4
+MANUAL_MODE = 14
 
 WPM_TO_HA_HVAC = {
     1: HVACMode.AUTO,
@@ -76,7 +77,7 @@ HA_TO_WPM_HVAC = {
 
 LWZ_TO_HA_HVAC = {
     11: HVACMode.AUTO,
-    14: HVACMode.HEAT,
+    MANUAL_MODE: HVACMode.HEAT,
     1: HVACMode.AUTO,
     3: HVACMode.AUTO,
     4: HVACMode.AUTO,
@@ -87,7 +88,7 @@ LWZ_TO_HA_HVAC = {
 HA_TO_LWZ_HVAC = {
     HVACMode.AUTO: 11,
     HVACMode.OFF: 5,
-    HVACMode.HEAT: 14,
+    HVACMode.HEAT: MANUAL_MODE,
 }
 
 LWZ_TO_HA_PRESET = {
@@ -96,7 +97,7 @@ LWZ_TO_HA_PRESET = {
     4: PRESET_ECO,
     5: PRESET_WATER_HEATING,
     11: PRESET_AUTO,
-    14: PRESET_MANUAL,
+    MANUAL_MODE: PRESET_MANUAL,
     0: PRESET_EMERGENCY,
 }
 
@@ -106,7 +107,7 @@ HA_TO_LWZ_PRESET = {
     PRESET_ECO: 4,
     PRESET_WATER_HEATING: 5,
     PRESET_AUTO: 11,
-    PRESET_MANUAL: 14,
+    PRESET_MANUAL: MANUAL_MODE,
     PRESET_EMERGENCY: 0,
 }
 
@@ -574,14 +575,19 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
             await self._write_field("operating_mode", new_mode)
 
     @property
+    def _fan_stage_field(self) -> str:
+        """Select the fan stage used by the current operating mode."""
+        if self.operation_mode == ECO_MODE:
+            return "night_stage"
+        if self.operation_mode == MANUAL_MODE:
+            return "manual_stage"
+        return "day_stage"
+
+    @property
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
-        if self.operation_mode == ECO_MODE:
-            value = self._read_register(lambda api: api.system_parameters.night_stage)
-            if value is None:
-                return None
-            return LWZ_TO_HA_FAN.get(int(value))
-        value = self._read_register(lambda api: api.system_parameters.day_stage)
+        field = self._fan_stage_field
+        value = self._read_register(lambda api: getattr(api.system_parameters, field))
         if value is None:
             return None
         return LWZ_TO_HA_FAN.get(int(value))
@@ -590,7 +596,4 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
         if new_mode is not None and self.fan_mode != fan_mode:
-            if self.operation_mode == ECO_MODE:
-                await self._write_field("night_stage", new_mode)
-            else:
-                await self._write_field("day_stage", new_mode)
+            await self._write_field(self._fan_stage_field, new_mode)
