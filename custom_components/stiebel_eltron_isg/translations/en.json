@@ -705,6 +705,15 @@
             "eco_water_temperature_target": {
                 "name": "Eco Water Temperature Target"
             },
+            "manual_water_temperature_target": {
+                "name": "Manual Water Temperature Target"
+            },
+            "manual_hc_set_hk1": {
+                "name": "Manual Heating Circuit Setpoint HK1"
+            },
+            "manual_hc_set_hk2": {
+                "name": "Manual Heating Circuit Setpoint HK2"
+            },
             "dualmode_temperature_ww": {
                 "name": "Dual Mode Temperature WW"
             },

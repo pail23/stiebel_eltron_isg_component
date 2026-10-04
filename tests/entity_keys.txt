@@ -151,6 +151,9 @@ is_summer_mode
 low_pressure
 low_pressure_wp1
 low_pressure_wp2
+manual_hc_set_hk1
+manual_hc_set_hk2
+manual_water_temperature_target
 min_source_temperature
 mixer_close_htg_circuit_2
 mixer_close_htg_circuit_3

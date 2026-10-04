@@ -269,6 +269,15 @@
             },
             "heating_curve_rise_hk3": {
                 "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "manual_hc_set_hk1": {
+                "default": "mdi:thermometer-lines"
+            },
+            "manual_hc_set_hk2": {
+                "default": "mdi:thermometer-lines"
+            },
+            "manual_water_temperature_target": {
+                "default": "mdi:thermometer-lines"
             }
         },
         "sensor": {

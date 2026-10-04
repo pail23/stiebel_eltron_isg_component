@@ -700,6 +700,15 @@
             "eco_water_temperature_target": {
                 "name": "Consigne eau chaude nuit"
             },
+            "manual_water_temperature_target": {
+                "name": "Consigne eau chaude mode manuel"
+            },
+            "manual_hc_set_hk1": {
+                "name": "Consigne circuit de chauffage mode manuel HK1"
+            },
+            "manual_hc_set_hk2": {
+                "name": "Consigne circuit de chauffage mode manuel HK2"
+            },
             "dualmode_temperature_ww": {
                 "name": "Température bivalence eau chaude"
             },
