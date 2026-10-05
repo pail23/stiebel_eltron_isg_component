@@ -74,12 +74,12 @@ def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None
 
 @pytest.mark.parametrize(
     ("version", "compatible"),
-    [("0.7.0", False), ("0.8.0", True), ("0.9.0", False)],
+    [("0.8.0", False), ("0.9.0", True), ("0.10.0", False)],
 )
-def test_runtime_library_range_keeps_ha_2026_9_compatibility(
+def test_runtime_library_range_requires_optional_hk3_handling(
     version: str, compatible: bool
 ) -> None:
-    """Keep the required API without admitting the incompatible 0.9 backend."""
+    """Require the optional HK3 handling without admitting an untested 0.10."""
     requirements = [
         Requirement(entry)
         for entry in json.loads(_MANIFEST.read_text())["requirements"]

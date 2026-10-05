@@ -18,12 +18,12 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from modbus_connection import ModbusError, ModbusTcpParams
+import probatio as vol
 from pystiebeleltron import (
     StiebelEltronModbusError,
     UnknownControllerModelError,
     get_controller_model,
 )
-import voluptuous as vol
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 

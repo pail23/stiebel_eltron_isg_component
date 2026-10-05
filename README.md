@@ -163,6 +163,14 @@ The integration cannot update ISG firmware. Firmware updates are handled
 through Stiebel Eltron support. It also cannot make a register writable when
 the connected controller or firmware exposes it as read-only.
 
+## Upgrading to 2026.10
+
+Release 2026.10 requires Home Assistant 2026.10.0 or newer.
+No reconfiguration is needed for a normal installation.
+
+This release uses pystiebeleltron 0.9, which reads the heating circuit 3 registers as an optional block.
+Controllers that reject this block now complete setup instead of failing, and the heating circuit 3 temperature sensors stay unavailable.
+
 ## Upgrading to 2026.9
 
 Release 2026.9 requires Home Assistant 2026.9.0 or newer.
