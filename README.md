@@ -179,6 +179,15 @@ A lost network link is re-established by the shared backend on the next poll, so
 If another integration already uses the same Modbus endpoint with incompatible link settings, setup stops and reports that conflict instead of opening a second managed connection.
 Align the connection settings or remove the conflicting configuration before trying again.
 
+On WPMsystem, the sensors **Compressor Heating**, **Compressor Heating Water** and **Cooling Runtime** are removed.
+Their registers did not return values on the installations reported in #612, so the entities stayed unavailable.
+Existing registry entries are cleaned up automatically; recorder history and long-term statistics are kept.
+Remove these entities from dashboards and automations that still refer to them.
+
+The LWZ cooling total now represents thermal cooling energy.
+Its entity ID, register and scaling are unchanged, but an existing Energy Dashboard assignment is not corrected automatically.
+See [Energy and long-term statistics](#energy-and-long-term-statistics) and check that the cooling total is not counted as electrical consumption.
+
 Debug logging now comes from `modbus_connection`, `tmodbus`, and `pystiebeleltron` rather than `pymodbus`.
 
 ## Upgrading to 2026.8
