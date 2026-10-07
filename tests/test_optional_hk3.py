@@ -1,4 +1,4 @@
-"""WPMsystem setup with and without the optional heating circuit 3 block."""
+"""WPM setup with and without the optional heating circuit 3 block."""
 
 from unittest.mock import patch
 
@@ -28,15 +28,24 @@ HK3_ACTUAL = 609
 HK3_TARGET = 610
 
 
-@pytest.mark.parametrize("serves_hk3", [True, False])
-async def test_wpmsystem_setup_tolerates_missing_hk3_block(
+@pytest.mark.parametrize(
+    "hk3_case",
+    [
+        pytest.param((ControllerModel.WPMsystem, True), id="WPMsystem-with-HK3"),
+        pytest.param((ControllerModel.WPMsystem, False), id="WPMsystem-without-HK3"),
+        pytest.param((ControllerModel.WPM_3, True), id="WPM3-with-HK3"),
+        pytest.param((ControllerModel.WPM_3, False), id="WPM3-without-HK3"),
+    ],
+)
+async def test_wpm_setup_tolerates_missing_hk3_block(
     hass,
     mock_config_entry,
     mock_get_controller_model,
     mock_modbus_connection,
-    serves_hk3,
+    hk3_case,
 ) -> None:
-    """A controller that rejects the HK3 block still sets up, issue #693."""
+    """Missing HK3 blocks do not prevent setup, issues #693 and #722."""
+    model, serves_hk3 = hk3_case
     unit = mock_modbus_connection.for_unit(UNIT_ID)
     raw = {
         "input": {
@@ -57,7 +66,7 @@ async def test_wpmsystem_setup_tolerates_missing_hk3_block(
         unit.fail_read(HK3_ACTUAL, IllegalDataAddressError(2), register_type="input")
 
     api = WpmStiebelEltronAPI(unit)
-    mock_get_controller_model.return_value = ControllerModel.WPMsystem
+    mock_get_controller_model.return_value = model
     mock_config_entry.add_to_hass(hass)
     with patch(
         "custom_components.stiebel_eltron_isg.wpm_coordinator.WpmStiebelEltronAPI",
