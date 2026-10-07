@@ -28,6 +28,25 @@ HK3_ACTUAL = 609
 HK3_TARGET = 610
 
 
+def _load_wpm_registers(unit) -> None:
+    """Serve every WPM register, with 21.5 and 23.0 °C for HK3."""
+    raw = {
+        "input": {
+            address: 0
+            for start, end in WPM_INPUT_RANGES
+            for address in range(start, end + 1)
+        },
+        "holding": {
+            address: 0
+            for start, end in WPM_HOLDING_RANGES
+            for address in range(start, end + 1)
+        },
+    }
+    raw["input"][HK3_ACTUAL] = 215
+    raw["input"][HK3_TARGET] = 230
+    unit.load_raw(raw)
+
+
 @pytest.mark.parametrize(
     "hk3_case",
     [
@@ -47,21 +66,7 @@ async def test_wpm_setup_tolerates_missing_hk3_block(
     """Missing HK3 blocks do not prevent setup, issues #693 and #722."""
     model, serves_hk3 = hk3_case
     unit = mock_modbus_connection.for_unit(UNIT_ID)
-    raw = {
-        "input": {
-            address: 0
-            for start, end in WPM_INPUT_RANGES
-            for address in range(start, end + 1)
-        },
-        "holding": {
-            address: 0
-            for start, end in WPM_HOLDING_RANGES
-            for address in range(start, end + 1)
-        },
-    }
-    raw["input"][HK3_ACTUAL] = 215
-    raw["input"][HK3_TARGET] = 230
-    unit.load_raw(raw)
+    _load_wpm_registers(unit)
     if not serves_hk3:
         unit.fail_read(HK3_ACTUAL, IllegalDataAddressError(2), register_type="input")
 
@@ -92,3 +97,44 @@ async def test_wpm_setup_tolerates_missing_hk3_block(
     else:
         assert state_of(ACTUAL_TEMPERATURE_HK3) == STATE_UNAVAILABLE
         assert state_of(TARGET_TEMPERATURE_HK3) == STATE_UNAVAILABLE
+
+
+@pytest.mark.xfail(
+    strict=True,
+    reason=(
+        "pystiebeleltron 0.9 drops an optional block refused after a successful "
+        "read and keeps its cached values until the API is rebuilt"
+    ),
+)
+async def test_hk3_refused_after_a_successful_read_becomes_unavailable(
+    hass,
+    mock_config_entry,
+    mock_get_controller_model,
+    mock_modbus_connection,
+) -> None:
+    """A later refusal must not leave the last HK3 values on display."""
+    unit = mock_modbus_connection.for_unit(UNIT_ID)
+    _load_wpm_registers(unit)
+
+    api = WpmStiebelEltronAPI(unit)
+    mock_get_controller_model.return_value = ControllerModel.WPMsystem
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "custom_components.stiebel_eltron_isg.wpm_coordinator.WpmStiebelEltronAPI",
+        return_value=api,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    entity_id = registry.async_get_entity_id(
+        "sensor", DOMAIN, build_unique_id(mock_config_entry, ACTUAL_TEMPERATURE_HK3)
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "21.5"
+
+    unit.fail_read(HK3_ACTUAL, IllegalDataAddressError(2), register_type="input")
+    await mock_config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE

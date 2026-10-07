@@ -950,16 +950,15 @@ async def test_a_disabled_replacement_device_does_not_disable_the_original(
     assert restored.disabled_by is None
 
 
-async def test_a_shared_replacement_device_is_left_alone(
+async def test_another_entrys_device_with_the_same_identifier_is_left_alone(
     hass: HomeAssistant,
     config_entry_with_name: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A device another config entry also belongs to is never removed.
+    """Only this entry's replacement device is replaced by the migration.
 
-    Home Assistant 2026.8 stores one device per config entry, so only this
-    entry's replacement may be adopted. Older releases store the config entries
-    directly on one device, which must remain untouched when it is shared.
+    Home Assistant stores one device per config entry, so another entry can
+    hold a device with the same identifier. That device must remain untouched.
     """
     config_entry_with_name.add_to_hass(hass)
     stranger = MockConfigEntry(domain=DOMAIN, title="Something else")
