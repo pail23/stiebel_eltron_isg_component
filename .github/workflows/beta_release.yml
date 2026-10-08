@@ -1,0 +1,156 @@
+name: "Beta release"
+
+# Run from the Actions tab. "Use workflow from" picks the integration branch.
+# The release is created with GITHUB_TOKEN, which does not trigger release.yml,
+# so the ZIP built here is the only one attached to the prerelease.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Beta version, e.g. 2026.10.1-beta1 (needs a suffix such as -beta1)"
+        required: true
+        type: string
+      bundle_library:
+        description: "Bundle pystiebeleltron from Git (the beta then requires the Home Assistant version below)"
+        type: boolean
+        default: false
+      library_ref:
+        description: "pystiebeleltron branch, tag or commit to bundle"
+        type: string
+        default: "master"
+      library_repository:
+        description: "Repository to bundle pystiebeleltron from"
+        type: string
+        default: "ThyMYthOS/python-stiebel-eltron"
+
+permissions: {}
+
+concurrency:
+  group: "beta-release"
+  cancel-in-progress: false
+
+env:
+  # A bundled library runs on the Modbus backend this Home Assistant version
+  # pins. Raise it when a bundled library needs a newer backend.
+  BUNDLED_MIN_HA: "2026.10.0"
+
+jobs:
+  beta:
+    name: "Beta release"
+    runs-on: "ubuntu-latest"
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+      BUNDLE: ${{ inputs.bundle_library }}
+      LIBRARY_REF: ${{ inputs.library_ref }}
+      LIBRARY_REPOSITORY: ${{ inputs.library_repository }}
+      OUTPUT_PATH: ${{ runner.temp }}/stiebel_eltron_isg.zip
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: "Check the version"
+        shell: "bash"
+        run: |
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+(\.[0-9]+)?-?[A-Za-z][A-Za-z0-9.-]*$ ]]; then
+            echo "::error::A beta version needs a suffix such as -beta1, got '$VERSION'"
+            exit 1
+          fi
+
+      - name: "Checkout the repository"
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          # Needed to push the release tag.
+          persist-credentials: true
+
+      - name: "Checkout the library"
+        if: inputs.bundle_library
+        uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
+        with:
+          repository: ${{ inputs.library_repository }}
+          ref: ${{ inputs.library_ref }}
+          path: ".bundled-library"
+          persist-credentials: false
+
+      - name: "Build and verify the release artifact"
+        shell: "bash"
+        run: |
+          args=()
+          if [[ "$BUNDLE" == "true" ]]; then
+            args=(--bundle-library .bundled-library
+                  --library-repository "$LIBRARY_REPOSITORY"
+                  --library-ref "$LIBRARY_REF")
+          fi
+          python3 scripts/build_release.py "$VERSION" "$OUTPUT_PATH" "${args[@]}" |
+            tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: "Install uv"
+        if: inputs.bundle_library
+        uses: "astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7" # v6
+        with:
+          python-version: "3.14"
+
+      - name: "Import the bundled integration on the minimum Home Assistant"
+        if: inputs.bundle_library
+        shell: "bash"
+        run: |
+          smoke="$RUNNER_TEMP/smoke"
+          mkdir -p "$smoke/custom_components/stiebel_eltron_isg"
+          touch "$smoke/custom_components/__init__.py"
+          unzip -q "$OUTPUT_PATH" -d "$smoke/custom_components/stiebel_eltron_isg"
+          mapfile -t modbus < <(
+            gh api "repos/home-assistant/core/contents/homeassistant/components/modbus/manifest.json?ref=$BUNDLED_MIN_HA" \
+              --jq '.content | @base64d | fromjson | .requirements[]'
+          )
+          with=(--with "homeassistant==$BUNDLED_MIN_HA")
+          for requirement in "${modbus[@]}"; do with+=(--with "$requirement"); done
+          cd "$smoke"
+          uv run --no-project "${with[@]}" python - <<'EOF'
+          import importlib
+          import pkgutil
+          import sys
+
+          import custom_components.stiebel_eltron_isg as integration
+
+          for module in pkgutil.iter_modules(integration.__path__):
+              importlib.import_module(f"{integration.__name__}.{module.name}")
+          leaked = sorted(name for name in sys.modules if name.split(".")[0] == "pystiebeleltron")
+          assert not leaked, f"installed library imported: {leaked}"
+          print("All integration modules import with the bundled library.")
+          EOF
+
+      - name: "Tag and publish the prerelease"
+        shell: "bash"
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
+          notes="$RUNNER_TEMP/notes.md"
+          {
+            echo "Beta built from \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}."
+          } > "$notes"
+          if [[ "$BUNDLE" == "true" ]]; then
+            # HACS reads the minimum version from hacs.json at the release tag,
+            # so only this beta asks for the newer Home Assistant.
+            python3 - <<'EOF'
+          import json
+          import os
+          from pathlib import Path
+
+          path = Path("hacs.json")
+          hacs = json.loads(path.read_text(encoding="utf-8"))
+          hacs["homeassistant"] = os.environ["BUNDLED_MIN_HA"]
+          path.write_text(json.dumps(hacs, indent=4) + "\n", encoding="utf-8")
+          EOF
+            git add hacs.json
+            git commit -q -m "Beta $VERSION: require Home Assistant $BUNDLED_MIN_HA for the bundled library"
+            commit=$(git -C .bundled-library rev-parse HEAD)
+            {
+              echo
+              echo "Bundles pystiebeleltron from ${LIBRARY_REPOSITORY} at \`${LIBRARY_REF}\` (${commit}) instead of the PyPI release."
+              echo "Requires Home Assistant ${BUNDLED_MIN_HA} or newer."
+            } >> "$notes"
+          fi
+          git tag "$VERSION"
+          git push origin "refs/tags/$VERSION"
+          gh release create "$VERSION" "$OUTPUT_PATH" \
+            --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"

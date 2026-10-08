@@ -70,6 +70,23 @@ Home Assistant instance running and already configured with the included
 [`configuration.yaml`](./config/configuration.yaml)
 file.
 
+## Releases and pystiebeleltron
+
+Regular releases require the pystiebeleltron version that Home Assistant core pins, installed from PyPI.
+Library changes go to [ThyMYthOS/python-stiebel-eltron](https://github.com/ThyMYthOS/python-stiebel-eltron) first and reach regular releases through a library release and the core bump.
+
+Beta and test releases may instead bundle a copy of pystiebeleltron from a branch, tag or commit of that repository.
+This lets testers try a library fix, or the version core is about to adopt, before core pins it.
+A bundled beta
+
+- is a GitHub prerelease built by the "Beta release" workflow with "Bundle pystiebeleltron" checked,
+- names the library repository, ref and commit in its release notes and in `manifest.json`, which Home Assistant shows in diagnostics,
+- keeps the library's MIT license next to the copy,
+- requires Home Assistant 2026.10 or newer, whose Modbus backend the copy runs on.
+
+The bundled copy is never edited.
+Fixes found while testing a beta go upstream as library pull requests; this repository does not maintain a fork of the library.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under its MIT License.
