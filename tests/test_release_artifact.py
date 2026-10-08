@@ -400,11 +400,11 @@ def test_bundled_library_refuses_an_incompatible_modbus_backend(
 @pytest.mark.parametrize(
     ("module", "dependency", "error"),
     [
-        ("import pystiebeleltron\n", None, "cannot rewrite"),
+        ("import pystiebeleltron\n", None, "cannot redirect"),
         (
             "from pystiebeleltron import (\n    MODEL,\n)\nimport pystiebeleltron.wpm\n",
             None,
-            "cannot rewrite",
+            "cannot redirect",
         ),
         ("", ("modbus-connection (>=4,<5)", "requests"), "does not provide"),
         (
@@ -491,3 +491,49 @@ def test_release_cli_bundles_the_library(tmp_path: Path) -> None:
     assert manifest["bundled_library"]["ref"] == "feature"
     assert "from ._vendor.pystiebeleltron import" in coordinator
     assert "\nfrom pystiebeleltron" not in coordinator
+
+
+def test_bundling_rejects_a_symlinked_license(tmp_path: Path) -> None:
+    """A license link cannot copy files from outside the checkout into a ZIP."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    secret = tmp_path / "git-config"
+    secret.write_text("token", encoding="utf-8")
+    (checkout / "LICENSE").unlink()
+    (checkout / "LICENSE").symlink_to(secret)
+
+    with pytest.raises(release_builder.ArtifactError, match="LICENSE is a symlink"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
+
+
+def test_bundling_rejects_absolute_self_imports_in_the_library(
+    tmp_path: Path,
+) -> None:
+    """A library module must not reach the installed copy by its top-level name."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    (checkout / "pystiebeleltron" / "wpm.py").write_text(
+        "from pystiebeleltron import MODEL\n", encoding="utf-8"
+    )
+
+    with pytest.raises(release_builder.ArtifactError, match="wpm.py:1"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
+
+
+def test_bundling_rejects_dynamic_dependencies(tmp_path: Path) -> None:
+    """Dependencies the build cannot read cannot be checked against HA."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nname = "pystiebeleltron"\ndynamic = ["version", "dependencies"]\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(release_builder.ArtifactError, match="dynamically"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
