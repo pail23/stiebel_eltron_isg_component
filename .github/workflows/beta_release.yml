@@ -45,6 +45,11 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: "Install uv"
+        uses: "astral-sh/setup-uv@c18668ad3cf93ea998bef934396af7bb5c839dc7" # v6
+        with:
+          python-version: "3.14"
+
       - name: "Check the version"
         shell: "bash"
         run: |
@@ -52,6 +57,29 @@ jobs:
             echo "::error::A beta version needs a suffix such as -beta1, got '$VERSION'"
             exit 1
           fi
+          # Home Assistant refuses to load a custom integration whose manifest
+          # version fails these strategies, e.g. 2026.10-test.
+          uv run --no-project --with awesomeversion==25.8.0 python - <<'EOF'
+          import os
+          import sys
+
+          from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
+
+          version = os.environ["VERSION"]
+          try:
+              AwesomeVersion(
+                  version,
+                  ensure_strategy=[
+                      AwesomeVersionStrategy.CALVER,
+                      AwesomeVersionStrategy.SEMVER,
+                      AwesomeVersionStrategy.SIMPLEVER,
+                      AwesomeVersionStrategy.BUILDVER,
+                      AwesomeVersionStrategy.PEP440,
+                  ],
+              )
+          except Exception as err:
+              sys.exit(f"::error::Home Assistant would not load version {version}: {err}")
+          EOF
 
       - name: "Checkout the repository"
         uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
@@ -138,7 +166,7 @@ jobs:
     needs: [build, smoke]
     # smoke is skipped when nothing is bundled.
     if: >-
-      always() && needs.build.result == 'success' &&
+      !cancelled() && needs.build.result == 'success' &&
       (needs.smoke.result == 'success' || needs.smoke.result == 'skipped')
     runs-on: "ubuntu-latest"
     # Runs for the same version publish one after the other, so the existence
