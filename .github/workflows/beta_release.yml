@@ -141,6 +141,11 @@ jobs:
       always() && needs.build.result == 'success' &&
       (needs.smoke.result == 'success' || needs.smoke.result == 'skipped')
     runs-on: "ubuntu-latest"
+    # Runs for the same version publish one after the other, so the existence
+    # check below cannot race; different versions still run in parallel.
+    concurrency:
+      group: "beta-release-${{ inputs.version }}"
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
