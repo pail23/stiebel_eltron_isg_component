@@ -84,6 +84,10 @@ A bundled beta
 - keeps the library's MIT license next to the copy,
 - requires Home Assistant 2026.10 or newer, whose Modbus backend the copy runs on.
 
+Testers only get betas after turning on the "Pre-release" switch on this repository's HACS device in Home Assistant; HACS creates that entity disabled.
+Name a beta below the stable release it leads to, for example `2026.10.1-beta1` before `2026.10.1`, so HACS offers that stable release as an update.
+The bundled library logs as `custom_components.stiebel_eltron_isg._vendor.pystiebeleltron`, which the integration's debug logging covers.
+
 The bundled copy is never edited.
 Fixes found while testing a beta go upstream as library pull requests; this repository does not maintain a fork of the library.
 

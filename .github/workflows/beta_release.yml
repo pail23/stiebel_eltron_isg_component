@@ -144,15 +144,24 @@ jobs:
           manifest="https://raw.githubusercontent.com/home-assistant/core/$BUNDLED_MIN_HA/homeassistant/components/modbus/manifest.json"
           mapfile -t modbus < <(curl -fsSL "$manifest" |
             python3 -c 'import json, sys; print("\n".join(json.load(sys.stdin)["requirements"]))')
+          # Install the library version core pins, as Home Assistant does, so the
+          # check below catches an import that silently loads it.
+          core="https://raw.githubusercontent.com/home-assistant/core/$BUNDLED_MIN_HA/homeassistant/components/stiebel_eltron/manifest.json"
+          mapfile -t library < <(curl -fsSL "$core" |
+            python3 -c 'import json, sys; print("\n".join(json.load(sys.stdin)["requirements"]))')
           with=(--with "homeassistant==$BUNDLED_MIN_HA")
-          for requirement in "${modbus[@]}"; do with+=(--with "$requirement"); done
+          for requirement in "${modbus[@]}" "${library[@]}"; do with+=(--with "$requirement"); done
           cd "$smoke"
           uv run --no-project "${with[@]}" python - <<'EOF'
           import importlib
           import pkgutil
           import sys
 
+          import importlib.util
+
           import custom_components.stiebel_eltron_isg as integration
+
+          assert importlib.util.find_spec("pystiebeleltron"), "core's library is not installed"
 
           for module in pkgutil.iter_modules(integration.__path__):
               importlib.import_module(f"{integration.__name__}.{module.name}")
@@ -203,24 +212,7 @@ jobs:
           if [[ "$BUNDLE" == "true" ]]; then
             # HACS reads the minimum version from hacs.json at the release tag,
             # so only this beta asks for the newer Home Assistant.
-            python3 - <<'EOF'
-          import json
-          import os
-          from pathlib import Path
-
-          path = Path("hacs.json")
-          hacs = json.loads(path.read_text(encoding="utf-8"))
-          minimum = os.environ["BUNDLED_MIN_HA"]
-
-
-          def key(version: str) -> tuple[int, ...]:
-              return tuple(int(part) for part in version.split("."))
-
-
-          if key(hacs.get("homeassistant", "0")) < key(minimum):
-              hacs["homeassistant"] = minimum
-              path.write_text(json.dumps(hacs, indent=4) + "\n", encoding="utf-8")
-          EOF
+            python3 scripts/raise_hacs_minimum.py "$BUNDLED_MIN_HA"
             git add hacs.json
             # A branch may already require this Home Assistant version or a newer one.
             if ! git diff --cached --quiet; then
