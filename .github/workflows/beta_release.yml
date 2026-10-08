@@ -201,11 +201,19 @@ jobs:
               echo "Requires Home Assistant ${BUNDLED_MIN_HA} or newer."
             } >> "$notes"
           fi
+          # Refuse an existing version, so the rollback below only ever
+          # removes a tag and release this run created.
+          if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" > /dev/null ||
+             gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "::error::Version $VERSION already has a tag or release"
+            exit 1
+          fi
           git tag "$VERSION"
           git push origin "refs/tags/$VERSION"
-          # Remove the tag again if publishing fails, so the run can be retried.
+          # Undo a partial publish, so the run can be retried with the same version.
           if ! gh release create "$VERSION" "$zip" \
               --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"; then
+            gh release delete "$VERSION" --yes || true
             git push origin --delete "refs/tags/$VERSION"
             exit 1
           fi
