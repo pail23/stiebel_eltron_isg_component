@@ -138,11 +138,22 @@ jobs:
 
           path = Path("hacs.json")
           hacs = json.loads(path.read_text(encoding="utf-8"))
-          hacs["homeassistant"] = os.environ["BUNDLED_MIN_HA"]
-          path.write_text(json.dumps(hacs, indent=4) + "\n", encoding="utf-8")
+          minimum = os.environ["BUNDLED_MIN_HA"]
+
+
+          def key(version: str) -> tuple[int, ...]:
+              return tuple(int(part) for part in version.split("."))
+
+
+          if key(hacs.get("homeassistant", "0")) < key(minimum):
+              hacs["homeassistant"] = minimum
+              path.write_text(json.dumps(hacs, indent=4) + "\n", encoding="utf-8")
           EOF
             git add hacs.json
-            git commit -q -m "Beta $VERSION: require Home Assistant $BUNDLED_MIN_HA for the bundled library"
+            # A branch may already require this Home Assistant version or a newer one.
+            if ! git diff --cached --quiet; then
+              git commit -q -m "Beta $VERSION: require Home Assistant $BUNDLED_MIN_HA for the bundled library"
+            fi
             commit=$(git -C .bundled-library rev-parse HEAD)
             {
               echo
