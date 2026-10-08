@@ -45,7 +45,6 @@ jobs:
       BUNDLE: ${{ inputs.bundle_library }}
       LIBRARY_REF: ${{ inputs.library_ref }}
       LIBRARY_REPOSITORY: ${{ inputs.library_repository }}
-      OUTPUT_PATH: ${{ runner.temp }}/stiebel_eltron_isg.zip
       GH_TOKEN: ${{ github.token }}
     steps:
       - name: "Check the version"
@@ -55,6 +54,8 @@ jobs:
             echo "::error::A beta version needs a suffix such as -beta1, got '$VERSION'"
             exit 1
           fi
+          # The runner context is not available in job-level env.
+          echo "OUTPUT_PATH=$RUNNER_TEMP/stiebel_eltron_isg.zip" >> "$GITHUB_ENV"
 
       - name: "Checkout the repository"
         uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
