@@ -1,11 +1,13 @@
 """WPM setup with and without the optional heating circuit 3 block."""
 
+from importlib.metadata import version
 from unittest.mock import patch
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.helpers import entity_registry as er
 from modbus_connection import IllegalDataAddressError
+from packaging.version import Version
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.wpm import (
     WPM_HOLDING_RANGES,
@@ -100,10 +102,12 @@ async def test_wpm_setup_tolerates_missing_hk3_block(
 
 
 @pytest.mark.xfail(
+    Version(version("pystiebeleltron")) < Version("0.9.1"),
     strict=True,
     reason=(
-        "pystiebeleltron 0.9 drops an optional block refused after a successful "
-        "read and keeps its cached values until the API is rebuilt"
+        "pystiebeleltron 0.9.0 drops an optional block refused after a successful "
+        "read and keeps its cached values; the fix from "
+        "ThyMYthOS/python-stiebel-eltron#102 is expected in 0.9.1"
     ),
 )
 async def test_hk3_refused_after_a_successful_read_becomes_unavailable(
