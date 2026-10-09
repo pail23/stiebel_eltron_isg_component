@@ -816,7 +816,7 @@
                     "water_heating": "Water heating",
                     "emergency": "Emergency",
                     "program": "Program",
-                    "ready": "Ready",
+                    "ready": "Standby",
                     "automatic": "Automatic",
                     "manual": "Manual",
                     "comfort": "Comfort",
@@ -833,7 +833,7 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready",
+                            "ready": "Standby",
                             "auto": "Auto",
                             "manual": "Manual"
                         }
@@ -848,7 +848,7 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready",
+                            "ready": "Standby",
                             "auto": "Auto",
                             "manual": "Manual"
                         }
@@ -863,7 +863,7 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready",
+                            "ready": "Standby",
                             "auto": "Auto",
                             "manual": "Manual"
                         }
