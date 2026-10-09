@@ -2,6 +2,8 @@
 
 from types import SimpleNamespace
 
+from homeassistant.components.number import NumberMode
+from homeassistant.const import UnitOfTemperature
 from pystiebeleltron.lwz import LwzSystemParameters
 import pytest
 
@@ -12,6 +14,7 @@ from custom_components.stiebel_eltron_isg.const import (
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_LEVEL_MANUAL,
     FAN_LEVEL_PARTY,
+    HEATING_CURVE_RISE_HK1,
     MANUAL_HC_SET_HK1,
     MANUAL_HC_SET_HK2,
     MANUAL_WATER_TEMPERATURE_TARGET,
@@ -19,7 +22,9 @@ from custom_components.stiebel_eltron_isg.const import (
 from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_LWZ,
     NUMBER_TYPES_WPM,
+    NUMBER_TYPES_WPM_3I,
     StiebelEltronISGNumberEntity,
+    number_mode,
 )
 
 
@@ -327,3 +332,29 @@ def test_other_lwz_temperature_target_keeps_tenth_degree_steps() -> None:
     )
     assert description.native_step == 0.1
     assert description.enforce_step is False
+
+
+_ALL_NUMBER_TYPES = NUMBER_TYPES_WPM_3I + NUMBER_TYPES_WPM + NUMBER_TYPES_LWZ
+
+
+@pytest.mark.parametrize(
+    "description",
+    [
+        d
+        for d in _ALL_NUMBER_TYPES
+        if d.native_unit_of_measurement
+        in (UnitOfTemperature.CELSIUS, UnitOfTemperature.KELVIN)
+    ],
+    ids=lambda d: d.key,
+)
+def test_temperature_numbers_use_an_input_box(description) -> None:
+    """Temperatures are typed in rather than set with a slider (#537)."""
+    assert number_mode(description) == NumberMode.BOX
+
+
+@pytest.mark.parametrize(
+    "key", [FAN_LEVEL_PARTY, FAN_LEVEL_MANUAL, HEATING_CURVE_RISE_HK1]
+)
+def test_non_temperature_numbers_keep_the_automatic_mode(key: str) -> None:
+    description = next(d for d in NUMBER_TYPES_LWZ if d.key == key)
+    assert number_mode(description) == NumberMode.AUTO
