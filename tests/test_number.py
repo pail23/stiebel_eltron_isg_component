@@ -1,6 +1,7 @@
 """Tests for the number platform."""
 
 from types import SimpleNamespace
+from unittest.mock import MagicMock
 
 from homeassistant.components.number import NumberMode
 from homeassistant.const import UnitOfTemperature
@@ -350,6 +351,20 @@ _ALL_NUMBER_TYPES = NUMBER_TYPES_WPM_3I + NUMBER_TYPES_WPM + NUMBER_TYPES_LWZ
 def test_temperature_numbers_use_an_input_box(description) -> None:
     """Temperatures are typed in rather than set with a slider (#537)."""
     assert number_mode(description) == NumberMode.BOX
+
+
+def test_number_entity_applies_the_mode() -> None:
+    """The entity itself must carry the mode, not only the helper."""
+    temperature = next(
+        d for d in NUMBER_TYPES_WPM if d.key == AREA_COOLING_FLOW_TEMPERATURE_HYSTERESIS
+    )
+    fan_level = next(d for d in NUMBER_TYPES_LWZ if d.key == FAN_LEVEL_PARTY)
+
+    def build(description) -> StiebelEltronISGNumberEntity:
+        return StiebelEltronISGNumberEntity(MagicMock(), MagicMock(), description)
+
+    assert build(temperature).mode == NumberMode.BOX
+    assert build(fan_level).mode == NumberMode.AUTO
 
 
 @pytest.mark.parametrize(
