@@ -51,6 +51,7 @@ from .const import (
     ACTUAL_TEMPERATURE_WATER,
     COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_HP_1,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_SPEED,
     COMPRESSOR_STARTS,
@@ -73,6 +74,7 @@ from .const import (
     COOLING_ENERGY_LAST_24H,
     COOLING_ENERGY_PREV_12M,
     COOLING_RUNTIME,
+    COOLING_RUNTIME_HP_1,
     CURRENT_POWER_CONSUMPTION,
     DEWPOINT_TEMPERATURE,
     DEWPOINT_TEMPERATURE_HK1,
@@ -112,6 +114,9 @@ from .const import (
     LOW_PRESSURE_WP1,
     LOW_PRESSURE_WP2,
     MIN_SOURCE_TEMPERATURE,
+    NHZ_1_2_RUNTIME,
+    NHZ_1_RUNTIME,
+    NHZ_2_RUNTIME,
     OUTDOOR_TEMPERATURE,
     PRODUCED_COOLING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
@@ -287,10 +292,10 @@ def create_efficiency_entity_description(
     )
 
 
-def heating_window_efficiency(
+def window_efficiency(
     heat: int | float | None, electricity: int | float | None
 ) -> float | None:
-    """Calculate a heating ratio only from two valid values for the same window."""
+    """Calculate a heat/electricity ratio only from two valid values for one window."""
     if (
         isinstance(heat, bool)
         or not isinstance(heat, (int, float))
@@ -1340,24 +1345,82 @@ WPM_AMOUNT_OF_HEAT_SENSOR_TYPES = [
 WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES = [
     create_efficiency_entity_description(
         EFFICIENCY_HEATING_1_24_H,
-        lambda api: heating_window_efficiency(
+        lambda api: window_efficiency(
             api.extended_energy_data.amount_of_heat_heating_1_24_h,
             api.extended_energy_data.heating_24h,
         ),
     ),
     create_efficiency_entity_description(
         EFFICIENCY_HEATING_1_12_M,
-        lambda api: heating_window_efficiency(
+        lambda api: window_efficiency(
             api.extended_energy_data.amount_of_heat_heating_1_12,
             api.extended_energy_data.heating_12m,
         ),
     ),
     create_efficiency_entity_description(
         EFFICIENCY_HEATING_13_24_M,
-        lambda api: heating_window_efficiency(
+        lambda api: window_efficiency(
             api.extended_energy_data.amount_of_heat_heating_13_24,
             api.extended_energy_data.heating_13_24,
         ),
+    ),
+]
+
+# Same window ratio for cooling. Checked on a WPMsystem against the ISG
+# ENERGIEBILANZ page in the same minute: 2029 kWh / 326 kWh = 6.22 for the last
+# 12 months, as displayed. Windows without cooling read 0/0 there and the ISG
+# shows 0.00; the ratio stays unavailable instead.
+WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES = [
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_1_24_H,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_cooling_1_24_h,
+            api.extended_energy_data.cooling_24h,
+        ),
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_1_12_M,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_cooling_1_12_m,
+            api.extended_energy_data.cooling_12m,
+        ),
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_13_24_M,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_cooling_13_24,
+            api.extended_energy_data.cooling_13_24,
+        ),
+    ),
+]
+
+# Runtime counters of heat pump 1 and the electric reheating stages. The
+# aggregate counters 3516-3518 are not served on WPMsystem (#612); these are.
+# Checked against the ISG page WAERMEPUMPE 1 / LAUFZEIT in the same minute:
+# 3643 = VD HEIZEN, 3544 = VD KUEHLEN, 3545-3547 = NHZ 1, NHZ 2, NHZ 1/2.
+# They get their own keys because on a cascade they cover heat pump 1 only,
+# unlike the hidden aggregate sensors. vd_dhw_hp_1 (3644) is left out: the
+# checked installation has a separate DHW heat pump and reads 0x8000 there.
+WPMSYSTEM_RUNTIME_SENSOR_TYPES = [
+    create_runtime_entity_description(
+        COMPRESSOR_HEATING_HP_1,
+        lambda api: api.extended_energy_data.vd_heating_hp_1,
+    ),
+    create_runtime_entity_description(
+        COOLING_RUNTIME_HP_1,
+        lambda api: api.energy_data.vd_cooling_x_hp_1,
+    ),
+    create_runtime_entity_description(
+        NHZ_1_RUNTIME,
+        lambda api: api.energy_data.nhz_1_reheating,
+    ),
+    create_runtime_entity_description(
+        NHZ_2_RUNTIME,
+        lambda api: api.energy_data.nhz_2_reheating,
+    ),
+    create_runtime_entity_description(
+        NHZ_1_2_RUNTIME,
+        lambda api: api.energy_data.nhz_1_2_reheating,
     ),
 ]
 
@@ -1496,6 +1559,8 @@ async def async_setup_entry(
                     WPM_INVERTER_POWER_SENSOR_TYPES
                     + WPMSYSTEM_COOLING_SENSOR_TYPES
                     + WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES
+                    + WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES
+                    + WPMSYSTEM_RUNTIME_SENSOR_TYPES
                 )
             )
     else:

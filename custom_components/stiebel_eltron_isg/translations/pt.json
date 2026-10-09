@@ -471,6 +471,21 @@
             "cooling_runtime": {
                 "name": "Cooling Runtime"
             },
+            "compressor_heating_hp_1": {
+                "name": "Compressor aquecimento bomba de calor 1"
+            },
+            "cooling_runtime_hp_1": {
+                "name": "Tempo arrefecimento bomba de calor 1"
+            },
+            "nhz_1_runtime": {
+                "name": "Tempo NHZ 1"
+            },
+            "nhz_2_runtime": {
+                "name": "Tempo NHZ 2"
+            },
+            "nhz_1_2_runtime": {
+                "name": "Tempo NHZ 1/2"
+            },
             "current_power_consumption": {
                 "name": "Inverter Power Consumption"
             },

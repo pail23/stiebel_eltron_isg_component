@@ -476,6 +476,21 @@
             "cooling_runtime": {
                 "name": "Kühlbetrieb Laufzeit"
             },
+            "compressor_heating_hp_1": {
+                "name": "Verdichter Heizung Wärmepumpe 1"
+            },
+            "cooling_runtime_hp_1": {
+                "name": "Kühlbetrieb Laufzeit Wärmepumpe 1"
+            },
+            "nhz_1_runtime": {
+                "name": "NHZ 1 Laufzeit"
+            },
+            "nhz_2_runtime": {
+                "name": "NHZ 2 Laufzeit"
+            },
+            "nhz_1_2_runtime": {
+                "name": "NHZ 1/2 Laufzeit"
+            },
             "current_power_consumption": {
                 "name": "Inverter Aufnahmeleistung"
             },

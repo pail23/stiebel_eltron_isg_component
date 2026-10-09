@@ -471,6 +471,21 @@
             "cooling_runtime": {
                 "name": "Cooling Runtime"
             },
+            "compressor_heating_hp_1": {
+                "name": "Kompresor vykurovanie tepelné čerpadlo 1"
+            },
+            "cooling_runtime_hp_1": {
+                "name": "Doba chladenia tepelné čerpadlo 1"
+            },
+            "nhz_1_runtime": {
+                "name": "Doba chodu NHZ 1"
+            },
+            "nhz_2_runtime": {
+                "name": "Doba chodu NHZ 2"
+            },
+            "nhz_1_2_runtime": {
+                "name": "Doba chodu NHZ 1/2"
+            },
             "current_power_consumption": {
                 "name": "Inverter Power Consumption"
             },

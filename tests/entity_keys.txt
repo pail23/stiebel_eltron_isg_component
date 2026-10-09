@@ -39,6 +39,7 @@ comfort_temperature_target_hk2
 comfort_temperature_target_hk3
 comfort_water_temperature_target
 compressor_heating
+compressor_heating_hp_1
 compressor_heating_water
 compressor_cooling
 compressor_on
@@ -65,6 +66,7 @@ cooling_energy_last_24h
 cooling_energy_prev_12m
 cooling_mode
 cooling_runtime
+cooling_runtime_hp_1
 current_power_consumption
 dew_point_temperature
 dew_point_temperature_hk1
@@ -163,6 +165,9 @@ mixer_open_htg_circuit_2
 mixer_open_htg_circuit_3
 mixer_open_htg_circuit_4
 mixer_open_htg_circuit_5
+nhz_1_2_runtime
+nhz_1_runtime
+nhz_2_runtime
 nhz_stages_running
 operation_mode
 outdoor_temperature
