@@ -389,14 +389,16 @@ def create_volume_stream_entity_description(
 
 
 def create_runtime_entity_description(
-    key: str, modbus_register: StiebelEltronModbusRegister
+    key: str,
+    modbus_register: StiebelEltronModbusRegister,
+    state_class: SensorStateClass = SensorStateClass.MEASUREMENT,
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for an operating-duration sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=state_class,
         device_class=SensorDeviceClass.DURATION,
         modbus_register=modbus_register,
     )
@@ -1394,34 +1396,29 @@ WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES = [
     ),
 ]
 
-# Runtime counters of heat pump 1 and the electric reheating stages. The
-# aggregate counters 3516-3518 are not served on WPMsystem (#612); these are.
-# Checked against the ISG page WAERMEPUMPE 1 / LAUFZEIT in the same minute:
-# 3643 = VD HEIZEN, 3544 = VD KUEHLEN, 3545-3547 = NHZ 1, NHZ 2, NHZ 1/2.
-# They get their own keys because on a cascade they cover heat pump 1 only,
-# unlike the hidden aggregate sensors. vd_dhw_hp_1 (3644) is left out: the
-# checked installation has a separate DHW heat pump and reads 0x8000 there.
+# Runtime counters that WPMsystem serves, unlike the aggregate counters
+# 3516-3518 (#612). Checked against the ISG page WAERMEPUMPE 1 / LAUFZEIT in
+# the same minute: 3643 = VD HEIZEN, 3544 = VD KUEHLEN, 3545-3547 = NHZ 1,
+# NHZ 2, NHZ 1/2. The manual lists the two VD counters under heat pump 1 and
+# the NHZ counters under the reheating stages, without a heat pump; the heat
+# pump 2 block has no NHZ entries. The VD counters therefore get their own
+# keys instead of the hidden aggregate ones, since on a cascade they cover
+# heat pump 1 only. vd_dhw_hp_1 (3644) is left out: the checked installation
+# has a separate DHW heat pump and reads 0x8000 there.
+#
+# These are new entities without recorded statistics, so they can use the
+# state class of an ever-growing counter from the start. The older runtime
+# sensors keep MEASUREMENT, since changing theirs would affect existing
+# long-term statistics.
 WPMSYSTEM_RUNTIME_SENSOR_TYPES = [
-    create_runtime_entity_description(
-        COMPRESSOR_HEATING_HP_1,
-        lambda api: api.extended_energy_data.vd_heating_hp_1,
-    ),
-    create_runtime_entity_description(
-        COOLING_RUNTIME_HP_1,
-        lambda api: api.energy_data.vd_cooling_x_hp_1,
-    ),
-    create_runtime_entity_description(
-        NHZ_1_RUNTIME,
-        lambda api: api.energy_data.nhz_1_reheating,
-    ),
-    create_runtime_entity_description(
-        NHZ_2_RUNTIME,
-        lambda api: api.energy_data.nhz_2_reheating,
-    ),
-    create_runtime_entity_description(
-        NHZ_1_2_RUNTIME,
-        lambda api: api.energy_data.nhz_1_2_reheating,
-    ),
+    create_runtime_entity_description(key, register, SensorStateClass.TOTAL_INCREASING)
+    for key, register in (
+        (COMPRESSOR_HEATING_HP_1, lambda api: api.extended_energy_data.vd_heating_hp_1),
+        (COOLING_RUNTIME_HP_1, lambda api: api.energy_data.vd_cooling_x_hp_1),
+        (NHZ_1_RUNTIME, lambda api: api.energy_data.nhz_1_reheating),
+        (NHZ_2_RUNTIME, lambda api: api.energy_data.nhz_2_reheating),
+        (NHZ_1_2_RUNTIME, lambda api: api.energy_data.nhz_1_2_reheating),
+    )
 ]
 
 # Servicewelt "PROZESSDATEN" -> INVERTER AUFNAHMELEISTUNG, wire register 3679.

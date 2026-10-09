@@ -1037,14 +1037,18 @@ async def test_wpmsystem_cooling_efficiency_and_runtimes_decode_with_library(
     }
 
 
-async def test_wpmsystem_runtimes_are_unavailable_on_the_sentinel(
+async def test_wpmsystem_runtimes_follow_the_sentinel_and_come_back(
     mock_modbus_connection,
 ) -> None:
-    """A counter the installation does not keep reads 0x8000 and stays unknown."""
+    """A counter reading 0x8000 has no value, so its entity is unavailable.
+
+    The next valid reading brings the value back; the sentinel itself never
+    turns into a number that statistics could take for a counter reset.
+    """
     unit = mock_modbus_connection.for_unit(1)
     raw = {
         "input": {
-            address: 0x8000
+            address: 0
             for start, end in WPM_INPUT_RANGES
             for address in range(start, end + 1)
         },
@@ -1054,14 +1058,24 @@ async def test_wpmsystem_runtimes_are_unavailable_on_the_sentinel(
             for address in range(start, end + 1)
         },
     }
-    unit.load_raw(raw)
+    counters = {3643: 2268, 3544: 584, 3545: 0, 3546: 0, 3547: 57}
+    cooling_window = {3697: 29, 3698: 2, 3715: 326, 3716: 0}
     api = WpmStiebelEltronAPI(unit)
-    await api.async_update()
 
-    for description in WPMSYSTEM_RUNTIME_SENSOR_TYPES:
-        assert description.modbus_register(api) is None
-    for description in WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES:
-        assert description.modbus_register(api) is None
+    async def read(values: dict[int, int]) -> tuple[list, list]:
+        raw["input"].update(values)
+        unit.load_raw(raw)
+        await api.async_update()
+        return (
+            [d.modbus_register(api) for d in WPMSYSTEM_RUNTIME_SENSOR_TYPES],
+            [d.modbus_register(api) for d in WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES],
+        )
+
+    expected = ([2268, 584, 0, 0, 57], [None, 6.22, None])
+    assert await read(counters | cooling_window) == expected
+    sentinel = dict.fromkeys(counters | cooling_window, 0x8000)
+    assert await read(sentinel) == ([None] * 5, [None] * 3)
+    assert await read(counters | cooling_window) == expected
 
 
 def test_wpmsystem_runtimes_are_hour_counters_with_their_own_keys() -> None:
@@ -1078,6 +1092,7 @@ def test_wpmsystem_runtimes_are_hour_counters_with_their_own_keys() -> None:
     for description in WPMSYSTEM_RUNTIME_SENSOR_TYPES:
         assert description.native_unit_of_measurement == UnitOfTime.HOURS
         assert description.device_class is SensorDeviceClass.DURATION
+        assert description.state_class is SensorStateClass.TOTAL_INCREASING
 
 
 async def test_wpmsystem_cooling_efficiency_and_runtimes_model_surface() -> None:
