@@ -255,3 +255,285 @@ def test_archive_verification_rejects_a_wrong_manifest_version(
         release_builder._verify_archive(
             archive, {"manifest.json": manifest}, "2099.1-test"
         )
+
+
+DEFAULT_DEPENDENCIES = ["modbus-connection (>=4,<5)"]
+
+
+def _library_checkout(path: Path, *dependencies: str) -> Path:
+    """Create a Git checkout shaped like the pystiebeleltron repository."""
+    checkout = path / "library"
+    package = checkout / "pystiebeleltron"
+    package.mkdir(parents=True)
+    (package / "__init__.py").write_text(
+        '__version__ = "9.9.9"\nMODEL = "bundled"\n', encoding="utf-8"
+    )
+    (package / "wpm.py").write_text("from . import MODEL\n", encoding="utf-8")
+    (package / "py.typed").write_text("", encoding="utf-8")
+    (checkout / "LICENSE").write_text("MIT License\n", encoding="utf-8")
+    (checkout / "pyproject.toml").write_text(
+        f'[project]\nname = "pystiebeleltron"\ndynamic = ["version"]\n'
+        f"dependencies = {json.dumps(list(dependencies or DEFAULT_DEPENDENCIES))}\n",
+        encoding="utf-8",
+    )
+    subprocess.run(["git", "init", "-q"], cwd=checkout, check=True)
+    subprocess.run(["git", "add", "."], cwd=checkout, check=True)
+    subprocess.run(
+        [
+            "git",
+            "-c",
+            "user.name=test",
+            "-c",
+            "user.email=test@example.com",
+            "commit",
+            "-q",
+            "-m",
+            "library",
+        ],
+        cwd=checkout,
+        check=True,
+    )
+    return checkout
+
+
+def _bundling_repository(path: Path, module: str) -> Path:
+    """Create a releasable component that imports the library."""
+    repository = _minimal_repository(path)
+    component = repository / COMPONENT
+    (component / "manifest.json").write_text(
+        json.dumps({
+            "domain": "stiebel_eltron_isg",
+            "requirements": ["pystiebeleltron>=0.8.0,<0.9.0"],
+            "version": "source",
+        }),
+        encoding="utf-8",
+    )
+    (component / "coordinator.py").write_text(module, encoding="utf-8")
+    subprocess.run(["git", "add", str(COMPONENT)], cwd=repository, check=True)
+    return repository
+
+
+def _bundle(checkout: Path) -> release_builder.LibraryBundle:
+    return release_builder.LibraryBundle(checkout, "owner/library", "feature")
+
+
+def test_bundled_release_vendors_the_library(tmp_path: Path) -> None:
+    """A beta ZIP runs on its own library copy, not on the PyPI release."""
+    repository = _bundling_repository(
+        tmp_path,
+        "from pystiebeleltron import MODEL\nfrom pystiebeleltron.wpm import MODEL as WPM\n",
+    )
+    checkout = _library_checkout(tmp_path)
+    output = tmp_path / "beta.zip"
+
+    release_builder.build_release(repository, "2099.1-beta1", output, _bundle(checkout))
+
+    commit = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=checkout,
+        capture_output=True,
+        check=True,
+        text=True,
+    ).stdout.strip()
+    with ZipFile(output) as archive:
+        assert set(archive.namelist()) == {
+            "__init__.py",
+            "coordinator.py",
+            "manifest.json",
+            "_vendor/__init__.py",
+            "_vendor/pystiebeleltron/__init__.py",
+            "_vendor/pystiebeleltron/wpm.py",
+            "_vendor/pystiebeleltron/py.typed",
+            "_vendor/pystiebeleltron/LICENSE",
+        }
+        assert archive.read("coordinator.py").decode() == (
+            "from ._vendor.pystiebeleltron import MODEL\n"
+            "from ._vendor.pystiebeleltron.wpm import MODEL as WPM\n"
+        )
+        manifest = json.loads(archive.read("manifest.json"))
+        archive.extractall(tmp_path / "extracted" / "beta_component")
+
+    assert manifest["requirements"] == []
+    assert manifest["bundled_library"] == {
+        "name": "pystiebeleltron",
+        "version": "9.9.9",
+        "repository": "owner/library",
+        "ref": "feature",
+        "commit": commit,
+        "modbus_connection": ">=4,<5",
+    }
+
+    sys.path.insert(0, str(tmp_path / "extracted"))
+    try:
+        from beta_component import coordinator  # noqa: PLC0415
+
+        assert (coordinator.MODEL, coordinator.WPM) == ("bundled", "bundled")
+    finally:
+        sys.path.remove(str(tmp_path / "extracted"))
+        for name in [name for name in sys.modules if name.startswith("beta_component")]:
+            del sys.modules[name]
+
+
+def test_bundled_library_refuses_an_incompatible_modbus_backend(
+    tmp_path: Path,
+) -> None:
+    """A beta on an older Home Assistant fails with an explanation."""
+    repository = _bundling_repository(tmp_path, "from pystiebeleltron import MODEL\n")
+    checkout = _library_checkout(tmp_path, "modbus-connection (>=999)")
+    output = tmp_path / "beta.zip"
+    release_builder.build_release(repository, "2099.1-beta1", output, _bundle(checkout))
+    with ZipFile(output) as archive:
+        archive.extractall(tmp_path / "extracted" / "old_ha_component")
+
+    sys.path.insert(0, str(tmp_path / "extracted"))
+    try:
+        with pytest.raises(ImportError, match=r"needs modbus-connection>=999"):
+            __import__("old_ha_component.coordinator")
+    finally:
+        sys.path.remove(str(tmp_path / "extracted"))
+        for name in [
+            name for name in sys.modules if name.startswith("old_ha_component")
+        ]:
+            del sys.modules[name]
+
+
+@pytest.mark.parametrize(
+    ("module", "dependency", "error"),
+    [
+        ("import pystiebeleltron\n", None, "cannot redirect"),
+        (
+            "from pystiebeleltron import (\n    MODEL,\n)\nimport pystiebeleltron.wpm\n",
+            None,
+            "cannot redirect",
+        ),
+        ("", ("modbus-connection (>=4,<5)", "requests"), "does not provide"),
+        (
+            "",
+            ("modbus-connection>=4; python_version < '4'",),
+            "unsupported library dependency",
+        ),
+    ],
+    ids=["plain-import", "submodule-import", "extra-dependency", "marker"],
+)
+def test_bundling_rejects_what_it_cannot_ship_safely(
+    tmp_path: Path, module: str, dependency: tuple[str, ...] | None, error: str
+) -> None:
+    """Unrewritable imports and new dependencies stop the beta build."""
+    repository = _bundling_repository(tmp_path, module)
+    checkout = (
+        _library_checkout(tmp_path)
+        if dependency is None
+        else _library_checkout(tmp_path, *dependency)
+    )
+
+    with pytest.raises(release_builder.ArtifactError, match=error):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
+
+
+def test_bundling_requires_the_library_license(tmp_path: Path) -> None:
+    """The MIT license travels with every bundled copy."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    (checkout / "LICENSE").unlink()
+
+    with pytest.raises(release_builder.ArtifactError, match="LICENSE is missing"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
+
+
+def test_bundling_requires_one_library_requirement(tmp_path: Path) -> None:
+    """The beta manifest must drop exactly the requirement it replaces."""
+    repository = _minimal_repository(tmp_path)
+
+    with pytest.raises(release_builder.ArtifactError, match="exactly once"):
+        release_builder.build_release(
+            repository,
+            "2099.1-beta1",
+            tmp_path / "beta.zip",
+            _bundle(_library_checkout(tmp_path)),
+        )
+
+
+def test_release_cli_bundles_the_library(tmp_path: Path) -> None:
+    """The workflow's command line reaches the bundling path."""
+    output = tmp_path / "beta.zip"
+    checkout = _library_checkout(tmp_path)
+
+    result = subprocess.run(
+        [
+            sys.executable,
+            SCRIPT,
+            "2099.1-beta1",
+            output,
+            "--bundle-library",
+            checkout,
+            "--library-repository",
+            "owner/library",
+            "--library-ref",
+            "feature",
+        ],
+        cwd=REPOSITORY,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert result.returncode == 0, result.stderr
+    with ZipFile(output) as archive:
+        manifest = json.loads(archive.read("manifest.json"))
+        coordinator = archive.read("coordinator.py").decode()
+    assert "pystiebeleltron" not in {
+        requirement.split(">")[0] for requirement in manifest["requirements"]
+    }
+    assert manifest["bundled_library"]["ref"] == "feature"
+    assert "from ._vendor.pystiebeleltron import" in coordinator
+    assert "\nfrom pystiebeleltron" not in coordinator
+
+
+def test_bundling_rejects_a_symlinked_license(tmp_path: Path) -> None:
+    """A license link cannot copy files from outside the checkout into a ZIP."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    secret = tmp_path / "git-config"
+    secret.write_text("token", encoding="utf-8")
+    (checkout / "LICENSE").unlink()
+    (checkout / "LICENSE").symlink_to(secret)
+
+    with pytest.raises(release_builder.ArtifactError, match="LICENSE is a symlink"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
+
+
+def test_bundling_rejects_absolute_self_imports_in_the_library(
+    tmp_path: Path,
+) -> None:
+    """A library module must not reach the installed copy by its top-level name."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    (checkout / "pystiebeleltron" / "wpm.py").write_text(
+        "from pystiebeleltron import MODEL\n", encoding="utf-8"
+    )
+
+    with pytest.raises(release_builder.ArtifactError, match="wpm.py:1"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
+
+
+def test_bundling_rejects_dynamic_dependencies(tmp_path: Path) -> None:
+    """Dependencies the build cannot read cannot be checked against HA."""
+    repository = _bundling_repository(tmp_path, "")
+    checkout = _library_checkout(tmp_path)
+    (checkout / "pyproject.toml").write_text(
+        '[project]\nname = "pystiebeleltron"\ndynamic = ["version", "dependencies"]\n',
+        encoding="utf-8",
+    )
+
+    with pytest.raises(release_builder.ArtifactError, match="dynamically"):
+        release_builder.build_release(
+            repository, "2099.1-beta1", tmp_path / "beta.zip", _bundle(checkout)
+        )
