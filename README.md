@@ -172,7 +172,7 @@ No reconfiguration is needed for a normal installation.
 
 This update uses pystiebeleltron 0.9, which reads the heating circuit 3 registers as an optional block.
 Controllers that reject this block now complete setup instead of failing, and the heating circuit 3 temperature sensors stay unavailable.
-If a controller rejects the block only after it was read successfully, the two sensors keep their last values until the integration is reloaded.
+If a controller rejects the block only after it was read successfully, polls fail and all entities of the integration are unavailable until the controller answers the block again. Reload the integration if this persists.
 
 ## Upgrading to 2026.9
 
