@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.number import NumberMode
 from homeassistant.const import UnitOfTemperature
+from homeassistant.exceptions import ServiceValidationError
 from pystiebeleltron.lwz import LwzSystemParameters
 import pytest
 
@@ -15,6 +16,8 @@ from custom_components.stiebel_eltron_isg.const import (
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_LEVEL_MANUAL,
     FAN_LEVEL_PARTY,
+    HEATING_CURVE_LOW_END_HK1,
+    HEATING_CURVE_LOW_END_HK2,
     HEATING_CURVE_RISE_HK1,
     MANUAL_HC_SET_HK1,
     MANUAL_HC_SET_HK2,
@@ -373,3 +376,21 @@ def test_number_entity_applies_the_mode() -> None:
 def test_non_temperature_numbers_keep_the_automatic_mode(key: str) -> None:
     description = next(d for d in NUMBER_TYPES_LWZ if d.key == key)
     assert number_mode(description) == NumberMode.AUTO
+
+
+@pytest.mark.parametrize("key", [HEATING_CURVE_LOW_END_HK1, HEATING_CURVE_LOW_END_HK2])
+async def test_lwz_heating_curve_low_end_keeps_half_degree_steps(key: str) -> None:
+    """A typed value off the 0.5 degree grid is rejected before any write."""
+    description = next(d for d in NUMBER_TYPES_LWZ if d.key == key)
+    entity = _make_number(current=2.0)
+    entity.entity_description = description
+    entity.write_field = description.write_field
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_set_native_value(2.3)
+    assert entity.coordinator.writes == []
+
+    await entity.async_set_native_value(2.5)
+    assert entity.coordinator.writes == [
+        ("system_parameters", description.write_field, 2.5)
+    ]

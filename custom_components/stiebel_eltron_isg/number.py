@@ -83,7 +83,7 @@ def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode
     Home Assistant picks a slider whenever a range has at most 256 steps, which
     covers nearly every temperature here at 0.1 degree steps and makes an exact
     setpoint hard to hit (#537). Temperatures therefore get an input box, while
-    fan levels and the heating curve keep the automatic choice.
+    fan levels and the heating curve rise keep the automatic choice.
     """
     if description.mode is not None:
         return description.mode
@@ -494,6 +494,8 @@ NUMBER_TYPES_LWZ = [
         native_step=0.5,
         modbus_register=lambda api: api.system_parameters.low_end_hk1,
         write_field="low_end_hk1",
+        # The input box no longer snaps to the 0.5 degree grid like the slider.
+        enforce_step=True,
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_LOW_END_HK2,
@@ -504,6 +506,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.5,
         modbus_register=lambda api: api.system_parameters.low_end_hk2,
         write_field="low_end_hk2",
+        enforce_step=True,
     ),
 ]
 
