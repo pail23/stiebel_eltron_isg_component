@@ -5,6 +5,6 @@ set -e
 cd "$(dirname "$0")/.."
 
 
-uvx ruff format .
-uvx ruff check . --fix
-uvx mypy custom_components
+uv run --group dev ruff format .
+uv run --group dev ruff check . --fix
+uv run --group dev mypy custom_components

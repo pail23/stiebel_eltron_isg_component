@@ -834,7 +834,7 @@ async def test_a_device_of_another_entry_with_the_same_name_is_left_alone(
 
     still_theirs = device_registry.async_get(foreign.id)
     assert still_theirs is not None
-    assert still_theirs.config_entries == {other_entry.entry_id}
+    assert still_theirs.config_entry_id == other_entry.entry_id
     assert (DOMAIN, config_entry_with_name.entry_id) not in still_theirs.identifiers
     # Our own entry got a device of its own rather than adopting theirs.
     ours = _get_device_by_identifier(
