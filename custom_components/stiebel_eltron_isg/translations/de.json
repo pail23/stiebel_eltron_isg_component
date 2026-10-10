@@ -13,7 +13,7 @@
                 }
             },
             "discovery_confirm": {
-                "description": "Do you want to set up the Stiebel Eltron ISG at {host}?"
+                "description": "Möchten Sie das Stiebel Eltron ISG unter {host} einrichten?"
             },
             "reconfigure": {
                 "description": "Aktualisieren Sie die Verbindungsdaten für Ihre Stiebel Eltron ISG Wärmepumpe.",
@@ -31,12 +31,17 @@
             "already_configured": "Das Gerät ist bereits konfiguriert.",
             "invalid_host_IP": "Ungültige Host Adresse",
             "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port.",
-            "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung."
+            "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung.",
+            "unknown": "Unerwarteter Fehler",
+            "unsupported_controller": "Das ISG meldet die Reglermodell-ID {model_id}, die diese Version der Integration nicht unterstützt. Prüfen Sie, ob ein Update der Integration verfügbar ist. Wird das Modell weiterhin nicht unterstützt, melden Sie diese Modell-ID im Issue-Tracker des Projekts."
         },
         "abort": {
             "already_configured": "Das Gerät ist bereits konfiguriert.",
+            "cannot_connect": "Verbindung zum Gerät nicht möglich. Bitte überprüfen Sie Host und Port.",
             "link_conflict": "Eine andere Integration verwendet dieses Modbus-Gerät bereits mit inkompatiblen Verbindungseinstellungen. Konfigurieren Sie die andere Integration neu oder entfernen Sie die kollidierende Verbindung.",
-            "reconfigure_successful": "Verbindungsdaten erfolgreich aktualisiert."
+            "reconfigure_successful": "Verbindungsdaten erfolgreich aktualisiert.",
+            "unknown": "Unerwarteter Fehler",
+            "unsupported_controller": "Das ISG meldet die Reglermodell-ID {model_id}, die diese Version der Integration nicht unterstützt. Prüfen Sie, ob ein Update der Integration verfügbar ist. Wird das Modell weiterhin nicht unterstützt, melden Sie diese Modell-ID im Issue-Tracker des Projekts."
         }
     },
     "exceptions": {
@@ -169,7 +174,7 @@
                 "name": "Soll-Temperatur Flächenkühlung"
             },
             "target_temperature_cooling_circuit_1_hk1": {
-                "name": "Cooling Circuit 1 / HK1 Target Temperature"
+                "name": "Soll-Temperatur Kühlkreis 1 / HK1"
             },
             "solar_cylinder_temperature": {
                 "name": "Solarspeichertemperatur"
@@ -382,31 +387,31 @@
                 "name": "Erzeugte Warmwasserwärme vorherige 12 Monate"
             },
             "efficiency_heating_1_24_h": {
-                "name": "Efficiency Heating 1-24 h"
+                "name": "Effizienz Heizung letzte 24 h"
             },
             "efficiency_heating_1_12_m": {
-                "name": "Efficiency Heating 1-12 m"
+                "name": "Effizienz Heizung letzte 12 Monate"
             },
             "efficiency_heating_13_24_m": {
-                "name": "Efficiency Heating 13-24 m"
+                "name": "Effizienz Heizung vorherige 12 Monate"
             },
             "efficiency_cooling_1_24_h": {
-                "name": "Efficiency Cooling 1-24 h"
+                "name": "Effizienz Kühlung letzte 24 h"
             },
             "efficiency_cooling_1_12_m": {
-                "name": "Efficiency Cooling 1-12 m"
+                "name": "Effizienz Kühlung letzte 12 Monate"
             },
             "efficiency_cooling_13_24_m": {
-                "name": "Efficiency Cooling 13-24 m"
+                "name": "Effizienz Kühlung vorherige 12 Monate"
             },
             "efficiency_dhw_1_24_h": {
-                "name": "Efficiency DHW 1-24 h"
+                "name": "Effizienz Warmwasser letzte 24 h"
             },
             "efficiency_dhw_1_12_m": {
-                "name": "Efficiency DHW 1-12 m"
+                "name": "Effizienz Warmwasser letzte 12 Monate"
             },
             "efficiency_dhw_13_24_m": {
-                "name": "Efficiency DHW 13-24 m"
+                "name": "Effizienz Warmwasser vorherige 12 Monate"
             },
             "produced_electrical_booster_heating_total": {
                 "name": "Erzeugte Elektroheizung Heizung gesamt"
@@ -466,10 +471,25 @@
                 "name": "Verdichter Warmwasser"
             },
             "compressor_cooling": {
-                "name": "Compressor Cooling"
+                "name": "Verdichter Kühlung"
             },
             "cooling_runtime": {
                 "name": "Kühlbetrieb Laufzeit"
+            },
+            "compressor_heating_hp_1": {
+                "name": "Verdichter Heizung Wärmepumpe 1"
+            },
+            "cooling_runtime_hp_1": {
+                "name": "Kühlbetrieb Laufzeit Wärmepumpe 1"
+            },
+            "nhz_1_runtime": {
+                "name": "NHZ 1 Laufzeit"
+            },
+            "nhz_2_runtime": {
+                "name": "NHZ 2 Laufzeit"
+            },
+            "nhz_1_2_runtime": {
+                "name": "NHZ 1/2 Laufzeit"
             },
             "current_power_consumption": {
                 "name": "Inverter Aufnahmeleistung"

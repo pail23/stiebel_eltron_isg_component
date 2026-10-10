@@ -476,6 +476,21 @@
             "cooling_runtime": {
                 "name": "Cooling Runtime"
             },
+            "compressor_heating_hp_1": {
+                "name": "Compressor Heating Heat Pump 1"
+            },
+            "cooling_runtime_hp_1": {
+                "name": "Cooling Runtime Heat Pump 1"
+            },
+            "nhz_1_runtime": {
+                "name": "NHZ 1 Runtime"
+            },
+            "nhz_2_runtime": {
+                "name": "NHZ 2 Runtime"
+            },
+            "nhz_1_2_runtime": {
+                "name": "NHZ 1/2 Runtime"
+            },
             "current_power_consumption": {
                 "name": "Inverter Power Consumption"
             },
@@ -801,7 +816,7 @@
                     "water_heating": "Water heating",
                     "emergency": "Emergency",
                     "program": "Program",
-                    "ready": "Ready",
+                    "ready": "Standby",
                     "automatic": "Automatic",
                     "manual": "Manual",
                     "comfort": "Comfort",
@@ -818,7 +833,7 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready",
+                            "ready": "Standby",
                             "auto": "Auto",
                             "manual": "Manual"
                         }
@@ -833,7 +848,7 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready",
+                            "ready": "Standby",
                             "auto": "Auto",
                             "manual": "Manual"
                         }
@@ -848,7 +863,7 @@
                             "water_heating": "Water heating",
                             "emergency": "Emergency",
                             "program": "Program",
-                            "ready": "Ready",
+                            "ready": "Standby",
                             "auto": "Auto",
                             "manual": "Manual"
                         }

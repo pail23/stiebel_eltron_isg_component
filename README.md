@@ -114,6 +114,17 @@ counters. WPMsystem and LWZ R290 heat-window sensors require the extended
 energy registers and have no state class, so they create no long-term
 statistics.
 
+For WPMsystem, the three cooling efficiency sensors are calculated the same
+way from the matching cooling windows. A window without cooling reads zero
+heat and zero electricity, so its sensor stays unavailable while the ISG
+shows 0.00.
+
+WPMsystem also offers runtime counters: **Compressor Heating Heat Pump 1**,
+**Cooling Runtime Heat Pump 1**, and **NHZ 1 Runtime**, **NHZ 2 Runtime** and
+**NHZ 1/2 Runtime** for the electric reheating stages. On a cascade, the first
+two count heat pump 1 only. A hot water runtime is not offered yet because it
+has not been verified on hardware.
+
 ## Automation example
 
 Use the [heat pump fault notification blueprint](blueprints/automation/heat_pump_fault.yaml)

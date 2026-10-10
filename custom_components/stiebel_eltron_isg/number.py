@@ -5,7 +5,11 @@ import logging
 import math
 from typing import Any
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
@@ -71,6 +75,24 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
             return
 
         raise TypeError("modbus_register must be a lambda expression")
+
+
+def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode:
+    """Return how the frontend should offer a number for input.
+
+    Home Assistant picks a slider whenever a range has at most 256 steps, which
+    covers nearly every temperature here at 0.1 degree steps and makes an exact
+    setpoint hard to hit (#537). Temperatures therefore get an input box, while
+    fan levels and the heating curve rise keep the automatic choice.
+    """
+    if description.mode is not None:
+        return description.mode
+    if description.native_unit_of_measurement in (
+        UnitOfTemperature.CELSIUS,
+        UnitOfTemperature.KELVIN,
+    ):
+        return NumberMode.BOX
+    return NumberMode.AUTO
 
 
 NUMBER_TYPES_WPM_3I = [
@@ -472,6 +494,8 @@ NUMBER_TYPES_LWZ = [
         native_step=0.5,
         modbus_register=lambda api: api.system_parameters.low_end_hk1,
         write_field="low_end_hk1",
+        # The input box no longer snaps to the 0.5 degree grid like the slider.
+        enforce_step=True,
     ),
     StiebelEltronNumberEntityDescription(
         key=HEATING_CURVE_LOW_END_HK2,
@@ -482,6 +506,7 @@ NUMBER_TYPES_LWZ = [
         native_step=0.5,
         modbus_register=lambda api: api.system_parameters.low_end_hk2,
         write_field="low_end_hk2",
+        enforce_step=True,
     ),
 ]
 
@@ -545,6 +570,7 @@ class StiebelEltronISGNumberEntity(
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
+        self._attr_mode = number_mode(description)
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field

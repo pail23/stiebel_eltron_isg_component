@@ -51,6 +51,7 @@ from .const import (
     ACTUAL_TEMPERATURE_WATER,
     COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
+    COMPRESSOR_HEATING_HP_1,
     COMPRESSOR_HEATING_WATER,
     COMPRESSOR_SPEED,
     COMPRESSOR_STARTS,
@@ -73,6 +74,7 @@ from .const import (
     COOLING_ENERGY_LAST_24H,
     COOLING_ENERGY_PREV_12M,
     COOLING_RUNTIME,
+    COOLING_RUNTIME_HP_1,
     CURRENT_POWER_CONSUMPTION,
     DEWPOINT_TEMPERATURE,
     DEWPOINT_TEMPERATURE_HK1,
@@ -112,6 +114,9 @@ from .const import (
     LOW_PRESSURE_WP1,
     LOW_PRESSURE_WP2,
     MIN_SOURCE_TEMPERATURE,
+    NHZ_1_2_RUNTIME,
+    NHZ_1_RUNTIME,
+    NHZ_2_RUNTIME,
     OUTDOOR_TEMPERATURE,
     PRODUCED_COOLING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
@@ -287,10 +292,10 @@ def create_efficiency_entity_description(
     )
 
 
-def heating_window_efficiency(
+def window_efficiency(
     heat: int | float | None, electricity: int | float | None
 ) -> float | None:
-    """Calculate a heating ratio only from two valid values for the same window."""
+    """Calculate a heat/electricity ratio only from two valid values for one window."""
     if (
         isinstance(heat, bool)
         or not isinstance(heat, (int, float))
@@ -384,14 +389,16 @@ def create_volume_stream_entity_description(
 
 
 def create_runtime_entity_description(
-    key: str, modbus_register: StiebelEltronModbusRegister
+    key: str,
+    modbus_register: StiebelEltronModbusRegister,
+    state_class: SensorStateClass = SensorStateClass.MEASUREMENT,
 ) -> StiebelEltronSensorEntityDescription:
     """Create an entry description for an operating-duration sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfTime.HOURS,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=state_class,
         device_class=SensorDeviceClass.DURATION,
         modbus_register=modbus_register,
     )
@@ -1332,25 +1339,78 @@ WPM_AMOUNT_OF_HEAT_SENSOR_TYPES = [
 WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES = [
     create_efficiency_entity_description(
         EFFICIENCY_HEATING_1_24_H,
-        lambda api: heating_window_efficiency(
+        lambda api: window_efficiency(
             api.extended_energy_data.amount_of_heat_heating_1_24_h,
             api.extended_energy_data.heating_24h,
         ),
     ),
     create_efficiency_entity_description(
         EFFICIENCY_HEATING_1_12_M,
-        lambda api: heating_window_efficiency(
+        lambda api: window_efficiency(
             api.extended_energy_data.amount_of_heat_heating_1_12,
             api.extended_energy_data.heating_12m,
         ),
     ),
     create_efficiency_entity_description(
         EFFICIENCY_HEATING_13_24_M,
-        lambda api: heating_window_efficiency(
+        lambda api: window_efficiency(
             api.extended_energy_data.amount_of_heat_heating_13_24,
             api.extended_energy_data.heating_13_24,
         ),
     ),
+]
+
+# Same window ratio for cooling. Checked on a WPMsystem against the ISG
+# ENERGIEBILANZ page in the same minute: 2029 kWh / 326 kWh = 6.22 for the last
+# 12 months, as displayed. Windows without cooling read 0/0 there and the ISG
+# shows 0.00; the ratio stays unavailable instead.
+WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES = [
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_1_24_H,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_cooling_1_24_h,
+            api.extended_energy_data.cooling_24h,
+        ),
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_1_12_M,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_cooling_1_12_m,
+            api.extended_energy_data.cooling_12m,
+        ),
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_COOLING_13_24_M,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_cooling_13_24,
+            api.extended_energy_data.cooling_13_24,
+        ),
+    ),
+]
+
+# Runtime counters that WPMsystem serves, unlike the aggregate counters
+# 3516-3518 (#612). Checked against the ISG page WAERMEPUMPE 1 / LAUFZEIT in
+# the same minute: 3643 = VD HEIZEN, 3544 = VD KUEHLEN, 3545-3547 = NHZ 1,
+# NHZ 2, NHZ 1/2. The manual lists the two VD counters under heat pump 1 and
+# the NHZ counters under the reheating stages, without a heat pump; the heat
+# pump 2 block has no NHZ entries. The VD counters therefore get their own
+# keys instead of the hidden aggregate ones, since on a cascade they cover
+# heat pump 1 only. vd_dhw_hp_1 (3644) is left out: the checked installation
+# has a separate DHW heat pump and reads 0x8000 there.
+#
+# These are new entities without recorded statistics, so they can use the
+# state class of an ever-growing counter from the start. The older runtime
+# sensors keep MEASUREMENT, since changing theirs would affect existing
+# long-term statistics.
+WPMSYSTEM_RUNTIME_SENSOR_TYPES = [
+    create_runtime_entity_description(key, register, SensorStateClass.TOTAL_INCREASING)
+    for key, register in (
+        (COMPRESSOR_HEATING_HP_1, lambda api: api.extended_energy_data.vd_heating_hp_1),
+        (COOLING_RUNTIME_HP_1, lambda api: api.energy_data.vd_cooling_x_hp_1),
+        (NHZ_1_RUNTIME, lambda api: api.energy_data.nhz_1_reheating),
+        (NHZ_2_RUNTIME, lambda api: api.energy_data.nhz_2_reheating),
+        (NHZ_1_2_RUNTIME, lambda api: api.energy_data.nhz_1_2_reheating),
+    )
 ]
 
 # Servicewelt "PROZESSDATEN" -> INVERTER AUFNAHMELEISTUNG, wire register 3679.
@@ -1488,6 +1548,8 @@ async def async_setup_entry(
                     WPM_INVERTER_POWER_SENSOR_TYPES
                     + WPMSYSTEM_COOLING_SENSOR_TYPES
                     + WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES
+                    + WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES
+                    + WPMSYSTEM_RUNTIME_SENSOR_TYPES
                 )
             )
     else:
