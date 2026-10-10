@@ -6,11 +6,10 @@ readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
     "colorlog>=6.12.0",
-    # Match Home Assistant Core's required shared Modbus backend for tests.
+    # Add HA 2026.11's shared Modbus backend for integration tests.
     "modbus-connection[tmodbus]==4.12.3",
-    "pytest-homeassistant-custom-component>=0.13.369",
-    # Library 0.9 requires a newer backend than HA 2026.10 permits.
-    "pystiebeleltron[tmodbus]==0.8.0",
+    "pytest-homeassistant-custom-component>=0.13.371",
+    "pystiebeleltron[tmodbus]==0.9.1",
     # Keep the test stack aligned with Home Assistant's Modbus manifest.
     "pymodbus==3.13.1",
     "tmodbus==0.6.2",

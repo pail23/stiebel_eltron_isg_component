@@ -310,18 +310,16 @@ def async_migrate_device_identifier(
     )
     if legacy is None or legacy.config_entry_id != entry.entry_id:
         # Nothing to migrate, or the name belongs to a second installation that
-        # happens to be called the same. Before Home Assistant 2026.8 identifiers
-        # are global, so ownership has to be checked rather than assumed.
+        # happens to be called the same.
         return
 
     replacement = _async_get_device_by_identifier(
         registry, (DOMAIN, entry.entry_id), entry.entry_id
     )
     if replacement is not None and replacement.config_entry_id != entry.entry_id:
-        # Nothing here creates a device that another config entry can share, so
-        # this should not happen. If it ever does, leaving both devices alone is
-        # the harmless outcome, while removing one would take somebody else's
-        # device with it.
+        # The lookup is scoped to this config entry, so this should not happen.
+        # If it ever does, leaving both devices alone is the harmless outcome,
+        # while removing one would take somebody else's device with it.
         _LOGGER.warning(
             "The device of this config entry belongs to another config entry, so it is left as it is",
             extra={"config_entry_id": replacement.config_entry_id},
@@ -345,15 +343,8 @@ def _async_get_device_by_identifier(
     identifier: tuple[str, str],
     config_entry_id: str,
 ) -> dr.DeviceEntry | None:
-    """Look up one entry's device across supported Home Assistant versions."""
-    # Remove this compatibility helper once the minimum supported Home Assistant
-    # version provides the config-entry-scoped lookup.
-    if hasattr(registry, "async_get_device_by_identifier"):
-        return registry.async_get_device_by_identifier(identifier, config_entry_id)
-
-    # Home Assistant before 2026.8 only has the global identifier lookup. The
-    # caller still verifies ownership before changing the returned device.
-    return registry.async_get_device(identifiers={identifier})
+    """Look up the device of one config entry by identifier."""
+    return registry.async_get_device_by_identifier(identifier, config_entry_id)
 
 
 @callback
