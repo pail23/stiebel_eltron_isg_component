@@ -106,9 +106,12 @@ async def test_wpm_setup_tolerates_missing_hk3_block(
 @pytest.mark.parametrize(
     "block_case",
     [
-        pytest.param((HK3_ACTUAL, ACTUAL_TEMPERATURE_HK3, "21.5"), id="HK3-block"),
         pytest.param(
-            (HP1_HEATING_RUNTIME, COMPRESSOR_HEATING_HP_1, "2268"), id="energy-block"
+            (HK3_ACTUAL, ACTUAL_TEMPERATURE_HK3, "21.5", 220, "22.0"), id="HK3-block"
+        ),
+        pytest.param(
+            (HP1_HEATING_RUNTIME, COMPRESSOR_HEATING_HP_1, "2268", 2269, "2269"),
+            id="energy-block",
         ),
     ],
 )
@@ -120,7 +123,7 @@ async def test_optional_block_refused_after_a_successful_read_until_answered_aga
     block_case,
 ) -> None:
     """A later refusal makes the entities unavailable until the block is answered again."""
-    refused_address, key, served = block_case
+    refused_address, key, served, raw_later, served_later = block_case
     unit = mock_modbus_connection.for_unit(UNIT_ID)
     _load_wpm_registers(unit)
 
@@ -156,9 +159,17 @@ async def test_optional_block_refused_after_a_successful_read_until_answered_aga
     assert state_of(key) == STATE_UNAVAILABLE
     assert state_of(OUTDOOR_TEMPERATURE) == STATE_UNAVAILABLE
 
+    # The block must be read again, not skipped: a skipped block would let the
+    # next poll succeed and bring back the cached value from before the refusal.
+    unit.load_raw({"input": {refused_address: raw_later}})
+    await poll()
+
+    assert state_of(key) == STATE_UNAVAILABLE
+    assert state_of(OUTDOOR_TEMPERATURE) == STATE_UNAVAILABLE
+
     unit.fail_read(refused_address, None, register_type="input")
     await poll()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert state_of(key) == served
+    assert state_of(key) == served_later
     assert state_of(OUTDOOR_TEMPERATURE) != STATE_UNAVAILABLE
