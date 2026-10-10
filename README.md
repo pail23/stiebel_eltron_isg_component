@@ -30,6 +30,19 @@ Modbus, the separate [Stiebel Eltron HTTP integration](https://github.com/pmq/st
 may provide additional sensors. It reads the local web pages and does not
 control the heat pump; available values depend on the ISG page layout.
 
+For a register this integration does not read, you can add your own sensor with
+the [Modbus integration](https://www.home-assistant.io/integrations/modbus/)
+of Home Assistant. It opens its own connection to the ISG. In a read-only test
+on a WPM 3i, two additional Modbus clients read without errors while this
+integration kept working; other controllers and older ISG firmware are
+untested. Use unit ID 1 and the address one lower than the one in the Stiebel
+Eltron Modbus manual, for example `address: 1500` for the WPM operating mode
+listed at 1501. Prefer read-only sensors there, because writes through it bypass
+the range checks of this integration.
+
+Registers that only exist after editing the ISG's SD card are not supported by
+this integration.
+
 ## Prerequisites
 
 You need:
