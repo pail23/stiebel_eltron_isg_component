@@ -18,24 +18,24 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from modbus_connection import ModbusError, ModbusTcpParams
+import probatio
 from pystiebeleltron import (
     StiebelEltronModbusError,
     UnknownControllerModelError,
     get_controller_model,
 )
-import voluptuous as vol
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema({
-    vol.Required(CONF_HOST): TextSelector(),
-    vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+STEP_USER_DATA_SCHEMA = probatio.Schema({
+    probatio.Required(CONF_HOST): TextSelector(),
+    probatio.Required(CONF_PORT, default=DEFAULT_PORT): probatio.All(
         NumberSelector(
             NumberSelectorConfig(min=1, max=65535, mode=NumberSelectorMode.BOX)
         ),
-        vol.Coerce(int),
+        probatio.Coerce(int),
     ),
 })
 
