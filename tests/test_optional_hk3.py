@@ -16,6 +16,7 @@ import pytest
 
 from custom_components.stiebel_eltron_isg.const import (
     ACTUAL_TEMPERATURE_HK3,
+    COMPRESSOR_HEATING_HP_1,
     DOMAIN,
     OUTDOOR_TEMPERATURE,
     TARGET_TEMPERATURE_HK3,
@@ -26,10 +27,12 @@ from custom_components.stiebel_eltron_isg.entity import build_unique_id
 # Wire addresses of the HK3 actual and set temperature, issue #693.
 HK3_ACTUAL = 609
 HK3_TARGET = 610
+# First register of the optional energy block, heat pump 1 VD HEIZEN hours.
+HP1_HEATING_RUNTIME = 3643
 
 
 def _load_wpm_registers(unit) -> None:
-    """Serve every WPM register, with 21.5 and 23.0 °C for HK3."""
+    """Serve every WPM register, with 21.5 and 23.0 °C for HK3 and 2268 h for HP 1."""
     raw = {
         "input": {
             address: 0
@@ -44,6 +47,7 @@ def _load_wpm_registers(unit) -> None:
     }
     raw["input"][HK3_ACTUAL] = 215
     raw["input"][HK3_TARGET] = 230
+    raw["input"][HP1_HEATING_RUNTIME] = 2268
     unit.load_raw(raw)
 
 
@@ -99,13 +103,24 @@ async def test_wpm_setup_tolerates_missing_hk3_block(
         assert state_of(TARGET_TEMPERATURE_HK3) == STATE_UNAVAILABLE
 
 
-async def test_hk3_refused_after_a_successful_read_until_answered_again(
+@pytest.mark.parametrize(
+    "block_case",
+    [
+        pytest.param((HK3_ACTUAL, ACTUAL_TEMPERATURE_HK3, "21.5"), id="HK3-block"),
+        pytest.param(
+            (HP1_HEATING_RUNTIME, COMPRESSOR_HEATING_HP_1, "2268"), id="energy-block"
+        ),
+    ],
+)
+async def test_optional_block_refused_after_a_successful_read_until_answered_again(
     hass,
     mock_config_entry,
     mock_get_controller_model,
     mock_modbus_connection,
+    block_case,
 ) -> None:
-    """A later refusal makes the entities unavailable until HK3 is answered again."""
+    """A later refusal makes the entities unavailable until the block is answered again."""
+    refused_address, key, served = block_case
     unit = mock_modbus_connection.for_unit(UNIT_ID)
     _load_wpm_registers(unit)
 
@@ -121,9 +136,9 @@ async def test_hk3_refused_after_a_successful_read_until_answered_again(
 
     registry = er.async_get(hass)
 
-    def state_of(key: str) -> str:
+    def state_of(entity_key: str) -> str:
         entity_id = registry.async_get_entity_id(
-            "sensor", DOMAIN, build_unique_id(mock_config_entry, key)
+            "sensor", DOMAIN, build_unique_id(mock_config_entry, entity_key)
         )
         assert entity_id is not None
         return hass.states.get(entity_id).state
@@ -132,19 +147,18 @@ async def test_hk3_refused_after_a_successful_read_until_answered_again(
         await mock_config_entry.runtime_data.async_refresh()
         await hass.async_block_till_done()
 
-    assert state_of(ACTUAL_TEMPERATURE_HK3) == "21.5"
+    assert state_of(key) == served
     assert state_of(OUTDOOR_TEMPERATURE) != STATE_UNAVAILABLE
 
-    unit.fail_read(HK3_ACTUAL, IllegalDataAddressError(2), register_type="input")
+    unit.fail_read(refused_address, IllegalDataAddressError(2), register_type="input")
     await poll()
 
-    assert state_of(ACTUAL_TEMPERATURE_HK3) == STATE_UNAVAILABLE
+    assert state_of(key) == STATE_UNAVAILABLE
     assert state_of(OUTDOOR_TEMPERATURE) == STATE_UNAVAILABLE
 
-    unit.fail_read(HK3_ACTUAL, None, register_type="input")
+    unit.fail_read(refused_address, None, register_type="input")
     await poll()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert state_of(ACTUAL_TEMPERATURE_HK3) == "21.5"
-    assert state_of(TARGET_TEMPERATURE_HK3) == "23.0"
+    assert state_of(key) == served
     assert state_of(OUTDOOR_TEMPERATURE) != STATE_UNAVAILABLE
