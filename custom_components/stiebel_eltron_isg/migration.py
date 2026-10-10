@@ -321,8 +321,8 @@ def async_migrate_device_identifier(
         # If it ever does, leaving both devices alone is the harmless outcome,
         # while removing one would take somebody else's device with it.
         _LOGGER.warning(
-            "The device of this config entry belongs to %s, so it is left as it is",
-            replacement.config_entry_id,
+            "The device of this config entry belongs to another config entry, so it is left as it is",
+            extra={"config_entry_id": replacement.config_entry_id},
         )
         return
 
