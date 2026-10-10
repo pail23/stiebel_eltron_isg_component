@@ -1600,11 +1600,11 @@ sdist = { url = "https://files.pythonhosted.org/packages/9a/02/cef85a80ff6d3092a
 
 [[package]]
 name = "modbus-connection"
-version = "4.10.0"
+version = "4.12.3"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/f1/29/701cb11593839b334c9a388e43dde4d61abdc8939d74003b4d60b546b812/modbus_connection-4.10.0.tar.gz", hash = "sha256:fb328d011c6268bd1e272a0600373794a07bc453d4e9358498789312e0c1e0f2", size = 256827, upload-time = "2026-08-25T09:47:12.384Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d5/13/f7338f692f4ca5c9d5206e47d7ac4fdf358e45fc28445b7d223a08342151/modbus_connection-4.12.3.tar.gz", hash = "sha256:252213d5dac1fc7b2aadcb7fd105cf3657f6432225ae42c9c15eb84d62b9fb6d", size = 278311, upload-time = "2026-09-28T09:07:34.5Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a1/07/39374fc700ecac019d23c65696748a3a75e7390c797c09b51c114b04289d/modbus_connection-4.10.0-py3-none-any.whl", hash = "sha256:1a2256de5d427f89d422d1bbf52fdeda1a58e6e4f97acdb226e581dcad263700", size = 78284, upload-time = "2026-08-25T09:47:11.18Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/5b/70976163d4b17ac645d3fb576a515ae08170bffc274b3e114178839d45a9/modbus_connection-4.12.3-py3-none-any.whl", hash = "sha256:3389426f0e71867e84cf74300439e268a4aa7bfefe798a608d04994e1483b9e6", size = 86603, upload-time = "2026-09-28T09:07:32.31Z" },
 ]
 
 [package.optional-dependencies]
@@ -3039,7 +3039,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "colorlog", specifier = ">=6.12.0" },
-    { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.10.0" },
+    { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.12.3" },
     { name = "pymodbus", specifier = "==3.13.1" },
     { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.8.0" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.369" },
