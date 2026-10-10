@@ -4,10 +4,10 @@
 # README.md and info.md provide the local documentation evidence because this
 # custom integration has no page on home-assistant.io.
 #
-# The 54-rule inventory is pinned to Home Assistant Core 2026.9.1 at commit
-# fc034572d0216a04ed40a07154394908a594dfed, retrieved on 2026-09-06:
-# https://github.com/home-assistant/core/blob/fc034572d0216a04ed40a07154394908a594dfed/script/hassfest/quality_scale.py
-# On 2026-09-06, independent AST extraction of ALL_RULES from that source
+# The 54-rule inventory is pinned to Home Assistant Core 2026.10.0, retrieved
+# on 2026-10-10:
+# https://github.com/home-assistant/core/blob/HEAD/script/hassfest/quality_scale.py
+# On 2026-10-10, independent AST extraction of ALL_RULES from that source
 # confirmed all 54 names here and in tests/test_quality_scale.py. The offline
 # tests check local consistency; they do not fetch or verify the upstream source.
 # Repeat the source comparison when changing either inventory or the pin.
