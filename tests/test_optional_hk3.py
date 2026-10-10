@@ -99,13 +99,13 @@ async def test_wpm_setup_tolerates_missing_hk3_block(
         assert state_of(TARGET_TEMPERATURE_HK3) == STATE_UNAVAILABLE
 
 
-async def test_hk3_refused_after_a_successful_read_becomes_unavailable(
+async def test_hk3_refused_after_a_successful_read_until_answered_again(
     hass,
     mock_config_entry,
     mock_get_controller_model,
     mock_modbus_connection,
 ) -> None:
-    """A later refusal must not leave the last HK3 values on display."""
+    """A later refusal makes the entities unavailable until HK3 is answered again."""
     unit = mock_modbus_connection.for_unit(UNIT_ID)
     _load_wpm_registers(unit)
 
@@ -120,14 +120,31 @@ async def test_hk3_refused_after_a_successful_read_becomes_unavailable(
         await hass.async_block_till_done()
 
     registry = er.async_get(hass)
-    entity_id = registry.async_get_entity_id(
-        "sensor", DOMAIN, build_unique_id(mock_config_entry, ACTUAL_TEMPERATURE_HK3)
-    )
-    assert entity_id is not None
-    assert hass.states.get(entity_id).state == "21.5"
+
+    def state_of(key: str) -> str:
+        entity_id = registry.async_get_entity_id(
+            "sensor", DOMAIN, build_unique_id(mock_config_entry, key)
+        )
+        assert entity_id is not None
+        return hass.states.get(entity_id).state
+
+    async def poll() -> None:
+        await mock_config_entry.runtime_data.async_refresh()
+        await hass.async_block_till_done()
+
+    assert state_of(ACTUAL_TEMPERATURE_HK3) == "21.5"
+    assert state_of(OUTDOOR_TEMPERATURE) != STATE_UNAVAILABLE
 
     unit.fail_read(HK3_ACTUAL, IllegalDataAddressError(2), register_type="input")
-    await mock_config_entry.runtime_data.async_refresh()
-    await hass.async_block_till_done()
+    await poll()
 
-    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    assert state_of(ACTUAL_TEMPERATURE_HK3) == STATE_UNAVAILABLE
+    assert state_of(OUTDOOR_TEMPERATURE) == STATE_UNAVAILABLE
+
+    unit.fail_read(HK3_ACTUAL, None, register_type="input")
+    await poll()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert state_of(ACTUAL_TEMPERATURE_HK3) == "21.5"
+    assert state_of(TARGET_TEMPERATURE_HK3) == "23.0"
+    assert state_of(OUTDOOR_TEMPERATURE) != STATE_UNAVAILABLE
