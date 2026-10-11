@@ -706,8 +706,20 @@
             "comfort_temperature_target_hk3": {
                 "name": "Temperatura target comfort CC 3"
             },
+            "comfort_temperature_target_hk4": {
+                "name": "Temperatura target comfort CC 4"
+            },
+            "comfort_temperature_target_hk5": {
+                "name": "Temperatura target comfort CC 5"
+            },
             "eco_temperature_target_hk3": {
                 "name": "Temperatura target eco CC 3"
+            },
+            "eco_temperature_target_hk4": {
+                "name": "Temperatura target eco CC 4"
+            },
+            "eco_temperature_target_hk5": {
+                "name": "Temperatura target eco CC 5"
             },
             "dualmode_temperature_hzg": {
                 "name": "Temperatura bivalenza riscaldamento"
@@ -756,6 +768,12 @@
             },
             "heating_curve_rise_hk3": {
                 "name": "Pendenza curva climatica CC 3"
+            },
+            "heating_curve_rise_hk4": {
+                "name": "Pendenza curva climatica CC 4"
+            },
+            "heating_curve_rise_hk5": {
+                "name": "Pendenza curva climatica CC 5"
             },
             "fan_level_comfort": {
                 "name": "Livello ventilatore giorno"
@@ -852,6 +870,36 @@
             },
             "climate_hk_3": {
                 "name": "Circuito riscaldamento 3",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Riscaldamento dell'acqua",
+                            "emergency": "Emergenza",
+                            "program": "Programma",
+                            "ready": "Pronto",
+                            "auto": "Automatico",
+                            "manual": "Manuale"
+                        }
+                    }
+                }
+            },
+            "climate_hk_4": {
+                "name": "Circuito riscaldamento 4",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Riscaldamento dell'acqua",
+                            "emergency": "Emergenza",
+                            "program": "Programma",
+                            "ready": "Pronto",
+                            "auto": "Automatico",
+                            "manual": "Manuale"
+                        }
+                    }
+                }
+            },
+            "climate_hk_5": {
+                "name": "Circuito riscaldamento 5",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {

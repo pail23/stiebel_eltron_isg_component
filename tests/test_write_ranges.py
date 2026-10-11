@@ -21,6 +21,7 @@ from custom_components.stiebel_eltron_isg.climate import (
     LWZ_CLIMATE_TYPES,
     WPM_3I_CLIMATE_TYPES,
     WPM_CLIMATE_TYPES,
+    WPMSYSTEM_CLIMATE_TYPES,
     StiebelEltronISGClimateEntity,
 )
 from custom_components.stiebel_eltron_isg.const import UNIT_ID
@@ -28,11 +29,13 @@ from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_LWZ,
     NUMBER_TYPES_WPM,
     NUMBER_TYPES_WPM_3I,
+    NUMBER_TYPES_WPMSYSTEM,
 )
 
 _NUMBER_DESCRIPTION_LISTS = (
     ("NUMBER_TYPES_LWZ", LwzStiebelEltronAPI, NUMBER_TYPES_LWZ),
     ("NUMBER_TYPES_WPM", WpmStiebelEltronAPI, NUMBER_TYPES_WPM),
+    ("NUMBER_TYPES_WPMSYSTEM", WpmStiebelEltronAPI, NUMBER_TYPES_WPMSYSTEM),
     (
         "NUMBER_TYPES_WPM_3I",
         Wpm3iStiebelEltronAPI,
@@ -43,6 +46,7 @@ _NUMBER_DESCRIPTION_LISTS = (
 _CLIMATE_DESCRIPTION_LISTS = (
     ("LWZ_CLIMATE_TYPES", LwzStiebelEltronAPI, LWZ_CLIMATE_TYPES),
     ("WPM_CLIMATE_TYPES", WpmStiebelEltronAPI, WPM_CLIMATE_TYPES),
+    ("WPMSYSTEM_CLIMATE_TYPES", WpmStiebelEltronAPI, WPMSYSTEM_CLIMATE_TYPES),
     (
         "WPM_3I_CLIMATE_TYPES",
         Wpm3iStiebelEltronAPI,
@@ -55,8 +59,20 @@ _CLIMATE_WRITE_FIELDS = (
     "comfort_target_temp_write_field",
 )
 
+# The manual gives no range for heating circuits 4 and 5, so the library
+# validates nothing there. The ISG object database declares 5 to 30 °C for their
+# comfort and eco setpoints on WPMsystem, the range the entities advertise.
 _UNVALIDATED_WRITE_FIELDS = frozenset({
-    (WpmStiebelEltronAPI, "system_parameters", "heating_curve_rise_hk_3")
+    (WpmStiebelEltronAPI, "system_parameters", "heating_curve_rise_hk_3"),
+    *(
+        (WpmStiebelEltronAPI, "system_parameters", f"{field}_hk_{circuit}")
+        for circuit in (4, 5)
+        for field in (
+            "comfort_temperature",
+            "eco_temperature",
+            "heating_curve_rise",
+        )
+    ),
 })
 
 

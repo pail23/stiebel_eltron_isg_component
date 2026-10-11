@@ -706,8 +706,20 @@
             "comfort_temperature_target_hk3": {
                 "name": "Denní teplota Soll TO 3"
             },
+            "comfort_temperature_target_hk4": {
+                "name": "Denní teplota Soll TO 4"
+            },
+            "comfort_temperature_target_hk5": {
+                "name": "Denní teplota Soll TO 5"
+            },
             "eco_temperature_target_hk3": {
                 "name": "Noční teplota Soll TO 3"
+            },
+            "eco_temperature_target_hk4": {
+                "name": "Noční teplota Soll TO 4"
+            },
+            "eco_temperature_target_hk5": {
+                "name": "Noční teplota Soll TO 5"
             },
             "dualmode_temperature_hzg": {
                 "name": "Bivalentní teplota topení"
@@ -756,6 +768,12 @@
             },
             "heating_curve_rise_hk3": {
                 "name": "Sklon topné křivky TO 3"
+            },
+            "heating_curve_rise_hk4": {
+                "name": "Sklon topné křivky TO 4"
+            },
+            "heating_curve_rise_hk5": {
+                "name": "Sklon topné křivky TO 5"
             },
             "fan_level_comfort": {
                 "name": "Stupeň ventilátoru den"
@@ -852,6 +870,36 @@
             },
             "climate_hk_3": {
                 "name": "Topný okruh 3",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Ohřev vody",
+                            "emergency": "Nouzový stav",
+                            "program": "Program",
+                            "ready": "Pohotovost",
+                            "auto": "Auto",
+                            "manual": "Manuál"
+                        }
+                    }
+                }
+            },
+            "climate_hk_4": {
+                "name": "Topný okruh 4",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Ohřev vody",
+                            "emergency": "Nouzový stav",
+                            "program": "Program",
+                            "ready": "Pohotovost",
+                            "auto": "Auto",
+                            "manual": "Manuál"
+                        }
+                    }
+                }
+            },
+            "climate_hk_5": {
+                "name": "Topný okruh 5",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {

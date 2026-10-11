@@ -711,8 +711,20 @@
             "comfort_temperature_target_hk3": {
                 "name": "Comfort Temperature Target HK3"
             },
+            "comfort_temperature_target_hk4": {
+                "name": "Comfort Temperature Target HK4"
+            },
+            "comfort_temperature_target_hk5": {
+                "name": "Comfort Temperature Target HK5"
+            },
             "eco_temperature_target_hk3": {
                 "name": "Eco Temperature Target HK3"
+            },
+            "eco_temperature_target_hk4": {
+                "name": "Eco Temperature Target HK4"
+            },
+            "eco_temperature_target_hk5": {
+                "name": "Eco Temperature Target HK5"
             },
             "dualmode_temperature_hzg": {
                 "name": "Dual Mode Temperature HZG"
@@ -761,6 +773,12 @@
             },
             "heating_curve_rise_hk3": {
                 "name": "Heating Curve Rise HK3"
+            },
+            "heating_curve_rise_hk4": {
+                "name": "Heating Curve Rise HK4"
+            },
+            "heating_curve_rise_hk5": {
+                "name": "Heating Curve Rise HK5"
             },
             "fan_level_comfort": {
                 "name": "Fan Level Day"
@@ -857,6 +875,36 @@
             },
             "climate_hk_3": {
                 "name": "Heat Circuit 3",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Water heating",
+                            "emergency": "Emergency",
+                            "program": "Program",
+                            "ready": "Standby",
+                            "auto": "Automatic",
+                            "manual": "Manual"
+                        }
+                    }
+                }
+            },
+            "climate_hk_4": {
+                "name": "Heat Circuit 4",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Water heating",
+                            "emergency": "Emergency",
+                            "program": "Program",
+                            "ready": "Standby",
+                            "auto": "Automatic",
+                            "manual": "Manual"
+                        }
+                    }
+                }
+            },
+            "climate_hk_5": {
+                "name": "Heat Circuit 5",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {
