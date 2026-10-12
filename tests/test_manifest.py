@@ -74,7 +74,7 @@ def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None
 
 @pytest.mark.parametrize(
     ("version", "compatible"),
-    [("0.9.0", False), ("0.9.1", True), ("0.10.0", False)],
+    [("0.9.1", False), ("0.9.2", True), ("0.10.0", False)],
 )
 def test_runtime_library_range_requires_optional_hk3_handling(
     version: str, compatible: bool
