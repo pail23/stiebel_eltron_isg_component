@@ -177,13 +177,14 @@ the connected controller or firmware exposes it as read-only.
 ## Upcoming update: optional heating circuit 3
 
 The planned minimum is Home Assistant 2026.11.0, which is not yet released.
-The update remains unreleased until a stable Home Assistant version ships pystiebeleltron 0.9 and the compatible shared Modbus backend.
+The update remains unreleased until a stable Home Assistant version ships pystiebeleltron 0.9.2 and the compatible shared Modbus backend.
 The minimum version will be checked against that release before publication.
 No reconfiguration is needed for a normal installation.
 
-This update uses pystiebeleltron 0.9, which reads the heating circuit 3 registers as an optional block.
-Controllers that reject this block now complete setup instead of failing, and the heating circuit 3 temperature sensors stay unavailable.
-If a controller rejects the block only after it was read successfully, polls fail and all entities of the integration are unavailable until the controller answers the block again. Reload the integration if this persists.
+This update uses pystiebeleltron 0.9.2, which reads the heating circuit 3 registers as an optional block.
+If a controller rejects the start of a block, the library retries once from a lower address the controller answered in the same poll.
+Controllers that still reject this block complete setup instead of failing, and the heating circuit 3 temperature sensors stay unavailable.
+If a block that was read successfully is later rejected, even after the retry, polls fail and all entities of the integration are unavailable until the controller answers the block again. Reload the integration if this persists.
 
 ## Upgrading to 2026.9
 
