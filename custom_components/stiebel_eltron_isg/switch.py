@@ -101,12 +101,18 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         self.write_field = description.write_field
 
     @property
-    def is_on(self) -> bool:
-        """Return the state of the switch."""
-        value = self.coordinator.get_value(self.modbus_register)
-        if value is not None:
-            return value != 0
-        return False
+    def is_on(self) -> bool | None:
+        """Return the written state until the device confirmed it, else its own.
+
+        None while neither is known: the SG Ready inputs stay operable without
+        a read-back, and an unknown state must not be shown as off.
+        """
+        value = self.coordinator.pending_value(self.write_component, self.write_field)
+        if value is None:
+            value = self.coordinator.get_value(self.modbus_register)
+        if value is None:
+            return None
+        return value != 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -117,20 +123,25 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         await self._async_set_state(0)
 
     async def _async_set_state(self, value: int) -> None:
-        """Write a changed switch state and refresh its read-back value."""
+        """Write a changed switch state.
+
+        The comparison includes a state written moments ago: a read-back right
+        after a write still shows the old state, and comparing with that would
+        drop the command that reverses the write.
+        """
         if self.write_component is None or self.write_field is None:
             return
 
-        current = self.coordinator.get_value(self.modbus_register)
-        if current is not None and bool(current) == bool(value):
-            return
+        async with self.coordinator.write_lock:
+            current = self.is_on
+            if current is not None and current == bool(value):
+                return
 
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            value,
-        )
-        await self.async_update()
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                value,
+            )
 
     @property
     def available(self) -> bool:

@@ -58,7 +58,7 @@ from .const import (
     MANUAL_WATER_TEMPERATURE_TARGET,
 )
 from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import OptimisticValueMixin, StiebelEltronISGEntity
+from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -630,9 +630,7 @@ async def async_setup_entry(
     async_add_devices(entities)
 
 
-class StiebelEltronISGNumberEntity(
-    OptimisticValueMixin, StiebelEltronISGEntity, NumberEntity
-):
+class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
     """stiebel_eltron_isg select class."""
 
     entity_description: StiebelEltronNumberEntityDescription
@@ -686,24 +684,21 @@ class StiebelEltronISGNumberEntity(
             # Remove only floating-point noise from an accepted step value.
             value = self.native_min_value + round(steps) * step
 
-        current = (
-            self._optimistic_value
-            if self._optimistic_value is not None
-            else self.coordinator.get_value(self.modbus_register)
-        )
-        if current is not None and math.isclose(current, value, abs_tol=1e-9):
-            return
+        async with self.coordinator.write_lock:
+            current = self.native_value
+            if current is not None and math.isclose(current, value, abs_tol=1e-9):
+                return
 
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            value,
-        )
-        self._set_optimistic_value(value)
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                value,
+            )
 
     @property
     def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        if self._optimistic_value is not None:
-            return self._optimistic_value
+        """Return the written value until the device confirmed it, else its own."""
+        pending = self.coordinator.pending_value(self.write_component, self.write_field)
+        if pending is not None:
+            return pending
         return self.coordinator.get_value(self.modbus_register)

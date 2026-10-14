@@ -40,6 +40,9 @@ def _coordinator(api) -> StiebelEltronDataCoordinator:
     """Build a coordinator without invoking Home Assistant setup."""
     coordinator = StiebelEltronDataCoordinator.__new__(StiebelEltronDataCoordinator)
     coordinator._api = api
+    coordinator._refresh_generation = 0
+    coordinator._pending_writes = {}
+    coordinator._listeners = {}
     return coordinator
 
 

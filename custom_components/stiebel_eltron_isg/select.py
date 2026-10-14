@@ -11,7 +11,7 @@ from pystiebeleltron import ControllerModel
 
 from .const import OPERATION_MODE
 from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import OptimisticValueMixin, StiebelEltronISGEntity
+from .entity import StiebelEltronISGEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -120,9 +120,7 @@ def get_key_from_value(d: dict[int, str], val: str) -> int | None:
     return None
 
 
-class StiebelEltronISGSelectEntity(
-    OptimisticValueMixin, StiebelEltronISGEntity, SelectEntity
-):
+class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     """stiebel_eltron_isg select class."""
 
     def __init__(
@@ -146,26 +144,26 @@ class StiebelEltronISGSelectEntity(
 
     @property
     def current_option(self) -> str | None:
-        """Return current option."""
-        value = (
-            self._optimistic_value
-            if self._optimistic_value is not None
-            else self.coordinator.get_value(self.modbus_register)
-        )
-        key = int(value) if value is not None else None
-        if key is None:
+        """Return the written option until the device confirmed it, else its own."""
+        value = self.coordinator.pending_value(self.write_component, self.write_field)
+        if value is None:
+            value = self.coordinator.get_value(self.modbus_register)
+        if value is None:
             return None
-        return self._options.get(key)
+        return self._options.get(int(value))
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
-        if key is None or self.write_field is None or self.current_option == option:
+        if key is None or self.write_field is None:
             return
 
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            key,
-        )
-        self._set_optimistic_value(key)
+        async with self.coordinator.write_lock:
+            if self.current_option == option:
+                return
+
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                key,
+            )
