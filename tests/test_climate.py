@@ -5,8 +5,9 @@ from unittest.mock import MagicMock, patch
 
 from homeassistant.components.climate import ClimateEntityFeature
 from homeassistant.components.climate.const import FAN_HIGH, FAN_LOW, HVACMode
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection, WriteEvent
@@ -17,6 +18,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import climate as climate_module
 from custom_components.stiebel_eltron_isg.climate import (
+    CLIMATE_HK_1,
     CLIMATE_HK_2,
     ECO_MODE,
     LWZ_CLIMATE_TYPES,
@@ -65,6 +67,8 @@ class _FakeSystemParameters:
         self.night_stage = night_stage
         self.room_temperature_day_hk1 = 21.0
         self.room_temperature_night_hk1 = 18.0
+        self.comfort_temperature_hk_1 = 21.0
+        self.eco_temperature_hk_1 = 18.0
 
 
 class _FakeApi:
@@ -126,6 +130,14 @@ def _make_wpm_climate(operating_mode: int | None) -> StiebelEltronWPMClimateEnti
     api = _FakeApi(_FakeSystemParameters(operating_mode, 3, 1))
     entity.coordinator = _StubCoordinator(api)
     entity.write_component = "system_parameters"
+    entity.eco_target_temp_write_field = "eco_temperature_hk_1"
+    entity.comfort_target_temp_write_field = "comfort_temperature_hk_1"
+    entity.eco_target_temp_register = lambda api: (
+        api.system_parameters.eco_temperature_hk_1
+    )
+    entity.comfort_target_temp_register = lambda api: (
+        api.system_parameters.comfort_temperature_hk_1
+    )
     entity.async_write_ha_state = lambda: None
     return entity
 
@@ -282,12 +294,103 @@ async def test_wpm_3i_hk2_reads_and_writes_its_own_target(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
-def test_base_climate_operation_mode_is_abstract() -> None:
-    """Controller-specific climate classes must implement their mode lookup."""
-    entity = StiebelEltronISGClimateEntity.__new__(StiebelEltronISGClimateEntity)
+@pytest.mark.parametrize(
+    "factory", [_make_wpm_climate, _make_lwz_climate], ids=["wpm", "lwz"]
+)
+def test_unknown_operating_mode_is_not_shown_as_emergency(factory) -> None:
+    """A missing mode read must not be presented as the real mode 0."""
+    entity = factory(operating_mode=None)
 
-    with pytest.raises(NotImplementedError):
-        _ = entity.operation_mode
+    assert entity.operation_mode is None
+    assert entity.preset_mode is None
+    assert entity.hvac_mode is None
+    # Without the mode there is no way to tell which setpoint applies.
+    assert entity.target_temperature is None
+    # The entity stays reachable for the mode change that ends this state.
+    assert entity.available is True
+
+
+@pytest.mark.parametrize(
+    "factory", [_make_wpm_climate, _make_lwz_climate], ids=["wpm", "lwz"]
+)
+def test_unknown_operating_mode_without_setpoints_is_unavailable(factory) -> None:
+    """With neither mode nor setpoints there is nothing to show or to change."""
+    entity = factory(operating_mode=None)
+    for field in (
+        entity.comfort_target_temp_write_field,
+        entity.eco_target_temp_write_field,
+    ):
+        setattr(entity.coordinator._api.system_parameters, field, None)
+
+    assert entity.available is False
+
+
+@pytest.mark.parametrize(
+    "factory", [_make_wpm_climate, _make_lwz_climate], ids=["wpm", "lwz"]
+)
+async def test_unknown_operating_mode_refuses_temperature_write(factory) -> None:
+    """A setpoint must not go to the comfort field just because the mode is unknown."""
+    entity = factory(operating_mode=None)
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await entity.async_set_temperature(temperature=22.0)
+
+    assert excinfo.value.translation_key == "operating_mode_unknown"
+    assert entity.coordinator.writes == []
+
+
+async def test_unknown_operating_mode_still_takes_a_mode_change_through_services(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
+) -> None:
+    """Home Assistant skips unavailable entities, so the mode must stay settable."""
+    mock_get_controller_model.return_value = ControllerModel.WPM_3i
+    unit = mock_modbus_connection.for_unit(UNIT_ID)
+    unit.load_raw({
+        "input": {500: 215, 502: 215, 504: 450, 508: UNAVAILABLE, 509: 50},
+        "holding": {1500: UNAVAILABLE, 1501: 210, 1502: 180, 1504: 190, 1505: 180},
+    })
+    writes: list[WriteEvent] = []
+    unit.on_write(writes.append)
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.stiebel_eltron_isg.wpm3i_coordinator.Wpm3iStiebelEltronAPI",
+        Wpm3iStiebelEltronAPI,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "climate", DOMAIN, build_unique_id(mock_config_entry, CLIMATE_HK_1)
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+    assert state.attributes.get("preset_mode") is None
+    assert state.attributes.get("temperature") is None
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": entity_id, "temperature": 22.5},
+            blocking=True,
+        )
+    assert excinfo.value.translation_key == "operating_mode_unknown"
+    assert writes == []
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {"entity_id": entity_id, "preset_mode": "emergency"},
+        blocking=True,
+    )
+    assert [(event.register_type, event.address, event.values) for event in writes] == [
+        ("holding", 1500, [0])
+    ]
 
 
 @pytest.mark.parametrize(

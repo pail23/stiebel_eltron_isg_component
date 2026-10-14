@@ -68,6 +68,9 @@
         },
         "write_failed": {
             "message": "Die Einstellung {field} konnte wegen eines Kommunikationsfehlers mit der Wärmepumpe nicht geschrieben werden."
+        },
+        "operating_mode_unknown": {
+            "message": "Die Solltemperatur kann nicht gesetzt werden, solange die Betriebsart der Wärmepumpe unbekannt ist."
         }
     },
     "issues": {

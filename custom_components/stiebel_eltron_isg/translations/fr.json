@@ -63,6 +63,9 @@
         },
         "write_failed": {
             "message": "The setting {field} could not be written because communication with the heat pump failed."
+        },
+        "operating_mode_unknown": {
+            "message": "La température de consigne ne peut pas être réglée tant que le mode de fonctionnement de la pompe à chaleur est inconnu."
         }
     },
     "issues": {
