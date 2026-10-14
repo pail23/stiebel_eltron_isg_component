@@ -8,6 +8,7 @@ from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
@@ -89,13 +90,39 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_host: str
 
+    def _abort_if_host_port_configured(self, host: str, port: int) -> None:
+        """Abort if another entry uses this host and port.
+
+        Entries stored without a port use the default port, so compare the
+        effective port. The entry being reconfigured is excluded.
+        """
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.entry_id == self.context.get("entry_id"):
+                continue
+            if (
+                entry.data.get(CONF_HOST) == host
+                and entry.data.get(CONF_PORT, DEFAULT_PORT) == port
+            ):
+                raise AbortFlow("already_configured")
+
     @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        await self.async_set_unique_id(format_mac(discovery_info.macaddress))
+        mac = format_mac(discovery_info.macaddress)
+        await self.async_set_unique_id(mac)
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
+
+        # Manually configured entries have no unique ID. Adopt the MAC so a
+        # later IP change is tracked instead of creating a second entry.
+        host_matches = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_HOST) == discovery_info.ip
+        ]
+        if len(host_matches) == 1 and host_matches[0].unique_id is None:
+            self.hass.config_entries.async_update_entry(host_matches[0], unique_id=mac)
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
 
         check_result = await check_controller_model(
@@ -135,10 +162,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
-            self._async_abort_entries_match({
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            })
+            self._abort_if_host_port_configured(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
             check_result = await check_controller_model(
                 self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
             )
@@ -166,10 +192,9 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
-            self._async_abort_entries_match({
-                CONF_HOST: user_input[CONF_HOST],
-                CONF_PORT: user_input[CONF_PORT],
-            })
+            self._abort_if_host_port_configured(
+                user_input[CONF_HOST], user_input[CONF_PORT]
+            )
             check_result = await check_controller_model(
                 self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
             )
