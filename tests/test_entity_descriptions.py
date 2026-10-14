@@ -4,8 +4,8 @@ All platforms declare their entities as descriptions holding lambda accessors
 (``lambda api: api.<component>.<field>``) plus the ``write_field`` name that
 ``write_component_value`` writes to. A description used for a model whose API
 does not have that field breaks only at runtime: the accessor raises
-``AttributeError`` (the coordinator only catches ``StiebelEltronModbusError``)
-and the write raises a translated ``write_unsupported`` error. The tests below
+``AttributeError``, which nothing catches, and the write raises a translated
+``write_unsupported`` error. The tests below
 therefore resolve every accessor and every write field of every model specific
 description list against the API class the coordinator really builds for that
 model, and check that no description list escapes that sweep.

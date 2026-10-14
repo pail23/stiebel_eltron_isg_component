@@ -4,8 +4,6 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-import logging
-
 from homeassistant.core import HomeAssistant
 from modbus_connection import ModbusUnit
 from pystiebeleltron import ControllerModel
@@ -16,8 +14,6 @@ from .coordinator import (
     StiebelEltronConnectionParams,
     StiebelEltronDataCoordinator,
 )
-
-_LOGGER: logging.Logger = logging.getLogger(__package__)
 
 
 class StiebelEltronModbusWPM3iDataCoordinator(

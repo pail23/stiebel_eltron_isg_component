@@ -1,7 +1,6 @@
 """Switch platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -11,9 +10,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
 from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -22,16 +19,9 @@ PARALLEL_UPDATES = 1
 class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: Any
+    modbus_register: ValueAccessor
     write_component: str | None = None
     write_field: str | None = None
-
-    def __post_init__(self) -> None:
-        """Ensure value references are lambda-based."""
-        if callable(self.modbus_register):
-            return
-
-        raise TypeError("modbus_register must be a lambda expression")
 
 
 SWITCH_TYPES = [

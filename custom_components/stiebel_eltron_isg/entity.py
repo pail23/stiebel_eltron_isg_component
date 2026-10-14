@@ -1,10 +1,8 @@
 """StiebelEltronISGEntity class."""
 
 from collections.abc import Callable
-from dataclasses import dataclass
 from typing import Any
 
-from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
@@ -15,18 +13,16 @@ def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
     return f"{entry.entry_id}_{key}"
 
 
-@dataclass(frozen=True, kw_only=True)
-class StiebelEltronEntityDescription(EntityDescription):
-    """Entity description for stiebel eltron with modbus register."""
-
-    modbus_register: Any
+# Reads one value from the model-specific API client. The client type is
+# erased to Any at this boundary, see AnyStiebelEltronDataCoordinator.
+type ValueAccessor = Callable[[Any], float | int | None]
 
 
 class StiebelEltronISGEntity(CoordinatorEntity[AnyStiebelEltronDataCoordinator]):
     """stiebel_eltron_isg entity base class."""
 
     _attr_has_entity_name = True
-    modbus_register: Callable[[Any], float | int | None]
+    modbus_register: ValueAccessor
 
     def __init__(
         self,

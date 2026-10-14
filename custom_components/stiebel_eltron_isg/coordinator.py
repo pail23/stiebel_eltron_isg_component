@@ -8,6 +8,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
 import logging
 from typing import Any, Protocol
 
@@ -19,7 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from modbus_connection import ModbusError
 from modbus_connection.cli_helper import field_rows
 from modbus_connection.model import Component, ManualComponent
-from pystiebeleltron import ControllerModel, StiebelEltronModbusError
+from pystiebeleltron import ControllerModel
 
 from custom_components.stiebel_eltron_isg.const import (
     ATTR_MANUFACTURER,
@@ -52,6 +53,28 @@ def coordinator_display_name(model: ControllerModel) -> str:
     were created by an earlier release, so both places derive it from here.
     """
     return f"Stiebel Eltron {model.name}"
+
+
+class ControllerFamily(Enum):
+    """The register layout a controller model is served with.
+
+    The platforms pick their entity descriptions by family, not by model, so
+    a model that shares a layout is added in one place: ``CONTROLLER_FAMILIES``.
+    """
+
+    WPM_3I = "wpm_3i"
+    WPM = "wpm"
+    LWZ = "lwz"
+
+
+CONTROLLER_FAMILIES: dict[ControllerModel, ControllerFamily] = {
+    ControllerModel.WPM_3i: ControllerFamily.WPM_3I,
+    ControllerModel.WPM_3: ControllerFamily.WPM,
+    ControllerModel.WPMsystem: ControllerFamily.WPM,
+    ControllerModel.LWZ_R290: ControllerFamily.WPM,
+    ControllerModel.LWZ: ControllerFamily.LWZ,
+    ControllerModel.LWZ_x04_SOL: ControllerFamily.LWZ,
+}
 
 
 class StiebelEltronApi(Protocol):
@@ -133,6 +156,11 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
         return self._model
 
     @property
+    def family(self) -> ControllerFamily:
+        """Return the register layout family of the controller model."""
+        return CONTROLLER_FAMILIES[self._model]
+
+    @property
     def model_name(self) -> str:
         """Return the name of the controller model of the Stiebel Eltron ISG."""
         if self._model == ControllerModel.LWZ:
@@ -157,8 +185,7 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             # APIs also contain polling helpers, which have no register fields.
             if not isinstance(component, (Component, ManualComponent)):
                 continue
-            component_result = dict(field_rows(component))
-            result = {**result, **component_result}
+            result.update(field_rows(component))
         return result
 
     async def _async_update_data(self) -> dict[str, float | int | None]:
@@ -231,16 +258,13 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
         self,
         value_reference: Callable[[T], float | int | None],
     ) -> float | int | None:
-        """Return a value from a callable accessor."""
-        try:
-            value = value_reference(self._api)
-        except StiebelEltronModbusError as err:
-            _LOGGER.warning(
-                "Failed to get value from accessor %r: %s",
-                value_reference,
-                err,
-            )
-            return None
+        """Return a value from a callable accessor.
+
+        Accessors read the library's cache and raise nothing on their own; a
+        non-numeric result, such as the unavailable marker decoded to None, is
+        reported as no value.
+        """
+        value = value_reference(self._api)
         return value if isinstance(value, (int, float)) else None
 
     def has_value(
@@ -294,7 +318,7 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
                 translation_key="write_unsupported",
                 translation_placeholders={"field": field},
             ) from err
-        except (ModbusError, StiebelEltronModbusError) as err:
+        except ModbusError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
