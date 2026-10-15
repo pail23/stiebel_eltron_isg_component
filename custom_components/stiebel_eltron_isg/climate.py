@@ -18,9 +18,11 @@ from homeassistant.components.climate.const import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
+from .const import DOMAIN
 from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
 from .entity import OptimisticValueMixin, StiebelEltronISGEntity
 
@@ -379,19 +381,33 @@ class StiebelEltronISGClimateEntity(
 
     @property
     def available(self) -> bool:
-        """Return True if entity is available."""
-        return (
-            self.coordinator.last_update_success and self.target_temperature is not None
-        )
+        """Return True if entity is available.
+
+        While the operating mode is unknown the entity stays available as long
+        as a setpoint register answers: Home Assistant passes no service call
+        to an unavailable entity, and changing the mode is the way out of that
+        state.
+        """
+        if not self.coordinator.last_update_success:
+            return False
+        if self.operation_mode is None:
+            return any(
+                self._read_accessor(register) is not None
+                for register in (
+                    self.comfort_target_temp_register,
+                    self.eco_target_temp_register,
+                )
+            )
+        return self.target_temperature is not None
 
     @property
-    def operation_mode(self) -> int:
-        """Operating mode of the heat pump."""
-        raise NotImplementedError
+    def operation_mode(self) -> int | None:
+        """Return the raw operating mode, or None while the device reports none.
 
-    @property
-    def _raw_operation_mode(self) -> int | None:
-        """Return the raw mode while preserving an unavailable read-back."""
+        The unavailable marker must not be replaced by a real mode: 0 is the
+        emergency mode, so a fallback to 0 would show and write as if the heat
+        pump were in emergency operation.
+        """
         value = self._read_register(lambda api: api.system_parameters.operating_mode)
         return int(value) if value is not None else None
 
@@ -419,8 +435,15 @@ class StiebelEltronISGClimateEntity(
 
     @property
     def _target_temp_write_field(self) -> str | None:
-        """Return the field the current operating mode takes its target from."""
-        if self.operation_mode == ECO_MODE:
+        """Return the field the current operating mode takes its target from.
+
+        None while the operating mode is unknown: without it there is no way to
+        tell which of the two setpoints applies.
+        """
+        mode = self.operation_mode
+        if mode is None:
+            return None
+        if mode == ECO_MODE:
             return self.eco_target_temp_write_field
         return self.comfort_target_temp_write_field
 
@@ -430,12 +453,15 @@ class StiebelEltronISGClimateEntity(
         # An assumed target only holds for the field it was written to. Once the
         # operating mode makes the other field the target, it no longer applies,
         # whoever changed that mode.
+        mode = self.operation_mode
+        if mode is None:
+            return None
         if (
             self._optimistic_value is not None
             and self._optimistic_target_field == self._target_temp_write_field
         ):
             return self._optimistic_value
-        if self.operation_mode == ECO_MODE:
+        if mode == ECO_MODE:
             return self._read_accessor(self.eco_target_temp_register)
         return self._read_accessor(self.comfort_target_temp_register)
 
@@ -444,7 +470,10 @@ class StiebelEltronISGClimateEntity(
         value = kwargs["temperature"]
         field = self._target_temp_write_field
         if field is None:
-            return
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="operating_mode_unknown",
+            )
         current = self.target_temperature
         if current is not None and math.isclose(current, value, abs_tol=1e-9):
             return
@@ -492,32 +521,28 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         super().__init__(coordinator, config_entry, description)
 
     @property
-    def operation_mode(self) -> int:
-        """Operating mode of the heat pump."""
-        raw_mode = self._raw_operation_mode
-        return raw_mode if raw_mode is not None else 0
-
-    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return WPM_TO_HA_HVAC.get(self.operation_mode)
+        mode = self.operation_mode
+        return WPM_TO_HA_HVAC.get(mode) if mode is not None else None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
         # Several raw modes map to AUTO, so compare the controller value.
-        if new_mode is not None and self._raw_operation_mode != new_mode:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        return WPM_TO_HA_PRESET.get(self.operation_mode)
+        mode = self.operation_mode
+        return WPM_TO_HA_PRESET.get(mode) if mode is not None else None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_WPM_PRESET.get(preset_mode)
-        if new_mode is not None and self._raw_operation_mode != new_mode:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
 
@@ -546,32 +571,28 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
-    def operation_mode(self) -> int:
-        """Operating mode of the heat pump."""
-        raw_mode = self._raw_operation_mode
-        return raw_mode if raw_mode is not None else 0
-
-    @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        return LWZ_TO_HA_HVAC.get(self.operation_mode)
+        mode = self.operation_mode
+        return LWZ_TO_HA_HVAC.get(mode) if mode is not None else None
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
         # Several raw modes map to AUTO, so compare the controller value.
-        if new_mode is not None and self._raw_operation_mode != new_mode:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
-        return LWZ_TO_HA_PRESET.get(self.operation_mode)
+        mode = self.operation_mode
+        return LWZ_TO_HA_PRESET.get(mode) if mode is not None else None
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
-        if new_mode is not None and self._raw_operation_mode != new_mode:
+        if new_mode is not None and self.operation_mode != new_mode:
             await self._write_field("operating_mode", new_mode)
 
     @property
