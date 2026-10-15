@@ -25,6 +25,8 @@ from .const import (
     COMFORT_TEMPERATURE_TARGET_HK1,
     COMFORT_TEMPERATURE_TARGET_HK2,
     COMFORT_TEMPERATURE_TARGET_HK3,
+    COMFORT_TEMPERATURE_TARGET_HK4,
+    COMFORT_TEMPERATURE_TARGET_HK5,
     COMFORT_WATER_TEMPERATURE_TARGET,
     DOMAIN,
     DUALMODE_TEMPERATURE_HZG,
@@ -34,6 +36,8 @@ from .const import (
     ECO_TEMPERATURE_TARGET_HK1,
     ECO_TEMPERATURE_TARGET_HK2,
     ECO_TEMPERATURE_TARGET_HK3,
+    ECO_TEMPERATURE_TARGET_HK4,
+    ECO_TEMPERATURE_TARGET_HK5,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
     FAN_COOLING_TARGET_FLOW_TEMPERATURE,
@@ -47,6 +51,8 @@ from .const import (
     HEATING_CURVE_RISE_HK1,
     HEATING_CURVE_RISE_HK2,
     HEATING_CURVE_RISE_HK3,
+    HEATING_CURVE_RISE_HK4,
+    HEATING_CURVE_RISE_HK5,
     MANUAL_HC_SET_HK1,
     MANUAL_HC_SET_HK2,
     MANUAL_WATER_TEMPERATURE_TARGET,
@@ -288,6 +294,72 @@ NUMBER_TYPES_WPM = [
         write_field="heating_curve_rise_hk_3",
     ),
 ]
+
+
+def _extension_circuit_numbers(
+    circuit: int, comfort_key: str, eco_key: str, curve_key: str
+) -> list[StiebelEltronNumberEntityDescription]:
+    """Describe the setpoints and heating curve of heating circuit 4 or 5.
+
+    These circuits need the WPE extension module of WPMsystem, so their entities
+    are registered disabled, like the circuits' sensors. The manual gives no
+    range for them; 5 to 30 °C is what the ISG's object database declares.
+    """
+    comfort_field = f"comfort_temperature_hk_{circuit}"
+    eco_field = f"eco_temperature_hk_{circuit}"
+    curve_field = f"heating_curve_rise_hk_{circuit}"
+    return [
+        StiebelEltronNumberEntityDescription(
+            key=comfort_key,
+            translation_key=comfort_key,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            native_min_value=5,
+            native_max_value=30,
+            native_step=0.1,
+            entity_registry_enabled_default=False,
+            modbus_register=lambda api: getattr(api.system_parameters, comfort_field),
+            write_field=comfort_field,
+        ),
+        StiebelEltronNumberEntityDescription(
+            key=eco_key,
+            translation_key=eco_key,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            native_min_value=5,
+            native_max_value=30,
+            native_step=0.1,
+            entity_registry_enabled_default=False,
+            modbus_register=lambda api: getattr(api.system_parameters, eco_field),
+            write_field=eco_field,
+        ),
+        StiebelEltronNumberEntityDescription(
+            key=curve_key,
+            translation_key=curve_key,
+            native_min_value=0,
+            native_max_value=3,
+            native_step=0.01,
+            entity_registry_enabled_default=False,
+            modbus_register=lambda api: getattr(api.system_parameters, curve_field),
+            write_field=curve_field,
+        ),
+    ]
+
+
+NUMBER_TYPES_WPMSYSTEM = [
+    *NUMBER_TYPES_WPM,
+    *_extension_circuit_numbers(
+        4,
+        COMFORT_TEMPERATURE_TARGET_HK4,
+        ECO_TEMPERATURE_TARGET_HK4,
+        HEATING_CURVE_RISE_HK4,
+    ),
+    *_extension_circuit_numbers(
+        5,
+        COMFORT_TEMPERATURE_TARGET_HK5,
+        ECO_TEMPERATURE_TARGET_HK5,
+        HEATING_CURVE_RISE_HK5,
+    ),
+]
+
 
 NUMBER_TYPES_LWZ = [
     StiebelEltronNumberEntityDescription(
@@ -540,7 +612,11 @@ async def async_setup_entry(
                 entry,
                 description,
             )
-            for description in NUMBER_TYPES_WPM
+            for description in (
+                NUMBER_TYPES_WPMSYSTEM
+                if coordinator.model == ControllerModel.WPMsystem
+                else NUMBER_TYPES_WPM
+            )
         ]
     else:
         entities = [

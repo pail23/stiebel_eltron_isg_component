@@ -207,6 +207,12 @@
             "comfort_temperature_target_hk3": {
                 "default": "mdi:thermometer-high"
             },
+            "comfort_temperature_target_hk4": {
+                "default": "mdi:thermometer-high"
+            },
+            "comfort_temperature_target_hk5": {
+                "default": "mdi:thermometer-high"
+            },
             "comfort_water_temperature_target": {
                 "default": "mdi:thermometer-high"
             },
@@ -229,6 +235,12 @@
                 "default": "mdi:thermometer-low"
             },
             "eco_temperature_target_hk3": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_temperature_target_hk4": {
+                "default": "mdi:thermometer-low"
+            },
+            "eco_temperature_target_hk5": {
                 "default": "mdi:thermometer-low"
             },
             "eco_water_temperature_target": {
@@ -268,6 +280,12 @@
                 "default": "mdi:chart-bell-curve-cumulative"
             },
             "heating_curve_rise_hk3": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "heating_curve_rise_hk4": {
+                "default": "mdi:chart-bell-curve-cumulative"
+            },
+            "heating_curve_rise_hk5": {
                 "default": "mdi:chart-bell-curve-cumulative"
             },
             "manual_hc_set_hk1": {

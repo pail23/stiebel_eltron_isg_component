@@ -714,8 +714,20 @@
             "comfort_temperature_target_hk3": {
                 "name": "Tagbetrieb Temperatursoll HK 3"
             },
+            "comfort_temperature_target_hk4": {
+                "name": "Tagbetrieb Temperatursoll HK 4"
+            },
+            "comfort_temperature_target_hk5": {
+                "name": "Tagbetrieb Temperatursoll HK 5"
+            },
             "eco_temperature_target_hk3": {
                 "name": "Absenkbetrieb Temperatursoll HK 3"
+            },
+            "eco_temperature_target_hk4": {
+                "name": "Absenkbetrieb Temperatursoll HK 4"
+            },
+            "eco_temperature_target_hk5": {
+                "name": "Absenkbetrieb Temperatursoll HK 5"
             },
             "dualmode_temperature_hzg": {
                 "name": "Bivalenztemperatur Heizung"
@@ -764,6 +776,12 @@
             },
             "heating_curve_rise_hk3": {
                 "name": "Heizkurve Steilheit HK 3"
+            },
+            "heating_curve_rise_hk4": {
+                "name": "Heizkurve Steilheit HK 4"
+            },
+            "heating_curve_rise_hk5": {
+                "name": "Heizkurve Steilheit HK 5"
             },
             "fan_level_comfort": {
                 "name": "Lüfterstufe Tag"
@@ -860,6 +878,36 @@
             },
             "climate_hk_3": {
                 "name": "Heizkreis 3",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Warmwasserbetrieb",
+                            "emergency": "Notbetrieb",
+                            "program": "Programmbetrieb",
+                            "ready": "Bereitschaftsbetrieb",
+                            "auto": "Automatikbetrieb",
+                            "manual": "Handbetrieb"
+                        }
+                    }
+                }
+            },
+            "climate_hk_4": {
+                "name": "Heizkreis 4",
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "water_heating": "Warmwasserbetrieb",
+                            "emergency": "Notbetrieb",
+                            "program": "Programmbetrieb",
+                            "ready": "Bereitschaftsbetrieb",
+                            "auto": "Automatikbetrieb",
+                            "manual": "Handbetrieb"
+                        }
+                    }
+                }
+            },
+            "climate_hk_5": {
+                "name": "Heizkreis 5",
                 "state_attributes": {
                     "preset_mode": {
                         "state": {

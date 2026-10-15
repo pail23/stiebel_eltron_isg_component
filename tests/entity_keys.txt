@@ -32,11 +32,15 @@ circulation_pump
 climate_hk_1
 climate_hk_2
 climate_hk_3
+climate_hk_4
+climate_hk_5
 comfort_cooling_temperature_target_hk1
 comfort_cooling_temperature_target_hk2
 comfort_temperature_target_hk1
 comfort_temperature_target_hk2
 comfort_temperature_target_hk3
+comfort_temperature_target_hk4
+comfort_temperature_target_hk5
 comfort_water_temperature_target
 compressor_heating
 compressor_heating_hp_1
@@ -84,6 +88,8 @@ eco_cooling_temperature_target_hk2
 eco_temperature_target_hk1
 eco_temperature_target_hk2
 eco_temperature_target_hk3
+eco_temperature_target_hk4
+eco_temperature_target_hk5
 eco_water_temperature_target
 electric_reheating
 efficiency_cooling_13_24_m
@@ -140,6 +146,8 @@ heating_curve_low_end_hk2
 heating_curve_rise_hk1
 heating_curve_rise_hk2
 heating_curve_rise_hk3
+heating_curve_rise_hk4
+heating_curve_rise_hk5
 high_pressure
 high_pressure_wp1
 high_pressure_wp2

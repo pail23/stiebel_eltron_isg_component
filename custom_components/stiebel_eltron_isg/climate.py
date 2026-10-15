@@ -33,6 +33,8 @@ PARALLEL_UPDATES = 1
 CLIMATE_HK_1 = "climate_hk_1"
 CLIMATE_HK_2 = "climate_hk_2"
 CLIMATE_HK_3 = "climate_hk_3"
+CLIMATE_HK_4 = "climate_hk_4"
+CLIMATE_HK_5 = "climate_hk_5"
 
 ECO_MODE = 4
 MANUAL_MODE = 14
@@ -256,6 +258,46 @@ WPM_CLIMATE_TYPES = [
     ),
 ]
 
+
+def _extension_circuit_climate(
+    circuit: int, key: str
+) -> StiebelEltronClimateEntityDescription:
+    """Describe heating circuit 4 or 5, which need the WPE extension module.
+
+    Only WPMsystem supports the module, and the entity is registered disabled,
+    like the circuit's sensors.
+    """
+    index = circuit - 1
+    comfort_field = f"comfort_temperature_hk_{circuit}"
+    eco_field = f"eco_temperature_hk_{circuit}"
+    return StiebelEltronClimateEntityDescription(
+        key=key,
+        translation_key=key,
+        entity_registry_enabled_default=False,
+        humidity_modbus_register=[
+            lambda api: api.system_values.room_temperatures[index].relative_humidity
+        ],
+        actual_temperature_register=[
+            lambda api: api.system_values.room_temperatures[index].actual_temperature
+        ],
+        eco_target_temp_register=lambda api: getattr(api.system_parameters, eco_field),
+        comfort_target_temp_register=lambda api: getattr(
+            api.system_parameters, comfort_field
+        ),
+        min_temp=5,
+        max_temp=30,
+        eco_target_temp_write_field=eco_field,
+        comfort_target_temp_write_field=comfort_field,
+    )
+
+
+WPMSYSTEM_CLIMATE_TYPES = [
+    *WPM_CLIMATE_TYPES,
+    _extension_circuit_climate(4, CLIMATE_HK_4),
+    _extension_circuit_climate(5, CLIMATE_HK_5),
+]
+
+
 LWZ_CLIMATE_TYPES = [
     StiebelEltronClimateEntityDescription(
         key=CLIMATE_HK_1,
@@ -320,7 +362,11 @@ async def async_setup_entry(
                 entry,
                 description,
             )
-            for description in WPM_CLIMATE_TYPES
+            for description in (
+                WPMSYSTEM_CLIMATE_TYPES
+                if coordinator.model == ControllerModel.WPMsystem
+                else WPM_CLIMATE_TYPES
+            )
         ]
     else:
         entities = [
