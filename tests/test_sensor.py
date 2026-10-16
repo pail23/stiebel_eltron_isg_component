@@ -380,27 +380,17 @@ def test_wpm_3i_target_temperature_hk1_reads_the_shared_field() -> None:
     assert _wpm_3i(TARGET_TEMPERATURE_HK1).modbus_register(api) == 23.4
 
 
-@pytest.mark.parametrize("has_extended_values", [False, True])
-def test_hk3_temperatures_follow_library_component(
-    has_extended_values: bool,
-) -> None:
-    """Read HK3 from its component in either supported library layout."""
+def test_hk3_temperatures_follow_library_component() -> None:
+    """Read HK3 from the optional extended system values component."""
     api = SimpleNamespace(
-        system_values=SimpleNamespace(
-            actual_temperature_hk_3=11.1,
-            set_temperature_hk_3=22.2,
-        )
-    )
-    if has_extended_values:
-        api.extended_system_values = SimpleNamespace(
+        extended_system_values=SimpleNamespace(
             actual_temperature_hk_3=33.3,
             set_temperature_hk_3=44.4,
         )
+    )
 
-    expected_actual = 33.3 if has_extended_values else 11.1
-    expected_target = 44.4 if has_extended_values else 22.2
-    assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) == expected_actual
-    assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) == expected_target
+    assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) == 33.3
+    assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) == 44.4
 
 
 def test_hk3_temperatures_resolve_on_installed_wpm_api() -> None:
