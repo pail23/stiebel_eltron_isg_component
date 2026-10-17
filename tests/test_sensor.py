@@ -468,8 +468,9 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.modbus_register(api) == value
         assert desc.native_unit_of_measurement == unit
         assert desc.device_class == SensorDeviceClass.ENERGY
-        # Rolling windows reset, so they must not be TOTAL_INCREASING.
-        assert desc.state_class == SensorStateClass.TOTAL
+        # Rolling windows fit no state class: TOTAL would book the energy that
+        # drops out of a window, TOTAL_INCREASING would read it as a reset.
+        assert desc.state_class is None
 
 
 @pytest.mark.parametrize(
@@ -739,8 +740,9 @@ def test_lwz_exposes_efficiency_statistics() -> None:
         desc = _lwz(key)
         assert desc.modbus_register(api) == value
         assert desc.device_class is None
-        # TODO: Add this test once the values are verified to be correct.
-        # assert desc.state_class == SensorStateClass.MEASUREMENT
+        # The raw LWZ registers get a state class once their scaling has been
+        # confirmed against a device; until then they record no statistics.
+        assert desc.state_class is None
 
 
 def test_inverter_power_reads_the_measured_field() -> None:
@@ -858,7 +860,7 @@ def test_wpmsystem_heating_efficiency_uses_matching_energy_windows() -> None:
     for description in WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES:
         assert description.modbus_register(api) == expected[description.key]
         assert description.native_unit_of_measurement is None
-        assert description.state_class is None
+        assert description.state_class is SensorStateClass.MEASUREMENT
 
 
 @pytest.mark.parametrize(
@@ -984,7 +986,7 @@ def test_wpmsystem_cooling_efficiency_uses_matching_energy_windows() -> None:
     for description in WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES:
         assert description.modbus_register(api) == expected[description.key]
         assert description.native_unit_of_measurement is None
-        assert description.state_class is None
+        assert description.state_class is SensorStateClass.MEASUREMENT
 
 
 async def test_wpmsystem_cooling_efficiency_and_runtimes_decode_with_library(

@@ -16,3 +16,7 @@ updates:
       # These versions must follow Home Assistant's Modbus manifest as one set.
       - dependency-name: "modbus-connection"
       - dependency-name: "tmodbus"
+      - dependency-name: "pymodbus"
+      # Pulls in the Home Assistant release it was built for, so it moves with
+      # the pins above, in one deliberate step.
+      - dependency-name: "pytest-homeassistant-custom-component"

@@ -125,7 +125,15 @@ The 24-hour values are both Wh;
 the 12-month values are both kWh. These windows differ from calendar-day
 counters. WPMsystem and LWZ R290 heat-window sensors require the extended
 energy registers and have no state class, so they create no long-term
-statistics.
+statistics. The same applies to the WPMsystem power-consumption windows
+(**Consumed heating/cooling/water heating last 24 h, 12 m, previous 12 m**):
+a rolling window fits no state class, since the energy that drops out of the
+window is not consumption. Installations that recorded statistics for them
+under the earlier `total` state class may see a fixable `state_class_removed`
+issue under **Developer Tools → Statistics**; deleting that statistic removes
+the misleading long-term sum, not the entity's state history. The six
+WPMsystem efficiency ratios do record statistics as measurements; the mean of a
+window ratio is a trend indicator, not a COP recomputed over the whole period.
 
 For WPMsystem, the three cooling efficiency sensors are calculated the same
 way from the matching cooling windows. A window without cooling reads zero

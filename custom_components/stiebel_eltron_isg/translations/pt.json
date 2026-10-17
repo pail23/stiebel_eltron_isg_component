@@ -65,7 +65,7 @@
             "message": "The setting {field} could not be written because communication with the heat pump failed."
         },
         "operating_mode_unknown": {
-            "message": "A temperatura alvo não pode ser definida enquanto o modo de funcionamento da bomba de calor for desconhecido."
+            "message": "Esta definição não pode ser alterada enquanto o modo de funcionamento da bomba de calor for desconhecido."
         }
     },
     "issues": {
