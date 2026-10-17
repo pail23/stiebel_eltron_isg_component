@@ -4,6 +4,7 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -69,6 +70,17 @@ class StiebelEltronConnectionParams:
     model: ControllerModel
 
 
+@dataclass(frozen=True)
+class PendingWrite:
+    """A value written to the device that no later poll has confirmed yet."""
+
+    value: float | int
+    # The newest poll that had started when the value was written. A poll with
+    # a higher generation started after the write and is the first one that can
+    # report what the device made of it.
+    refresh_generation: int
+
+
 class StiebelEltronDataCoordinator[T: StiebelEltronApi](
     DataUpdateCoordinator[dict[str, float | int | None]]
 ):
@@ -87,6 +99,8 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
         self._api = api_client
         self._refresh_generation = 0
         self._last_successful_refresh_generation = 0
+        self._pending_writes: dict[tuple[str, str], PendingWrite] = {}
+        self._write_lock = asyncio.Lock()
 
         super().__init__(
             hass,
@@ -157,6 +171,14 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             raise UpdateFailed(exception) from exception
         else:
             self._last_successful_refresh_generation = generation
+            # Only a poll that started after a write can have read the device's
+            # answer to it. A poll that was already in flight may have read the
+            # registers before the write, so its pending values stay.
+            self._pending_writes = {
+                key: pending
+                for key, pending in self._pending_writes.items()
+                if pending.refresh_generation >= generation
+            }
             return {}
 
     @property
@@ -168,6 +190,42 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
     def last_successful_refresh_generation(self) -> int:
         """Return the generation of the newest successful refresh."""
         return self._last_successful_refresh_generation
+
+    @property
+    def write_lock(self) -> asyncio.Lock:
+        """Serialise an entity's comparison and write across all entities.
+
+        A written value is only held once its write has completed. Two entities
+        writing the same field at the same time would otherwise both compare
+        against the value from before either write, and the second command
+        would be dropped as unchanged or written twice. Holding this lock from
+        the comparison to the end of the write makes the second one see the
+        first. Home Assistant serialises calls within a platform only.
+        """
+        return self._write_lock
+
+    def pending_value(
+        self, component: str | None, field: str | None
+    ) -> float | int | None:
+        """Return the value last written to a field until the device confirmed it.
+
+        A write travels ISG to CAN to heat pump and needs a moment to be
+        reflected in the registers; the library does not update its cache on a
+        write either. Until a poll started after the write has succeeded, the
+        written value is therefore the best knowledge of the field. It is held
+        here rather than in the entity that wrote it because several entities
+        read and write the same field: the number and the climate entity share a
+        setpoint, the select and every climate entity share the operating mode.
+        A follow-up command from any of them has to see the value just written,
+        both to display it and to decide whether a write would change anything.
+
+        If the controller clamps or rounds the value, that correction appears
+        with the first poll started after the write.
+        """
+        if component is None or field is None:
+            return None
+        pending = self._pending_writes.get((component, field))
+        return pending.value if pending is not None else None
 
     def get_value(
         self,
@@ -242,6 +300,12 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
                 translation_key="write_failed",
                 translation_placeholders={"field": field},
             ) from err
+
+        self._pending_writes[(component, field)] = PendingWrite(
+            value, self._refresh_generation
+        )
+        # Every entity reading this field shows the written value right away.
+        self.async_update_listeners()
 
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
