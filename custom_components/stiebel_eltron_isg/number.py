@@ -1,9 +1,7 @@
 """Sensor number for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-import logging
 import math
-from typing import Any
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -57,10 +55,12 @@ from .const import (
     MANUAL_HC_SET_HK2,
     MANUAL_WATER_TEMPERATURE_TARGET,
 )
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import OptimisticValueMixin, StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import (
+    AnyStiebelEltronDataCoordinator,
+    ControllerFamily,
+    StiebelEltronConfigEntry,
+)
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -70,17 +70,10 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     entity_category: EntityCategory | None = EntityCategory.CONFIG
-    modbus_register: Any
+    modbus_register: ValueAccessor
     write_component: str = "system_parameters"
     write_field: str | None = None
     enforce_step: bool = False
-
-    def __post_init__(self) -> None:
-        """Ensure value references are lambda-based."""
-        if callable(self.modbus_register):
-            return
-
-        raise TypeError("modbus_register must be a lambda expression")
 
 
 def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode:
@@ -583,56 +576,32 @@ NUMBER_TYPES_LWZ = [
 ]
 
 
+_NUMBER_TYPES = {
+    ControllerFamily.WPM_3I: NUMBER_TYPES_WPM_3I,
+    ControllerFamily.WPM: NUMBER_TYPES_WPM,
+    ControllerFamily.LWZ: NUMBER_TYPES_LWZ,
+}
+
+
 async def async_setup_entry(
-    _hass: HomeAssistant,  # Unused function argument: `hass`
+    _hass: HomeAssistant,
     entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
-    """Set up the select platform."""
+    """Set up the number platform."""
     coordinator = entry.runtime_data
-
-    entities = []
-    if coordinator.model == ControllerModel.WPM_3i:
-        entities = [
-            StiebelEltronISGNumberEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in NUMBER_TYPES_WPM_3I
-        ]
-    elif coordinator.model in (
-        ControllerModel.WPM_3,
-        ControllerModel.WPMsystem,
-        ControllerModel.LWZ_R290,
-    ):
-        entities = [
-            StiebelEltronISGNumberEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in (
-                NUMBER_TYPES_WPMSYSTEM
-                if coordinator.model == ControllerModel.WPMsystem
-                else NUMBER_TYPES_WPM
-            )
-        ]
-    else:
-        entities = [
-            StiebelEltronISGNumberEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in NUMBER_TYPES_LWZ
-        ]
-    async_add_devices(entities)
+    descriptions = (
+        NUMBER_TYPES_WPMSYSTEM
+        if coordinator.model is ControllerModel.WPMsystem
+        else _NUMBER_TYPES[coordinator.family]
+    )
+    async_add_devices([
+        StiebelEltronISGNumberEntity(coordinator, entry, description)
+        for description in descriptions
+    ])
 
 
-class StiebelEltronISGNumberEntity(
-    OptimisticValueMixin, StiebelEltronISGEntity, NumberEntity
-):
+class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
     """stiebel_eltron_isg select class."""
 
     entity_description: StiebelEltronNumberEntityDescription
@@ -686,24 +655,21 @@ class StiebelEltronISGNumberEntity(
             # Remove only floating-point noise from an accepted step value.
             value = self.native_min_value + round(steps) * step
 
-        current = (
-            self._optimistic_value
-            if self._optimistic_value is not None
-            else self.coordinator.get_value(self.modbus_register)
-        )
-        if current is not None and math.isclose(current, value, abs_tol=1e-9):
-            return
+        async with self.coordinator.write_lock:
+            current = self.native_value
+            if current is not None and math.isclose(current, value, abs_tol=1e-9):
+                return
 
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            value,
-        )
-        self._set_optimistic_value(value)
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                value,
+            )
 
     @property
     def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        if self._optimistic_value is not None:
-            return self._optimistic_value
+        """Return the written value until the device confirmed it, else its own."""
+        pending = self.coordinator.pending_value(self.write_component, self.write_field)
+        if pending is not None:
+            return pending
         return self.coordinator.get_value(self.modbus_register)

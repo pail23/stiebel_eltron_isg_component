@@ -1,7 +1,7 @@
 """Tests for the number platform."""
 
 from types import SimpleNamespace
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.number import NumberMode
 from homeassistant.const import UnitOfTemperature
@@ -30,35 +30,26 @@ from custom_components.stiebel_eltron_isg.number import (
     StiebelEltronISGNumberEntity,
     number_mode,
 )
+from tests.pending import FakeApi, FakeComponent, attach, make_coordinator, poll
 
-
-class _StubCoordinator:
-    """Minimal coordinator stub exposing the value accessor API."""
-
-    def __init__(self, current: float | None) -> None:
-        self._current = current
-        self.writes: list[tuple] = []
-        self.refresh_generation = 0
-        self.last_successful_refresh_generation = 0
-        self.last_update_success = True
-
-    def get_value(self, accessor) -> float | None:
-        return self._current
-
-    async def write_component_value(self, component, field, value) -> None:
-        self.writes.append((component, field, value))
+_FIELD = "set_flow_temperature_area"
 
 
 def _make_number(current: float | None) -> StiebelEltronISGNumberEntity:
     entity = StiebelEltronISGNumberEntity.__new__(StiebelEltronISGNumberEntity)
     entity.entity_description = NUMBER_TYPES_WPM[0]
-    entity.coordinator = _StubCoordinator(current)
-    entity.modbus_register = lambda api: None
+    writes: list[tuple] = []
+    coordinator = make_coordinator(FakeApi(writes, system_parameters={_FIELD: current}))
+    coordinator.writes = writes
+    entity.modbus_register = lambda api: getattr(api.system_parameters, _FIELD)
     entity.write_component = "system_parameters"
-    entity.write_field = "set_flow_temperature_area"
-    # Written state is pushed to hass, which does not exist in these unit tests.
-    entity.async_write_ha_state = lambda: None
+    entity.write_field = _FIELD
+    attach(coordinator, entity)
     return entity
+
+
+def _device(entity: StiebelEltronISGNumberEntity) -> FakeComponent:
+    return entity.coordinator._api.system_parameters
 
 
 async def test_number_skips_write_when_value_unchanged() -> None:
@@ -126,55 +117,50 @@ async def test_number_shows_written_value_before_the_next_poll() -> None:
     assert entity.native_value == 12.0
 
 
-async def test_number_repeated_optimistic_value_is_a_noop() -> None:
+async def test_number_repeated_written_value_is_a_noop() -> None:
     """Repeating the visible value must neither write nor delay reconciliation."""
     entity = _make_number(current=10.0)
 
     await entity.async_set_native_value(12.0)
-    entity.coordinator.refresh_generation = 1
     await entity.async_set_native_value(12.0)
 
-    assert entity.coordinator.writes == [
-        ("system_parameters", "set_flow_temperature_area", 12.0)
-    ]
+    assert entity.coordinator.writes == [("system_parameters", _FIELD, 12.0)]
 
-    entity.coordinator._current = 11.0
-    entity.coordinator.last_successful_refresh_generation = 1
-    entity._handle_coordinator_update()
+    setattr(_device(entity), _FIELD, 11.0)
+    await poll(entity.coordinator)
 
     assert entity.native_value == 11.0
 
 
 async def test_number_can_return_to_device_value_before_the_next_poll() -> None:
-    """A correction must be compared with the visible optimistic value."""
+    """A correction must be compared with the visible written value."""
     entity = _make_number(current=10.0)
 
     await entity.async_set_native_value(12.0)
     await entity.async_set_native_value(10.0)
 
     assert entity.coordinator.writes == [
-        ("system_parameters", "set_flow_temperature_area", 12.0),
-        ("system_parameters", "set_flow_temperature_area", 10.0),
+        ("system_parameters", _FIELD, 12.0),
+        ("system_parameters", _FIELD, 10.0),
     ]
     assert entity.native_value == 10.0
 
 
 async def test_number_returns_to_the_device_value_once_polled() -> None:
-    """A poll made after the write must hand the value back to the device."""
+    """Only a poll started after the write hands the value back to the device."""
     entity = _make_number(current=10.0)
-    entity.coordinator.refresh_generation = 1
-    await entity.async_set_native_value(12.0)
 
-    # The controller clamped the value, which a later poll reports.
-    entity.coordinator._current = 11.0
+    async def write_while_polling() -> None:
+        await entity.async_set_native_value(12.0)
+        # The controller clamped the value, which a later poll reports.
+        setattr(_device(entity), _FIELD, 11.0)
 
-    entity.coordinator.last_successful_refresh_generation = 1
-    entity._handle_coordinator_update()
+    # This poll was in flight during the write and may have read the old
+    # registers, so the written value still stands afterwards.
+    await poll(entity.coordinator, during=write_while_polling)
     assert entity.native_value == 12.0
 
-    entity.coordinator.refresh_generation = 2
-    entity.coordinator.last_successful_refresh_generation = 2
-    entity._handle_coordinator_update()
+    await poll(entity.coordinator)
 
     assert entity.native_value == 11.0
 
@@ -183,30 +169,24 @@ async def test_number_uses_the_first_poll_started_after_the_write() -> None:
     """Without an in-flight poll, the next successful poll is authoritative."""
     entity = _make_number(current=10.0)
     await entity.async_set_native_value(12.0)
-    entity.coordinator._current = 11.0
-    entity.coordinator.refresh_generation = 1
-    entity.coordinator.last_successful_refresh_generation = 1
+    setattr(_device(entity), _FIELD, 11.0)
 
-    entity._handle_coordinator_update()
+    await poll(entity.coordinator)
 
     assert entity.native_value == 11.0
 
 
-async def test_number_keeps_optimistic_value_when_refresh_fails() -> None:
+async def test_number_keeps_written_value_when_refresh_fails() -> None:
     """A failed poll has no fresh device value to replace the written value."""
     entity = _make_number(current=10.0)
     await entity.async_set_native_value(12.0)
 
-    entity.coordinator.refresh_generation = 1
-    entity.coordinator.last_update_success = False
-    entity._handle_coordinator_update()
+    await poll(entity.coordinator, success=False)
 
     assert entity.native_value == 12.0
 
-    entity.coordinator._current = 11.0
-    entity.coordinator.last_update_success = True
-    entity.coordinator.last_successful_refresh_generation = 1
-    entity._handle_coordinator_update()
+    setattr(_device(entity), _FIELD, 11.0)
+    await poll(entity.coordinator)
 
     assert entity.native_value == 11.0
 
@@ -214,7 +194,7 @@ async def test_number_keeps_optimistic_value_when_refresh_fails() -> None:
 async def test_number_does_not_assume_a_value_it_did_not_write() -> None:
     """A failed write must not change the reported value."""
     entity = _make_number(current=10.0)
-    entity.coordinator.write_component_value = _failed_write
+    _device(entity).write = AsyncMock(side_effect=RuntimeError("write failed"))
 
     with pytest.raises(RuntimeError, match="write failed"):
         await entity.async_set_native_value(12.0)
@@ -222,9 +202,13 @@ async def test_number_does_not_assume_a_value_it_did_not_write() -> None:
     assert entity.native_value == 10.0
 
 
-async def _failed_write(component, field, value) -> None:
-    """Stand in for a coordinator write that raises its translated error."""
-    raise RuntimeError("write failed")
+async def test_number_publishes_the_written_value_at_once() -> None:
+    """The state is written to hass right after the write, not after the poll."""
+    entity = _make_number(current=10.0)
+
+    await entity.async_set_native_value(12.0)
+
+    assert entity.published_states == 1
 
 
 def _description(key: str):
@@ -385,6 +369,7 @@ async def test_lwz_heating_curve_low_end_keeps_half_degree_steps(key: str) -> No
     entity = _make_number(current=2.0)
     entity.entity_description = description
     entity.write_field = description.write_field
+    setattr(_device(entity), description.write_field, 2.0)
 
     with pytest.raises(ServiceValidationError):
         await entity.async_set_native_value(2.3)

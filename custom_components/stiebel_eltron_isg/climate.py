@@ -1,7 +1,6 @@
 """Climate platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-import logging
 import math
 from typing import Any
 
@@ -23,10 +22,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from pystiebeleltron import ControllerModel
 
 from .const import DOMAIN
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import OptimisticValueMixin, StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import (
+    AnyStiebelEltronDataCoordinator,
+    ControllerFamily,
+    StiebelEltronConfigEntry,
+)
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -119,46 +120,20 @@ LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
 HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
 
 
-def _as_accessor(register_or_accessor: Any) -> Any:
-    """Return an API value accessor callable for descriptor inputs."""
-    if callable(register_or_accessor):
-        return register_or_accessor
-
-    raise TypeError("climate field reference must be a lambda expression")
-
-
 @dataclass(frozen=True, kw_only=True)
 class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    humidity_modbus_register: list[Any]
-    actual_temperature_register: list[Any]
-    eco_target_temp_register: Any
-    comfort_target_temp_register: Any
+    # Room sensors are tried in order; the first one that reports is used.
+    humidity_modbus_register: list[ValueAccessor]
+    actual_temperature_register: list[ValueAccessor]
+    eco_target_temp_register: ValueAccessor
+    comfort_target_temp_register: ValueAccessor
     min_temp: float
     max_temp: float
     write_component: str = "system_parameters"
     eco_target_temp_write_field: str | None = None
     comfort_target_temp_write_field: str | None = None
-
-    def __post_init__(self) -> None:
-        """Convert legacy register tokens into API value accessor lambdas."""
-        object.__setattr__(
-            self,
-            "humidity_modbus_register",
-            [_as_accessor(ref) for ref in self.humidity_modbus_register],
-        )
-        object.__setattr__(
-            self,
-            "actual_temperature_register",
-            [_as_accessor(ref) for ref in self.actual_temperature_register],
-        )
-
-        if not callable(self.eco_target_temp_register):
-            raise TypeError("eco_target_temp_register must be a lambda expression")
-
-        if not callable(self.comfort_target_temp_register):
-            raise TypeError("comfort_target_temp_register must be a lambda expression")
 
 
 WPM_3I_CLIMATE_TYPES = [
@@ -339,58 +314,41 @@ async def async_setup_entry(
     entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
-    """Set up the select platform."""
+    """Set up the climate platform."""
     coordinator = entry.runtime_data
-    entities: list[StiebelEltronWPMClimateEntity | StiebelEltronLWZClimateEntity] = []
-    if coordinator.model == ControllerModel.WPM_3i:
+    entities: list[StiebelEltronISGClimateEntity]
+    if coordinator.family is ControllerFamily.LWZ:
         entities = [
-            StiebelEltronWPMClimateEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in WPM_3I_CLIMATE_TYPES
-        ]
-    elif coordinator.model in (
-        ControllerModel.WPM_3,
-        ControllerModel.WPMsystem,
-        ControllerModel.LWZ_R290,
-    ):
-        entities = [
-            StiebelEltronWPMClimateEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in (
-                WPMSYSTEM_CLIMATE_TYPES
-                if coordinator.model == ControllerModel.WPMsystem
-                else WPM_CLIMATE_TYPES
-            )
+            StiebelEltronLWZClimateEntity(coordinator, entry, description)
+            for description in LWZ_CLIMATE_TYPES
         ]
     else:
+        if coordinator.family is ControllerFamily.WPM_3I:
+            descriptions = WPM_3I_CLIMATE_TYPES
+        elif coordinator.model is ControllerModel.WPMsystem:
+            descriptions = WPMSYSTEM_CLIMATE_TYPES
+        else:
+            descriptions = WPM_CLIMATE_TYPES
         entities = [
-            StiebelEltronLWZClimateEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in LWZ_CLIMATE_TYPES
+            StiebelEltronWPMClimateEntity(coordinator, entry, description)
+            for description in descriptions
         ]
 
     async_add_devices(entities)
 
 
-class StiebelEltronISGClimateEntity(
-    OptimisticValueMixin, StiebelEltronISGEntity, ClimateEntity
-):
+class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     """stiebel_eltron_isg climate class."""
 
     _enable_turn_on_off_backwards_compatibility = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    # The field an assumed target temperature was written to, see
-    # ``target_temperature``.
-    _optimistic_target_field: str | None = None
+    # The controller's raw operating modes and their Home Assistant names.
+    # Several raw modes map to one HVAC mode, so the raw value is what gets
+    # compared and written.
+    _hvac_by_mode: dict[int, HVACMode]
+    _mode_by_hvac: dict[HVACMode, int]
+    _preset_by_mode: dict[int, str]
+    _mode_by_preset: dict[str, int]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.PRESET_MODE
@@ -453,8 +411,13 @@ class StiebelEltronISGClimateEntity(
         The unavailable marker must not be replaced by a real mode: 0 is the
         emergency mode, so a fallback to 0 would show and write as if the heat
         pump were in emergency operation.
+
+        A mode written moments ago counts before the device confirmed it, so a
+        setpoint that follows a mode change goes to the field of the new mode.
         """
-        value = self._read_register(lambda api: api.system_parameters.operating_mode)
+        value = self._read_written_or_device(
+            "operating_mode", lambda api: api.system_parameters.operating_mode
+        )
         return int(value) if value is not None else None
 
     @property
@@ -495,46 +458,85 @@ class StiebelEltronISGClimateEntity(
 
     @property
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach."""
-        # An assumed target only holds for the field it was written to. Once the
-        # operating mode makes the other field the target, it no longer applies,
-        # whoever changed that mode.
+        """Return the temperature we try to reach.
+
+        A written target only holds for the field it was written to. Once the
+        operating mode makes the other field the target, it no longer applies,
+        whoever changed that mode.
+        """
         mode = self.operation_mode
         if mode is None:
             return None
-        if (
-            self._optimistic_value is not None
-            and self._optimistic_target_field == self._target_temp_write_field
-        ):
-            return self._optimistic_value
         if mode == ECO_MODE:
-            return self._read_accessor(self.eco_target_temp_register)
-        return self._read_accessor(self.comfort_target_temp_register)
+            return self._read_written_or_device(
+                self.eco_target_temp_write_field, self.eco_target_temp_register
+            )
+        return self._read_written_or_device(
+            self.comfort_target_temp_write_field, self.comfort_target_temp_register
+        )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         value = kwargs["temperature"]
-        field = self._target_temp_write_field
-        if field is None:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="operating_mode_unknown",
-            )
-        current = self.target_temperature
-        if current is not None and math.isclose(current, value, abs_tol=1e-9):
+        async with self.coordinator.write_lock:
+            # The field depends on the mode, which another entity may be
+            # writing right now, so it is chosen under the same lock.
+            field = self._target_temp_write_field
+            if field is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="operating_mode_unknown",
+                )
+            current = self.target_temperature
+            if current is not None and math.isclose(current, value, abs_tol=1e-9):
+                return
+
+            await self._write_field(field, value)
+
+    async def _async_write_operating_mode(self, new_mode: int | None) -> None:
+        """Write a raw operating mode unless the controller already runs it.
+
+        Several raw modes map to one Home Assistant mode, so the controller
+        value is compared, not the mapped one.
+        """
+        if new_mode is None:
             return
+        async with self.coordinator.write_lock:
+            if self.operation_mode != new_mode:
+                await self._write_field("operating_mode", new_mode)
 
-        await self._write_field(field, value)
-        self._optimistic_target_field = field
-        self._set_optimistic_value(value)
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return current operation ie. heat, cool, idle."""
+        mode = self.operation_mode
+        return self._hvac_by_mode.get(mode) if mode is not None else None
 
-    def _read_accessor(self, accessor: Any) -> float | int | None:
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new operation mode."""
+        await self._async_write_operating_mode(self._mode_by_hvac.get(hvac_mode))
+
+    @property
+    def preset_mode(self) -> str | None:
+        """Return current preset mode."""
+        mode = self.operation_mode
+        return self._preset_by_mode.get(mode) if mode is not None else None
+
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set new target preset mode."""
+        await self._async_write_operating_mode(self._mode_by_preset.get(preset_mode))
+
+    def _read_accessor(self, accessor: ValueAccessor) -> float | int | None:
         """Read a value via accessor callable."""
         return self.coordinator.get_value(accessor)
 
-    def _read_register(self, register: Any) -> float | int | None:
-        """Read a register reference."""
-        return self.coordinator.get_value(register)
+    def _read_written_or_device(
+        self, field: str | None, accessor: ValueAccessor
+    ) -> float | int | None:
+        """Return the value written to ``field`` until the device confirmed it."""
+        pending = self.coordinator.pending_value(self.write_component, field)
+        if pending is not None:
+            return pending
+        return self.coordinator.get_value(accessor)
 
     async def _write_field(self, field: str, value: float | int) -> None:
         """Write a component field reference."""
@@ -547,6 +549,11 @@ class StiebelEltronISGClimateEntity(
 
 class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     """stiebel_eltron_isg climate class for wpm."""
+
+    _hvac_by_mode = WPM_TO_HA_HVAC
+    _mode_by_hvac = HA_TO_WPM_HVAC
+    _preset_by_mode = WPM_TO_HA_PRESET
+    _mode_by_preset = HA_TO_WPM_PRESET
 
     def __init__(
         self,
@@ -566,34 +573,14 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
         ]
         super().__init__(coordinator, config_entry, description)
 
-    @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Return current operation ie. heat, cool, idle."""
-        mode = self.operation_mode
-        return WPM_TO_HA_HVAC.get(mode) if mode is not None else None
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new operation mode."""
-        new_mode = HA_TO_WPM_HVAC.get(hvac_mode)
-        # Several raw modes map to AUTO, so compare the controller value.
-        if new_mode is not None and self.operation_mode != new_mode:
-            await self._write_field("operating_mode", new_mode)
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return current preset mode."""
-        mode = self.operation_mode
-        return WPM_TO_HA_PRESET.get(mode) if mode is not None else None
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new target preset mode."""
-        new_mode = HA_TO_WPM_PRESET.get(preset_mode)
-        if new_mode is not None and self.operation_mode != new_mode:
-            await self._write_field("operating_mode", new_mode)
-
 
 class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     """stiebel_eltron_isg climate class for lwz."""
+
+    _hvac_by_mode = LWZ_TO_HA_HVAC
+    _mode_by_hvac = HA_TO_LWZ_HVAC
+    _preset_by_mode = LWZ_TO_HA_PRESET
+    _mode_by_preset = HA_TO_LWZ_PRESET
 
     def __init__(
         self,
@@ -617,31 +604,6 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
-    def hvac_mode(self) -> HVACMode | None:
-        """Return current operation ie. heat, cool, idle."""
-        mode = self.operation_mode
-        return LWZ_TO_HA_HVAC.get(mode) if mode is not None else None
-
-    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Set new operation mode."""
-        new_mode = HA_TO_LWZ_HVAC.get(hvac_mode)
-        # Several raw modes map to AUTO, so compare the controller value.
-        if new_mode is not None and self.operation_mode != new_mode:
-            await self._write_field("operating_mode", new_mode)
-
-    @property
-    def preset_mode(self) -> str | None:
-        """Return current preset mode."""
-        mode = self.operation_mode
-        return LWZ_TO_HA_PRESET.get(mode) if mode is not None else None
-
-    async def async_set_preset_mode(self, preset_mode: str) -> None:
-        """Set new target preset mode."""
-        new_mode = HA_TO_LWZ_PRESET.get(preset_mode)
-        if new_mode is not None and self.operation_mode != new_mode:
-            await self._write_field("operating_mode", new_mode)
-
-    @property
     def _fan_stage_field(self) -> str:
         """Select the fan stage used by the current operating mode."""
         if self.operation_mode == ECO_MODE:
@@ -654,7 +616,9 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
         field = self._fan_stage_field
-        value = self._read_register(lambda api: getattr(api.system_parameters, field))
+        value = self._read_written_or_device(
+            field, lambda api: getattr(api.system_parameters, field)
+        )
         if value is None:
             return None
         return LWZ_TO_HA_FAN.get(int(value))
@@ -662,5 +626,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         new_mode = HA_TO_LWZ_FAN.get(fan_mode)
-        if new_mode is not None and self.fan_mode != fan_mode:
-            await self._write_field(self._fan_stage_field, new_mode)
+        if new_mode is None:
+            return
+        async with self.coordinator.write_lock:
+            if self.fan_mode != fan_mode:
+                await self._write_field(self._fan_stage_field, new_mode)

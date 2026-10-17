@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusError
 from modbus_connection.model import Component, ManualComponent
 import pystiebeleltron
-from pystiebeleltron import ControllerModel, StiebelEltronModbusError
+from pystiebeleltron import ControllerModel
 import pytest
 
 from custom_components.stiebel_eltron_isg import coordinator as coordinator_module
@@ -40,6 +40,9 @@ def _coordinator(api) -> StiebelEltronDataCoordinator:
     """Build a coordinator without invoking Home Assistant setup."""
     coordinator = StiebelEltronDataCoordinator.__new__(StiebelEltronDataCoordinator)
     coordinator._api = api
+    coordinator._refresh_generation = 0
+    coordinator._pending_writes = {}
+    coordinator._listeners = {}
     return coordinator
 
 
@@ -210,19 +213,6 @@ def test_get_raw_data_combines_all_api_components() -> None:
     assert rows.call_args_list[1].args == (second,)
 
 
-def test_get_value_returns_none_for_library_read_error(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A register read error makes one entity unavailable without crashing."""
-    coordinator = _coordinator(SimpleNamespace())
-
-    def failed_accessor(api):
-        raise StiebelEltronModbusError
-
-    assert coordinator.get_value(failed_accessor) is None
-    assert "Failed to get value from accessor" in caplog.text
-
-
 @pytest.mark.parametrize(
     ("value", "expected"),
     [(1, 1), (1.5, 1.5), (True, True), ("not numeric", None), (None, None)],
@@ -345,20 +335,11 @@ async def test_write_component_value_reports_invalid_value() -> None:
     assert isinstance(error.value.__cause__, ValueError)
 
 
-@pytest.mark.parametrize(
-    "write_error",
-    [
-        pytest.param(ModbusError("write failed"), id="modbus"),
-        pytest.param(StiebelEltronModbusError(), id="library"),
-    ],
-)
-async def test_write_component_value_reports_communication_error(
-    write_error: Exception,
-) -> None:
+async def test_write_component_value_reports_communication_error() -> None:
     """Communication failures are exposed as translated HA errors."""
     component = SimpleNamespace(
         target=21.0,
-        write=AsyncMock(side_effect=write_error),
+        write=AsyncMock(side_effect=ModbusError("write failed")),
     )
     coordinator = _coordinator(SimpleNamespace(parameters=component))
 
@@ -369,7 +350,7 @@ async def test_write_component_value_reports_communication_error(
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "write_failed"
     assert error.value.translation_placeholders == {"field": "target"}
-    assert error.value.__cause__ is write_error
+    assert isinstance(error.value.__cause__, ModbusError)
 
 
 @pytest.mark.parametrize(

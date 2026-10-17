@@ -1,19 +1,18 @@
 """Select platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-import logging
-from typing import Any
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from pystiebeleltron import ControllerModel
 
 from .const import OPERATION_MODE
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import OptimisticValueMixin, StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import (
+    AnyStiebelEltronDataCoordinator,
+    ControllerFamily,
+    StiebelEltronConfigEntry,
+)
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -42,17 +41,10 @@ OPERATION_MODE_LWZ_OPTIONS = {
 class StiebelEltronSelectEntityDescription(SelectEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: Any
+    modbus_register: ValueAccessor
     write_component: str = "system_parameters"
     write_field: str | None = None
     operation_modes: dict[int, str]
-
-    def __post_init__(self) -> None:
-        """Ensure value references are lambda-based."""
-        if callable(self.modbus_register):
-            return
-
-        raise TypeError("modbus_register must be a lambda expression")
 
 
 WPM_SELECT_TYPES = [
@@ -83,33 +75,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data
-
-    entities = []
-    if coordinator.model in (
-        ControllerModel.WPM_3i,
-        ControllerModel.WPM_3,
-        ControllerModel.WPMsystem,
-        ControllerModel.LWZ_R290,
-    ):
-        entities = [
-            StiebelEltronISGSelectEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in WPM_SELECT_TYPES
-        ]
-    else:
-        entities = [
-            StiebelEltronISGSelectEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in LWZ_SELECT_TYPES
-        ]
-
-    async_add_devices(entities)
+    descriptions = (
+        LWZ_SELECT_TYPES
+        if coordinator.family is ControllerFamily.LWZ
+        else WPM_SELECT_TYPES
+    )
+    async_add_devices([
+        StiebelEltronISGSelectEntity(coordinator, entry, description)
+        for description in descriptions
+    ])
 
 
 def get_key_from_value(d: dict[int, str], val: str) -> int | None:
@@ -120,9 +94,7 @@ def get_key_from_value(d: dict[int, str], val: str) -> int | None:
     return None
 
 
-class StiebelEltronISGSelectEntity(
-    OptimisticValueMixin, StiebelEltronISGEntity, SelectEntity
-):
+class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     """stiebel_eltron_isg select class."""
 
     def __init__(
@@ -146,26 +118,26 @@ class StiebelEltronISGSelectEntity(
 
     @property
     def current_option(self) -> str | None:
-        """Return current option."""
-        value = (
-            self._optimistic_value
-            if self._optimistic_value is not None
-            else self.coordinator.get_value(self.modbus_register)
-        )
-        key = int(value) if value is not None else None
-        if key is None:
+        """Return the written option until the device confirmed it, else its own."""
+        value = self.coordinator.pending_value(self.write_component, self.write_field)
+        if value is None:
+            value = self.coordinator.get_value(self.modbus_register)
+        if value is None:
             return None
-        return self._options.get(key)
+        return self._options.get(int(value))
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
         key = get_key_from_value(self._options, option)
-        if key is None or self.write_field is None or self.current_option == option:
+        if key is None or self.write_field is None:
             return
 
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            key,
-        )
-        self._set_optimistic_value(key)
+        async with self.coordinator.write_lock:
+            if self.current_option == option:
+                return
+
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                key,
+            )
