@@ -2437,14 +2437,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/08/64/a99f27d3b4347486c
 
 [[package]]
 name = "pystiebeleltron"
-version = "0.8.0"
+version = "0.9.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "modbus-connection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/df/97a950dadce154eff12b302b224c1c7e82466ad1d8b5e45c7f0ae57079b8/pystiebeleltron-0.8.0.tar.gz", hash = "sha256:1d9e7fb6ba77b599e295c34670fce288eb91e09e8353e3ce163acb9e37f8eb7f", size = 18179, upload-time = "2026-09-18T16:37:07.687Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/57/8f/d3dc05fb41d80c59eaf8da7d4c6e4435a7da1aaaaacdd951a3f986da2382/pystiebeleltron-0.9.2.tar.gz", hash = "sha256:ef666e514e03801c82087777b2f639277ba03204d55efabac20048cb7e863175", size = 20529, upload-time = "2026-10-12T15:03:23.667Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/48/f0/f7626cbdd1988c18263c7ed9719b7a6c02ca156f3dd48ea7f8bf3adb00fb/pystiebeleltron-0.8.0-py3-none-any.whl", hash = "sha256:6105f027508fd5f2f40810192e7f676e43128e40c45d48843d3d27e8e29ad378", size = 22588, upload-time = "2026-09-18T16:37:06.326Z" },
+    { url = "https://files.pythonhosted.org/packages/bb/15/baba5889bb08cb788d47b857bd9e53345ffd5e0323f26665db26d95c8305/pystiebeleltron-0.9.2-py3-none-any.whl", hash = "sha256:58acf22b8b6783763420784c824c1b9415f049cd76134d090ede03d55f68f734", size = 25497, upload-time = "2026-10-12T15:03:22.542Z" },
 ]
 
 [package.optional-dependencies]
@@ -3041,7 +3041,7 @@ requires-dist = [
     { name = "colorlog", specifier = ">=6.12.0" },
     { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.12.3" },
     { name = "pymodbus", specifier = "==3.13.1" },
-    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.8.0" },
+    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.9.2" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.369" },
     { name = "tmodbus", specifier = "==0.6.2" },
 ]
