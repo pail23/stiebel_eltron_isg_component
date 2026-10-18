@@ -22,10 +22,10 @@ The project uses [uv](https://docs.astral.sh/uv/) and [ruff](https://docs.astral
 These are the same commands CI runs, so running them locally first avoids a red pull request:
 
 ```sh
-uv sync --all-extras --dev --prerelease=allow
-uv run --prerelease=allow ruff check .
-uv run --prerelease=allow ruff format . --check
-uv run --prerelease=allow pytest tests
+uv sync --locked --all-extras --dev
+uv run --locked ruff check .
+uv run --locked ruff format . --check
+uv run --locked pytest tests
 ```
 
 If you add or rename an entity, its `translation_key` needs a matching entry in
