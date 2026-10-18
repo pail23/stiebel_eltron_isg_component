@@ -89,6 +89,7 @@ from custom_components.stiebel_eltron_isg.const import (
     TARGET_TEMPERATURE_HK1,
     TARGET_TEMPERATURE_HK3,
 )
+from custom_components.stiebel_eltron_isg.coordinator import CONTROLLER_FAMILIES
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.sensor import (
     ENERGY_DAILY_SENSOR_TYPES,
@@ -104,7 +105,6 @@ from custom_components.stiebel_eltron_isg.sensor import (
     WPMSYSTEM_RUNTIME_SENSOR_TYPES,
     WPMSYSTEM_SENSOR_TYPES,
     StiebelEltronISGSensor,
-    StiebelEltronSensorEntityDescription,
     async_setup_entry,
     window_efficiency,
 )
@@ -245,17 +245,10 @@ def test_runtime_sensors_use_duration_device_class() -> None:
     )
 
 
-def test_sensor_description_rejects_non_callable_register() -> None:
-    """Register references must use the API accessor contract."""
-    with pytest.raises(TypeError, match="must be a lambda expression"):
-        StiebelEltronSensorEntityDescription(
-            key="invalid",
-            modbus_register="legacy register token",
-        )
-
-
 async def _setup_sensor_keys(model: ControllerModel) -> list[str]:
-    entry = SimpleNamespace(runtime_data=SimpleNamespace(model=model))
+    entry = SimpleNamespace(
+        runtime_data=SimpleNamespace(model=model, family=CONTROLLER_FAMILIES[model])
+    )
     add_entities = MagicMock()
     with patch.object(
         sensor_module,
@@ -624,7 +617,9 @@ async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
     model, daily_descriptions
 ) -> None:
     """Day registers must not invent a new reset timestamp on each zero poll."""
-    coordinator = SimpleNamespace(model=model, device_info={})
+    coordinator = SimpleNamespace(
+        model=model, family=CONTROLLER_FAMILIES[model], device_info={}
+    )
     entry = SimpleNamespace(runtime_data=coordinator, entry_id="test")
     entities = []
 

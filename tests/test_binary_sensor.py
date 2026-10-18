@@ -9,6 +9,7 @@ import pytest
 
 from custom_components.stiebel_eltron_isg import binary_sensor
 from custom_components.stiebel_eltron_isg.const import CIRCULATION_PUMP
+from custom_components.stiebel_eltron_isg.coordinator import CONTROLLER_FAMILIES
 from custom_components.stiebel_eltron_isg.switch import SWITCH_TYPES
 
 
@@ -40,7 +41,9 @@ async def test_circulation_pump_is_only_added_for_supported_models(
     expected: bool,
 ) -> None:
     """Only controllers exposing the register get the status entity."""
-    entry = SimpleNamespace(runtime_data=SimpleNamespace(model=model))
+    entry = SimpleNamespace(
+        runtime_data=SimpleNamespace(model=model, family=CONTROLLER_FAMILIES[model])
+    )
     async_add_entities = MagicMock()
 
     with patch.object(

@@ -22,12 +22,12 @@ from custom_components.stiebel_eltron_isg.climate import (
     CLIMATE_HK_2,
     ECO_MODE,
     LWZ_CLIMATE_TYPES,
-    StiebelEltronClimateEntityDescription,
     StiebelEltronISGClimateEntity,
     StiebelEltronLWZClimateEntity,
     StiebelEltronWPMClimateEntity,
 )
 from custom_components.stiebel_eltron_isg.const import DOMAIN, UNIT_ID
+from custom_components.stiebel_eltron_isg.coordinator import CONTROLLER_FAMILIES
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from tests.pending import FakeApi, attach, make_coordinator, poll
 
@@ -122,48 +122,13 @@ def _make_wpm_climate(operating_mode: int | None) -> StiebelEltronWPMClimateEnti
     return entity
 
 
-def test_climate_description_rejects_legacy_register_tokens() -> None:
-    """All descriptor inputs must use callable API accessors."""
-
-    def valid(api):
-        return 1
-
-    with pytest.raises(TypeError, match="climate field reference"):
-        StiebelEltronClimateEntityDescription(
-            key="invalid-list",
-            humidity_modbus_register=["legacy"],
-            actual_temperature_register=[valid],
-            eco_target_temp_register=valid,
-            comfort_target_temp_register=valid,
-            min_temp=5,
-            max_temp=30,
-        )
-    with pytest.raises(TypeError, match="eco_target_temp_register"):
-        StiebelEltronClimateEntityDescription(
-            key="invalid-eco",
-            humidity_modbus_register=[valid],
-            actual_temperature_register=[valid],
-            eco_target_temp_register="legacy",
-            comfort_target_temp_register=valid,
-            min_temp=5,
-            max_temp=30,
-        )
-    with pytest.raises(TypeError, match="comfort_target_temp_register"):
-        StiebelEltronClimateEntityDescription(
-            key="invalid-comfort",
-            humidity_modbus_register=[valid],
-            actual_temperature_register=[valid],
-            eco_target_temp_register=valid,
-            comfort_target_temp_register="legacy",
-            min_temp=5,
-            max_temp=30,
-        )
-
-
 async def test_setup_uses_wpm_3i_descriptions() -> None:
     """WPM 3i receives its narrower climate description set."""
     entry = SimpleNamespace(
-        runtime_data=SimpleNamespace(model=ControllerModel.WPM_3i),
+        runtime_data=SimpleNamespace(
+            model=ControllerModel.WPM_3i,
+            family=CONTROLLER_FAMILIES[ControllerModel.WPM_3i],
+        ),
     )
     add_entities = MagicMock()
 

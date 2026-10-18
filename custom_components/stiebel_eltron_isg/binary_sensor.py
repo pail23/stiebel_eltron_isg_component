@@ -1,7 +1,6 @@
 """Binary sensor platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -72,8 +71,12 @@ from .const import (
     SWITCHING_PROGRAM_ENABLED,
     VENTILATION,
 )
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import StiebelEltronISGEntity
+from .coordinator import (
+    AnyStiebelEltronDataCoordinator,
+    ControllerFamily,
+    StiebelEltronConfigEntry,
+)
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -82,7 +85,7 @@ PARALLEL_UPDATES = 1
 class StiebelEltronBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: Any
+    modbus_register: ValueAccessor
     bit_number: int = 0
 
 
@@ -478,6 +481,13 @@ LWZ_BINARY_SENSOR_TYPES = [
 ]
 
 
+_BINARY_SENSOR_TYPES = {
+    ControllerFamily.WPM_3I: WPM_3I_BINARY_SENSOR_TYPES,
+    ControllerFamily.WPM: WPM_BINARY_SENSOR_TYPES,
+    ControllerFamily.LWZ: LWZ_BINARY_SENSOR_TYPES,
+}
+
+
 async def async_setup_entry(
     _hass: HomeAssistant,
     entry: StiebelEltronConfigEntry,
@@ -485,50 +495,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up the binary_sensor platform."""
     coordinator = entry.runtime_data
-
-    if coordinator.model == ControllerModel.WPM_3i:
-        entities = [
-            StiebelEltronISGBinarySensor(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in WPM_3I_BINARY_SENSOR_TYPES
-        ]
-    elif coordinator.model in (
-        ControllerModel.WPM_3,
-        ControllerModel.WPMsystem,
-        ControllerModel.LWZ_R290,
-    ):
-        entities = [
-            StiebelEltronISGBinarySensor(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in WPM_BINARY_SENSOR_TYPES
-        ]
-    else:
-        entities = [
-            StiebelEltronISGBinarySensor(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in LWZ_BINARY_SENSOR_TYPES
-        ]
-
+    descriptions = list(_BINARY_SENSOR_TYPES[coordinator.family])
     if coordinator.model in (ControllerModel.LWZ_R290, ControllerModel.WPMsystem):
-        entities.extend(
-            StiebelEltronISGBinarySensor(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in CIRCULATION_PUMP_BINARY_SENSOR_TYPES
-        )
+        descriptions.extend(CIRCULATION_PUMP_BINARY_SENSOR_TYPES)
 
-    async_add_devices(entities)
+    async_add_devices([
+        StiebelEltronISGBinarySensor(coordinator, entry, description)
+        for description in descriptions
+    ])
 
 
 class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):

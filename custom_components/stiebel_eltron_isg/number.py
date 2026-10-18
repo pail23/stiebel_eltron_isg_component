@@ -1,9 +1,7 @@
 """Sensor number for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-import logging
 import math
-from typing import Any
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -57,10 +55,12 @@ from .const import (
     MANUAL_HC_SET_HK2,
     MANUAL_WATER_TEMPERATURE_TARGET,
 )
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import (
+    AnyStiebelEltronDataCoordinator,
+    ControllerFamily,
+    StiebelEltronConfigEntry,
+)
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -70,17 +70,10 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     entity_category: EntityCategory | None = EntityCategory.CONFIG
-    modbus_register: Any
+    modbus_register: ValueAccessor
     write_component: str = "system_parameters"
     write_field: str | None = None
     enforce_step: bool = False
-
-    def __post_init__(self) -> None:
-        """Ensure value references are lambda-based."""
-        if callable(self.modbus_register):
-            return
-
-        raise TypeError("modbus_register must be a lambda expression")
 
 
 def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode:
@@ -583,51 +576,29 @@ NUMBER_TYPES_LWZ = [
 ]
 
 
+_NUMBER_TYPES = {
+    ControllerFamily.WPM_3I: NUMBER_TYPES_WPM_3I,
+    ControllerFamily.WPM: NUMBER_TYPES_WPM,
+    ControllerFamily.LWZ: NUMBER_TYPES_LWZ,
+}
+
+
 async def async_setup_entry(
-    _hass: HomeAssistant,  # Unused function argument: `hass`
+    _hass: HomeAssistant,
     entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
-    """Set up the select platform."""
+    """Set up the number platform."""
     coordinator = entry.runtime_data
-
-    entities = []
-    if coordinator.model == ControllerModel.WPM_3i:
-        entities = [
-            StiebelEltronISGNumberEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in NUMBER_TYPES_WPM_3I
-        ]
-    elif coordinator.model in (
-        ControllerModel.WPM_3,
-        ControllerModel.WPMsystem,
-        ControllerModel.LWZ_R290,
-    ):
-        entities = [
-            StiebelEltronISGNumberEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in (
-                NUMBER_TYPES_WPMSYSTEM
-                if coordinator.model == ControllerModel.WPMsystem
-                else NUMBER_TYPES_WPM
-            )
-        ]
-    else:
-        entities = [
-            StiebelEltronISGNumberEntity(
-                coordinator,
-                entry,
-                description,
-            )
-            for description in NUMBER_TYPES_LWZ
-        ]
-    async_add_devices(entities)
+    descriptions = (
+        NUMBER_TYPES_WPMSYSTEM
+        if coordinator.model is ControllerModel.WPMsystem
+        else _NUMBER_TYPES[coordinator.family]
+    )
+    async_add_devices([
+        StiebelEltronISGNumberEntity(coordinator, entry, description)
+        for description in descriptions
+    ])
 
 
 class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):

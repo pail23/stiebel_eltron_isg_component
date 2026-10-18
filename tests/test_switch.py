@@ -10,10 +10,7 @@ from custom_components.stiebel_eltron_isg.const import (
     SG_READY_INPUT_1,
     SG_READY_INPUT_2,
 )
-from custom_components.stiebel_eltron_isg.switch import (
-    StiebelEltronISGSwitch,
-    StiebelEltronSwitchEntityDescription,
-)
+from custom_components.stiebel_eltron_isg.switch import StiebelEltronISGSwitch
 from tests.pending import FakeApi, attach, make_coordinator, poll
 
 
@@ -51,15 +48,6 @@ def test_write_only_switch_available_when_update_succeeded(key: str) -> None:
     entity = _make_switch(key, last_update_success=True)
 
     assert entity.available is True
-
-
-def test_switch_description_rejects_non_callable_register() -> None:
-    """Register references must use the API accessor contract."""
-    with pytest.raises(TypeError, match="must be a lambda expression"):
-        StiebelEltronSwitchEntityDescription(
-            key="invalid",
-            modbus_register="legacy register token",
-        )
 
 
 @pytest.mark.parametrize(

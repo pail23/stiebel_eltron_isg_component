@@ -1,6 +1,6 @@
 """Tests for the STIEBEL ELTRON integration."""
 
-from types import SimpleNamespace
+from enum import Enum
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.modbus import async_get_temporary_unit, async_get_unit
@@ -292,7 +292,7 @@ async def test_async_setup_entry_rejects_unhandled_model(
 ) -> None:
     """A detected model without a coordinator must fail with a repair."""
     assert mock_modbus_connection.connected is True
-    mock_get_controller_model.return_value = SimpleNamespace(name="FUTURE", value=166)
+    mock_get_controller_model.return_value = Enum("FutureModel", {"FUTURE": 166}).FUTURE
     mock_config_entry.add_to_hass(hass)
 
     with (
