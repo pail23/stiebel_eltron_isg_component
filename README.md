@@ -106,6 +106,21 @@ the total register and retains the fractional remainder in the day register.
 Treating that remainder as a reset to zero would count part of the energy
 twice.
 
+A WPMsystem has been seen to add the day value to the total register one
+poll before it resets the day register. Since
+[ThyMYthOS/python-stiebel-eltron#108](https://github.com/ThyMYthOS/python-stiebel-eltron/pull/108)
+the cumulative counter holds such a rise of the total back until the day
+register resets, so the day is counted once. Before that fix the counter ran
+ahead by up to the previous day's value until the current day caught up, and
+on the first restart with the fix it starts from the registers again, lower by
+that amount, as a restart did before while the counter was ahead. Home
+Assistant subtracts a drop of up to 10 % from that hour's statistics, which
+removes the extra energy, and treats a larger drop as a counter reset, which
+keeps it.
+Restarting in the evening, once today's consumption exceeds yesterday's,
+avoids the drop. Wrong hours can be corrected under **Developer Tools →
+Statistics → Adjust sum**.
+
 The separate **Total** sensors remain cumulative alternatives. Which energy
 entities are available depends on the connected controller.
 
