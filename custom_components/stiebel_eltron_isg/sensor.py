@@ -226,9 +226,9 @@ def create_power_consumption_entity_description(
 
     Like the heat windows below, these carry no state class. Whether a window
     rolls continuously or resets is not established, and no state class fits a
-    rolling sum: ``TOTAL`` would book the energy that drops out of the window
-    as if it had been consumed, and ``TOTAL_INCREASING`` would read every
-    decrease as a counter reset. The "previous 12 months" register suggests
+    rolling sum: ``TOTAL`` would record the net change of the window, so the
+    energy that drops out of it counts negative, and ``TOTAL_INCREASING``
+    would read every decrease as a counter reset. The "previous 12 months" register suggests
     bucketed rolling sums rather than daily counters.
 
     The unit is selected per window: the library sums each register pair as

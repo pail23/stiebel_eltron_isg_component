@@ -468,8 +468,8 @@ def test_wpm_exposes_power_consumption_statistics() -> None:
         assert desc.modbus_register(api) == value
         assert desc.native_unit_of_measurement == unit
         assert desc.device_class == SensorDeviceClass.ENERGY
-        # Rolling windows fit no state class: TOTAL would book the energy that
-        # drops out of a window, TOTAL_INCREASING would read it as a reset.
+        # Rolling windows fit no state class: TOTAL would sum the net change of
+        # a window, TOTAL_INCREASING would read a decrease as a reset.
         assert desc.state_class is None
 
 
