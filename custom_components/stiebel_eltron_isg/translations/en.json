@@ -70,7 +70,7 @@
             "message": "The setting {field} could not be written because communication with the heat pump failed."
         },
         "operating_mode_unknown": {
-            "message": "The target temperature cannot be set while the operating mode of the heat pump is unknown."
+            "message": "This setting cannot be changed while the operating mode of the heat pump is unknown."
         }
     },
     "issues": {

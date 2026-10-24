@@ -4,8 +4,6 @@ For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
-from collections.abc import Callable
-
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -16,9 +14,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
-from modbus_connection import ModbusTcpParams, ModbusUnit
+from modbus_connection import ModbusTcpParams
 from pystiebeleltron import (
-    ControllerModel,
     StiebelEltronModbusError,
     UnknownControllerModelError,
     get_controller_model,
@@ -27,11 +24,10 @@ from pystiebeleltron import (
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
 from .coordinator import (
     CONTROLLER_FAMILIES,
-    AnyStiebelEltronDataCoordinator,
-    ControllerFamily,
     StiebelEltronConfigEntry,
+    StiebelEltronDataCoordinator,
+    create_api,
 )
-from .lwz_coordinator import StiebelEltronModbusLWZDataCoordinator
 from .migration import (
     async_migrate_device_identifier,
     async_migrate_unique_ids,
@@ -39,8 +35,6 @@ from .migration import (
     async_remove_unsupported_wpmsystem_runtime_sensors,
     duplicate_entity_issue_id,
 )
-from .wpm3i_coordinator import StiebelEltronModbusWPM3iDataCoordinator
-from .wpm_coordinator import StiebelEltronModbusWPMDataCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -55,17 +49,6 @@ _PLATFORMS: list[Platform] = [
 ]
 
 _ISSUE_TRACKER = "https://github.com/pail23/stiebel_eltron_isg_component/issues"
-
-type _CoordinatorFactory = Callable[
-    [HomeAssistant, StiebelEltronConfigEntry, ControllerModel, ModbusUnit, str],
-    AnyStiebelEltronDataCoordinator,
-]
-
-_COORDINATORS: dict[ControllerFamily, _CoordinatorFactory] = {
-    ControllerFamily.WPM_3I: StiebelEltronModbusWPM3iDataCoordinator,
-    ControllerFamily.WPM: StiebelEltronModbusWPMDataCoordinator,
-    ControllerFamily.LWZ: StiebelEltronModbusLWZDataCoordinator,
-}
 
 
 def _unsupported_controller_issue_id(entry: StiebelEltronConfigEntry) -> str:
@@ -148,7 +131,9 @@ async def async_setup_entry(
             translation_key="unsupported_controller",
             translation_placeholders={"model_id": str(model.value)},
         )
-    coordinator = _COORDINATORS[family](hass, entry, model, unit, host)
+    coordinator = StiebelEltronDataCoordinator(
+        hass, entry, create_api(family, unit), model, host
+    )
 
     # A library and integration update can add the model while this repair still
     # exists from an earlier setup attempt.

@@ -8,9 +8,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import OPERATION_MODE
 from .coordinator import (
-    AnyStiebelEltronDataCoordinator,
     ControllerFamily,
     StiebelEltronConfigEntry,
+    StiebelEltronDataCoordinator,
 )
 from .entity import StiebelEltronISGEntity, ValueAccessor
 
@@ -99,7 +99,7 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSelectEntityDescription,
     ):

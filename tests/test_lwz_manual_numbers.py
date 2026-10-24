@@ -35,7 +35,7 @@ def lwz_number_setup(
         unit.on_write(writes.append)
         mock_config_entry.add_to_hass(hass)
         with patch(
-            "custom_components.stiebel_eltron_isg.lwz_coordinator.LwzStiebelEltronAPI",
+            "custom_components.stiebel_eltron_isg.coordinator.LwzStiebelEltronAPI",
             LwzStiebelEltronAPI,
         ):
             assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

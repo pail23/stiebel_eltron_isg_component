@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
@@ -33,7 +34,7 @@ def lwz_fan_setup(
         unit.on_write(writes.append)
         mock_config_entry.add_to_hass(hass)
         with patch(
-            "custom_components.stiebel_eltron_isg.lwz_coordinator.LwzStiebelEltronAPI",
+            "custom_components.stiebel_eltron_isg.coordinator.LwzStiebelEltronAPI",
             LwzStiebelEltronAPI,
         ):
             assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -101,3 +102,25 @@ async def test_manual_stage_unavailable_and_mode_change(
     await coordinator.async_refresh()
     assert hass.states.get(entity_id).attributes["fan_mode"] == "low"
     assert unit.holding[1020] == 2
+
+
+async def test_unknown_mode_hides_the_fan_and_rejects_writes(
+    hass, mock_config_entry, lwz_fan_setup
+):
+    """Without a known mode there is no stage to show, and none to write to.
+
+    Every operating mode runs its own fan stage. Falling back to the day stage
+    would show the wrong one and send the write to it.
+    """
+    unit, writes, entity_id = await lwz_fan_setup(ControllerModel.LWZ, 0x8000)
+    assert hass.states.get(entity_id).attributes.get("fan_mode") is None
+
+    with pytest.raises(HomeAssistantError, match="operating mode"):
+        await hass.services.async_call(
+            "climate",
+            "set_fan_mode",
+            {"entity_id": entity_id, "fan_mode": "medium"},
+            blocking=True,
+        )
+    assert writes == []
+    assert unit.holding[1019] == 1
