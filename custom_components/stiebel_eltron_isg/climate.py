@@ -23,9 +23,9 @@ from pystiebeleltron import ControllerModel
 
 from .const import DOMAIN
 from .coordinator import (
-    AnyStiebelEltronDataCoordinator,
     ControllerFamily,
     StiebelEltronConfigEntry,
+    StiebelEltronDataCoordinator,
 )
 from .entity import StiebelEltronISGEntity, ValueAccessor
 
@@ -340,7 +340,6 @@ async def async_setup_entry(
 class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     """stiebel_eltron_isg climate class."""
 
-    _enable_turn_on_off_backwards_compatibility = False
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     # The controller's raw operating modes and their Home Assistant names.
     # Several raw modes map to one HVAC mode, so the raw value is what gets
@@ -358,7 +357,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
@@ -367,8 +366,6 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
         self._attr_min_temp = description.min_temp
         self._attr_max_temp = description.max_temp
-        self._attr_target_temperature_low = description.min_temp
-        self._attr_target_temperature_high = description.max_temp
         self._attr_target_temperature_step = 0.1
 
         super().__init__(coordinator, config_entry)
@@ -557,7 +554,7 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
@@ -584,7 +581,7 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronClimateEntityDescription,
     ) -> None:
@@ -604,11 +601,18 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
 
     @property
-    def _fan_stage_field(self) -> str:
-        """Select the fan stage used by the current operating mode."""
-        if self.operation_mode == ECO_MODE:
+    def _fan_stage_field(self) -> str | None:
+        """Return the fan stage field of the current operating mode.
+
+        None while the mode is unknown: every mode runs its own stage, so there
+        is no field to show, and none that a write could safely go to.
+        """
+        mode = self.operation_mode
+        if mode is None:
+            return None
+        if mode == ECO_MODE:
             return "night_stage"
-        if self.operation_mode == MANUAL_MODE:
+        if mode == MANUAL_MODE:
             return "manual_stage"
         return "day_stage"
 
@@ -616,6 +620,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     def fan_mode(self) -> str | None:
         """Return the fan setting. Requires ClimateEntityFeature.FAN_MODE."""
         field = self._fan_stage_field
+        if field is None:
+            return None
         value = self._read_written_or_device(
             field, lambda api: getattr(api.system_parameters, field)
         )
@@ -629,5 +635,11 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         if new_mode is None:
             return
         async with self.coordinator.write_lock:
+            field = self._fan_stage_field
+            if field is None:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="operating_mode_unknown",
+                )
             if self.fan_mode != fan_mode:
-                await self._write_field(self._fan_stage_field, new_mode)
+                await self._write_field(field, new_mode)

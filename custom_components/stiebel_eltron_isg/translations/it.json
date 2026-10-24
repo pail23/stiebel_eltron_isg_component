@@ -65,7 +65,7 @@
             "message": "The setting {field} could not be written because communication with the heat pump failed."
         },
         "operating_mode_unknown": {
-            "message": "La temperatura di riferimento non può essere impostata finché la modalità di funzionamento della pompa di calore è sconosciuta."
+            "message": "Questa impostazione non può essere modificata finché la modalità di funzionamento della pompa di calore è sconosciuta."
         }
     },
     "issues": {

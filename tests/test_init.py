@@ -34,9 +34,6 @@ from custom_components.stiebel_eltron_isg.const import (
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.migration import duplicate_entity_issue_id
 from custom_components.stiebel_eltron_isg.sensor import WPM_SENSOR_TYPES
-from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
-    StiebelEltronModbusWPM3iDataCoordinator,
-)
 
 
 async def test_async_setup_entry_success(
@@ -52,21 +49,19 @@ async def test_async_setup_entry_success(
     assert "modbus" in hass.config.components
 
 
-async def test_async_setup_entry_selects_wpm_3i_coordinator(
+async def test_async_setup_entry_selects_wpm_3i_api(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
+    mock_wpm_3i_api: MagicMock,
 ) -> None:
-    """WPM 3i controllers must use their model-specific API coordinator."""
+    """WPM 3i controllers must be read through their model-specific API."""
     mock_get_controller_model.return_value = ControllerModel.WPM_3i
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert isinstance(
-        mock_config_entry.runtime_data,
-        StiebelEltronModbusWPM3iDataCoordinator,
-    )
+    assert mock_config_entry.runtime_data._api is mock_wpm_3i_api
 
 
 async def test_setup_registers_every_wpm_sensor(

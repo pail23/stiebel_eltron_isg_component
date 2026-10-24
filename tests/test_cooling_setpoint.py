@@ -57,7 +57,7 @@ async def test_wpmsystem_cooling_setpoint_reads_register_1603(
     mock_get_controller_model.return_value = ControllerModel.WPMsystem
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm_coordinator.WpmStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.WpmStiebelEltronAPI",
         return_value=api,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

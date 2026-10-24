@@ -76,15 +76,15 @@ async def test_blueprint_selector_matches_only_fault_entity(
     mock_get_controller_model.return_value = model
     mock_config_entry.add_to_hass(hass)
     if model in (ControllerModel.LWZ, ControllerModel.LWZ_x04_SOL):
-        module, api_class = "lwz_coordinator", LwzStiebelEltronAPI
+        api_class = LwzStiebelEltronAPI
     elif model == ControllerModel.WPM_3i:
-        module, api_class = "wpm3i_coordinator", Wpm3iStiebelEltronAPI
+        api_class = Wpm3iStiebelEltronAPI
     else:
-        module, api_class = "wpm_coordinator", WpmStiebelEltronAPI
+        api_class = WpmStiebelEltronAPI
     api = api_class(MockModbusConnection().for_unit(1))
     api.async_update = AsyncMock()
     with patch(
-        f"custom_components.stiebel_eltron_isg.{module}.{api_class.__name__}",
+        f"custom_components.stiebel_eltron_isg.coordinator.{api_class.__name__}",
         return_value=api,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
