@@ -518,6 +518,12 @@
             },
             "extract_air_temperature": {
                 "name": "Température air extrait"
+            },
+            "estimated_water_inverter_cop_heating_hp_1": {
+                "name": "Estimated water/inverter COP heating HP1"
+            },
+            "estimated_water_inverter_cop_dhw_hp_1": {
+                "name": "Estimated water/inverter COP hot water HP1"
             }
         },
         "binary_sensor": {
