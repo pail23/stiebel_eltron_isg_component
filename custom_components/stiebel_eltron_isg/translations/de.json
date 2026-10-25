@@ -482,6 +482,9 @@
             "compressor_heating_hp_1": {
                 "name": "Verdichter Heizung Wärmepumpe 1"
             },
+            "compressor_heating_water_hp_1": {
+                "name": "Verdichter Warmwasser Wärmepumpe 1"
+            },
             "cooling_runtime_hp_1": {
                 "name": "Kühlbetrieb Laufzeit Wärmepumpe 1"
             },

@@ -477,6 +477,9 @@
             "compressor_heating_hp_1": {
                 "name": "Compressor aquecimento bomba de calor 1"
             },
+            "compressor_heating_water_hp_1": {
+                "name": "Compressor AQS bomba de calor 1"
+            },
             "cooling_runtime_hp_1": {
                 "name": "Tempo arrefecimento bomba de calor 1"
             },

@@ -158,10 +158,11 @@ shows 0.00. The three water heating efficiency sensors follow the same rule
 with the water heating windows.
 
 WPMsystem also offers runtime counters: **Compressor Heating Heat Pump 1**,
-**Cooling Runtime Heat Pump 1**, and **NHZ 1 Runtime**, **NHZ 2 Runtime** and
-**NHZ 1/2 Runtime** for the electric reheating stages. On a cascade, the first
-two count heat pump 1 only. A hot water runtime is not offered yet because it
-has not been verified on hardware.
+**Compressor Heating Water Heat Pump 1**, **Cooling Runtime Heat Pump 1**, and
+**NHZ 1 Runtime**, **NHZ 2 Runtime** and **NHZ 1/2 Runtime** for the electric
+reheating stages. On a cascade, the first three count heat pump 1 only. An
+installation that heats its hot water with a separate DHW heat pump does not
+serve the hot water counter, so that sensor stays unavailable there.
 
 ## Automation example
 

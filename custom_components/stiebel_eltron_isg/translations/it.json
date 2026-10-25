@@ -477,6 +477,9 @@
             "compressor_heating_hp_1": {
                 "name": "Compressore riscaldamento pompa di calore 1"
             },
+            "compressor_heating_water_hp_1": {
+                "name": "Compressore acqua calda pompa di calore 1"
+            },
             "cooling_runtime_hp_1": {
                 "name": "Tempo raffrescamento pompa di calore 1"
             },

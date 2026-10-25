@@ -482,6 +482,9 @@
             "compressor_heating_hp_1": {
                 "name": "Compressor Heating Heat Pump 1"
             },
+            "compressor_heating_water_hp_1": {
+                "name": "Compressor Heating Water Heat Pump 1"
+            },
             "cooling_runtime_hp_1": {
                 "name": "Cooling Runtime Heat Pump 1"
             },

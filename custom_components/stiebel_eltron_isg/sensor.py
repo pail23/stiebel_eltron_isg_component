@@ -50,6 +50,7 @@ from .const import (
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_HP_1,
     COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_HEATING_WATER_HP_1,
     COMPRESSOR_SPEED,
     COMPRESSOR_STARTS,
     CONSUMED_COOLING_12M,
@@ -1433,8 +1434,10 @@ WPMSYSTEM_DHW_EFFICIENCY_SENSOR_TYPES = [
 # the NHZ counters under the reheating stages, without a heat pump; the heat
 # pump 2 block has no NHZ entries. The VD counters therefore get their own
 # keys instead of the hidden aggregate ones, since on a cascade they cover
-# heat pump 1 only. vd_dhw_hp_1 (3644) is left out: the checked installation
-# has a separate DHW heat pump and reads 0x8000 there.
+# heat pump 1 only. vd_dhw_hp_1 (3644) reads 0x8000 on an installation with
+# a separate DHW heat pump; a second WPMsystem, which heats its hot water with
+# heat pump 1, serves it and shows the same hours as VD WARMWASSER on that
+# page. The entity therefore follows the sentinel like the other counters.
 #
 # These are new entities without recorded statistics, so they can use the
 # state class of an ever-growing counter from the start. The older runtime
@@ -1444,6 +1447,10 @@ WPMSYSTEM_RUNTIME_SENSOR_TYPES = [
     create_runtime_entity_description(key, register, SensorStateClass.TOTAL_INCREASING)
     for key, register in (
         (COMPRESSOR_HEATING_HP_1, lambda api: api.extended_energy_data.vd_heating_hp_1),
+        (
+            COMPRESSOR_HEATING_WATER_HP_1,
+            lambda api: api.extended_energy_data.vd_dhw_hp_1,
+        ),
         (COOLING_RUNTIME_HP_1, lambda api: api.energy_data.vd_cooling_x_hp_1),
         (NHZ_1_RUNTIME, lambda api: api.energy_data.nhz_1_reheating),
         (NHZ_2_RUNTIME, lambda api: api.energy_data.nhz_2_reheating),
