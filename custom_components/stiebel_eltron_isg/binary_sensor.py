@@ -72,9 +72,9 @@ from .const import (
     VENTILATION,
 )
 from .coordinator import (
-    AnyStiebelEltronDataCoordinator,
     ControllerFamily,
     StiebelEltronConfigEntry,
+    StiebelEltronDataCoordinator,
 )
 from .entity import StiebelEltronISGEntity, ValueAccessor
 
@@ -510,7 +510,7 @@ class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronBinarySensorEntityDescription,
     ) -> None:

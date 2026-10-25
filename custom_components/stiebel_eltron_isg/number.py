@@ -56,9 +56,9 @@ from .const import (
     MANUAL_WATER_TEMPERATURE_TARGET,
 )
 from .coordinator import (
-    AnyStiebelEltronDataCoordinator,
     ControllerFamily,
     StiebelEltronConfigEntry,
+    StiebelEltronDataCoordinator,
 )
 from .entity import StiebelEltronISGEntity, ValueAccessor
 
@@ -608,7 +608,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronNumberEntityDescription,
     ):

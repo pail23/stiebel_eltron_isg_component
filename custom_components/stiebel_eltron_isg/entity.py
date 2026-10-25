@@ -5,7 +5,7 @@ from typing import Any
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
 
 def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
@@ -14,11 +14,11 @@ def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
 
 
 # Reads one value from the model-specific API client. The client type is
-# erased to Any at this boundary, see AnyStiebelEltronDataCoordinator.
+# erased to Any at this boundary, see StiebelEltronDataCoordinator.get_value.
 type ValueAccessor = Callable[[Any], float | int | None]
 
 
-class StiebelEltronISGEntity(CoordinatorEntity[AnyStiebelEltronDataCoordinator]):
+class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
     """stiebel_eltron_isg entity base class."""
 
     _attr_has_entity_name = True
@@ -26,7 +26,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[AnyStiebelEltronDataCoordinator])
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
     ):
         """Initialize the entity base class."""

@@ -65,7 +65,7 @@
             "message": "The setting {field} could not be written because communication with the heat pump failed."
         },
         "operating_mode_unknown": {
-            "message": "Cieľovú teplotu nie je možné nastaviť, kým nie je známy prevádzkový režim tepelného čerpadla."
+            "message": "Toto nastavenie nie je možné zmeniť, kým nie je známy prevádzkový režim tepelného čerpadla."
         }
     },
     "issues": {

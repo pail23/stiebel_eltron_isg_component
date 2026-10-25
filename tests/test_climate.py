@@ -189,7 +189,7 @@ async def test_wpm_3i_hk2_reads_and_writes_its_own_target(
     )
 
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm3i_coordinator.Wpm3iStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.Wpm3iStiebelEltronAPI",
         Wpm3iStiebelEltronAPI,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -302,7 +302,7 @@ async def test_unknown_operating_mode_still_takes_a_mode_change_through_services
     mock_config_entry.add_to_hass(hass)
 
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm3i_coordinator.Wpm3iStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.Wpm3iStiebelEltronAPI",
         Wpm3iStiebelEltronAPI,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
