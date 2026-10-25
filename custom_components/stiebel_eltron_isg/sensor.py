@@ -1395,6 +1395,37 @@ WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES = [
     ),
 ]
 
+# Same window ratio for water heating. Reported on a WPMsystem against the ISG
+# ENERGIEBILANZ page in the same minute: 1205 kWh / 320 kWh = 3.77 for the last
+# 12 months, as displayed. The integration uses the ISG's own efficiency
+# registers for LWZ only, so WPMsystem computes it like heating and cooling.
+WPMSYSTEM_DHW_EFFICIENCY_SENSOR_TYPES = [
+    create_efficiency_entity_description(
+        EFFICIENCY_DHW_1_24_H,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_dhw_1_24_h__wh_wh,
+            api.extended_energy_data.dhw_24h,
+        ),
+        SensorStateClass.MEASUREMENT,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_DHW_1_12_M,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_dhw_1_12_m,
+            api.extended_energy_data.dhw_12m,
+        ),
+        SensorStateClass.MEASUREMENT,
+    ),
+    create_efficiency_entity_description(
+        EFFICIENCY_DHW_13_24_M,
+        lambda api: window_efficiency(
+            api.extended_energy_data.amount_of_heat_dhw_13_24_m,
+            api.extended_energy_data.dhw_13_24,
+        ),
+        SensorStateClass.MEASUREMENT,
+    ),
+]
+
 # Runtime counters that WPMsystem serves, unlike the aggregate counters
 # 3516-3518 (#612). Checked against the ISG page WAERMEPUMPE 1 / LAUFZEIT in
 # the same minute: 3643 = VD HEIZEN, 3544 = VD KUEHLEN, 3545-3547 = NHZ 1,
@@ -1516,6 +1547,7 @@ async def async_setup_entry(
                 + WPMSYSTEM_COOLING_SENSOR_TYPES
                 + WPMSYSTEM_HEATING_EFFICIENCY_SENSOR_TYPES
                 + WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES
+                + WPMSYSTEM_DHW_EFFICIENCY_SENSOR_TYPES
                 + WPMSYSTEM_RUNTIME_SENSOR_TYPES
             )
     else:
