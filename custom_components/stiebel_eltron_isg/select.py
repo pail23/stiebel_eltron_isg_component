@@ -1,10 +1,11 @@
 """Select platform for stiebel_eltron_isg."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from pystiebeleltron import ControllerModel
 
 from .const import OPERATION_MODE
 from .coordinator import (
@@ -57,6 +58,15 @@ WPM_SELECT_TYPES = [
     ),
 ]
 
+# The THZ 5.1/7.1 (ISG Connect) is served by the WPM register map, but its
+# display calls the modes "Komfort" and "Eco" where the German translation of
+# the other controllers says "Tag" and "Absenk". Same key, register and options,
+# only the translation key differs.
+THZ_SELECT_TYPES = [
+    replace(description, translation_key="operation_mode_thz")
+    for description in WPM_SELECT_TYPES
+]
+
 LWZ_SELECT_TYPES = [
     StiebelEltronSelectEntityDescription(
         key=OPERATION_MODE,
@@ -75,11 +85,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the select platform."""
     coordinator = entry.runtime_data
-    descriptions = (
-        LWZ_SELECT_TYPES
-        if coordinator.family is ControllerFamily.LWZ
-        else WPM_SELECT_TYPES
-    )
+    if coordinator.family is ControllerFamily.LWZ:
+        descriptions = LWZ_SELECT_TYPES
+    elif coordinator.model is ControllerModel.LWZ_R290:
+        descriptions = THZ_SELECT_TYPES
+    else:
+        descriptions = WPM_SELECT_TYPES
     async_add_devices([
         StiebelEltronISGSelectEntity(coordinator, entry, description)
         for description in descriptions

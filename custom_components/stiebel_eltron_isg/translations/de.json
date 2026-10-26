@@ -812,6 +812,30 @@
             },
             "heating_curve_low_end_hk2": {
                 "name": "Heizkurve Fußpunkt HK 2"
+            },
+            "comfort_temperature_target_hk1_thz": {
+                "name": "Komfortbetrieb Temperatursoll HK 1"
+            },
+            "eco_temperature_target_hk1_thz": {
+                "name": "Ecobetrieb Temperatursoll HK 1"
+            },
+            "comfort_temperature_target_hk2_thz": {
+                "name": "Komfortbetrieb Temperatursoll HK 2"
+            },
+            "eco_temperature_target_hk2_thz": {
+                "name": "Ecobetrieb Temperatursoll HK 2"
+            },
+            "comfort_temperature_target_hk3_thz": {
+                "name": "Komfortbetrieb Temperatursoll HK 3"
+            },
+            "eco_temperature_target_hk3_thz": {
+                "name": "Ecobetrieb Temperatursoll HK 3"
+            },
+            "comfort_water_temperature_target_thz": {
+                "name": "Komfortbetrieb Warmwasser Temperatursoll"
+            },
+            "eco_water_temperature_target_thz": {
+                "name": "Ecobetrieb Warmwasser Temperatursoll"
             }
         },
         "switch": {
@@ -842,6 +866,19 @@
                     "manual": "Handbetrieb",
                     "comfort": "Tagbetrieb",
                     "eco": "Absenkbetrieb"
+                }
+            },
+            "operation_mode_thz": {
+                "name": "Betriebsart",
+                "state": {
+                    "water_heating": "Warmwasserbetrieb",
+                    "emergency": "Notbetrieb",
+                    "program": "Programmbetrieb",
+                    "ready": "Bereitschaftsbetrieb",
+                    "automatic": "Automatikbetrieb",
+                    "manual": "Handbetrieb",
+                    "comfort": "Komfortbetrieb",
+                    "eco": "Ecobetrieb"
                 }
             }
         },

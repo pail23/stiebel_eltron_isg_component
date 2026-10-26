@@ -27,6 +27,7 @@ from custom_components.stiebel_eltron_isg.climate import (
 from custom_components.stiebel_eltron_isg.const import UNIT_ID
 from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_LWZ,
+    NUMBER_TYPES_THZ,
     NUMBER_TYPES_WPM,
     NUMBER_TYPES_WPM_3I,
     NUMBER_TYPES_WPMSYSTEM,
@@ -35,6 +36,7 @@ from custom_components.stiebel_eltron_isg.number import (
 _NUMBER_DESCRIPTION_LISTS = (
     ("NUMBER_TYPES_LWZ", LwzStiebelEltronAPI, NUMBER_TYPES_LWZ),
     ("NUMBER_TYPES_WPM", WpmStiebelEltronAPI, NUMBER_TYPES_WPM),
+    ("NUMBER_TYPES_THZ", WpmStiebelEltronAPI, NUMBER_TYPES_THZ),
     ("NUMBER_TYPES_WPMSYSTEM", WpmStiebelEltronAPI, NUMBER_TYPES_WPMSYSTEM),
     (
         "NUMBER_TYPES_WPM_3I",

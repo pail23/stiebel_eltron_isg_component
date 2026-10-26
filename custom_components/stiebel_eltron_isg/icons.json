@@ -296,6 +296,30 @@
             },
             "manual_water_temperature_target": {
                 "default": "mdi:thermometer-lines"
+            },
+            "comfort_temperature_target_hk1_thz": {
+                "default": "mdi:thermometer-high"
+            },
+            "eco_temperature_target_hk1_thz": {
+                "default": "mdi:thermometer-low"
+            },
+            "comfort_temperature_target_hk2_thz": {
+                "default": "mdi:thermometer-high"
+            },
+            "eco_temperature_target_hk2_thz": {
+                "default": "mdi:thermometer-low"
+            },
+            "comfort_temperature_target_hk3_thz": {
+                "default": "mdi:thermometer-high"
+            },
+            "eco_temperature_target_hk3_thz": {
+                "default": "mdi:thermometer-low"
+            },
+            "comfort_water_temperature_target_thz": {
+                "default": "mdi:thermometer-high"
+            },
+            "eco_water_temperature_target_thz": {
+                "default": "mdi:thermometer-low"
             }
         },
         "sensor": {
