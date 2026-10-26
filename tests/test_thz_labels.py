@@ -1,5 +1,6 @@
 """The THZ 5.1/7.1 gets its own German wording for the operating modes."""
 
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
@@ -48,7 +49,10 @@ async def _number_descriptions(model: ControllerModel) -> list:
 async def test_thz_uses_its_own_select_translation() -> None:
     (description,) = await _select_descriptions(ControllerModel.LWZ_R290)
     assert description.translation_key == "operation_mode_thz"
-    assert description.key == select.WPM_SELECT_TYPES[0].key
+    assert (
+        replace(description, translation_key="operation_mode")
+        == select.WPM_SELECT_TYPES[0]
+    )
 
 
 async def test_other_wpm_models_keep_the_shared_select_translation() -> None:
@@ -58,9 +62,20 @@ async def test_other_wpm_models_keep_the_shared_select_translation() -> None:
 
 
 async def test_thz_numbers_only_change_the_translation_key() -> None:
-    """Keys and registers stay, so unique ids of existing entities are kept."""
+    """Keys and registers stay, so unique ids of existing entities are kept.
+
+    Every THZ description has to equal its WPM counterpart once the translation
+    key is put back, which also covers the register accessor, the write
+    component, the write field, the range and the step.
+    """
     thz = await _number_descriptions(ControllerModel.LWZ_R290)
-    assert [d.key for d in thz] == [d.key for d in number_module.NUMBER_TYPES_WPM]
+    wpm = number_module.NUMBER_TYPES_WPM
+    assert len(thz) == len(wpm)
+    for thz_description, wpm_description in zip(thz, wpm, strict=True):
+        assert (
+            replace(thz_description, translation_key=wpm_description.translation_key)
+            == wpm_description
+        )
     relabeled = {d.key for d in thz if d.translation_key != d.key}
     assert relabeled == set(number_module._THZ_RELABELED_KEYS)
     assert all(d.translation_key == f"{d.key}_thz" for d in thz if d.key in relabeled)
