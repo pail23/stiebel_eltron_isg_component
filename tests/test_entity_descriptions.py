@@ -74,6 +74,9 @@ _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
     ("NUMBER_TYPES_LWZ", LWZ, number.NUMBER_TYPES_LWZ),
     ("WPM_SENSOR_TYPES", WPM, sensor.WPM_SENSOR_TYPES),
     ("WPM_AMOUNT_OF_HEAT_SENSOR_TYPES", WPM, sensor.WPM_AMOUNT_OF_HEAT_SENSOR_TYPES),
+    # Created only when the installed library offers the ventilation components.
+    ("THZ_VENTILATION_SENSOR_TYPES", WPM, sensor.THZ_VENTILATION_SENSOR_TYPES),
+    ("THZ_VENTILATION_NUMBER_TYPES", WPM, number.THZ_VENTILATION_NUMBER_TYPES),
     # WPMsystem only, see the comment on the list itself.
     ("WPM_INVERTER_POWER_SENSOR_TYPES", WPM, sensor.WPM_INVERTER_POWER_SENSOR_TYPES),
     ("WPMSYSTEM_COOLING_SENSOR_TYPES", WPM, sensor.WPMSYSTEM_COOLING_SENSOR_TYPES),
@@ -161,6 +164,19 @@ def _resolves_on_wpm_3i(description: Any) -> bool:
     return bool(accessors)
 
 
+def _skip_unsupported(list_name: str, model: str) -> list[Any]:
+    """Skip a sweep case whose component the installed library does not have.
+
+    The ventilation entities are gated at runtime on the library offering the
+    component, because Home Assistant Core may still pin a release without it.
+    """
+    if list_name.startswith("THZ_VENTILATION") and (
+        getattr(_api(model), "ventilation_values", None) is None
+    ):
+        return [pytest.mark.skip(reason="installed library has no ventilation")]
+    return []
+
+
 def _module_description_lists(module: ModuleType) -> list[tuple[str, list[Any]]]:
     """Return every module level list of entity descriptions of ``module``."""
     lists = []
@@ -189,6 +205,7 @@ def _accessor_cases() -> list[Any]:
                         model,
                         accessor,
                         id=f"{name}[{index}]" if len(accessors) > 1 else name,
+                        marks=_skip_unsupported(list_name, model),
                     )
                     for index, accessor in enumerate(accessors)
                 )
@@ -218,6 +235,7 @@ def _write_field_cases() -> list[Any]:
                         f"{list_name}-{model}-{description.key}-{attribute}"
                         f"-{component}.{field}"
                     ),
+                    marks=_skip_unsupported(list_name, model),
                 )
                 for attribute, field in write_fields
             )

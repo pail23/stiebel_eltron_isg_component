@@ -42,17 +42,16 @@ comfort_temperature_target_hk3
 comfort_temperature_target_hk4
 comfort_temperature_target_hk5
 comfort_water_temperature_target
+compressor_cooling
 compressor_heating
 compressor_heating_hp_1
 compressor_heating_water
-compressor_cooling
 compressor_on
 compressor_speed
 compressor_starts
 consumed_cooling_12m
 consumed_cooling_last_24h
 consumed_cooling_prev_12m
-produced_cooling_total
 consumed_heating
 consumed_heating_12m
 consumed_heating_last_24h
@@ -91,7 +90,6 @@ eco_temperature_target_hk3
 eco_temperature_target_hk4
 eco_temperature_target_hk5
 eco_water_temperature_target
-electric_reheating
 efficiency_cooling_13_24_m
 efficiency_cooling_1_12_m
 efficiency_cooling_1_24_h
@@ -101,6 +99,7 @@ efficiency_dhw_1_24_h
 efficiency_heating_13_24_m
 efficiency_heating_1_12_m
 efficiency_heating_1_24_h
+electric_reheating
 electrical_booster_heating
 electrical_booster_heating_water
 emergency_heating_1
@@ -108,6 +107,8 @@ emergency_heating_1_2
 emergency_heating_2
 error_status
 evaporator_defrost
+exhaust_air_fan_control
+exhaust_air_flow_rate
 extract_air_actual
 extract_air_dew_point
 extract_air_humidity
@@ -179,9 +180,11 @@ nhz_2_runtime
 nhz_stages_running
 operation_mode
 outdoor_temperature
+outside_air_temperature
 pool_primary_pump
 pool_secondary_pump
 power_off
+produced_cooling_total
 produced_electrical_booster_heating_total
 produced_electrical_booster_water_heating_total
 produced_heating
@@ -224,6 +227,9 @@ solar_runtime
 source_pressure
 source_pump
 source_temperature
+supply_air_fan_control
+supply_air_flow_rate
+supply_air_temperature
 switching_program_enabled
 target_room_temperature_hk1
 target_room_temperature_hk2
@@ -243,6 +249,9 @@ target_temperature_water
 ventilation
 ventilation_air_actual_fan_speed
 ventilation_air_target_flow_rate
+ventilation_stage_comfort
+ventilation_stage_eco
+ventilation_stage_standby
 volume_stream
 volume_stream_wp1
 volume_stream_wp2

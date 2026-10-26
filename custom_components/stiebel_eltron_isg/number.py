@@ -54,6 +54,9 @@ from .const import (
     MANUAL_HC_SET_HK1,
     MANUAL_HC_SET_HK2,
     MANUAL_WATER_TEMPERATURE_TARGET,
+    VENTILATION_STAGE_COMFORT,
+    VENTILATION_STAGE_ECO,
+    VENTILATION_STAGE_STANDBY,
 )
 from .coordinator import (
     ControllerFamily,
@@ -354,6 +357,56 @@ NUMBER_TYPES_WPMSYSTEM = [
 ]
 
 
+# Ventilation stages of the THZ 5.1/7.1 (ISG Connect). They belong to the
+# optional ``ventilation_parameters`` component of the library, which releases
+# before 0.9.3 do not have, so these are only used where it is present. The
+# stage ECO was written 1 -> 2 -> 1 on a THZ 7.1 and the airflow followed
+# (124 -> 168 m3/h). The comfort and standby stages are the same kind of
+# register in the same block; standby was accepted and read back, but the unit
+# had the ventilation off at the time, so no airflow change was seen.
+THZ_VENTILATION_NUMBER_TYPES = [
+    StiebelEltronNumberEntityDescription(
+        key=VENTILATION_STAGE_COMFORT,
+        translation_key=VENTILATION_STAGE_COMFORT,
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+        mode=NumberMode.BOX,
+        enforce_step=True,
+        modbus_register=lambda api: (
+            api.ventilation_parameters.ventilation_stage_comfort
+        ),
+        write_component="ventilation_parameters",
+        write_field="ventilation_stage_comfort",
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=VENTILATION_STAGE_ECO,
+        translation_key=VENTILATION_STAGE_ECO,
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+        mode=NumberMode.BOX,
+        enforce_step=True,
+        modbus_register=lambda api: api.ventilation_parameters.ventilation_stage_eco,
+        write_component="ventilation_parameters",
+        write_field="ventilation_stage_eco",
+    ),
+    StiebelEltronNumberEntityDescription(
+        key=VENTILATION_STAGE_STANDBY,
+        translation_key=VENTILATION_STAGE_STANDBY,
+        native_min_value=0,
+        native_max_value=3,
+        native_step=1,
+        mode=NumberMode.BOX,
+        enforce_step=True,
+        modbus_register=lambda api: (
+            api.ventilation_parameters.ventilation_stage_standby
+        ),
+        write_component="ventilation_parameters",
+        write_field="ventilation_stage_standby",
+    ),
+]
+
 NUMBER_TYPES_LWZ = [
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK1,
@@ -595,6 +648,12 @@ async def async_setup_entry(
         if coordinator.model is ControllerModel.WPMsystem
         else _NUMBER_TYPES[coordinator.family]
     )
+    descriptions = list(descriptions)
+    if coordinator.family is ControllerFamily.WPM and coordinator.serves_component(
+        "ventilation_parameters",
+        [description.modbus_register for description in THZ_VENTILATION_NUMBER_TYPES],
+    ):
+        descriptions += THZ_VENTILATION_NUMBER_TYPES
     async_add_devices([
         StiebelEltronISGNumberEntity(coordinator, entry, description)
         for description in descriptions

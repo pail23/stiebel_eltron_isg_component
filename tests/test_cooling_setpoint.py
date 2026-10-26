@@ -86,7 +86,11 @@ async def test_wpmsystem_cooling_setpoint_reads_register_1603(
 async def test_cooling_setpoint_sensor_is_limited_to_wpmsystem(model) -> None:
     """No other controller family receives the WPMsystem-only register."""
     entry = SimpleNamespace(
-        runtime_data=SimpleNamespace(model=model, family=CONTROLLER_FAMILIES[model])
+        runtime_data=SimpleNamespace(
+            model=model,
+            family=CONTROLLER_FAMILIES[model],
+            serves_component=lambda *_: False,
+        )
     )
     add_entities = MagicMock()
     with patch.object(
