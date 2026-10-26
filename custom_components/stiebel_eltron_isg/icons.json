@@ -264,6 +264,15 @@
             "fan_level_manual": {
                 "default": "mdi:fan"
             },
+            "ventilation_stage_comfort": {
+                "default": "mdi:fan"
+            },
+            "ventilation_stage_eco": {
+                "default": "mdi:fan"
+            },
+            "ventilation_stage_standby": {
+                "default": "mdi:fan"
+            },
             "fan_level_party": {
                 "default": "mdi:fan"
             },

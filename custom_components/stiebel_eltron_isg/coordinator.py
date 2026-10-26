@@ -5,7 +5,7 @@ https://github.com/pail23/stiebel_eltron_isg
 """
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
@@ -264,6 +264,23 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
     ) -> bool:
         """Check if a callable accessor has a value."""
         return self.get_value(value_reference) is not None
+
+    def serves_component(
+        self,
+        component: str,
+        registers: Iterable[Callable[[Any], float | int | None]],
+    ) -> bool:
+        """Return True if the library offers ``component`` and the unit answers it.
+
+        Home Assistant Core pins a library release that may predate a component,
+        and a controller that does not have an optional block reads it as
+        unavailable for good. Entities that depend on such a component are only
+        created when the library offers it and at least one of ``registers``
+        holds a value after the first refresh.
+        """
+        if getattr(self._api, component, None) is None:
+            return False
+        return any(self.has_value(register) for register in registers)
 
     async def write_component_value(
         self,

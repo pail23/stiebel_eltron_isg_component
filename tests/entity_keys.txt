@@ -247,3 +247,12 @@ ventilation_air_target_flow_rate
 volume_stream
 volume_stream_wp1
 volume_stream_wp2
+exhaust_air_fan_control
+exhaust_air_flow_rate
+outside_air_temperature
+supply_air_fan_control
+supply_air_flow_rate
+supply_air_temperature
+ventilation_stage_comfort
+ventilation_stage_eco
+ventilation_stage_standby
