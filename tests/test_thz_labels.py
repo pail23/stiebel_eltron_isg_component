@@ -33,6 +33,7 @@ async def _number_descriptions(model: ControllerModel) -> list:
         runtime_data=SimpleNamespace(
             model=model,
             family=CONTROLLER_FAMILIES[model],
+            offers_component=lambda *_: False,
             serves_component=lambda *_: False,
         )
     )

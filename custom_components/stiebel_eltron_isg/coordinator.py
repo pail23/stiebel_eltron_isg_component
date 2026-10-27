@@ -265,6 +265,15 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
         """Check if a callable accessor has a value."""
         return self.get_value(value_reference) is not None
 
+    def offers_component(self, component: str) -> bool:
+        """Return True if the installed library has the optional ``component``.
+
+        Home Assistant Core pins a library release that may predate a component.
+        The library does not gain one while Home Assistant runs, so this never
+        changes for a loaded config entry.
+        """
+        return getattr(self._api, component, None) is not None
+
     def serves_component(
         self,
         component: str,
@@ -272,13 +281,12 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
     ) -> bool:
         """Return True if the library offers ``component`` and the unit answers it.
 
-        Home Assistant Core pins a library release that may predate a component,
-        and a controller that does not have an optional block reads it as
-        unavailable for good. Entities that depend on such a component are only
-        created when the library offers it and at least one of ``registers``
-        holds a value after the first refresh.
+        A controller that does not have an optional block reads it as
+        unavailable, and one that does may only answer it from a later poll on.
+        Entities that depend on such a component are therefore created once the
+        library offers it and at least one of ``registers`` holds a value.
         """
-        if getattr(self._api, component, None) is None:
+        if not self.offers_component(component):
             return False
         return any(self.has_value(register) for register in registers)
 

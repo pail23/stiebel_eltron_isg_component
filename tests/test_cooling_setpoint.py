@@ -89,7 +89,7 @@ async def test_cooling_setpoint_sensor_is_limited_to_wpmsystem(model) -> None:
         runtime_data=SimpleNamespace(
             model=model,
             family=CONTROLLER_FAMILIES[model],
-            serves_component=lambda *_: False,
+            offers_component=lambda _: False,
         )
     )
     add_entities = MagicMock()
