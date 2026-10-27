@@ -63,7 +63,7 @@ from .coordinator import (
     StiebelEltronConfigEntry,
     StiebelEltronDataCoordinator,
 )
-from .entity import StiebelEltronISGEntity, ValueAccessor
+from .entity import StiebelEltronISGEntity, ValueAccessor, async_add_when_served
 
 PARALLEL_UPDATES = 1
 
@@ -648,16 +648,21 @@ async def async_setup_entry(
         if coordinator.model is ControllerModel.WPMsystem
         else _NUMBER_TYPES[coordinator.family]
     )
-    descriptions = list(descriptions)
-    if coordinator.family is ControllerFamily.WPM and coordinator.serves_component(
-        "ventilation_parameters",
-        [description.modbus_register for description in THZ_VENTILATION_NUMBER_TYPES],
-    ):
-        descriptions += THZ_VENTILATION_NUMBER_TYPES
     async_add_devices([
         StiebelEltronISGNumberEntity(coordinator, entry, description)
         for description in descriptions
     ])
+    if coordinator.model is ControllerModel.LWZ_R290:
+        # Only the THZ 7.1 (LWZ_R290) is confirmed on hardware.
+        async_add_when_served(
+            entry,
+            "ventilation_parameters",
+            THZ_VENTILATION_NUMBER_TYPES,
+            lambda description: StiebelEltronISGNumberEntity(
+                coordinator, entry, description
+            ),
+            async_add_devices,
+        )
 
 
 class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):

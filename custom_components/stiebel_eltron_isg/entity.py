@@ -1,8 +1,11 @@
 """StiebelEltronISGEntity class."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from typing import Any
 
+from homeassistant.core import callback
+from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
@@ -54,3 +57,51 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
         return self.coordinator.last_update_success and self.coordinator.has_value(
             self.modbus_register
         )
+
+
+@callback
+def async_add_when_served[D: EntityDescription](
+    entry: StiebelEltronConfigEntry,
+    component: str,
+    descriptions: Sequence[D],
+    create_entity: Callable[[D], Entity],
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add entities of an optional library component once the unit serves it.
+
+    The first refresh may not answer an optional block yet, for example while the
+    controller is still starting, and the block can return valid values on a
+    later poll. Deciding once during setup would then leave the entities out
+    until the entry is reloaded, so the decision is repeated after every update
+    until the entities were added. Nothing is listened for when the installed
+    library does not have the component, because that cannot change.
+
+    ``descriptions`` must carry a ``modbus_register`` accessor.
+    """
+    coordinator = entry.runtime_data
+    if not coordinator.offers_component(component):
+        return
+
+    registers = [description.modbus_register for description in descriptions]  # type: ignore[attr-defined]
+    remove_listener: Callable[[], None] | None = None
+
+    @callback
+    def _stop() -> None:
+        nonlocal remove_listener
+        if remove_listener is not None:
+            remove_listener()
+            remove_listener = None
+
+    @callback
+    def _add_if_served() -> None:
+        if not coordinator.serves_component(component, registers):
+            return
+        _stop()
+        async_add_entities([create_entity(description) for description in descriptions])
+
+    if coordinator.serves_component(component, registers):
+        async_add_entities([create_entity(description) for description in descriptions])
+        return
+
+    remove_listener = coordinator.async_add_listener(_add_if_served)
+    entry.async_on_unload(_stop)

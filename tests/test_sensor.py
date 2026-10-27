@@ -251,7 +251,7 @@ async def _setup_sensor_keys(model: ControllerModel) -> list[str]:
         runtime_data=SimpleNamespace(
             model=model,
             family=CONTROLLER_FAMILIES[model],
-            serves_component=lambda *_: False,
+            offers_component=lambda _: False,
         )
     )
     add_entities = MagicMock()
@@ -633,7 +633,7 @@ async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
         model=model,
         family=CONTROLLER_FAMILIES[model],
         device_info={},
-        serves_component=lambda *_: False,
+        offers_component=lambda _: False,
     )
     entry = SimpleNamespace(runtime_data=coordinator, entry_id="test")
     entities = []

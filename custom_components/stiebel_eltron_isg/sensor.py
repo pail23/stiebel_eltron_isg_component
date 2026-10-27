@@ -180,7 +180,7 @@ from .coordinator import (
     StiebelEltronConfigEntry,
     StiebelEltronDataCoordinator,
 )
-from .entity import StiebelEltronISGEntity, ValueAccessor
+from .entity import StiebelEltronISGEntity, ValueAccessor, async_add_when_served
 
 PARALLEL_UPDATES = 1
 
@@ -1599,14 +1599,6 @@ async def async_setup_entry(
         ) + ENERGY_DAILY_SENSOR_TYPES
         if model in (ControllerModel.WPMsystem, ControllerModel.LWZ_R290):
             descriptions += WPM_AMOUNT_OF_HEAT_SENSOR_TYPES
-        if coordinator.serves_component(
-            "ventilation_values",
-            [
-                description.modbus_register
-                for description in THZ_VENTILATION_SENSOR_TYPES
-            ],
-        ):
-            descriptions += THZ_VENTILATION_SENSOR_TYPES
         if model is ControllerModel.WPMsystem:
             # These extra fields are limited to WPMsystem; support on the
             # other controller families has not been established.
@@ -1625,6 +1617,15 @@ async def async_setup_entry(
         StiebelEltronISGSensor(coordinator, entry, description)
         for description in descriptions
     ])
+    if model is ControllerModel.LWZ_R290:
+        # Only the THZ 7.1 (LWZ_R290) is confirmed on hardware.
+        async_add_when_served(
+            entry,
+            "ventilation_values",
+            THZ_VENTILATION_SENSOR_TYPES,
+            lambda description: StiebelEltronISGSensor(coordinator, entry, description),
+            async_add_devices,
+        )
 
 
 class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
