@@ -30,12 +30,18 @@ from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_WPM,
     NUMBER_TYPES_WPM_3I,
     NUMBER_TYPES_WPMSYSTEM,
+    THZ_VENTILATION_NUMBER_TYPES,
 )
 
 _NUMBER_DESCRIPTION_LISTS = (
     ("NUMBER_TYPES_LWZ", LwzStiebelEltronAPI, NUMBER_TYPES_LWZ),
     ("NUMBER_TYPES_WPM", WpmStiebelEltronAPI, NUMBER_TYPES_WPM),
     ("NUMBER_TYPES_WPMSYSTEM", WpmStiebelEltronAPI, NUMBER_TYPES_WPMSYSTEM),
+    (
+        "THZ_VENTILATION_NUMBER_TYPES",
+        WpmStiebelEltronAPI,
+        THZ_VENTILATION_NUMBER_TYPES,
+    ),
     (
         "NUMBER_TYPES_WPM_3I",
         Wpm3iStiebelEltronAPI,
@@ -132,6 +138,14 @@ def _write_range_cases() -> list[WriteRangeCase]:
     for list_name, api_class, descriptions in _NUMBER_DESCRIPTION_LISTS:
         for number_description in descriptions:
             if number_description.write_field is None:
+                continue
+            # Gated at runtime: a library that predates the component has none
+            # of its fields, so there is nothing to validate against.
+            if (
+                list_name.startswith("THZ_VENTILATION")
+                and getattr(_api(api_class), number_description.write_component, None)
+                is None
+            ):
                 continue
             cases.append(
                 WriteRangeCase(

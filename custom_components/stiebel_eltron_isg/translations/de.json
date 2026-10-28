@@ -523,6 +523,24 @@
             },
             "extract_air_temperature": {
                 "name": "Ablufttemperatur"
+            },
+            "outside_air_temperature": {
+                "name": "Außenlufttemperatur"
+            },
+            "supply_air_temperature": {
+                "name": "Zulufttemperatur"
+            },
+            "supply_air_flow_rate": {
+                "name": "Zuluft Volumenstrom"
+            },
+            "exhaust_air_flow_rate": {
+                "name": "Fortluft Volumenstrom"
+            },
+            "supply_air_fan_control": {
+                "name": "Zuluft Lüfteransteuerung"
+            },
+            "exhaust_air_fan_control": {
+                "name": "Fortluft Lüfteransteuerung"
             }
         },
         "binary_sensor": {
@@ -794,6 +812,15 @@
             },
             "fan_level_manual": {
                 "name": "Lüfterstufe Handbetrieb"
+            },
+            "ventilation_stage_comfort": {
+                "name": "Lüftungsstufe im Komfortbetrieb"
+            },
+            "ventilation_stage_eco": {
+                "name": "Lüftungsstufe im Eco-Betrieb"
+            },
+            "ventilation_stage_standby": {
+                "name": "Lüftungsstufe im Bereitschaftsbetrieb"
             },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Tagbetrieb Kühlung Temperatursoll HK 1"

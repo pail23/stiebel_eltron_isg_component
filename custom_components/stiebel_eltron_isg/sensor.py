@@ -90,6 +90,8 @@ from .const import (
     EFFICIENCY_HEATING_13_24_M,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
+    EXHAUST_AIR_FAN_CONTROL,
+    EXHAUST_AIR_FLOW_RATE,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
     EXTRACT_AIR_DEW_POINT,
     EXTRACT_AIR_HUMIDITY,
@@ -115,6 +117,7 @@ from .const import (
     NHZ_1_RUNTIME,
     NHZ_2_RUNTIME,
     OUTDOOR_TEMPERATURE,
+    OUTSIDE_AIR_TEMPERATURE,
     PRODUCED_COOLING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
@@ -148,6 +151,9 @@ from .const import (
     SOLAR_RUNTIME,
     SOURCE_PRESSURE,
     SOURCE_TEMPERATURE,
+    SUPPLY_AIR_FAN_CONTROL,
+    SUPPLY_AIR_FLOW_RATE,
+    SUPPLY_AIR_TEMPERATURE,
     TARGET_ROOM_TEMPERATURE_HK1,
     TARGET_ROOM_TEMPERATURE_HK2,
     TARGET_ROOM_TEMPERATURE_HK3,
@@ -174,7 +180,7 @@ from .coordinator import (
     StiebelEltronConfigEntry,
     StiebelEltronDataCoordinator,
 )
-from .entity import StiebelEltronISGEntity, ValueAccessor
+from .entity import StiebelEltronISGEntity, ValueAccessor, async_add_when_served
 
 PARALLEL_UPDATES = 1
 
@@ -1483,6 +1489,60 @@ WPMSYSTEM_COOLING_SENSOR_TYPES = [
 ]
 
 
+THZ_VENTILATION_SENSOR_TYPES = [
+    create_temperature_entity_description(
+        EXTRACT_AIR_TEMPERATURE,
+        lambda api: api.ventilation_values.extract_air_temperature,
+    ),
+    create_humidity_entity_description(
+        EXTRACT_AIR_HUMIDITY,
+        lambda api: api.ventilation_values.extract_air_humidity,
+    ),
+    create_temperature_entity_description(
+        EXTRACT_AIR_DEW_POINT,
+        lambda api: api.ventilation_values.extract_air_dew_point,
+    ),
+    create_temperature_entity_description(
+        OUTSIDE_AIR_TEMPERATURE,
+        lambda api: api.ventilation_values.outside_air_temperature,
+    ),
+    create_temperature_entity_description(
+        SUPPLY_AIR_TEMPERATURE,
+        lambda api: api.ventilation_values.supply_air_temperature,
+    ),
+    StiebelEltronSensorEntityDescription(
+        key=SUPPLY_AIR_FLOW_RATE,
+        translation_key=SUPPLY_AIR_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.ventilation_values.supply_air_flow,
+    ),
+    StiebelEltronSensorEntityDescription(
+        key=EXHAUST_AIR_FLOW_RATE,
+        translation_key=EXHAUST_AIR_FLOW_RATE,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.ventilation_values.exhaust_air_flow,
+    ),
+    StiebelEltronSensorEntityDescription(
+        key=SUPPLY_AIR_FAN_CONTROL,
+        translation_key=SUPPLY_AIR_FAN_CONTROL,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.ventilation_values.supply_fan_control,
+    ),
+    StiebelEltronSensorEntityDescription(
+        key=EXHAUST_AIR_FAN_CONTROL,
+        translation_key=EXHAUST_AIR_FAN_CONTROL,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        modbus_register=lambda api: api.ventilation_values.exhaust_fan_control,
+    ),
+]
+
+
 WPM_3I_SENSOR_TYPES = (
     WPM_3I_SYSTEM_VALUES_SENSOR_TYPES
     + ENERGYMANAGEMENT_SENSOR_TYPES
@@ -1557,6 +1617,15 @@ async def async_setup_entry(
         StiebelEltronISGSensor(coordinator, entry, description)
         for description in descriptions
     ])
+    if model is ControllerModel.LWZ_R290:
+        # Only the THZ 7.1 (LWZ_R290) is confirmed on hardware.
+        async_add_when_served(
+            entry,
+            "ventilation_values",
+            THZ_VENTILATION_SENSOR_TYPES,
+            lambda description: StiebelEltronISGSensor(coordinator, entry, description),
+            async_add_devices,
+        )
 
 
 class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):

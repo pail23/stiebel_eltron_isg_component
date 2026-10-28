@@ -523,6 +523,24 @@
             },
             "extract_air_temperature": {
                 "name": "Extract Air Temperature"
+            },
+            "outside_air_temperature": {
+                "name": "Outside Air Temperature"
+            },
+            "supply_air_temperature": {
+                "name": "Supply Air Temperature"
+            },
+            "supply_air_flow_rate": {
+                "name": "Supply Air Flow Rate"
+            },
+            "exhaust_air_flow_rate": {
+                "name": "Exhaust Air Flow Rate"
+            },
+            "supply_air_fan_control": {
+                "name": "Supply Air Fan Control"
+            },
+            "exhaust_air_fan_control": {
+                "name": "Exhaust Air Fan Control"
             }
         },
         "binary_sensor": {
@@ -794,6 +812,15 @@
             },
             "fan_level_manual": {
                 "name": "Fan Level Manual"
+            },
+            "ventilation_stage_comfort": {
+                "name": "Ventilation Stage in Comfort Mode"
+            },
+            "ventilation_stage_eco": {
+                "name": "Ventilation Stage in Eco Mode"
+            },
+            "ventilation_stage_standby": {
+                "name": "Ventilation Stage in Standby Mode"
             },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Comfort Cooling Temperature Target HK1"
