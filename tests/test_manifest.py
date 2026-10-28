@@ -74,12 +74,12 @@ def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None
 
 @pytest.mark.parametrize(
     ("version", "compatible"),
-    [("0.9.1", False), ("0.9.2", True), ("0.10.0", False)],
+    [("0.9.3", False), ("0.10.0", True), ("0.11.0", False)],
 )
 def test_runtime_library_range_requires_optional_hk3_handling(
     version: str, compatible: bool
 ) -> None:
-    """Require the served-block refusal fix without admitting an untested 0.10."""
+    """Require the midnight day and total fix without admitting an untested 0.11."""
     requirements = [
         Requirement(entry)
         for entry in json.loads(_MANIFEST.read_text())["requirements"]
