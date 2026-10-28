@@ -1,7 +1,6 @@
 """Switch platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
@@ -10,10 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import SG_READY_ACTIVE, SG_READY_INPUT_1, SG_READY_INPUT_2
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
-from .entity import StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
+from .entity import StiebelEltronISGEntity, ValueAccessor
 
 PARALLEL_UPDATES = 1
 
@@ -22,16 +19,9 @@ PARALLEL_UPDATES = 1
 class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
-    modbus_register: Any
+    modbus_register: ValueAccessor
     write_component: str | None = None
     write_field: str | None = None
-
-    def __post_init__(self) -> None:
-        """Ensure value references are lambda-based."""
-        if callable(self.modbus_register):
-            return
-
-        raise TypeError("modbus_register must be a lambda expression")
 
 
 SWITCH_TYPES = [
@@ -89,7 +79,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSwitchEntityDescription,
     ):
@@ -101,12 +91,18 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         self.write_field = description.write_field
 
     @property
-    def is_on(self) -> bool:
-        """Return the state of the switch."""
-        value = self.coordinator.get_value(self.modbus_register)
-        if value is not None:
-            return value != 0
-        return False
+    def is_on(self) -> bool | None:
+        """Return the written state until the device confirmed it, else its own.
+
+        None while neither is known: the SG Ready inputs stay operable without
+        a read-back, and an unknown state must not be shown as off.
+        """
+        value = self.coordinator.pending_value(self.write_component, self.write_field)
+        if value is None:
+            value = self.coordinator.get_value(self.modbus_register)
+        if value is None:
+            return None
+        return value != 0
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -117,20 +113,25 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         await self._async_set_state(0)
 
     async def _async_set_state(self, value: int) -> None:
-        """Write a changed switch state and refresh its read-back value."""
+        """Write a changed switch state.
+
+        The comparison includes a state written moments ago: a read-back right
+        after a write still shows the old state, and comparing with that would
+        drop the command that reverses the write.
+        """
         if self.write_component is None or self.write_field is None:
             return
 
-        current = self.coordinator.get_value(self.modbus_register)
-        if current is not None and bool(current) == bool(value):
-            return
+        async with self.coordinator.write_lock:
+            current = self.is_on
+            if current is not None and current == bool(value):
+                return
 
-        await self.coordinator.write_component_value(
-            self.write_component,
-            self.write_field,
-            value,
-        )
-        await self.async_update()
+            await self.coordinator.write_component_value(
+                self.write_component,
+                self.write_field,
+                value,
+            )
 
     @property
     def available(self) -> bool:

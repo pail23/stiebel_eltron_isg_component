@@ -1,20 +1,11 @@
 """Constants for stiebel_eltron_isg."""
 
 # Base component constants
-DEFAULT_NAME = "Stiebel Eltron ISG"
 ATTR_MANUFACTURER = "Stiebel Eltron"
 DOMAIN = "stiebel_eltron_isg"
-DEFAULT_HOST_NAME = ""
 DEFAULT_SCAN_INTERVAL = 30
 DEFAULT_PORT = 502
 UNIT_ID = 1
-
-# Config flow error keys
-ERROR_ALREADY_CONFIGURED = "already_configured"
-ERROR_INVALID_HOST = "invalid_host_IP"
-ERROR_CANNOT_CONNECT = "cannot_connect"
-ERROR_RECONFIGURE_FAILED = "reconfigure_failed"
-
 
 ACTUAL_TEMPERATURE = "actual_temperature"
 TARGET_TEMPERATURE = "target_temperature"
@@ -64,7 +55,6 @@ RETURN_TEMPERATURE = "return_temperature"
 HEATER_PRESSURE = "heater_pressure"
 VOLUME_STREAM = "volume_stream"
 SG_READY_STATE = "sg_ready_state"
-CONTROLLER_TYPE = "controller_type"
 SG_READY_ACTIVE = "sg_ready_active"
 SG_READY_INPUT_1 = "sg_ready_input_1"
 SG_READY_INPUT_2 = "sg_ready_input_2"
@@ -100,12 +90,10 @@ OPERATION_MODE = "operation_mode"
 
 PRODUCED_HEATING_TODAY = "produced_heating_today"
 PRODUCED_HEATING_TOTAL = "produced_heating_total"
-PREVIOUS_PRODUCED_HEATING_TOTAL = "previous_produced_heating_total"
 PRODUCED_HEATING = "produced_heating"
 
 PRODUCED_WATER_HEATING_TODAY = "produced_water_heating_today"
 PRODUCED_WATER_HEATING_TOTAL = "produced_water_heating_total"
-PREVIOUS_PRODUCED_WATER_HEATING_TOTAL = "previous_produced_water_heating_total"
 PRODUCED_WATER_HEATING = "produced_water_heating"
 PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL = "produced_electrical_booster_heating_total"
 PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL = (
@@ -124,12 +112,10 @@ PRODUCED_SOLAR_WATER_HEATING = "produced_solar_water_heating"
 
 CONSUMED_HEATING_TODAY = "consumed_heating_today"
 CONSUMED_HEATING_TOTAL = "consumed_heating_total"
-PREVIOUS_CONSUMED_HEATING_TOTAL = "previous_consumed_heating_total"
 CONSUMED_HEATING = "consumed_heating"
 
 CONSUMED_WATER_HEATING_TODAY = "consumed_water_heating_today"
 CONSUMED_WATER_HEATING_TOTAL = "consumed_water_heating_total"
-PREVIOUS_CONSUMED_WATER_HEATING_TOTAL = "previous_consumed_water_heating_total"
 CONSUMED_WATER_HEATING = "consumed_water_heating"
 
 # WPM power-consumption breakdown (Servicewelt "POWER CONSUMPTION" screen,
@@ -262,14 +248,18 @@ HEATING_CURVE_RISE_HK2 = "heating_curve_rise_hk2"
 COMFORT_TEMPERATURE_TARGET_HK3 = "comfort_temperature_target_hk3"
 ECO_TEMPERATURE_TARGET_HK3 = "eco_temperature_target_hk3"
 HEATING_CURVE_RISE_HK3 = "heating_curve_rise_hk3"
+COMFORT_TEMPERATURE_TARGET_HK4 = "comfort_temperature_target_hk4"
+ECO_TEMPERATURE_TARGET_HK4 = "eco_temperature_target_hk4"
+HEATING_CURVE_RISE_HK4 = "heating_curve_rise_hk4"
+COMFORT_TEMPERATURE_TARGET_HK5 = "comfort_temperature_target_hk5"
+ECO_TEMPERATURE_TARGET_HK5 = "eco_temperature_target_hk5"
+HEATING_CURVE_RISE_HK5 = "heating_curve_rise_hk5"
 DUALMODE_TEMPERATURE_HZG = "dualmode_temperature_hzg"
 
 COMFORT_COOLING_TEMPERATURE_TARGET_HK1 = "comfort_cooling_temperature_target_hk1"
 ECO_COOLING_TEMPERATURE_TARGET_HK1 = "eco_cooling_temperature_target_hk1"
 COMFORT_COOLING_TEMPERATURE_TARGET_HK2 = "comfort_cooling_temperature_target_hk2"
 ECO_COOLING_TEMPERATURE_TARGET_HK2 = "eco_cooling_temperature_target_hk2"
-COMFORT_COOLING_TEMPERATURE_TARGET_HK3 = "comfort_cooling_temperature_target_hk3"
-ECO_COOLING_TEMPERATURE_TARGET_HK3 = "eco_cooling_temperature_target_hk3"
 
 COMFORT_WATER_TEMPERATURE_TARGET = "comfort_water_temperature_target"
 ECO_WATER_TEMPERATURE_TARGET = "eco_water_temperature_target"

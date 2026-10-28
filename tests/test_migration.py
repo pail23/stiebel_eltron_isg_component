@@ -1254,3 +1254,73 @@ def test_runtime_sensor_cleanup_covers_a_previously_detected_model(
     )
 
     assert er.async_get(hass).async_get(previous_model.entity_id) is None
+
+
+async def test_a_historical_model_id_migrates_without_changing_the_entity_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A controller detected as another model before the update is migrated."""
+    mock_config_entry.add_to_hass(hass)
+    existing = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPM_3i_{KEY}",
+        "wpm_3i_outdoor_temperature",
+    )
+
+    await migration.async_migrate_unique_ids(
+        hass, mock_config_entry, ControllerModel.WPMsystem
+    )
+
+    migrated = er.async_get(hass).async_get(existing.entity_id)
+    assert migrated is not None
+    assert migrated.unique_id == f"{mock_config_entry.entry_id}_{KEY}"
+    assert migrated.entity_id == existing.entity_id
+
+
+async def test_current_model_id_wins_over_a_historical_model_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The current model outranks an earlier one and the loser is reported."""
+    mock_config_entry.add_to_hass(hass)
+    historical = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPM_3i_{KEY}",
+        "wpm_3i_outdoor_temperature",
+    )
+    current = _register(
+        hass,
+        mock_config_entry,
+        f"{DOMAIN}_Stiebel Eltron WPMsystem_{KEY}",
+        "wpmsystem_outdoor_temperature",
+    )
+
+    losers = migration.async_get_duplicate_entities(
+        hass, mock_config_entry, ControllerModel.WPMsystem
+    )
+    assert [loser.entity_id for loser in losers] == [historical.entity_id]
+
+    await migration.async_migrate_unique_ids(
+        hass, mock_config_entry, ControllerModel.WPMsystem
+    )
+
+    registry = er.async_get(hass)
+    assert (
+        registry.async_get(current.entity_id).unique_id
+        == f"{mock_config_entry.entry_id}_{KEY}"
+    )
+    assert (
+        registry.async_get(historical.entity_id).unique_id
+        == f"{DOMAIN}_Stiebel Eltron WPM_3i_{KEY}"
+    )
+    issue = ir.async_get(hass).async_get_issue(
+        DOMAIN, f"duplicate_entities_{mock_config_entry.entry_id}"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders == {
+        "count": "1",
+        "entities": historical.entity_id,
+    }

@@ -1,12 +1,14 @@
-"""Data Coordinator base class for the LWZ Stiebel Eltron heat pumps.
+"""Data update coordinator for Stiebel Eltron ISG controllers.
 
 For more details about this integration, please refer to
 https://github.com/pail23/stiebel_eltron_isg
 """
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
 import logging
 from typing import Any, Protocol
 
@@ -15,10 +17,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from modbus_connection import ModbusError
+from modbus_connection import ModbusError, ModbusUnit
 from modbus_connection.cli_helper import field_rows
 from modbus_connection.model import Component, ManualComponent
-from pystiebeleltron import ControllerModel, StiebelEltronModbusError
+from pystiebeleltron import ControllerModel
+from pystiebeleltron.lwz import LwzStiebelEltronAPI
+from pystiebeleltron.wpm import WpmStiebelEltronAPI
+from pystiebeleltron.wpm3i import Wpm3iStiebelEltronAPI
 
 from custom_components.stiebel_eltron_isg.const import (
     ATTR_MANUFACTURER,
@@ -28,11 +33,7 @@ from custom_components.stiebel_eltron_isg.const import (
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
-# Entity accessors reach model-specific API attributes that the shared protocol
-# cannot express. Keep that erasure at the shared coordinator/config-entry
-# boundary while the coordinator's own interface and data remain typed.
-type AnyStiebelEltronDataCoordinator = StiebelEltronDataCoordinator[Any]
-type StiebelEltronConfigEntry = ConfigEntry[AnyStiebelEltronDataCoordinator]
+type StiebelEltronConfigEntry = ConfigEntry[StiebelEltronDataCoordinator]
 
 
 def _is_read_only_write_error(err: AttributeError, field: str) -> bool:
@@ -53,6 +54,35 @@ def coordinator_display_name(model: ControllerModel) -> str:
     return f"Stiebel Eltron {model.name}"
 
 
+class ControllerFamily(Enum):
+    """The register layout a controller model is served with.
+
+    The platforms pick their entity descriptions by family, not by model, so
+    a model that shares a layout is added in one place: ``CONTROLLER_FAMILIES``.
+    """
+
+    WPM_3I = "wpm_3i"
+    WPM = "wpm"
+    LWZ = "lwz"
+
+
+CONTROLLER_FAMILIES: dict[ControllerModel, ControllerFamily] = {
+    ControllerModel.WPM_3i: ControllerFamily.WPM_3I,
+    ControllerModel.WPM_3: ControllerFamily.WPM,
+    ControllerModel.WPMsystem: ControllerFamily.WPM,
+    ControllerModel.LWZ_R290: ControllerFamily.WPM,
+    ControllerModel.LWZ: ControllerFamily.LWZ,
+    ControllerModel.LWZ_x04_SOL: ControllerFamily.LWZ,
+}
+
+# The value ``system_parameters.reset`` takes to restart the heat pump.
+RESET_VALUES: dict[ControllerFamily, int] = {
+    ControllerFamily.WPM_3I: 3,
+    ControllerFamily.WPM: 3,
+    ControllerFamily.LWZ: 1,
+}
+
+
 class StiebelEltronApi(Protocol):
     """Protocol for Stiebel Eltron API clients."""
 
@@ -61,32 +91,49 @@ class StiebelEltronApi(Protocol):
         ...
 
 
-@dataclass
-class StiebelEltronConnectionParams:
-    """Connection parameters for Stiebel Eltron ISG."""
+def create_api(family: ControllerFamily, unit: ModbusUnit) -> StiebelEltronApi:
+    """Return the library client that reads a family's register layout."""
+    if family is ControllerFamily.WPM_3I:
+        return Wpm3iStiebelEltronAPI(unit)
+    if family is ControllerFamily.WPM:
+        return WpmStiebelEltronAPI(unit)
+    return LwzStiebelEltronAPI(unit)
 
-    host: str
-    model: ControllerModel
+
+@dataclass(frozen=True)
+class PendingWrite:
+    """A value written to the device that no later poll has confirmed yet."""
+
+    value: float | int
+    # The newest poll that had started when the value was written. A poll with
+    # a higher generation started after the write and is the first one that can
+    # report what the device made of it.
+    refresh_generation: int
 
 
-class StiebelEltronDataCoordinator[T: StiebelEltronApi](
-    DataUpdateCoordinator[dict[str, float | int | None]]
-):
-    """Data coordinator base class for stiebel eltron isg."""
+class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
+    """Poll one controller and route writes to it.
+
+    The coordinator holds no data of its own: the API client caches the
+    register values, and entities read them through accessors.
+    """
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: StiebelEltronConfigEntry,
-        api_client: T,
-        params: StiebelEltronConnectionParams,
+        api_client: StiebelEltronApi,
+        model: ControllerModel,
+        host: str,
     ) -> None:
         """Initialize the Modbus hub."""
-        self._model: ControllerModel = params.model
-        self._host = params.host
+        self._model = model
+        self._host = host
         self._api = api_client
         self._refresh_generation = 0
         self._last_successful_refresh_generation = 0
+        self._pending_writes: dict[tuple[str, str], PendingWrite] = {}
+        self._write_lock = asyncio.Lock()
 
         super().__init__(
             hass,
@@ -94,8 +141,8 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             name=coordinator_display_name(self._model),
             config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            # The coordinator holds no data of its own (the API client caches
-            # the register values), so there is nothing to diff against.
+            # There is no coordinator data to diff against, so every successful
+            # poll has to notify the entities.
             always_update=True,
         )
 
@@ -119,22 +166,9 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
         return self._model
 
     @property
-    def model_name(self) -> str:
-        """Return the name of the controller model of the Stiebel Eltron ISG."""
-        if self._model == ControllerModel.LWZ:
-            return "LWA/LWZ"
-        if self._model == ControllerModel.LWZ_x04_SOL:
-            return "LWZ"
-        if self._model == ControllerModel.WPM_3:
-            return "WPM 3"
-        if self._model == ControllerModel.WPM_3i:
-            return "WPM 3i"
-        if self._model == ControllerModel.WPMsystem:
-            return "WPMsystem"
-        if self._model == ControllerModel.LWZ_R290:
-            return "LWZ R290"
-        # Fall back to the enum name for a clear, readable representation
-        return f"other model ({self._model.name})"
+    def family(self) -> ControllerFamily:
+        """Return the register layout family of the controller model."""
+        return CONTROLLER_FAMILIES[self._model]
 
     def get_raw_data(self) -> dict[str, Any]:
         """Return the raw data from the heat pump."""
@@ -143,11 +177,10 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             # APIs also contain polling helpers, which have no register fields.
             if not isinstance(component, (Component, ManualComponent)):
                 continue
-            component_result = dict(field_rows(component))
-            result = {**result, **component_result}
+            result.update(field_rows(component))
         return result
 
-    async def _async_update_data(self) -> dict[str, float | int | None]:
+    async def _async_update_data(self) -> None:
         """Time to update."""
         self._refresh_generation += 1
         generation = self._refresh_generation
@@ -155,9 +188,15 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
             await self._api.async_update()
         except ModbusError as exception:
             raise UpdateFailed(exception) from exception
-        else:
-            self._last_successful_refresh_generation = generation
-            return {}
+        self._last_successful_refresh_generation = generation
+        # Only a poll that started after a write can have read the device's
+        # answer to it. A poll that was already in flight may have read the
+        # registers before the write, so its pending values stay.
+        self._pending_writes = {
+            key: pending
+            for key, pending in self._pending_writes.items()
+            if pending.refresh_generation >= generation
+        }
 
     @property
     def refresh_generation(self) -> int:
@@ -169,25 +208,59 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
         """Return the generation of the newest successful refresh."""
         return self._last_successful_refresh_generation
 
+    @property
+    def write_lock(self) -> asyncio.Lock:
+        """Serialise an entity's comparison and write across all entities.
+
+        A written value is only held once its write has completed. Two entities
+        writing the same field at the same time would otherwise both compare
+        against the value from before either write, and the second command
+        would be dropped as unchanged or written twice. Holding this lock from
+        the comparison to the end of the write makes the second one see the
+        first. Home Assistant serialises calls within a platform only.
+        """
+        return self._write_lock
+
+    def pending_value(
+        self, component: str | None, field: str | None
+    ) -> float | int | None:
+        """Return the value last written to a field until the device confirmed it.
+
+        A write travels ISG to CAN to heat pump and needs a moment to be
+        reflected in the registers; the library does not update its cache on a
+        write either. Until a poll started after the write has succeeded, the
+        written value is therefore the best knowledge of the field. It is held
+        here rather than in the entity that wrote it because several entities
+        read and write the same field: the number and the climate entity share a
+        setpoint, the select and every climate entity share the operating mode.
+        A follow-up command from any of them has to see the value just written,
+        both to display it and to decide whether a write would change anything.
+
+        If the controller clamps or rounds the value, that correction appears
+        with the first poll started after the write.
+        """
+        if component is None or field is None:
+            return None
+        pending = self._pending_writes.get((component, field))
+        return pending.value if pending is not None else None
+
     def get_value(
         self,
-        value_reference: Callable[[T], float | int | None],
+        value_reference: Callable[[Any], float | int | None],
     ) -> float | int | None:
-        """Return a value from a callable accessor."""
-        try:
-            value = value_reference(self._api)
-        except StiebelEltronModbusError as err:
-            _LOGGER.warning(
-                "Failed to get value from accessor %r: %s",
-                value_reference,
-                err,
-            )
-            return None
+        """Return a value from a callable accessor.
+
+        Accessors read the library's cache and raise nothing on their own; a
+        non-numeric result, such as the unavailable marker decoded to None, is
+        reported as no value. The client is passed untyped because accessors
+        reach model-specific attributes the shared protocol cannot express.
+        """
+        value = value_reference(self._api)
         return value if isinstance(value, (int, float)) else None
 
     def has_value(
         self,
-        value_reference: Callable[[T], float | int | None],
+        value_reference: Callable[[Any], float | int | None],
     ) -> bool:
         """Check if a callable accessor has a value."""
         return self.get_value(value_reference) is not None
@@ -236,14 +309,22 @@ class StiebelEltronDataCoordinator[T: StiebelEltronApi](
                 translation_key="write_unsupported",
                 translation_placeholders={"field": field},
             ) from err
-        except (ModbusError, StiebelEltronModbusError) as err:
+        except ModbusError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="write_failed",
                 translation_placeholders={"field": field},
             ) from err
 
+        self._pending_writes[(component, field)] = PendingWrite(
+            value, self._refresh_generation
+        )
+        # Every entity reading this field shows the written value right away.
+        self.async_update_listeners()
+
     async def async_reset_heatpump(self) -> None:
         """Reset the heat pump."""
         _LOGGER.debug("Reset the heat pump")
-        await self.write_component_value("system_parameters", "reset", 3)
+        await self.write_component_value(
+            "system_parameters", "reset", RESET_VALUES[self.family]
+        )

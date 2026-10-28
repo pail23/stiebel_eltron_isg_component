@@ -110,13 +110,10 @@ def async_remove_unsupported_wpmsystem_runtime_sensors(
         return
 
     registry = er.async_get(hass)
-    # Every model prefix, not only the one detected now: a controller that was
-    # replaced by a WPMsystem left ids carrying the name of the model it was
-    # detected as back then, and nothing will ever provide those entities again.
-    prefixes = _legacy_prefixes(entry, model) + [
-        f"{DOMAIN}_{coordinator_display_name(historical)}_"
-        for historical in ControllerModel
-    ]
+    # _legacy_prefixes covers every model, not only the one detected now: a
+    # controller replaced by a WPMsystem left ids carrying the name of the model
+    # it was detected as back then, and nothing will ever provide those again.
+    prefixes = _legacy_prefixes(entry, model)
     obsolete_unique_ids = {
         unique_id
         for key in _WPMSYSTEM_UNSUPPORTED_RUNTIME_KEYS
@@ -162,12 +159,21 @@ def _legacy_prefixes(
 
     The name the user configured comes first: an installation that has already
     been updated holds registry entries of both schemes, and the older entry is
-    the one dashboards, automations and long term statistics refer to.
+    the one dashboards, automations and long term statistics refer to. The
+    model detected now comes second, followed by every other model. A controller
+    that was replaced, or detected as another model before an update, left ids
+    carrying the display name of that earlier model, and they must be migrated
+    and reported like any other. The order is the priority, see _match_prefix.
     """
-    prefixes = [f"{DOMAIN}_{_legacy_name(entry)}_"]
-    model_prefix = f"{DOMAIN}_{coordinator_display_name(model)}_"
-    if model_prefix not in prefixes:
-        prefixes.append(model_prefix)
+    prefixes: list[str] = []
+    for name in (
+        _legacy_name(entry),
+        coordinator_display_name(model),
+        *(coordinator_display_name(historical) for historical in ControllerModel),
+    ):
+        prefix = f"{DOMAIN}_{name}_"
+        if prefix not in prefixes:
+            prefixes.append(prefix)
     return prefixes
 
 

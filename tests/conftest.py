@@ -85,7 +85,7 @@ def mock_lwz_api() -> Generator[MagicMock]:
     """Patch the LWZ API and return the mocked client."""
 
     with patch(
-        "custom_components.stiebel_eltron_isg.lwz_coordinator.LwzStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.LwzStiebelEltronAPI",
         autospec=True,
     ) as mock_api_cls:
         api_client = mock_api_cls.return_value
@@ -106,7 +106,7 @@ def mock_wpm_3i_api() -> Generator[MagicMock]:
     """Patch the WPM API and return the mocked client."""
 
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm3i_coordinator.Wpm3iStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.Wpm3iStiebelEltronAPI",
         autospec=True,
     ) as mock_api_cls:
         api_client = mock_api_cls.return_value
@@ -136,7 +136,7 @@ def mock_wpm_api() -> Generator[MagicMock]:
     """Patch the WPM API and return the mocked client."""
 
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm_coordinator.WpmStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.WpmStiebelEltronAPI",
         autospec=True,
     ) as mock_api_cls:
         api_client = mock_api_cls.return_value

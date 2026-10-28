@@ -457,3 +457,150 @@ async def test_dhcp_discovery_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == expected_reason
+
+
+async def test_dhcp_adopts_mac_for_manual_entry(hass: HomeAssistant) -> None:
+    """Test DHCP discovery sets the MAC as unique ID of a manual entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: DHCP_DISCOVERY.ip, CONF_PORT: 502},
+    )
+    config_entry.add_to_hass(hass)
+    assert config_entry.unique_id is None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id == "00:00:00:00:00:01"
+    assert config_entry.data[CONF_HOST] == DHCP_DISCOVERY.ip
+
+
+async def test_dhcp_keeps_existing_unique_id(hass: HomeAssistant) -> None:
+    """Test DHCP discovery does not overwrite a different unique ID."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: DHCP_DISCOVERY.ip, CONF_PORT: 502},
+        unique_id="00:00:00:00:00:99",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.unique_id == "00:00:00:00:00:99"
+
+
+async def test_portless_entry_blocks_duplicate_user_flow(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entry stored without a port counts as the default port."""
+    MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: USER_INPUT[CONF_HOST]},
+    ).add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: USER_INPUT[CONF_HOST], CONF_PORT: 503}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_reconfigure_portless_entry_is_not_own_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """Test reconfiguring a port-less entry to its own host and port works."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: USER_INPUT[CONF_HOST]},
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_PORT] == 502
+
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_dhcp_leaves_ambiguous_host_matches_alone(hass: HomeAssistant) -> None:
+    """Two entries with the discovered IP get no MAC, the flow just aborts."""
+    entries = [
+        MockConfigEntry(
+            domain=DOMAIN,
+            title="Stiebel Eltron",
+            data={CONF_HOST: DHCP_DISCOVERY.ip, CONF_PORT: port},
+        )
+        for port in (502, 503)
+    ]
+    for config_entry in entries:
+        config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_DHCP}, data=DHCP_DISCOVERY
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert [config_entry.unique_id for config_entry in entries] == [None, None]
+
+
+async def test_reconfigure_onto_another_portless_entry_is_a_duplicate(
+    hass: HomeAssistant,
+) -> None:
+    """A port-less entry blocks reconfiguring another entry onto its host."""
+    other_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data={CONF_HOST: USER_INPUT[CONF_HOST]},
+    )
+    other_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Stiebel Eltron",
+        data=RECONFIGURE_INPUT,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert config_entry.data == RECONFIGURE_INPUT

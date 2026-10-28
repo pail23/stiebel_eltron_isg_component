@@ -19,6 +19,7 @@ from custom_components.stiebel_eltron_isg.const import (
     TARGET_TEMPERATURE_COOLING_CIRCUIT_1_HK1,
     UNIT_ID,
 )
+from custom_components.stiebel_eltron_isg.coordinator import CONTROLLER_FAMILIES
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 
 
@@ -56,7 +57,7 @@ async def test_wpmsystem_cooling_setpoint_reads_register_1603(
     mock_get_controller_model.return_value = ControllerModel.WPMsystem
     mock_config_entry.add_to_hass(hass)
     with patch(
-        "custom_components.stiebel_eltron_isg.wpm_coordinator.WpmStiebelEltronAPI",
+        "custom_components.stiebel_eltron_isg.coordinator.WpmStiebelEltronAPI",
         return_value=api,
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -84,7 +85,9 @@ async def test_wpmsystem_cooling_setpoint_reads_register_1603(
 )
 async def test_cooling_setpoint_sensor_is_limited_to_wpmsystem(model) -> None:
     """No other controller family receives the WPMsystem-only register."""
-    entry = SimpleNamespace(runtime_data=SimpleNamespace(model=model))
+    entry = SimpleNamespace(
+        runtime_data=SimpleNamespace(model=model, family=CONTROLLER_FAMILIES[model])
+    )
     add_entities = MagicMock()
     with patch.object(
         sensor_module,

@@ -9,25 +9,22 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusError
 from modbus_connection.model import Component, ManualComponent
 import pystiebeleltron
-from pystiebeleltron import ControllerModel, StiebelEltronModbusError
+from pystiebeleltron import ControllerModel
 import pytest
 
 from custom_components.stiebel_eltron_isg import coordinator as coordinator_module
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.coordinator import (
-    StiebelEltronConnectionParams,
+    CONTROLLER_FAMILIES,
+    RESET_VALUES,
+    ControllerFamily,
     StiebelEltronDataCoordinator,
     coordinator_display_name,
-)
-from custom_components.stiebel_eltron_isg.lwz_coordinator import (
-    StiebelEltronModbusLWZDataCoordinator,
+    create_api,
 )
 from custom_components.stiebel_eltron_isg.sensor import (
     StiebelEltronISGSensor,
     StiebelEltronSensorEntityDescription,
-)
-from custom_components.stiebel_eltron_isg.wpm3i_coordinator import (
-    StiebelEltronModbusWPM3iDataCoordinator,
 )
 
 
@@ -40,6 +37,10 @@ def _coordinator(api) -> StiebelEltronDataCoordinator:
     """Build a coordinator without invoking Home Assistant setup."""
     coordinator = StiebelEltronDataCoordinator.__new__(StiebelEltronDataCoordinator)
     coordinator._api = api
+    coordinator._model = ControllerModel.WPM_3
+    coordinator._refresh_generation = 0
+    coordinator._pending_writes = {}
+    coordinator._listeners = {}
     return coordinator
 
 
@@ -72,13 +73,7 @@ async def test_coordinator_and_entity_recover_after_repeated_offline_updates(
     api = SequencedApi()
     display_name = coordinator_display_name(ControllerModel.WPM_3)
     coordinator = StiebelEltronDataCoordinator(
-        hass,
-        mock_config_entry,
-        api,
-        StiebelEltronConnectionParams(
-            host="isg.local",
-            model=ControllerModel.WPM_3,
-        ),
+        hass, mock_config_entry, api, ControllerModel.WPM_3, "isg.local"
     )
     entity = StiebelEltronISGSensor(
         coordinator,
@@ -127,19 +122,13 @@ async def test_equal_data_refreshes_still_notify_entities(
 ) -> None:
     """Every successful device poll must notify entities.
 
-    Register values are cached on the API client while coordinator data is
-    always an empty dict. Disabling ``always_update`` would therefore suppress
-    every listener update after the first successful poll.
+    Register values are cached on the API client while the coordinator holds
+    no data. Disabling ``always_update`` would therefore suppress every
+    listener update after the first successful poll.
     """
     api = SimpleNamespace(async_update=AsyncMock())
     coordinator = StiebelEltronDataCoordinator(
-        hass,
-        mock_config_entry,
-        api,
-        StiebelEltronConnectionParams(
-            host="isg.local",
-            model=ControllerModel.WPM_3,
-        ),
+        hass, mock_config_entry, api, ControllerModel.WPM_3, "isg.local"
     )
     listener = MagicMock()
     remove_listener = coordinator.async_add_listener(listener)
@@ -148,7 +137,7 @@ async def test_equal_data_refreshes_still_notify_entities(
         await coordinator.async_refresh()
         await coordinator.async_refresh()
 
-        assert coordinator.data == {}
+        assert coordinator.data is None
         assert api.async_update.await_count == 2
         assert listener.call_count == 2
     finally:
@@ -161,26 +150,6 @@ def test_host_returns_the_configured_address() -> None:
     coordinator._host = "isg.local"
 
     assert coordinator.host == "isg.local"
-
-
-@pytest.mark.parametrize(
-    ("model", "expected"),
-    [
-        (ControllerModel.LWZ, "LWA/LWZ"),
-        (ControllerModel.LWZ_x04_SOL, "LWZ"),
-        (ControllerModel.WPM_3, "WPM 3"),
-        (ControllerModel.WPM_3i, "WPM 3i"),
-        (ControllerModel.WPMsystem, "WPMsystem"),
-        (ControllerModel.LWZ_R290, "LWZ R290"),
-        (SimpleNamespace(name="FUTURE"), "other model (FUTURE)"),
-    ],
-)
-def test_model_name_is_readable(model, expected: str) -> None:
-    """Every known model and the forward-compatible fallback have a name."""
-    coordinator = _coordinator(SimpleNamespace())
-    coordinator._model = model
-
-    assert coordinator.model_name == expected
 
 
 def test_get_raw_data_combines_all_api_components() -> None:
@@ -208,19 +177,6 @@ def test_get_raw_data_combines_all_api_components() -> None:
     assert rows.call_count == 2
     assert rows.call_args_list[0].args == (first,)
     assert rows.call_args_list[1].args == (second,)
-
-
-def test_get_value_returns_none_for_library_read_error(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A register read error makes one entity unavailable without crashing."""
-    coordinator = _coordinator(SimpleNamespace())
-
-    def failed_accessor(api):
-        raise StiebelEltronModbusError
-
-    assert coordinator.get_value(failed_accessor) is None
-    assert "Failed to get value from accessor" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -345,20 +301,11 @@ async def test_write_component_value_reports_invalid_value() -> None:
     assert isinstance(error.value.__cause__, ValueError)
 
 
-@pytest.mark.parametrize(
-    "write_error",
-    [
-        pytest.param(ModbusError("write failed"), id="modbus"),
-        pytest.param(StiebelEltronModbusError(), id="library"),
-    ],
-)
-async def test_write_component_value_reports_communication_error(
-    write_error: Exception,
-) -> None:
+async def test_write_component_value_reports_communication_error() -> None:
     """Communication failures are exposed as translated HA errors."""
     component = SimpleNamespace(
         target=21.0,
-        write=AsyncMock(side_effect=write_error),
+        write=AsyncMock(side_effect=ModbusError("write failed")),
     )
     coordinator = _coordinator(SimpleNamespace(parameters=component))
 
@@ -369,7 +316,7 @@ async def test_write_component_value_reports_communication_error(
     assert error.value.translation_domain == DOMAIN
     assert error.value.translation_key == "write_failed"
     assert error.value.translation_placeholders == {"field": "target"}
-    assert error.value.__cause__ is write_error
+    assert isinstance(error.value.__cause__, ModbusError)
 
 
 @pytest.mark.parametrize(
@@ -398,47 +345,74 @@ async def test_write_component_value_propagates_unexpected_error(
     assert error.value is write_error
 
 
-async def test_reset_heatpump_uses_wpm_reset_value() -> None:
-    """The base WPM coordinator resets with the WPM-specific value."""
+@pytest.mark.parametrize(
+    ("model", "reset_value"),
+    [
+        (ControllerModel.WPM_3, 3),
+        (ControllerModel.WPM_3i, 3),
+        (ControllerModel.WPMsystem, 3),
+        (ControllerModel.LWZ_R290, 3),
+        (ControllerModel.LWZ, 1),
+        (ControllerModel.LWZ_x04_SOL, 1),
+    ],
+)
+async def test_reset_heatpump_writes_the_value_of_the_family(
+    model: ControllerModel, reset_value: int
+) -> None:
+    """Every model resets through the shared write path with its family's value."""
     coordinator = _coordinator(SimpleNamespace())
+    coordinator._model = model
     coordinator.write_component_value = AsyncMock()
 
     await coordinator.async_reset_heatpump()
 
     coordinator.write_component_value.assert_awaited_once_with(
-        "system_parameters", "reset", 3
+        "system_parameters", "reset", reset_value
     )
 
 
-async def test_lwz_reset_heatpump_uses_central_write_path() -> None:
-    """LWZ keeps its value 1 while using the shared error handling."""
-    coordinator = StiebelEltronModbusLWZDataCoordinator.__new__(
-        StiebelEltronModbusLWZDataCoordinator
-    )
-    coordinator.write_component_value = AsyncMock()
-
-    await coordinator.async_reset_heatpump()
-
-    coordinator.write_component_value.assert_awaited_once_with(
-        "system_parameters", "reset", 1
-    )
+def test_every_family_has_a_reset_value() -> None:
+    """A family added to the layout table cannot be left without one."""
+    assert set(RESET_VALUES) == set(ControllerFamily)
+    assert set(CONTROLLER_FAMILIES) == set(ControllerModel)
 
 
-def test_wpm_3i_coordinator_initializes_model_specific_api(
+@pytest.mark.parametrize(
+    ("family", "api_fixture"),
+    [
+        (ControllerFamily.WPM_3I, "mock_wpm_3i_api"),
+        (ControllerFamily.WPM, "mock_wpm_api"),
+        (ControllerFamily.LWZ, "mock_lwz_api"),
+    ],
+)
+def test_create_api_picks_the_client_of_the_family(
+    request: pytest.FixtureRequest,
+    mock_modbus_connection,
+    family: ControllerFamily,
+    api_fixture: str,
+) -> None:
+    """Each register layout is read by its own library client."""
+    api = create_api(family, mock_modbus_connection.for_unit(1))
+
+    assert api is request.getfixturevalue(api_fixture)
+
+
+def test_coordinator_keeps_api_model_and_host(
     hass,
     mock_config_entry,
     mock_modbus_connection,
     mock_wpm_3i_api,
 ) -> None:
-    """The WPM 3i coordinator keeps its model-specific API, model and host."""
-    coordinator = StiebelEltronModbusWPM3iDataCoordinator(
+    """The coordinator exposes the client, model and host it was set up with."""
+    coordinator = StiebelEltronDataCoordinator(
         hass,
         mock_config_entry,
+        create_api(ControllerFamily.WPM_3I, mock_modbus_connection.for_unit(1)),
         ControllerModel.WPM_3i,
-        mock_modbus_connection.for_unit(1),
         "isg.local",
     )
 
     assert coordinator.model is ControllerModel.WPM_3i
+    assert coordinator.family is ControllerFamily.WPM_3I
     assert coordinator.host == "isg.local"
     assert coordinator._api is mock_wpm_3i_api

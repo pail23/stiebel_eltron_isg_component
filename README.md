@@ -30,6 +30,19 @@ Modbus, the separate [Stiebel Eltron HTTP integration](https://github.com/pmq/st
 may provide additional sensors. It reads the local web pages and does not
 control the heat pump; available values depend on the ISG page layout.
 
+For a register this integration does not read, you can add your own sensor with
+the [Modbus integration](https://www.home-assistant.io/integrations/modbus/)
+of Home Assistant. It opens its own connection to the ISG. In a read-only test
+on a WPM 3i, two additional Modbus clients read without errors while this
+integration kept working; other controllers and older ISG firmware are
+untested. Use unit ID 1 and the address one lower than the one in the Stiebel
+Eltron Modbus manual, for example `address: 1500` for the WPM operating mode
+listed at 1501. Prefer read-only sensors there, because writes through it bypass
+the range checks of this integration.
+
+Registers that only exist after editing the ISG's SD card are not supported by
+this integration.
+
 ## Prerequisites
 
 You need:
@@ -93,6 +106,21 @@ the total register and retains the fractional remainder in the day register.
 Treating that remainder as a reset to zero would count part of the energy
 twice.
 
+A WPMsystem has been seen to add the day value to the total register one
+poll before it resets the day register. Since
+[ThyMYthOS/python-stiebel-eltron#108](https://github.com/ThyMYthOS/python-stiebel-eltron/pull/108)
+the cumulative counter holds such a rise of the total back until the day
+register resets, so the day is counted once. Before that fix the counter ran
+ahead by up to the previous day's value until the current day caught up, and
+on the first restart with the fix it starts from the registers again, lower by
+that amount, as a restart did before while the counter was ahead. Home
+Assistant subtracts a drop of up to 10 % from that hour's statistics, which
+removes the extra energy, and treats a larger drop as a counter reset, which
+keeps it.
+Restarting in the evening, once today's consumption exceeds yesterday's,
+avoids the drop. Wrong hours can be corrected under **Developer Tools →
+Statistics → Adjust sum**.
+
 The separate **Total** sensors remain cumulative alternatives. Which energy
 entities are available depends on the connected controller.
 
@@ -112,12 +140,22 @@ The 24-hour values are both Wh;
 the 12-month values are both kWh. These windows differ from calendar-day
 counters. WPMsystem and LWZ R290 heat-window sensors require the extended
 energy registers and have no state class, so they create no long-term
-statistics.
+statistics. The same applies to the power-consumption windows of WPMsystem,
+WPM 3 and LWZ R290 (**Consumed heating/cooling/water heating last 24 h, 12 m,
+previous 12 m**): a rolling window fits no state class, since a long-term sum
+would track the net change of the window, not consumption. Installations that
+recorded statistics for them under the earlier `total` state class may see a
+fixable `state_class_removed` issue under **Developer Tools → Statistics**;
+deleting that statistic removes the misleading long-term sum, not the entity's
+state history. The nine WPMsystem efficiency ratios do record statistics as
+measurements; the mean of a window ratio is a trend indicator, not a COP
+recomputed over the whole period.
 
 For WPMsystem, the three cooling efficiency sensors are calculated the same
 way from the matching cooling windows. A window without cooling reads zero
 heat and zero electricity, so its sensor stays unavailable while the ISG
-shows 0.00.
+shows 0.00. The three water heating efficiency sensors follow the same rule
+with the water heating windows.
 
 WPMsystem also offers runtime counters: **Compressor Heating Heat Pump 1**,
 **Cooling Runtime Heat Pump 1**, and **NHZ 1 Runtime**, **NHZ 2 Runtime** and

@@ -2,7 +2,6 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-import logging
 from typing import Any
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -11,27 +10,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import RESET_HEATPUMP
-from .coordinator import AnyStiebelEltronDataCoordinator, StiebelEltronConfigEntry
+from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 from .entity import StiebelEltronISGEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
 
-@dataclass(frozen=True)
-class StiebelEltronISGButtonDescriptionMixin:
-    """Mixin to describe aStiebel Eltron ISG button."""
-
-    press_action: Callable[[AnyStiebelEltronDataCoordinator], Coroutine[Any, Any, None]]
-
-
-@dataclass(frozen=True)
-class StiebelEltronISGButtonDescription(
-    ButtonEntityDescription,
-    StiebelEltronISGButtonDescriptionMixin,
-):
+@dataclass(frozen=True, kw_only=True)
+class StiebelEltronISGButtonDescription(ButtonEntityDescription):
     """Stiebel Eltron ISG button description."""
+
+    press_action: Callable[[StiebelEltronDataCoordinator], Coroutine[Any, Any, None]]
 
 
 BUTTONS = [
@@ -49,7 +38,7 @@ async def async_setup_entry(
     entry: StiebelEltronConfigEntry,
     async_add_devices: AddEntitiesCallback,
 ) -> None:
-    """Set up the select platform."""
+    """Set up the button platform."""
     coordinator = entry.runtime_data
 
     async_add_devices(
@@ -65,7 +54,7 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: AnyStiebelEltronDataCoordinator,
+        coordinator: StiebelEltronDataCoordinator,
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronISGButtonDescription,
     ) -> None:
@@ -76,14 +65,6 @@ class StiebelEltronISGButtonEntity(StiebelEltronISGEntity, ButtonEntity):
     async def async_press(self) -> None:
         """Trigger the button action."""
         await self.entity_description.press_action(self.coordinator)
-
-    @property
-    def entity_registry_enabled_default(self) -> bool:
-        """Return if the entity should be enabled when first added.
-
-        This only applies when first added to the entity registry.
-        """
-        return True  # The button should be enabled by default as it doesn't rely on specific data from the coordinator
 
     @property
     def available(self) -> bool:
