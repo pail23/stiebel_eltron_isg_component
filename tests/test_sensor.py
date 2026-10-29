@@ -401,6 +401,25 @@ def test_hk3_temperatures_resolve_on_installed_wpm_api() -> None:
     assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) is None
 
 
+async def test_installed_library_counts_the_midnight_transfer_once() -> None:
+    """The cumulative sensor keeps its value while the total books the day first.
+
+    PyPI's yanked 0.10.0 shipped the 0.9.3 code, whose ``max(previous, day +
+    total)`` would report 120 kWh in the second poll (#738).
+    """
+    unit = MockModbusConnection().for_unit(1)
+    api = WpmStiebelEltronAPI(unit)
+    produced_heating = _wpm(PRODUCED_HEATING)
+    readings = []
+    # Day register 3500, total 3501 + 3502 * 1000 (wire addresses).
+    for day, total in ((10, 100), (10, 110), (0, 110), (3, 110)):
+        unit.load_raw({"input": {3500: day, 3501: total % 1000, 3502: total // 1000}})
+        await api.energy_data.async_update()
+        readings.append(produced_heating.modbus_register(api))
+
+    assert readings == [110, 110, 110, 113]
+
+
 def test_lwz_exposes_compressor_frequency() -> None:
     """LWZ compressor frequency reads system_values.compressor_speed (Hz)."""
     api = SimpleNamespace(system_values=SimpleNamespace(compressor_speed=31.0))

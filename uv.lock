@@ -2437,14 +2437,14 @@ sdist = { url = "https://files.pythonhosted.org/packages/08/64/a99f27d3b4347486c
 
 [[package]]
 name = "pystiebeleltron"
-version = "0.10.0"
+version = "0.10.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "modbus-connection" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/94/73b1b1c613136a66e4b1a5e369e200bbe07f18d63b0de20fe3f91c4e2872/pystiebeleltron-0.10.0.tar.gz", hash = "sha256:123a613070265bf2ee45c15db4d6fd2f7973538aecc32ca84787969602dfb32d", size = 21576, upload-time = "2026-10-24T16:50:27.378Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/05/0f/2ebfbd05ed54a592c5817a2e37c8e0f8ed0168451a2e80253baa06559872/pystiebeleltron-0.10.1.tar.gz", hash = "sha256:ef0f2ec4ac184b5438e2292595b5063b3ebcb47939624db1c54c7a38190542af", size = 22664, upload-time = "2026-10-29T19:54:12.888Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f0/bc/1218cc6722a32c11f9631513888f912ccf54d13bd1533737d16e460ce6ab/pystiebeleltron-0.10.0-py3-none-any.whl", hash = "sha256:3671944bd6c8c303691aec988a2bd44976d6fe1d2f771276ab98b817fd684005", size = 26533, upload-time = "2026-10-24T16:50:25.859Z" },
+    { url = "https://files.pythonhosted.org/packages/01/9b/b92a72d90ed64ec90b5d214652010f7b40dce91a692a98e6ce673bf3cda7/pystiebeleltron-0.10.1-py3-none-any.whl", hash = "sha256:87630a9f6405c4429ce9a4e8537200ac0a8155850ca0ebad7bd6a7bbfd98a359", size = 28070, upload-time = "2026-10-29T19:54:11.737Z" },
 ]
 
 [package.optional-dependencies]
@@ -3041,7 +3041,7 @@ requires-dist = [
     { name = "colorlog", specifier = ">=6.12.0" },
     { name = "modbus-connection", extras = ["tmodbus"], specifier = "==4.12.4" },
     { name = "pymodbus", specifier = "==3.13.1" },
-    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.10.0" },
+    { name = "pystiebeleltron", extras = ["tmodbus"], specifier = "==0.10.1" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.375" },
     { name = "tmodbus", specifier = "==0.6.2" },
 ]

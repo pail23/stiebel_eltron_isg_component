@@ -74,12 +74,16 @@ def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None
 
 @pytest.mark.parametrize(
     ("version", "compatible"),
-    [("0.9.3", False), ("0.10.0", True), ("0.11.0", False)],
+    [("0.9.3", False), ("0.10.0", True), ("0.10.1", True), ("0.11.0", False)],
 )
 def test_runtime_library_range_requires_optional_hk3_handling(
     version: str, compatible: bool
 ) -> None:
-    """Require the midnight day and total fix without admitting an untested 0.11."""
+    """Keep the 0.10 series without admitting an untested 0.11.
+
+    The yanked 0.10.0 stays in range while Home Assistant Core pins it;
+    0.10.1 is the first package with the midnight day and total fix.
+    """
     requirements = [
         Requirement(entry)
         for entry in json.loads(_MANIFEST.read_text())["requirements"]
