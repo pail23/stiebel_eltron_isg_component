@@ -235,6 +235,12 @@ jobs:
           fi
           git tag "$VERSION"
           git push origin "refs/tags/$VERSION"
+          # The API may not list a just pushed tag yet, and --verify-tag below
+          # would then fail. Without the tag after a minute, it fails anyway.
+          for _ in $(seq 30); do
+            gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION" > /dev/null 2>&1 && break
+            sleep 2
+          done
           # Undo a partial publish, so the run can be retried with the same version.
           if ! gh release create "$VERSION" "$zip" \
               --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"; then
