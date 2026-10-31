@@ -477,6 +477,9 @@
             "compressor_heating_hp_1": {
                 "name": "Compresseur chauffage pompe à chaleur 1"
             },
+            "compressor_heating_water_hp_1": {
+                "name": "Compresseur eau chaude pompe à chaleur 1"
+            },
             "cooling_runtime_hp_1": {
                 "name": "Durée refroidissement pompe à chaleur 1"
             },

@@ -477,6 +477,9 @@
             "compressor_heating_hp_1": {
                 "name": "Kompresor topení tepelné čerpadlo 1"
             },
+            "compressor_heating_water_hp_1": {
+                "name": "Kompresor TUV tepelné čerpadlo 1"
+            },
             "cooling_runtime_hp_1": {
                 "name": "Doba chlazení tepelné čerpadlo 1"
             },

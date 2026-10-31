@@ -32,6 +32,7 @@ from custom_components.stiebel_eltron_isg.const import (
     COMPRESSOR_HEATING,
     COMPRESSOR_HEATING_HP_1,
     COMPRESSOR_HEATING_WATER,
+    COMPRESSOR_HEATING_WATER_HP_1,
     COMPRESSOR_SPEED,
     CONSUMED_COOLING_12M,
     CONSUMED_COOLING_LAST_24H,
@@ -1117,6 +1118,7 @@ async def test_wpmsystem_cooling_efficiency_and_runtimes_decode_with_library(
         3715: 326,
         3716: 0,
         3643: 2268,
+        3644: 1663,
         3544: 584,
         3545: 0,
         3546: 0,
@@ -1132,6 +1134,7 @@ async def test_wpmsystem_cooling_efficiency_and_runtimes_decode_with_library(
     runtimes = {d.key: d.modbus_register(api) for d in WPMSYSTEM_RUNTIME_SENSOR_TYPES}
     assert runtimes == {
         COMPRESSOR_HEATING_HP_1: 2268,
+        COMPRESSOR_HEATING_WATER_HP_1: 1663,
         COOLING_RUNTIME_HP_1: 584,
         NHZ_1_RUNTIME: 0,
         NHZ_2_RUNTIME: 0,
@@ -1160,7 +1163,7 @@ async def test_wpmsystem_runtimes_follow_the_sentinel_and_come_back(
             for address in range(start, end + 1)
         },
     }
-    counters = {3643: 2268, 3544: 584, 3545: 0, 3546: 0, 3547: 57}
+    counters = {3643: 2268, 3644: 1663, 3544: 584, 3545: 0, 3546: 0, 3547: 57}
     cooling_window = {3697: 29, 3698: 2, 3715: 326, 3716: 0}
     api = WpmStiebelEltronAPI(unit)
 
@@ -1173,10 +1176,10 @@ async def test_wpmsystem_runtimes_follow_the_sentinel_and_come_back(
             [d.modbus_register(api) for d in WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES],
         )
 
-    expected = ([2268, 584, 0, 0, 57], [None, 6.22, None])
+    expected = ([2268, 1663, 584, 0, 0, 57], [None, 6.22, None])
     assert await read(counters | cooling_window) == expected
     sentinel = dict.fromkeys(counters | cooling_window, 0x8000)
-    assert await read(sentinel) == ([None] * 5, [None] * 3)
+    assert await read(sentinel) == ([None] * 6, [None] * 3)
     assert await read(counters | cooling_window) == expected
 
 
@@ -1185,6 +1188,7 @@ def test_wpmsystem_runtimes_are_hour_counters_with_their_own_keys() -> None:
     keys = {d.key for d in WPMSYSTEM_RUNTIME_SENSOR_TYPES}
     assert keys == {
         COMPRESSOR_HEATING_HP_1,
+        COMPRESSOR_HEATING_WATER_HP_1,
         COOLING_RUNTIME_HP_1,
         NHZ_1_RUNTIME,
         NHZ_2_RUNTIME,
