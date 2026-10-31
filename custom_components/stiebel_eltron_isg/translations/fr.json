@@ -810,6 +810,30 @@
             },
             "heating_curve_low_end_hk2": {
                 "name": "Point bas courbe de chauffe CC 2"
+            },
+            "comfort_temperature_target_hk1_thz": {
+                "name": "Consigne jour CC 1"
+            },
+            "eco_temperature_target_hk1_thz": {
+                "name": "Consigne nuit CC 1"
+            },
+            "comfort_temperature_target_hk2_thz": {
+                "name": "Consigne jour CC 2"
+            },
+            "eco_temperature_target_hk2_thz": {
+                "name": "Consigne nuit CC 2"
+            },
+            "comfort_temperature_target_hk3_thz": {
+                "name": "Consigne jour CC 3"
+            },
+            "eco_temperature_target_hk3_thz": {
+                "name": "Consigne nuit CC 3"
+            },
+            "comfort_water_temperature_target_thz": {
+                "name": "Consigne eau chaude jour"
+            },
+            "eco_water_temperature_target_thz": {
+                "name": "Consigne eau chaude nuit"
             }
         },
         "switch": {
@@ -830,6 +854,19 @@
         },
         "select": {
             "operation_mode": {
+                "name": "Mode de fonctionnement",
+                "state": {
+                    "water_heating": "Chauffage de l'eau",
+                    "emergency": "Urgence",
+                    "program": "Programme",
+                    "ready": "Prêt",
+                    "automatic": "Automatique",
+                    "manual": "Manuel",
+                    "comfort": "Confort",
+                    "eco": "Économie"
+                }
+            },
+            "operation_mode_thz": {
                 "name": "Mode de fonctionnement",
                 "state": {
                     "water_heating": "Chauffage de l'eau",

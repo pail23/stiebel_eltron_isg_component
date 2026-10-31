@@ -810,6 +810,30 @@
             },
             "heating_curve_low_end_hk2": {
                 "name": "Dolní bod topné křivky TO 2"
+            },
+            "comfort_temperature_target_hk1_thz": {
+                "name": "Denní teplota Soll TO 1"
+            },
+            "eco_temperature_target_hk1_thz": {
+                "name": "Noční teplota Soll TO 1"
+            },
+            "comfort_temperature_target_hk2_thz": {
+                "name": "Denní teplota Soll TO 2"
+            },
+            "eco_temperature_target_hk2_thz": {
+                "name": "Noční teplota Soll TO 2"
+            },
+            "comfort_temperature_target_hk3_thz": {
+                "name": "Denní teplota Soll TO 3"
+            },
+            "eco_temperature_target_hk3_thz": {
+                "name": "Noční teplota Soll TO 3"
+            },
+            "comfort_water_temperature_target_thz": {
+                "name": "Denní teplota TUV Soll"
+            },
+            "eco_water_temperature_target_thz": {
+                "name": "Noční teplota TUV Soll"
             }
         },
         "switch": {
@@ -830,6 +854,19 @@
         },
         "select": {
             "operation_mode": {
+                "name": "Provozní režim",
+                "state": {
+                    "water_heating": "Ohřev vody",
+                    "emergency": "Nouzový stav",
+                    "program": "Program",
+                    "ready": "Pohotovost",
+                    "automatic": "Automatický",
+                    "manual": "Manuál",
+                    "comfort": "Komfort",
+                    "eco": "Eco"
+                }
+            },
+            "operation_mode_thz": {
                 "name": "Provozní režim",
                 "state": {
                     "water_heating": "Ohřev vody",

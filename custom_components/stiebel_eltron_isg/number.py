@@ -1,6 +1,6 @@
 """Sensor number for stiebel_eltron_isg."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 import math
 
 from homeassistant.components.number import (
@@ -354,6 +354,29 @@ NUMBER_TYPES_WPMSYSTEM = [
 ]
 
 
+# The German wording of the THZ 5.1/7.1 (ISG Connect) differs from the one the
+# other controllers use: its display and ISG call the operating modes "Komfort"
+# and "Eco", not "Tag" and "Absenk". These descriptions only differ in their
+# translation key, so keys, unique ids and registers stay those of
+# NUMBER_TYPES_WPM and existing entities keep their ids.
+_THZ_RELABELED_KEYS = frozenset({
+    COMFORT_TEMPERATURE_TARGET_HK1,
+    ECO_TEMPERATURE_TARGET_HK1,
+    COMFORT_TEMPERATURE_TARGET_HK2,
+    ECO_TEMPERATURE_TARGET_HK2,
+    COMFORT_TEMPERATURE_TARGET_HK3,
+    ECO_TEMPERATURE_TARGET_HK3,
+    COMFORT_WATER_TEMPERATURE_TARGET,
+    ECO_WATER_TEMPERATURE_TARGET,
+})
+
+NUMBER_TYPES_THZ = [
+    replace(description, translation_key=f"{description.key}_thz")
+    if description.key in _THZ_RELABELED_KEYS
+    else description
+    for description in NUMBER_TYPES_WPM
+]
+
 NUMBER_TYPES_LWZ = [
     StiebelEltronNumberEntityDescription(
         key=COMFORT_TEMPERATURE_TARGET_HK1,
@@ -590,11 +613,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the number platform."""
     coordinator = entry.runtime_data
-    descriptions = (
-        NUMBER_TYPES_WPMSYSTEM
-        if coordinator.model is ControllerModel.WPMsystem
-        else _NUMBER_TYPES[coordinator.family]
-    )
+    if coordinator.model is ControllerModel.WPMsystem:
+        descriptions = NUMBER_TYPES_WPMSYSTEM
+    elif coordinator.model is ControllerModel.LWZ_R290:
+        descriptions = NUMBER_TYPES_THZ
+    else:
+        descriptions = _NUMBER_TYPES[coordinator.family]
     async_add_devices([
         StiebelEltronISGNumberEntity(coordinator, entry, description)
         for description in descriptions

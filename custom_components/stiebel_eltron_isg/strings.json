@@ -815,6 +815,30 @@
             },
             "heating_curve_low_end_hk2": {
                 "name": "Heating Curve Low End HK2"
+            },
+            "comfort_temperature_target_hk1_thz": {
+                "name": "Comfort Temperature Target HK1"
+            },
+            "eco_temperature_target_hk1_thz": {
+                "name": "Eco Temperature Target HK1"
+            },
+            "comfort_temperature_target_hk2_thz": {
+                "name": "Comfort Temperature Target HK2"
+            },
+            "eco_temperature_target_hk2_thz": {
+                "name": "Eco Temperature Target HK2"
+            },
+            "comfort_temperature_target_hk3_thz": {
+                "name": "Comfort Temperature Target HK3"
+            },
+            "eco_temperature_target_hk3_thz": {
+                "name": "Eco Temperature Target HK3"
+            },
+            "comfort_water_temperature_target_thz": {
+                "name": "Comfort Water Temperature Target"
+            },
+            "eco_water_temperature_target_thz": {
+                "name": "Eco Water Temperature Target"
             }
         },
         "switch": {
@@ -835,6 +859,19 @@
         },
         "select": {
             "operation_mode": {
+                "name": "Operation Mode",
+                "state": {
+                    "water_heating": "Water heating",
+                    "emergency": "Emergency",
+                    "program": "Program",
+                    "ready": "Standby",
+                    "automatic": "Automatic",
+                    "manual": "Manual",
+                    "comfort": "Comfort",
+                    "eco": "Eco"
+                }
+            },
+            "operation_mode_thz": {
                 "name": "Operation Mode",
                 "state": {
                     "water_heating": "Water heating",

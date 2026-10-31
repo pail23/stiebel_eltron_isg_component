@@ -810,6 +810,30 @@
             },
             "heating_curve_low_end_hk2": {
                 "name": "Punto basso curva climatica CC 2"
+            },
+            "comfort_temperature_target_hk1_thz": {
+                "name": "Temperatura target comfort CC 1"
+            },
+            "eco_temperature_target_hk1_thz": {
+                "name": "Temperatura target eco CC 1"
+            },
+            "comfort_temperature_target_hk2_thz": {
+                "name": "Temperatura target comfort CC 2"
+            },
+            "eco_temperature_target_hk2_thz": {
+                "name": "Temperatura target eco CC 2"
+            },
+            "comfort_temperature_target_hk3_thz": {
+                "name": "Temperatura target comfort CC 3"
+            },
+            "eco_temperature_target_hk3_thz": {
+                "name": "Temperatura target eco CC 3"
+            },
+            "comfort_water_temperature_target_thz": {
+                "name": "Temperatura target acqua calda comfort"
+            },
+            "eco_water_temperature_target_thz": {
+                "name": "Temperatura target acqua calda eco"
             }
         },
         "switch": {
@@ -830,6 +854,19 @@
         },
         "select": {
             "operation_mode": {
+                "name": "Modalità operativa",
+                "state": {
+                    "water_heating": "Riscaldamento dell'acqua",
+                    "emergency": "Emergenza",
+                    "program": "Programma",
+                    "ready": "Pronto",
+                    "automatic": "Automatico",
+                    "manual": "Manuale",
+                    "comfort": "Comfort",
+                    "eco": "Eco"
+                }
+            },
+            "operation_mode_thz": {
                 "name": "Modalità operativa",
                 "state": {
                     "water_heating": "Riscaldamento dell'acqua",

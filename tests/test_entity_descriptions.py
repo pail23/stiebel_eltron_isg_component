@@ -69,6 +69,7 @@ _WRITE_FIELD_ATTRIBUTES = (
 # ``test_every_description_is_covered`` fails if one is missed entirely.
 _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
     ("NUMBER_TYPES_WPM", WPM, number.NUMBER_TYPES_WPM),
+    ("NUMBER_TYPES_THZ", WPM, number.NUMBER_TYPES_THZ),
     ("NUMBER_TYPES_WPMSYSTEM", WPM, number.NUMBER_TYPES_WPMSYSTEM),
     ("NUMBER_TYPES_WPM_3I", WPM_3I, number.NUMBER_TYPES_WPM_3I),
     ("NUMBER_TYPES_LWZ", LWZ, number.NUMBER_TYPES_LWZ),
@@ -111,6 +112,7 @@ _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
     ("SWITCH_TYPES", WPM_3I, switch.SWITCH_TYPES),
     ("SWITCH_TYPES", LWZ, switch.SWITCH_TYPES),
     ("WPM_SELECT_TYPES", WPM, select.WPM_SELECT_TYPES),
+    ("THZ_SELECT_TYPES", WPM, select.THZ_SELECT_TYPES),
     ("WPM_SELECT_TYPES", WPM_3I, select.WPM_SELECT_TYPES),
     ("LWZ_SELECT_TYPES", LWZ, select.LWZ_SELECT_TYPES),
     ("WPM_CLIMATE_TYPES", WPM, climate.WPM_CLIMATE_TYPES),
