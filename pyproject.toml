@@ -8,9 +8,10 @@ dependencies = [
     "colorlog>=6.12.0",
     # Match Home Assistant Core's required shared Modbus backend for tests.
     "modbus-connection[tmodbus]==4.12.4",
-    "pytest-homeassistant-custom-component>=0.13.372",
-    # Home Assistant 2026.10 pins 0.8.0 for its own stiebel_eltron integration.
-    "pystiebeleltron[tmodbus]==0.8.0",
+    "pytest-homeassistant-custom-component>=0.13.375",
+    # PyPI's yanked 0.10.0 contains the 0.9.3 code; 0.10.1 is the first package
+    # with the midnight day and total fix (home-assistant/core#189495).
+    "pystiebeleltron[tmodbus]==0.10.1",
     # Keep the test stack aligned with Home Assistant's Modbus manifest.
     "pymodbus==3.13.1",
     "tmodbus==0.6.2",

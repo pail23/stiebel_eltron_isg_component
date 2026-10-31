@@ -380,27 +380,17 @@ def test_wpm_3i_target_temperature_hk1_reads_the_shared_field() -> None:
     assert _wpm_3i(TARGET_TEMPERATURE_HK1).modbus_register(api) == 23.4
 
 
-@pytest.mark.parametrize("has_extended_values", [False, True])
-def test_hk3_temperatures_follow_library_component(
-    has_extended_values: bool,
-) -> None:
-    """Read HK3 from its component in either supported library layout."""
+def test_hk3_temperatures_follow_library_component() -> None:
+    """Read HK3 from the optional extended system values component."""
     api = SimpleNamespace(
-        system_values=SimpleNamespace(
-            actual_temperature_hk_3=11.1,
-            set_temperature_hk_3=22.2,
-        )
-    )
-    if has_extended_values:
-        api.extended_system_values = SimpleNamespace(
+        extended_system_values=SimpleNamespace(
             actual_temperature_hk_3=33.3,
             set_temperature_hk_3=44.4,
         )
+    )
 
-    expected_actual = 33.3 if has_extended_values else 11.1
-    expected_target = 44.4 if has_extended_values else 22.2
-    assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) == expected_actual
-    assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) == expected_target
+    assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) == 33.3
+    assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) == 44.4
 
 
 def test_hk3_temperatures_resolve_on_installed_wpm_api() -> None:
@@ -409,6 +399,25 @@ def test_hk3_temperatures_resolve_on_installed_wpm_api() -> None:
 
     assert _wpm(ACTUAL_TEMPERATURE_HK3).modbus_register(api) is None
     assert _wpm(TARGET_TEMPERATURE_HK3).modbus_register(api) is None
+
+
+async def test_installed_library_counts_the_midnight_transfer_once() -> None:
+    """The cumulative sensor keeps its value while the total books the day first.
+
+    PyPI's yanked 0.10.0 shipped the 0.9.3 code, whose ``max(previous, day +
+    total)`` would report 120 kWh in the second poll (#738).
+    """
+    unit = MockModbusConnection().for_unit(1)
+    api = WpmStiebelEltronAPI(unit)
+    produced_heating = _wpm(PRODUCED_HEATING)
+    readings = []
+    # Day register 3500, total 3501 + 3502 * 1000 (wire addresses).
+    for day, total in ((10, 100), (10, 110), (0, 110), (3, 110)):
+        unit.load_raw({"input": {3500: day, 3501: total % 1000, 3502: total // 1000}})
+        await api.energy_data.async_update()
+        readings.append(produced_heating.modbus_register(api))
+
+    assert readings == [110, 110, 110, 113]
 
 
 def test_lwz_exposes_compressor_frequency() -> None:

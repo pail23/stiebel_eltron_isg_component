@@ -74,12 +74,16 @@ def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None
 
 @pytest.mark.parametrize(
     ("version", "compatible"),
-    [("0.7.0", False), ("0.8.0", True), ("0.9.0", False)],
+    [("0.9.3", False), ("0.10.0", False), ("0.10.1", True), ("0.11.0", False)],
 )
-def test_runtime_library_range_keeps_ha_2026_9_compatibility(
+def test_runtime_library_range_requires_optional_hk3_handling(
     version: str, compatible: bool
 ) -> None:
-    """Keep the required API without admitting the incompatible 0.9 backend."""
+    """Keep the 0.10 series without admitting an untested 0.11.
+
+    The yanked 0.10.0 contains the 0.9.3 code; 0.10.1 is the first package
+    with the midnight day and total fix, and Home Assistant 2026.11 pins it.
+    """
     requirements = [
         Requirement(entry)
         for entry in json.loads(_MANIFEST.read_text())["requirements"]
