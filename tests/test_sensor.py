@@ -296,6 +296,10 @@ async def test_setup_omits_unsupported_wpmsystem_aggregate_runtime_sensors() -> 
         | {description.key for description in WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES}
         | {description.key for description in WPMSYSTEM_DHW_EFFICIENCY_SENSOR_TYPES}
         | {description.key for description in WPMSYSTEM_RUNTIME_SENSOR_TYPES}
+        | {
+            description.key
+            for description in sensor_module.WPMSYSTEM_ESTIMATED_COP_SENSOR_TYPES
+        }
     )
     assert len(entity_keys) == len(set(entity_keys))
 

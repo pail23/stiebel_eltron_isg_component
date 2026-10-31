@@ -178,6 +178,36 @@ fault is reported only when the entity next changes to On; unknown and unavailab
 states do not trigger an alert. This is a convenience notification, not a substitute
 for the heat pump's own fault display.
 
+## Optional estimated instantaneous inverter COP (proposal)
+
+WPMsystem offers two disabled-by-default diagnostic sensors: **Estimated
+water/inverter COP heating HP1** and **Estimated water/inverter COP hot water
+HP1**. Enable them only for a single-unit system whose heat-pump water circuit
+contains water, not a glycol mixture. Cascade operation is not validated.
+
+They estimate `0.06977 * flow_L_per_min * (supply_C - return_C) / inverter_kW`
+from the existing HP1 temperatures and flow, IWS1 inverter input, and operating
+status. No additional Modbus reads or control writes are added. They require
+the compressor and exactly the requested heating/hot-water mode, and are
+unavailable during cooling, defrost, booster operation, invalid input, inverter
+power below 0.2 kW, or temperature difference at or below 0.2 K. Residual heat
+circulation with the compressor stopped is not assigned a COP.
+
+The thresholds avoid division near zero; they do not specify measurement
+accuracy. The coefficient approximates liquid-water properties, temperatures
+and flow are not calibrated by this integration, and the 0.1 kW resolution of
+the inverter input limits accuracy at low power. Different firmware fields can
+lag internally even within one poll, so starts and mode changes can still
+produce transient estimates. Other pumps, fans, standby consumption and losses
+are not separately accounted for. These sensors are **not a whole-system COP**.
+
+These estimates complement the Servicewelt energy-window ratios. They do not
+replace them, generate long-term statistics, or change existing entity keys or
+energy counters. No COP range is silently clipped. An energy-period COP must
+be calculated from corresponding heat and electricity integrals, with defrost
+and gaps explicitly handled; averaging these instantaneous estimates is not
+an energy-period COP.
+
 ## Removing the integration
 
 1. Open **Settings → Devices & services**.
