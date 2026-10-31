@@ -218,8 +218,7 @@ The planned minimum is Home Assistant 2026.11.0 with the compatible shared Modbu
 The update remains unreleased until Home Assistant 2026.11.0 is released; the minimum version will be checked against that release before publication.
 No reconfiguration is needed for a normal installation.
 
-This update uses pystiebeleltron 0.10, which reads the heating circuit 3 registers as an optional block.
-The midnight fix for the cumulative energy counters needs 0.10.1; the 0.10.0 package on PyPI contains the 0.9.3 code and has been withdrawn.
+This update uses pystiebeleltron 0.10.1, which reads the heating circuit 3 registers as an optional block and books the midnight transfer of the cumulative energy counters once.
 If a controller rejects the start of a block, the library retries once from a lower address the controller answered in the same poll.
 Controllers that still reject this block complete setup instead of failing, and the heating circuit 3 temperature sensors stay unavailable.
 If a block that was read successfully is later rejected, even after the retry, polls fail and all entities of the integration are unavailable until the controller answers the block again. Reload the integration if this persists.
