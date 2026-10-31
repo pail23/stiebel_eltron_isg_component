@@ -199,6 +199,7 @@ jobs:
           path: ${{ runner.temp }}/artifact
 
       - name: "Tag and publish the prerelease"
+        id: "publish"
         shell: "bash"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -226,19 +227,49 @@ jobs:
               echo "Requires Home Assistant ${BUNDLED_MIN_HA} or newer."
             } >> "$notes"
           fi
-          # Refuse an existing version, so the rollback below only ever
-          # removes a tag and release this run created.
+          # Refuse an existing version, so the rollback step does not remove a
+          # tag or release from an earlier publish.
           if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" > /dev/null ||
              gh release view "$VERSION" > /dev/null 2>&1; then
             echo "::error::Version $VERSION already has a tag or release"
             exit 1
           fi
           git tag "$VERSION"
+          # From here on, a failed or canceled run is rolled back by the next step.
+          touch "$RUNNER_TEMP/publish-started"
           git push origin "refs/tags/$VERSION"
-          # Undo a partial publish, so the run can be retried with the same version.
-          if ! gh release create "$VERSION" "$zip" \
-              --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"; then
-            gh release delete "$VERSION" --yes || true
-            git push origin --delete "refs/tags/$VERSION"
+          # The API may not list a just pushed tag yet, and --verify-tag below
+          # would then fail. Without the tag after a minute, it fails anyway.
+          for _ in $(seq 30); do
+            gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION" > /dev/null 2>&1 && break
+            sleep 2
+          done
+          gh release create "$VERSION" "$zip" \
+            --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"
+
+      # Also runs when the job is canceled, so a rerun with the same version is
+      # not refused because of a tag without a release. A runner that dies
+      # still leaves the tag behind.
+      - name: "Undo a partial publish"
+        if: ${{ (failure() || cancelled()) && steps.publish.outcome != 'success' }}
+        shell: "bash"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ -f "$RUNNER_TEMP/publish-started" ]] || exit 0
+          gh auth setup-git
+          own=$(git rev-parse "refs/tags/$VERSION")
+          # Fails the step on a network or auth error instead of skipping the cleanup.
+          remote=$(git ls-remote --tags origin "refs/tags/$VERSION" | cut -f1)
+          [[ -n "$remote" ]] || exit 0
+          # A failed push may mean someone else tagged another commit meanwhile.
+          if [[ "$remote" != "$own" ]]; then
+            echo "::warning::Tag $VERSION points to $remote, not this run's $own; leaving it"
+            exit 0
+          fi
+          # Tolerate only a release that was never created.
+          if ! gh release delete "$VERSION" --yes && gh release view "$VERSION" > /dev/null 2>&1; then
+            echo "::error::Could not delete the release $VERSION"
             exit 1
           fi
+          git push --force-with-lease="refs/tags/$VERSION:$own" origin --delete "refs/tags/$VERSION"
