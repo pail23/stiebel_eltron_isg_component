@@ -249,7 +249,11 @@ def test_runtime_sensors_use_duration_device_class() -> None:
 
 async def _setup_sensor_keys(model: ControllerModel) -> list[str]:
     entry = SimpleNamespace(
-        runtime_data=SimpleNamespace(model=model, family=CONTROLLER_FAMILIES[model])
+        runtime_data=SimpleNamespace(
+            model=model,
+            family=CONTROLLER_FAMILIES[model],
+            offers_component=lambda _: False,
+        )
     )
     add_entities = MagicMock()
     with patch.object(
@@ -636,7 +640,10 @@ async def test_daily_energy_sensors_do_not_report_poll_time_as_reset(
 ) -> None:
     """Day registers must not invent a new reset timestamp on each zero poll."""
     coordinator = SimpleNamespace(
-        model=model, family=CONTROLLER_FAMILIES[model], device_info={}
+        model=model,
+        family=CONTROLLER_FAMILIES[model],
+        device_info={},
+        offers_component=lambda _: False,
     )
     entry = SimpleNamespace(runtime_data=coordinator, entry_id="test")
     entities = []
