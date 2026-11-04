@@ -340,7 +340,7 @@ async def async_setup_entry(
 class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     """stiebel_eltron_isg climate class."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     # The controller's raw operating modes and their Home Assistant names.
     # Several raw modes map to one HVAC mode, so the raw value is what gets
     # compared and written.
@@ -399,7 +399,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
                     self.eco_target_temp_register,
                 )
             )
-        return self.target_temperature is not None
+        return self.native_target_temperature is not None
 
     @property
     def operation_mode(self) -> int | None:
@@ -429,7 +429,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         return None
 
     @property
-    def current_temperature(self) -> float | None:
+    def native_current_temperature(self) -> float | None:
         """Return the current temperature."""
         for accessor in self.actual_temperature_register:
             value = self._read_accessor(accessor)
@@ -454,7 +454,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         return self.comfort_target_temp_write_field
 
     @property
-    def target_temperature(self) -> float | None:
+    def native_target_temperature(self) -> float | None:
         """Return the temperature we try to reach.
 
         A written target only holds for the field it was written to. Once the
@@ -484,7 +484,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
                     translation_domain=DOMAIN,
                     translation_key="operating_mode_unknown",
                 )
-            current = self.target_temperature
+            current = self.native_target_temperature
             if current is not None and math.isclose(current, value, abs_tol=1e-9):
                 return
 
