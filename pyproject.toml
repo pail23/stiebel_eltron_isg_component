@@ -7,20 +7,25 @@ requires-python = ">=3.14.2"
 dependencies = [
     "colorlog>=6.12.0",
     # Match Home Assistant Core's required shared Modbus backend for tests.
-    "modbus-connection[tmodbus]==4.12.4",
-    "pytest-homeassistant-custom-component>=0.13.375",
+    "modbus-connection[tmodbus]==4.12.7",
+    # Home Assistant's own test package; it pins the matching homeassistant.
+    # 2026.11.0 failed to upload to PyPI, and b6 differs only in the version.
+    "pytest-homeassistant==2026.11.0b6",
     # PyPI's yanked 0.10.0 contains the 0.9.3 code; 0.10.1 is the first package
     # with the midnight day and total fix (home-assistant/core#189495).
     "pystiebeleltron[tmodbus]==0.10.1",
     # Keep the test stack aligned with Home Assistant's Modbus manifest.
     "pymodbus==3.13.1",
-    "tmodbus==0.6.2",
+    "tmodbus==1.1.0",
 ]
 
 [dependency-groups]
 dev = [
     "mypy>=2.3.0,<3",
     "pytest>=9.0.3",
+    # CI uses --cov and --timeout; pytest-homeassistant does not bring them.
+    "pytest-cov>=7.1.0",
+    "pytest-timeout>=2.4.0",
     "ruff>=0.16.3",
 ]
 
@@ -36,7 +41,10 @@ testpaths = [
 ]
 addopts = [
   "--disable-socket",
-  "--allow-unix-socket"
+  "--allow-unix-socket",
+  # Let Home Assistant install its httpx alias before respx is imported.
+  "-p",
+  "no:respx",
 ]
 
 [tool.ruff]

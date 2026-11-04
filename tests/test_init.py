@@ -17,7 +17,7 @@ from pystiebeleltron import (
     UnknownControllerModelError,
 )
 import pytest
-from pytest_homeassistant_custom_component.common import (
+from pytest_homeassistant.common import (
     MockConfigEntry,
     MockModule,
     mock_config_flow,
@@ -492,12 +492,13 @@ async def test_shares_connection_with_another_config_entry(
     class OtherConfigFlow(ConfigFlow):
         """Stand in for another integration's config flow."""
 
-    async def async_setup_other_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    # The mock counts as a core integration, which since 2026.11 must not
+    # return a boolean from its config entry methods.
+    async def async_setup_other_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         async_get_unit(hass, entry, params, UNIT_ID)
-        return True
 
-    async def async_unload_other_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-        return True
+    async def async_unload_other_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+        return None
 
     mock_integration(
         hass,

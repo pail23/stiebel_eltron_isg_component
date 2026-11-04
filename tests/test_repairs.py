@@ -10,7 +10,7 @@ from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from pystiebeleltron import ControllerModel
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import repairs
 from custom_components.stiebel_eltron_isg.const import DOMAIN

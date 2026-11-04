@@ -4,16 +4,12 @@ While tests aren't required to publish a custom component for Home Assistant, th
 
 # Getting Started
 
-To begin, it is recommended to create a virtual environment to install dependencies:
+Install the locked test stack with [uv](https://docs.astral.sh/uv/):
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+uv sync --locked --all-extras --dev
 ```
 
-You can then install the dependencies that will allow you to run tests:
-`pip3 install -r requirements.txt.`
-
-This will install `homeassistant`, `pytest`, and `pytest-homeassistant-custom-component`, a plugin which allows you to leverage helpers that are available in Home Assistant for core integration tests.
+This installs `homeassistant` together with `pytest-homeassistant`, Home Assistant's own test package. Its version pins the matching Home Assistant release, so both move together. Run the commands below with `uv run`, for example `uv run pytest tests/`.
 
 # Useful commands
 
