@@ -185,6 +185,10 @@ jobs:
       cancel-in-progress: false
     permissions:
       contents: write
+    env:
+      # Marks the tag and release of this run attempt, so the rollback step
+      # removes only what this attempt created.
+      RUN_MARKER: "beta-release run ${{ github.run_id }}/${{ github.run_attempt }}"
     steps:
       - name: "Checkout the repository"
         uses: "actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1" # v7.0.1
@@ -199,6 +203,7 @@ jobs:
           path: ${{ runner.temp }}/artifact
 
       - name: "Tag and publish the prerelease"
+        id: "publish"
         shell: "bash"
         env:
           GH_TOKEN: ${{ github.token }}
@@ -208,7 +213,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898333+github-actions[bot]@users.noreply.github.com"
           notes="$RUNNER_TEMP/notes.md"
-          echo "Beta built from \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}." > "$notes"
+          {
+            echo "<!-- $RUN_MARKER -->"
+            echo "Beta built from \`${GITHUB_REF_NAME}\` at ${GITHUB_SHA}."
+          } > "$notes"
           if [[ "$BUNDLE" == "true" ]]; then
             # HACS reads the minimum version from hacs.json at the release tag,
             # so only this beta asks for the newer Home Assistant.
@@ -226,19 +234,62 @@ jobs:
               echo "Requires Home Assistant ${BUNDLED_MIN_HA} or newer."
             } >> "$notes"
           fi
-          # Refuse an existing version, so the rollback below only ever
-          # removes a tag and release this run created.
+          # Refuse an existing version, so the rollback step does not remove a
+          # tag or release from an earlier publish.
           if git ls-remote --exit-code --tags origin "refs/tags/$VERSION" > /dev/null ||
              gh release view "$VERSION" > /dev/null 2>&1; then
             echo "::error::Version $VERSION already has a tag or release"
             exit 1
           fi
-          git tag "$VERSION"
+          # An annotated tag gets an object ID of its own, unlike another
+          # publisher's tag on the same commit.
+          git tag -a "$VERSION" -m "Beta $VERSION ($RUN_MARKER)"
+          # From here on, a failed or canceled run is rolled back by the next step.
+          touch "$RUNNER_TEMP/publish-started"
           git push origin "refs/tags/$VERSION"
-          # Undo a partial publish, so the run can be retried with the same version.
-          if ! gh release create "$VERSION" "$zip" \
-              --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"; then
-            gh release delete "$VERSION" --yes || true
-            git push origin --delete "refs/tags/$VERSION"
-            exit 1
+          # The API may not list a just pushed tag yet, and --verify-tag below
+          # would then fail. Without the tag after a minute, it fails anyway.
+          for _ in $(seq 30); do
+            gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$VERSION" > /dev/null 2>&1 && break
+            sleep 2
+          done
+          gh release create "$VERSION" "$zip" \
+            --prerelease --verify-tag --title "$VERSION" --notes-file "$notes"
+
+      # Also runs when the job is canceled, so a rerun with the same version is
+      # not refused because of a tag without a release. A runner that dies
+      # still leaves the tag behind.
+      - name: "Undo a partial publish"
+        if: ${{ (failure() || cancelled()) && steps.publish.outcome != 'success' }}
+        shell: "bash"
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [[ -f "$RUNNER_TEMP/publish-started" ]] || exit 0
+          gh auth setup-git
+          own=$(git rev-parse "refs/tags/$VERSION")
+          # Fails the step on a network or auth error instead of skipping the cleanup.
+          remote=$(git ls-remote origin "refs/tags/$VERSION" | cut -f1)
+          [[ -n "$remote" ]] || exit 0
+          if [[ "$remote" != "$own" ]]; then
+            echo "::warning::Tag $VERSION was not created by this run; leaving it"
+            exit 0
           fi
+          # The list includes drafts, which a partial `gh release create` leaves
+          # behind. A failed request fails the step and keeps the tag.
+          releases=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq '.[] | [.id, .tag_name, (.body // "" | @base64)] | @tsv')
+          ids=()
+          while IFS=$'\t' read -r id tag body; do
+            [[ "$tag" == "$VERSION" ]] || continue
+            if [[ "$(base64 -d <<< "$body")" != *"<!-- $RUN_MARKER -->"* ]]; then
+              echo "::warning::Release $id for $VERSION was not created by this run; leaving it and its tag"
+              exit 0
+            fi
+            ids+=("$id")
+          done <<< "$releases"
+          # Delete by ID, so only the releases checked above are removed.
+          for id in "${ids[@]}"; do
+            gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$id"
+          done
+          git push --force-with-lease="refs/tags/$VERSION:$own" origin --delete "refs/tags/$VERSION"
