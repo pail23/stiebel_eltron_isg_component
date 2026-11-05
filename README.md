@@ -213,13 +213,13 @@ The integration cannot update ISG firmware. Firmware updates are handled
 through Stiebel Eltron support. It also cannot make a register writable when
 the connected controller or firmware exposes it as read-only.
 
-## Upcoming update: optional heating circuit 3
+## Upgrading to 2026.11
 
-The planned minimum is Home Assistant 2026.11.0 with the compatible shared Modbus backend.
-The update remains unreleased until Home Assistant 2026.11.0 is released; the minimum version will be checked against that release before publication.
+Release 2026.11 requires Home Assistant 2026.11.0 or newer.
 No reconfiguration is needed for a normal installation.
+Before updating, read [Energy and long-term statistics](#energy-and-long-term-statistics): the cumulative energy counters can drop once on the first restart with this release, and the power-consumption windows of WPMsystem, WPM 3 and LWZ R290 no longer have a state class.
 
-This update uses pystiebeleltron 0.10.1, which reads the heating circuit 3 registers as an optional block and books the midnight transfer of the cumulative energy counters once.
+This release uses pystiebeleltron 0.10.1, which reads the heating circuit 3 registers as an optional block and books the midnight transfer of the cumulative energy counters once.
 If a controller rejects the start of a block, the library retries once from a lower address the controller answered in the same poll.
 Controllers that still reject this block complete setup instead of failing, and the heating circuit 3 temperature sensors stay unavailable.
 If a block that was read successfully is later rejected, even after the retry, polls fail and all entities of the integration are unavailable until the controller answers the block again. Reload the integration if this persists.
