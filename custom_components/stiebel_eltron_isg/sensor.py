@@ -1,7 +1,8 @@
 """Sensor platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass, replace
-from math import isfinite
+from math import isclose, isfinite
+from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -1134,6 +1135,24 @@ LWZ_ENERGY_DAILY_SENSOR_TYPES = [
 ]
 
 
+def _lwz_compressor_speed(api: Any) -> float | int | None:
+    """Return the LWZ compressor speed in whole Hz.
+
+    The manual gives register 32 data type 2, so pystiebeleltron 0.10.1 scales
+    it by 0.1, but a THZ 5.5 eco and a THZ 5.5 cool both show the raw value on
+    the ISG (#536, #784). The value is only corrected while the library still
+    declares that 0.1 scale, so a library that reads whole Hz is passed through
+    unchanged. Drop this once the minimum library version reads whole Hz.
+    """
+    value = api.system_values.compressor_speed
+    if not isinstance(value, (int, float)):
+        return None
+    field = getattr(type(api.system_values), "compressor_speed", None)
+    if isclose(getattr(field, "scale", 1), 0.1):
+        return round(value * 10)
+    return value
+
+
 LWZ_COMPRESSOR_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_STARTS,
@@ -1146,7 +1165,7 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=lambda api: api.system_values.compressor_speed,
+        modbus_register=_lwz_compressor_speed,
     ),
     create_runtime_entity_description(
         COMPRESSOR_HEATING,
