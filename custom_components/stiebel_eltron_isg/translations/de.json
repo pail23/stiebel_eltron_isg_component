@@ -544,6 +544,12 @@
             },
             "exhaust_air_fan_control": {
                 "name": "Fortluft Lüfteransteuerung"
+            },
+            "estimated_water_inverter_cop_heating_hp_1": {
+                "name": "Geschätzter Wasser/Inverter-COP Heizen WP1"
+            },
+            "estimated_water_inverter_cop_dhw_hp_1": {
+                "name": "Geschätzter Wasser/Inverter-COP Warmwasser WP1"
             }
         },
         "binary_sensor": {

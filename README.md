@@ -179,6 +179,38 @@ fault is reported only when the entity next changes to On; unknown and unavailab
 states do not trigger an alert. This is a convenience notification, not a substitute
 for the heat pump's own fault display.
 
+## Optional estimated instantaneous inverter COP
+
+WPMsystem offers two **experimental, disabled-by-default** diagnostic sensors:
+**Estimated water/inverter COP heating HP1** and **Estimated water/inverter COP
+hot water HP1**. Enable them only for a single-unit system using water in the
+heat-pump circuit. Glycol mixtures and cascades are not validated. The sensors
+may change or be removed in future releases if they prove unreliable.
+
+They estimate `0.06977 * flow_L_per_min * (supply_C - return_C) / inverter_kW`
+from existing HP1 temperatures and flow, IWS1 inverter input, and operating
+status. No additional Modbus reads or control writes are added. They require
+the compressor and exactly the requested heating/hot-water mode. Cooling,
+defrost, booster operation, invalid input, inverter power below 0.2 kW, and
+temperature differences at or below 0.2 K make the estimate unavailable. The
+difference is rounded to the registers' 0.1 K resolution before that check.
+Residual heat circulation with the compressor stopped is not assigned a COP.
+
+These thresholds avoid division near zero; they do not establish accuracy.
+The coefficient approximates liquid-water properties; temperatures and flow
+are not calibrated by this integration. Inverter input has 0.1 kW resolution,
+limiting accuracy at low power. Firmware fields can lag internally, producing
+transient estimates at starts and mode changes. External circulation-pump
+energy is not added. The inverter reading's boundary for internal auxiliaries,
+such as drain and oil-sump heaters, has not been independently verified.
+These sensors are **not a whole-system COP**.
+
+They complement the Servicewelt energy-window ratios for heating and hot
+water. They do not generate long-term statistics or change energy counters.
+No COP range is silently clipped. An energy-period COP requires corresponding
+heat and electricity integrals with defrost and gaps handled explicitly;
+averaging these instantaneous estimates is not an energy-period COP.
+
 ## Removing the integration
 
 1. Open **Settings → Devices & services**.
