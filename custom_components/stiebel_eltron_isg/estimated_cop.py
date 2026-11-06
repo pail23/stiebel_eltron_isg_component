@@ -61,7 +61,9 @@ def estimated_water_inverter_cop(
     ):
         return None
 
-    delta_t = supply - return_temp
+    # Match the 0.1 K register resolution before applying the threshold:
+    # 35.2 - 35.0 is slightly greater than 0.2 in binary floating point.
+    delta_t = round(supply - return_temp, 1)
     if flow <= 0 or electricity < 0.2 or delta_t <= 0.2:
         return None
     ratio = _WATER_KW_PER_L_MIN_K * flow * delta_t / electricity
