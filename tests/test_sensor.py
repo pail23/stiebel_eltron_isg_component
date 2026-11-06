@@ -16,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import ControllerModel
+from pystiebeleltron.lwz import LwzStiebelEltronAPI
 from pystiebeleltron.wpm import (
     WPM_HOLDING_RANGES,
     WPM_INPUT_RANGES,
@@ -426,13 +427,50 @@ async def test_installed_library_counts_the_midnight_transfer_once() -> None:
 
 
 def test_lwz_exposes_compressor_frequency() -> None:
-    """LWZ compressor frequency reads system_values.compressor_speed (Hz)."""
-    api = SimpleNamespace(system_values=SimpleNamespace(compressor_speed=31.0))
-
+    """LWZ compressor frequency is reported in Hz."""
     speed = _lwz(COMPRESSOR_SPEED)
-    assert speed.modbus_register(api) == 31.0
     assert speed.native_unit_of_measurement == UnitOfFrequency.HERTZ
     assert speed.device_class == SensorDeviceClass.FREQUENCY
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"), [(0, 0), (20, 20), (50, 50), (240, 240), (0x8000, None)]
+)
+async def test_lwz_compressor_speed_reads_whole_hz_from_installed_library(
+    raw: int, expected: int | None
+) -> None:
+    """The ISG shows the raw register as the compressor speed in Hz (#784).
+
+    The installed library still scales register 32 by 0.1, which the sensor
+    undoes; once the library reads whole Hz this keeps passing unchanged.
+    """
+    unit = MockModbusConnection().for_unit(1)
+    api = LwzStiebelEltronAPI(unit)
+    # Doc register 32 is wire address 31.
+    unit.load_raw({"input": {31: raw}})
+    await api.system_values.async_update()
+
+    assert _lwz(COMPRESSOR_SPEED).modbus_register(api) == expected
+
+
+def test_lwz_compressor_speed_passes_a_whole_hz_library_through() -> None:
+    """A library that already reads whole Hz is not multiplied again."""
+
+    class FixedValues:
+        compressor_speed = SimpleNamespace(scale=1)
+
+    values = FixedValues()
+    values.__dict__["compressor_speed"] = 20
+    api = SimpleNamespace(system_values=values)
+
+    assert _lwz(COMPRESSOR_SPEED).modbus_register(api) == 20
+
+
+def test_lwz_compressor_speed_without_a_field_definition_is_unchanged() -> None:
+    """An unknown field definition is passed through rather than guessed at."""
+    api = SimpleNamespace(system_values=SimpleNamespace(compressor_speed=31.0))
+
+    assert _lwz(COMPRESSOR_SPEED).modbus_register(api) == 31.0
 
 
 def test_lwz_exposes_compressor_cooling_runtime_hours() -> None:
