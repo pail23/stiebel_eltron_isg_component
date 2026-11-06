@@ -14,7 +14,7 @@ from modbus_connection.mock import MockModbusConnection, WriteEvent
 from pystiebeleltron import UNAVAILABLE, ControllerModel
 from pystiebeleltron.wpm3i import Wpm3iStiebelEltronAPI
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg import climate as climate_module
 from custom_components.stiebel_eltron_isg.climate import (
@@ -250,7 +250,7 @@ def test_unknown_operating_mode_is_not_shown_as_emergency(factory) -> None:
     assert entity.preset_mode is None
     assert entity.hvac_mode is None
     # Without the mode there is no way to tell which setpoint applies.
-    assert entity.target_temperature is None
+    assert entity.native_target_temperature is None
     # The entity stays reachable for the mode change that ends this state.
     assert entity.available is True
 
@@ -360,7 +360,7 @@ def test_climate_uses_the_first_nonzero_measurement(
     property_name = (
         "current_humidity"
         if attribute == "humidity_modbus_register"
-        else "current_temperature"
+        else "native_current_temperature"
     )
     assert getattr(entity, property_name) == expected
 
@@ -570,7 +570,7 @@ async def test_climate_shows_written_target_before_the_next_poll() -> None:
     assert entity.coordinator.writes == [
         ("system_parameters", "room_temperature_day_hk1", 22.5)
     ]
-    assert entity.target_temperature == 22.5
+    assert entity.native_target_temperature == 22.5
     assert entity.published_states == 1
 
 
@@ -594,7 +594,7 @@ async def test_climate_writes_when_target_is_unknown() -> None:
     assert entity.coordinator.writes == [
         ("system_parameters", "room_temperature_day_hk1", 21.0)
     ]
-    assert entity.target_temperature == 21.0
+    assert entity.native_target_temperature == 21.0
     assert entity.published_states == 1
 
 
@@ -620,7 +620,7 @@ async def test_climate_does_not_assume_a_target_when_the_write_fails() -> None:
     with pytest.raises(RuntimeError, match="write failed"):
         await entity.async_set_temperature(temperature=22.5)
 
-    assert entity.target_temperature == 21.0
+    assert entity.native_target_temperature == 21.0
 
 
 async def test_climate_returns_to_the_device_value_once_polled() -> None:
@@ -633,11 +633,11 @@ async def test_climate_returns_to_the_device_value_once_polled() -> None:
     # This poll was in flight during the write and may have read the old
     # registers, so the written target still stands afterwards.
     await poll(entity.coordinator, during=write_while_polling)
-    assert entity.target_temperature == 22.5
+    assert entity.native_target_temperature == 22.5
 
     await poll(entity.coordinator)
 
-    assert entity.target_temperature == 21.0
+    assert entity.native_target_temperature == 21.0
 
 
 async def test_climate_keeps_the_written_target_when_refresh_fails() -> None:
@@ -647,7 +647,7 @@ async def test_climate_keeps_the_written_target_when_refresh_fails() -> None:
 
     await poll(entity.coordinator, success=False)
 
-    assert entity.target_temperature == 22.5
+    assert entity.native_target_temperature == 22.5
 
 
 async def test_climate_drops_the_written_target_when_the_mode_makes_it_stale() -> None:
@@ -659,7 +659,7 @@ async def test_climate_drops_the_written_target_when_the_mode_makes_it_stale() -
     # the assumed value belongs to the comfort field.
     entity.coordinator._api.system_parameters.operating_mode = ECO_MODE
 
-    assert entity.target_temperature == 18.0
+    assert entity.native_target_temperature == 18.0
 
 
 async def test_climate_keeps_the_written_target_when_the_fan_stage_changes() -> None:
@@ -669,7 +669,7 @@ async def test_climate_keeps_the_written_target_when_the_fan_stage_changes() -> 
 
     await entity.async_set_fan_mode(FAN_LOW)
 
-    assert entity.target_temperature == 22.5
+    assert entity.native_target_temperature == 22.5
 
 
 async def test_climate_keeps_the_written_target_between_non_eco_modes() -> None:
@@ -679,4 +679,4 @@ async def test_climate_keeps_the_written_target_between_non_eco_modes() -> None:
 
     entity.coordinator._api.system_parameters.operating_mode = 2
 
-    assert entity.target_temperature == 22.5
+    assert entity.native_target_temperature == 22.5

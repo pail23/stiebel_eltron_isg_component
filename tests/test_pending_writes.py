@@ -196,7 +196,7 @@ async def test_a_setpoint_after_a_mode_change_goes_to_the_new_mode() -> None:
 
     await climate.async_set_preset_mode("eco")
     assert climate.preset_mode == "eco"
-    assert climate.target_temperature == 18.0
+    assert climate.native_target_temperature == 18.0
 
     await climate.async_set_temperature(temperature=19.0)
 
@@ -204,7 +204,7 @@ async def test_a_setpoint_after_a_mode_change_goes_to_the_new_mode() -> None:
         ("system_parameters", "operating_mode", ECO_MODE),
         ("system_parameters", "eco_temperature_hk_1", 19.0),
     ]
-    assert climate.target_temperature == 19.0
+    assert climate.native_target_temperature == 19.0
 
 
 async def test_a_mode_can_be_changed_back_before_the_next_poll() -> None:
@@ -231,7 +231,7 @@ async def test_the_number_and_the_climate_entity_share_a_setpoint() -> None:
     number = _comfort_number(coordinator)
 
     await number.async_set_native_value(22.0)
-    assert climate.target_temperature == 22.0
+    assert climate.native_target_temperature == 22.0
 
     await climate.async_set_temperature(temperature=21.0)
 

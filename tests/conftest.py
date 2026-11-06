@@ -26,19 +26,19 @@ from pystiebeleltron.wpm3i import (
     Wpm3iSystemValues,
 )
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 
-pytest_plugins = "pytest_homeassistant_custom_component"
 
+@pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """Give each test its own config directory.
 
-# This fixture enables loading custom integrations in all tests.
-# Remove to enable selective use of this fixture
-@pytest.fixture(autouse=True)
-def auto_enable_custom_integrations(enable_custom_integrations):
-    """Enable loading custom integrations in all tests."""
-    return
+    Loading automation copies Home Assistant's default blueprints into the
+    config directory, which would otherwise be tests/testing_config.
+    """
+    return hass_tmp_config_dir
 
 
 @pytest.fixture

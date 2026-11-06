@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from modbus_connection import ModbusError
 import pytest
-from pytest_homeassistant_custom_component.common import MockConfigEntry
+from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.button import StiebelEltronISGButtonEntity
 from custom_components.stiebel_eltron_isg.const import DOMAIN, RESET_HEATPUMP

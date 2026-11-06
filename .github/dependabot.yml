@@ -17,6 +17,6 @@ updates:
       - dependency-name: "modbus-connection"
       - dependency-name: "tmodbus"
       - dependency-name: "pymodbus"
-    # pytest-homeassistant-custom-component stays unignored: it pins the
-    # Home Assistant release it was built for, so its update is the signal to
-    # move the Modbus pins above in the same pull request.
+    # pytest-homeassistant stays unignored: it pins the Home Assistant release
+    # it was built for, so its update is the signal to move the Modbus pins
+    # above in the same pull request. The hacs.json minimum is a separate decision.
