@@ -108,6 +108,8 @@ emergency_heating_1
 emergency_heating_1_2
 emergency_heating_2
 error_status
+estimated_water_inverter_cop_dhw_hp_1
+estimated_water_inverter_cop_heating_hp_1
 evaporator_defrost
 extract_air_actual
 extract_air_dew_point

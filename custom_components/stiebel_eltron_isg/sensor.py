@@ -183,6 +183,7 @@ from .coordinator import (
     StiebelEltronDataCoordinator,
 )
 from .entity import StiebelEltronISGEntity, ValueAccessor, async_add_when_served
+from .estimated_cop import estimated_water_inverter_cop
 
 PARALLEL_UPDATES = 1
 
@@ -1587,6 +1588,27 @@ WPM_SENSOR_TYPES = (
 # until equivalent measurements exist.
 WPMSYSTEM_SENSOR_TYPES = WPM_BASE_SENSOR_TYPES + WPM_POWER_CONSUMPTION_SENSOR_TYPES
 
+# An opt-in estimate for water circuits on a single-unit WPMsystem. It is
+# separate from the device's energy windows and intentionally creates no LTS.
+WPMSYSTEM_ESTIMATED_COP_SENSOR_TYPES = [
+    StiebelEltronSensorEntityDescription(
+        key="estimated_water_inverter_cop_heating_hp_1",
+        translation_key="estimated_water_inverter_cop_heating_hp_1",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=None,
+        modbus_register=lambda api: estimated_water_inverter_cop(api, "heating"),
+    ),
+    StiebelEltronSensorEntityDescription(
+        key="estimated_water_inverter_cop_dhw_hp_1",
+        translation_key="estimated_water_inverter_cop_dhw_hp_1",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        state_class=None,
+        modbus_register=lambda api: estimated_water_inverter_cop(api, "dhw"),
+    ),
+]
+
 LWZ_SENSOR_TYPES = (
     LWZ_SYSTEM_VALUES_SENSOR_TYPES
     + ENERGYMANAGEMENT_SENSOR_TYPES
@@ -1627,6 +1649,7 @@ async def async_setup_entry(
                 + WPMSYSTEM_COOLING_EFFICIENCY_SENSOR_TYPES
                 + WPMSYSTEM_DHW_EFFICIENCY_SENSOR_TYPES
                 + WPMSYSTEM_RUNTIME_SENSOR_TYPES
+                + WPMSYSTEM_ESTIMATED_COP_SENSOR_TYPES
             )
     else:
         descriptions = LWZ_SENSOR_TYPES + LWZ_ENERGY_DAILY_SENSOR_TYPES
