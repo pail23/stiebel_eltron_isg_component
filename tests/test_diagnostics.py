@@ -48,9 +48,8 @@ async def test_diagnostics_redact_host_and_preserve_useful_data(
     mock_config_entry.runtime_data = SimpleNamespace(
         model=ControllerModel.WPM_3,
         get_raw_data=lambda: {
-            "outside_temperature": 12.5,
-            "produced_heating_total": 12345,
-            "unsupported_value": None,
+            "system_values": {"outside_temperature": "12.5 °C"},
+            "energy_data": {"produced_heating_total": "12345 kWh"},
         },
     )
 
@@ -72,8 +71,8 @@ async def test_diagnostics_redact_host_and_preserve_useful_data(
     assert config_diagnostics["options"] == {"scan_interval": 60}
     assert config_diagnostics["data"] == [
         {
-            "outside_temperature": 12.5,
-            "produced_heating_total": 12345,
+            "system_values": {"outside_temperature": "12.5 °C"},
+            "energy_data": {"produced_heating_total": "12345 kWh"},
         },
         {"model": "WPM_3", "model_id": 390},
     ]
@@ -105,7 +104,12 @@ async def test_diagnostics_with_real_library_components(
     unit = MockModbusConnection().for_unit(1)
     unit.load_raw({"input": {address: 125}})
     api = api_class(unit)
-    await api.system_values.async_update()
+    for component in (
+        api.system_values,
+        api.system_parameters,
+        api.energy_system_information,
+    ):
+        await component.async_update()
     coordinator = StiebelEltronDataCoordinator.__new__(StiebelEltronDataCoordinator)
     coordinator._api = api
     coordinator._model = model
@@ -117,9 +121,12 @@ async def test_diagnostics_with_real_library_components(
     result = await async_get_config_entry_diagnostics(hass, entry)
     device_result = await async_get_device_diagnostics(hass, entry, SimpleNamespace())
     assert result == device_result
-    assert result["data"][0]["outside_temperature"] == "12.5 °C"
-    assert "sg_ready_operating_state" in result["data"][0]
-    assert "operating_mode" in result["data"][0]
+    components = result["data"][0]
+    assert components["system_values"]["outside_temperature"] == "12.5 °C"
+    assert "sg_ready_operating_state" in components["energy_system_information"]
+    assert "operating_mode" in components["system_parameters"]
+    # Components that were not read hold no value and are left out.
+    assert "energy_data" not in components
     assert result["data"][1] == {"model": model.name, "model_id": model.value}
     assert result["config_entry"][CONF_HOST] == REDACTED
     assert "private.example" not in json.dumps(result, cls=ExtendedJSONEncoder)

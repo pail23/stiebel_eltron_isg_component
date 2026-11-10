@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 import math
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -95,6 +96,24 @@ def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode
     ):
         return NumberMode.BOX
     return NumberMode.AUTO
+
+
+def number_device_class(
+    description: StiebelEltronNumberEntityDescription,
+) -> NumberDeviceClass | None:
+    """Return the device class a number's unit stands for.
+
+    Home Assistant converts a temperature to the unit system of the instance
+    only when the device class says it is one. A hysteresis is a difference,
+    which converts without the offset of the scale.
+    """
+    if description.device_class is not None:
+        return description.device_class
+    if description.native_unit_of_measurement == UnitOfTemperature.CELSIUS:
+        return NumberDeviceClass.TEMPERATURE
+    if description.native_unit_of_measurement == UnitOfTemperature.KELVIN:
+        return NumberDeviceClass.TEMPERATURE_DELTA
+    return None
 
 
 NUMBER_TYPES_WPM_3I = [
@@ -530,6 +549,7 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=3,
         native_step=1,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.day_stage,
         write_field="day_stage",
     ),
@@ -539,6 +559,7 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=3,
         native_step=1,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.night_stage,
         write_field="night_stage",
     ),
@@ -548,6 +569,7 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=3,
         native_step=1,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.party_stage,
         write_field="party_stage",
     ),
@@ -557,6 +579,7 @@ NUMBER_TYPES_LWZ = [
         native_min_value=0,
         native_max_value=3,
         native_step=1,
+        enforce_step=True,
         modbus_register=lambda api: api.system_parameters.manual_stage,
         write_field="manual_stage",
     ),
@@ -704,6 +727,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         self.entity_description = description
         super().__init__(coordinator, config_entry)
         self._attr_mode = number_mode(description)
+        self._attr_device_class = number_device_class(description)
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
@@ -728,8 +752,16 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
             step = self.native_step
             assert step is not None
             steps = (value - self.native_min_value) / step
-            if not math.isfinite(steps) or not math.isclose(
-                steps, round(steps), rel_tol=0, abs_tol=1e-9
+            # Home Assistant converts the value of an instance that shows
+            # another unit, but offers the native step unchanged, so a value
+            # picked there rarely lands on the grid. It is moved to the nearest
+            # step instead of being refused.
+            native_unit = self.native_unit_of_measurement
+            converted = (
+                native_unit is not None and self.unit_of_measurement != native_unit
+            )
+            if not math.isfinite(steps) or not (
+                converted or math.isclose(steps, round(steps), rel_tol=0, abs_tol=1e-9)
             ):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
@@ -740,7 +772,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
                         "step": str(step),
                     },
                 )
-            # Remove only floating-point noise from an accepted step value.
+            # Remove floating-point noise, or the remainder of a conversion.
             value = self.native_min_value + round(steps) * step
 
         async with self.coordinator.write_lock:

@@ -124,3 +124,35 @@ async def test_unknown_mode_hides_the_fan_and_rejects_writes(
         )
     assert writes == []
     assert unit.holding[1019] == 1
+
+
+async def test_turn_on_selects_automatic_not_manual(hass, lwz_fan_setup):
+    """Home Assistant's default turn_on would pick HEAT, which is manual mode."""
+    _unit, writes, entity_id = await lwz_fan_setup(ControllerModel.LWZ, 5)
+    assert hass.states.get(entity_id).state == "off"
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+
+    assert [(w.register_type, w.address, w.values) for w in writes] == [
+        ("holding", 1000, [11])
+    ]
+    assert hass.states.get(entity_id).state == "auto"
+
+
+async def test_set_temperature_applies_the_mode_it_is_given(hass, lwz_fan_setup):
+    """A mode passed along with the temperature decides which setpoint is written."""
+    _unit, writes, entity_id = await lwz_fan_setup(ControllerModel.LWZ, 4)
+
+    await hass.services.async_call(
+        "climate",
+        "set_temperature",
+        {"entity_id": entity_id, "temperature": 22, "hvac_mode": "auto"},
+        blocking=True,
+    )
+
+    assert [(w.register_type, w.address, w.values) for w in writes] == [
+        ("holding", 1000, [11]),
+        ("holding", 1001, [220]),
+    ]

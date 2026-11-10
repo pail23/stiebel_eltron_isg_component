@@ -5,6 +5,7 @@ from unittest.mock import patch
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 import pytest
@@ -150,3 +151,21 @@ async def test_existing_lwz_comfort_target_still_accepts_tenth_degree(
         ("holding", 1011, [203])
     ]
     assert float(hass.states.get(entity_id).state) == 20.3
+
+
+async def test_fahrenheit_value_is_moved_to_the_half_degree_grid(
+    hass, lwz_number_setup
+):
+    """An instance in Fahrenheit is offered the native step, so nothing fits it."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    _unit, writes, entity_id = await lwz_number_setup("manual_hc_set_hk1")
+    state = hass.states.get(entity_id)
+    assert state.attributes["unit_of_measurement"] == "°F"
+    assert float(state.state) == pytest.approx(105.8)
+
+    # 68.5 °F is 20.28 °C, which is not on the 0.5 °C grid; 20.5 °C is nearest.
+    await _set_number(hass, entity_id, 68.5)
+
+    assert [(w.register_type, w.address, w.values) for w in writes] == [
+        ("holding", 1003, [205])
+    ]

@@ -18,8 +18,8 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from modbus_connection import ModbusError, ModbusUnit
-from modbus_connection.cli_helper import field_rows
-from modbus_connection.model import Component, ManualComponent
+from modbus_connection.cli_helper import field_rows, group_rows
+from modbus_connection.model import Component
 from pystiebeleltron import ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 from pystiebeleltron.wpm import WpmStiebelEltronAPI
@@ -43,6 +43,25 @@ def _is_read_only_write_error(err: AttributeError, field: str) -> bool:
         message.startswith(f"{field} is in the ")
         and message.endswith(" register space, which is read-only")
     )
+
+
+def _component_rows(component: Component) -> dict[str, Any]:
+    """Return the values a component holds, with its repeating groups.
+
+    The display text of ``field_rows`` is kept, since it carries the unit. A
+    field without a value is left out; it is looked up on the component
+    because the display text of "no value" is a dash, not None.
+    """
+    rows: dict[str, Any] = {
+        name: text
+        for name, text in field_rows(component)
+        if getattr(component, name) is not None
+    }
+    for name, instances in group_rows(component):
+        group = [_component_rows(instance) for instance in instances]
+        if any(group):
+            rows[name] = group
+    return rows
 
 
 def coordinator_display_name(model: ControllerModel) -> str:
@@ -170,14 +189,19 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
         """Return the register layout family of the controller model."""
         return CONTROLLER_FAMILIES[self._model]
 
-    def get_raw_data(self) -> dict[str, Any]:
-        """Return the raw data from the heat pump."""
-        result: dict[str, Any] = {}
-        for component in vars(self._api).values():
+    def get_raw_data(self) -> dict[str, dict[str, Any]]:
+        """Return the values of every component, keyed by component.
+
+        The components are kept apart because some field names occur in more
+        than one of them. A component without any value is left out.
+        """
+        result: dict[str, dict[str, Any]] = {}
+        for name, component in vars(self._api).items():
             # APIs also contain polling helpers, which have no register fields.
-            if not isinstance(component, (Component, ManualComponent)):
+            if not isinstance(component, Component):
                 continue
-            result.update(field_rows(component))
+            if rows := _component_rows(component):
+                result[name] = rows
         return result
 
     async def _async_update_data(self) -> None:

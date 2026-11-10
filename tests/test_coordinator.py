@@ -2,17 +2,17 @@
 
 import logging
 from types import SimpleNamespace
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 from modbus_connection import ModbusError
-from modbus_connection.model import Component, ManualComponent
+from modbus_connection.mock import MockModbusConnection
 import pystiebeleltron
 from pystiebeleltron import ControllerModel
+from pystiebeleltron.wpm import WpmStiebelEltronAPI
 import pytest
 
-from custom_components.stiebel_eltron_isg import coordinator as coordinator_module
 from custom_components.stiebel_eltron_isg.const import DOMAIN
 from custom_components.stiebel_eltron_isg.coordinator import (
     CONTROLLER_FAMILIES,
@@ -152,31 +152,33 @@ def test_host_returns_the_configured_address() -> None:
     assert coordinator.host == "isg.local"
 
 
-def test_get_raw_data_combines_all_api_components() -> None:
-    """Diagnostics receive the rows of every API component."""
-    first = Component.__new__(Component)
-    second = ManualComponent.__new__(ManualComponent)
-    coordinator = _coordinator(
-        SimpleNamespace(first=first, second=second, _group=object())
-    )
+async def test_get_raw_data_keeps_components_apart_and_follows_groups() -> None:
+    """Diagnostics get every component under its own name, groups included."""
+    unit = MockModbusConnection().for_unit(1)
+    unit.load_raw({
+        "input": {500: 0x8000, 506: 125, 541: 301, 583: 215, 2524: 1, 3519: 7},
+    })
+    api = WpmStiebelEltronAPI(unit)
+    coordinator = _coordinator(api)
 
-    with patch.object(
-        coordinator_module,
-        "field_rows",
-        side_effect=(
-            [("first", 1), ("shared", 1)],
-            [("second", 2), ("shared", 2)],
-        ),
-    ) as rows:
-        assert coordinator.get_raw_data() == {
-            "first": 1,
-            "second": 2,
-            "shared": 2,
-        }
+    # Nothing was read yet, and the polling helper is not a component.
+    assert coordinator.get_raw_data() == {}
 
-    assert rows.call_count == 2
-    assert rows.call_args_list[0].args == (first,)
-    assert rows.call_args_list[1].args == (second,)
+    for component in (api.system_values, api.system_state, api.energy_data):
+        await component.async_update()
+    data = coordinator.get_raw_data()
+
+    assert set(data) == {"system_values", "system_state", "energy_data"}
+    system_values = data["system_values"]
+    assert system_values["outside_temperature"] == "12.5 °C"
+    # A value the controller does not report is left out, not shown as a dash.
+    assert "actual_temperature_fe7" not in system_values
+    assert len(system_values["heat_pumps"]) == 6
+    assert system_values["heat_pumps"][0]["return_temperature"] == "30.1 °C"
+    assert system_values["room_temperatures"][0]["actual_temperature"] == "21.5 °C"
+    # Both components have a field of this name; neither replaces the other.
+    assert data["system_state"]["nhz_1"] == "True"
+    assert data["energy_data"]["nhz_1"] == "7 h"
 
 
 @pytest.mark.parametrize(
