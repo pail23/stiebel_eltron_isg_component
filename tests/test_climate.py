@@ -680,3 +680,37 @@ async def test_climate_keeps_the_written_target_between_non_eco_modes() -> None:
     entity.coordinator._api.system_parameters.operating_mode = 2
 
     assert entity.native_target_temperature == 22.5
+
+
+async def test_set_temperature_without_mode_keeps_the_mode() -> None:
+    """A plain temperature goes to the setpoint of the mode that is running."""
+    entity = _make_wpm_climate(operating_mode=4)
+
+    await entity.async_set_temperature(temperature=19.0)
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "eco_temperature_hk_1", 19.0)
+    ]
+
+
+async def test_set_temperature_with_the_running_mode_writes_no_mode() -> None:
+    """The raw mode is compared, so the mode that is running is not rewritten."""
+    entity = _make_wpm_climate(operating_mode=5)
+
+    await entity.async_set_temperature(temperature=22.0, hvac_mode=HVACMode.OFF)
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "comfort_temperature_hk_1", 22.0)
+    ]
+
+
+async def test_set_temperature_with_mode_writes_mode_then_its_setpoint() -> None:
+    """Leaving eco through the call moves the write to the comfort setpoint."""
+    entity = _make_wpm_climate(operating_mode=4)
+
+    await entity.async_set_temperature(temperature=22.0, hvac_mode=HVACMode.AUTO)
+
+    assert entity.coordinator.writes == [
+        ("system_parameters", "operating_mode", 2),
+        ("system_parameters", "comfort_temperature_hk_1", 22.0),
+    ]

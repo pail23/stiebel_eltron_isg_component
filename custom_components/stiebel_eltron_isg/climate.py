@@ -6,6 +6,7 @@ from typing import Any
 
 from homeassistant.components.climate import ClimateEntity, ClimateEntityDescription
 from homeassistant.components.climate.const import (
+    ATTR_HVAC_MODE,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -15,7 +16,7 @@ from homeassistant.components.climate.const import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -473,9 +474,20 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        value = kwargs["temperature"]
+        """Set new target temperature.
+
+        The service may pass a mode along. It is written first, so that the
+        temperature goes to the setpoint this entity shows for that mode, not
+        to the one of the mode left. Only eco has a setpoint of its own; every
+        other mode, LWZ manual operation included, uses the comfort setpoint.
+        """
+        value = kwargs[ATTR_TEMPERATURE]
+        hvac_mode = kwargs.get(ATTR_HVAC_MODE)
         async with self.coordinator.write_lock:
+            if hvac_mode is not None:
+                await self._write_operating_mode_locked(
+                    self._mode_by_hvac.get(hvac_mode)
+                )
             # The field depends on the mode, which another entity may be
             # writing right now, so it is chosen under the same lock.
             field = self._target_temp_write_field
@@ -496,11 +508,13 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         Several raw modes map to one Home Assistant mode, so the controller
         value is compared, not the mapped one.
         """
-        if new_mode is None:
-            return
         async with self.coordinator.write_lock:
-            if self.operation_mode != new_mode:
-                await self._write_field("operating_mode", new_mode)
+            await self._write_operating_mode_locked(new_mode)
+
+    async def _write_operating_mode_locked(self, new_mode: int | None) -> None:
+        """Write a raw operating mode; the caller holds the write lock."""
+        if new_mode is not None and self.operation_mode != new_mode:
+            await self._write_field("operating_mode", new_mode)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -599,6 +613,14 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
         self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
         super().__init__(coordinator, config_entry, description)
         self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+
+    async def async_turn_on(self) -> None:
+        """Return to automatic operation.
+
+        Home Assistant's default picks HEAT when more than one mode besides OFF
+        is offered, and HEAT is the manual mode here.
+        """
+        await self.async_set_hvac_mode(HVACMode.AUTO)
 
     @property
     def _fan_stage_field(self) -> str | None:
