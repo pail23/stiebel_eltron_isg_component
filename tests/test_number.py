@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, MagicMock
 
-from homeassistant.components.number import NumberMode
+from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.const import UnitOfTemperature
 from homeassistant.exceptions import ServiceValidationError
 from pystiebeleltron.lwz import LwzSystemParameters
@@ -371,6 +371,9 @@ async def test_lwz_heating_curve_low_end_keeps_half_degree_steps(key: str) -> No
     entity = _make_number(current=2.0)
     entity.entity_description = description
     entity.write_field = description.write_field
+    # The entity is built without a platform, which the lookup of the shown
+    # unit needs; it shows the native unit here.
+    entity._number_option_unit_of_measurement = UnitOfTemperature.CELSIUS
     setattr(_device(entity), description.write_field, 2.0)
 
     with pytest.raises(ServiceValidationError):
@@ -402,3 +405,14 @@ async def test_lwz_fan_levels_reject_a_fraction(key: str) -> None:
     assert entity.coordinator.writes == [
         ("system_parameters", description.write_field, 2)
     ]
+
+
+@pytest.mark.parametrize("description", _ALL_NUMBER_TYPES, ids=lambda d: d.key)
+def test_number_device_class_follows_the_unit(description) -> None:
+    """Home Assistant converts a temperature only when it knows it is one."""
+    entity = StiebelEltronISGNumberEntity(MagicMock(), MagicMock(), description)
+    expected = {
+        UnitOfTemperature.CELSIUS: NumberDeviceClass.TEMPERATURE,
+        UnitOfTemperature.KELVIN: NumberDeviceClass.TEMPERATURE_DELTA,
+    }.get(description.native_unit_of_measurement)
+    assert entity.device_class == expected
