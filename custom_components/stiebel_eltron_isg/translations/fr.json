@@ -31,12 +31,17 @@
             "already_configured": "Périphérique déjà configuré",
             "invalid_host_IP": "IP hôte invalide",
             "cannot_connect": "Impossible de se connecter au périphérique. Veuillez vérifier l'hôte et le port.",
-            "link_conflict": "Une autre intégration utilise déjà cet appareil Modbus avec des paramètres de connexion incompatibles. Reconfigurez cette intégration ou supprimez la connexion en conflit."
+            "link_conflict": "Une autre intégration utilise déjà cet appareil Modbus avec des paramètres de connexion incompatibles. Reconfigurez cette intégration ou supprimez la connexion en conflit.",
+            "unknown": "Erreur inattendue",
+            "unsupported_controller": "L'ISG signale l'ID de modèle de régulateur {model_id}, que cette version de l'intégration ne prend pas en charge. Vérifiez si une mise à jour de l'intégration est disponible. Si le modèle reste non pris en charge, signalez cet ID de modèle dans le suivi des tickets du projet."
         },
         "abort": {
             "already_configured": "Périphérique déjà configuré",
+            "cannot_connect": "Impossible de se connecter au périphérique. Veuillez vérifier l'hôte et le port.",
             "link_conflict": "Une autre intégration utilise déjà cet appareil Modbus avec des paramètres de connexion incompatibles. Reconfigurez cette intégration ou supprimez la connexion en conflit.",
-            "reconfigure_successful": "Les détails de connexion ont été mis à jour avec succès."
+            "reconfigure_successful": "Les détails de connexion ont été mis à jour avec succès.",
+            "unknown": "Erreur inattendue",
+            "unsupported_controller": "L'ISG signale l'ID de modèle de régulateur {model_id}, que cette version de l'intégration ne prend pas en charge. Vérifiez si une mise à jour de l'intégration est disponible. Si le modèle reste non pris en charge, signalez cet ID de modèle dans le suivi des tickets du projet."
         }
     },
     "exceptions": {
@@ -522,6 +527,24 @@
             "extract_air_temperature": {
                 "name": "Température air extrait"
             },
+            "outside_air_temperature": {
+                "name": "Température air extérieur"
+            },
+            "supply_air_temperature": {
+                "name": "Température air soufflé"
+            },
+            "supply_air_flow_rate": {
+                "name": "Débit air soufflé"
+            },
+            "exhaust_air_flow_rate": {
+                "name": "Débit air rejeté"
+            },
+            "supply_air_fan_control": {
+                "name": "Commande ventilateur de soufflage"
+            },
+            "exhaust_air_fan_control": {
+                "name": "Commande ventilateur air rejeté"
+            },
             "estimated_water_inverter_cop_heating_hp_1": {
                 "name": "Estimated water/inverter COP heating HP1"
             },
@@ -798,6 +821,15 @@
             },
             "fan_level_manual": {
                 "name": "Fan Level Manual"
+            },
+            "ventilation_stage_comfort": {
+                "name": "Niveau de ventilation en mode confort"
+            },
+            "ventilation_stage_eco": {
+                "name": "Niveau de ventilation en mode éco"
+            },
+            "ventilation_stage_standby": {
+                "name": "Niveau de ventilation en mode veille"
             },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Consigne refroidissement jour CC 1"

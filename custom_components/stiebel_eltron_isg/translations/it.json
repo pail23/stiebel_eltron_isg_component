@@ -31,12 +31,17 @@
             "already_configured": "Il dispositivo è già configurato",
             "invalid_host_IP": "Indirizzo IP host non valido",
             "cannot_connect": "Impossibile connettersi al dispositivo. Controllare host e porta.",
-            "link_conflict": "Un'altra integrazione sta già utilizzando questo dispositivo Modbus con impostazioni di connessione incompatibili. Riconfigurare tale integrazione o rimuovere la connessione in conflitto."
+            "link_conflict": "Un'altra integrazione sta già utilizzando questo dispositivo Modbus con impostazioni di connessione incompatibili. Riconfigurare tale integrazione o rimuovere la connessione in conflitto.",
+            "unknown": "Errore imprevisto",
+            "unsupported_controller": "L'ISG segnala l'ID del modello di regolatore {model_id}, che questa versione dell'integrazione non supporta. Verificare se è disponibile un aggiornamento dell'integrazione. Se il modello resta non supportato, segnalare questo ID modello nell'issue tracker del progetto."
         },
         "abort": {
             "already_configured": "Il dispositivo è già configurato",
+            "cannot_connect": "Impossibile connettersi al dispositivo. Controllare host e porta.",
             "link_conflict": "Un'altra integrazione sta già utilizzando questo dispositivo Modbus con impostazioni di connessione incompatibili. Riconfigurare tale integrazione o rimuovere la connessione in conflitto.",
-            "reconfigure_successful": "Dettagli di connessione aggiornati correttamente."
+            "reconfigure_successful": "Dettagli di connessione aggiornati correttamente.",
+            "unknown": "Errore imprevisto",
+            "unsupported_controller": "L'ISG segnala l'ID del modello di regolatore {model_id}, che questa versione dell'integrazione non supporta. Verificare se è disponibile un aggiornamento dell'integrazione. Se il modello resta non supportato, segnalare questo ID modello nell'issue tracker del progetto."
         }
     },
     "exceptions": {
@@ -522,6 +527,24 @@
             "extract_air_temperature": {
                 "name": "Temperatura aria estratta"
             },
+            "outside_air_temperature": {
+                "name": "Temperatura aria esterna"
+            },
+            "supply_air_temperature": {
+                "name": "Temperatura aria immessa"
+            },
+            "supply_air_flow_rate": {
+                "name": "Portata aria immessa"
+            },
+            "exhaust_air_flow_rate": {
+                "name": "Portata aria espulsa"
+            },
+            "supply_air_fan_control": {
+                "name": "Comando ventilatore aria immessa"
+            },
+            "exhaust_air_fan_control": {
+                "name": "Comando ventilatore aria espulsa"
+            },
             "estimated_water_inverter_cop_heating_hp_1": {
                 "name": "Estimated water/inverter COP heating HP1"
             },
@@ -798,6 +821,15 @@
             },
             "fan_level_manual": {
                 "name": "Fan Level Manual"
+            },
+            "ventilation_stage_comfort": {
+                "name": "Livello di ventilazione in modalità comfort"
+            },
+            "ventilation_stage_eco": {
+                "name": "Livello di ventilazione in modalità eco"
+            },
+            "ventilation_stage_standby": {
+                "name": "Livello di ventilazione in modalità standby"
             },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Temperatura target raffreddamento comfort CC 1"

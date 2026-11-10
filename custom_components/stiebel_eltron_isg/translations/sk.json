@@ -31,12 +31,17 @@
             "already_configured": "Zariadenie je už nakonfigurované",
             "invalid_host_IP": "Neplatná IP hostiteľa",
             "cannot_connect": "Nie je možné pripojiť sa k zariadeniu. Skontrolujte prosím host a port.",
-            "link_conflict": "Iná integrácia už používa toto zariadenie Modbus s nekompatibilnými nastaveniami pripojenia. Zmeňte konfiguráciu uvedenej integrácie alebo odstráňte konfliktné pripojenie."
+            "link_conflict": "Iná integrácia už používa toto zariadenie Modbus s nekompatibilnými nastaveniami pripojenia. Zmeňte konfiguráciu uvedenej integrácie alebo odstráňte konfliktné pripojenie.",
+            "unknown": "Neočakávaná chyba",
+            "unsupported_controller": "ISG hlási ID modelu regulátora {model_id}, ktoré táto verzia integrácie nepodporuje. Skontrolujte, či je k dispozícii aktualizácia integrácie. Ak model zostane nepodporovaný, nahláste toto ID modelu v issue trackeri projektu."
         },
         "abort": {
             "already_configured": "Zariadenie je už nakonfigurované",
+            "cannot_connect": "Nie je možné pripojiť sa k zariadeniu. Skontrolujte prosím host a port.",
             "link_conflict": "Iná integrácia už používa toto zariadenie Modbus s nekompatibilnými nastaveniami pripojenia. Zmeňte konfiguráciu uvedenej integrácie alebo odstráňte konfliktné pripojenie.",
-            "reconfigure_successful": "Podrobnosti o pripojení boli úspešne aktualizované."
+            "reconfigure_successful": "Podrobnosti o pripojení boli úspešne aktualizované.",
+            "unknown": "Neočakávaná chyba",
+            "unsupported_controller": "ISG hlási ID modelu regulátora {model_id}, ktoré táto verzia integrácie nepodporuje. Skontrolujte, či je k dispozícii aktualizácia integrácie. Ak model zostane nepodporovaný, nahláste toto ID modelu v issue trackeri projektu."
         }
     },
     "exceptions": {
@@ -522,6 +527,24 @@
             "extract_air_temperature": {
                 "name": "Teplota odvádzaného vzduchu"
             },
+            "outside_air_temperature": {
+                "name": "Teplota vonkajšieho vzduchu"
+            },
+            "supply_air_temperature": {
+                "name": "Teplota privádzaného vzduchu"
+            },
+            "supply_air_flow_rate": {
+                "name": "Prietok privádzaného vzduchu"
+            },
+            "exhaust_air_flow_rate": {
+                "name": "Prietok odpadového vzduchu"
+            },
+            "supply_air_fan_control": {
+                "name": "Riadenie ventilátora privádzaného vzduchu"
+            },
+            "exhaust_air_fan_control": {
+                "name": "Riadenie ventilátora odpadového vzduchu"
+            },
             "estimated_water_inverter_cop_heating_hp_1": {
                 "name": "Estimated water/inverter COP heating HP1"
             },
@@ -798,6 +821,15 @@
             },
             "fan_level_manual": {
                 "name": "Fan Level Manual"
+            },
+            "ventilation_stage_comfort": {
+                "name": "Stupeň vetrania v komfortnom režime"
+            },
+            "ventilation_stage_eco": {
+                "name": "Stupeň vetrania v režime Eco"
+            },
+            "ventilation_stage_standby": {
+                "name": "Stupeň vetrania v pohotovostnom režime"
             },
             "comfort_cooling_temperature_target_hk1": {
                 "name": "Denná teplota chladenia Soll TO 1"
