@@ -420,7 +420,11 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
     @property
     def current_humidity(self) -> int | None:
-        """Return the current humidity."""
+        """Return the current humidity.
+
+        A reading of 0 is skipped as a sensor that is not there: unlike 0 °C,
+        0 % relative humidity does not occur in a room.
+        """
         for accessor in self.humidity_modbus_register:
             value = self._read_accessor(accessor)
             if value == 0:
@@ -431,14 +435,21 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
     @property
     def native_current_temperature(self) -> float | None:
-        """Return the current temperature."""
+        """Return the current temperature.
+
+        A sensor that reads exactly 0 only yields to a later one that reports
+        something else: an unused sensor input may read 0 rather than the
+        unavailable marker, but 0 °C is also a real room temperature, so it is
+        reported when no other sensor has a reading.
+        """
+        zero: float | None = None
         for accessor in self.actual_temperature_register:
             value = self._read_accessor(accessor)
             if value == 0:
-                continue
-            if value is not None:
+                zero = value
+            elif value is not None:
                 return value
-        return None
+        return zero
 
     @property
     def _target_temp_write_field(self) -> str | None:
