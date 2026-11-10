@@ -14,7 +14,9 @@ from custom_components.stiebel_eltron_isg.const import (
     COMFORT_WATER_TEMPERATURE_TARGET,
     ECO_WATER_TEMPERATURE_TARGET,
     FAN_COOLING_FLOW_TEMPERATURE_HYSTERESIS,
+    FAN_LEVEL_DAY,
     FAN_LEVEL_MANUAL,
+    FAN_LEVEL_NIGHT,
     FAN_LEVEL_PARTY,
     HEATING_CURVE_LOW_END_HK1,
     HEATING_CURVE_LOW_END_HK2,
@@ -378,4 +380,25 @@ async def test_lwz_heating_curve_low_end_keeps_half_degree_steps(key: str) -> No
     await entity.async_set_native_value(2.5)
     assert entity.coordinator.writes == [
         ("system_parameters", description.write_field, 2.5)
+    ]
+
+
+@pytest.mark.parametrize(
+    "key", [FAN_LEVEL_DAY, FAN_LEVEL_NIGHT, FAN_LEVEL_PARTY, FAN_LEVEL_MANUAL]
+)
+async def test_lwz_fan_levels_reject_a_fraction(key: str) -> None:
+    """The library truncates a fraction, so 1.9 would be written as stage 1."""
+    description = next(d for d in NUMBER_TYPES_LWZ if d.key == key)
+    entity = _make_number(current=1)
+    entity.entity_description = description
+    entity.write_field = description.write_field
+    setattr(_device(entity), description.write_field, 1)
+
+    with pytest.raises(ServiceValidationError):
+        await entity.async_set_native_value(1.9)
+    assert entity.coordinator.writes == []
+
+    await entity.async_set_native_value(2)
+    assert entity.coordinator.writes == [
+        ("system_parameters", description.write_field, 2)
     ]
