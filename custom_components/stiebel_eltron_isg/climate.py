@@ -67,14 +67,9 @@ WPM_TO_HA_PRESET = {
     0: PRESET_EMERGENCY,
 }
 
-HA_TO_WPM_PRESET = {
-    PRESET_READY: 1,
-    PRESET_PROGRAM: 2,
-    PRESET_COMFORT: 3,
-    PRESET_ECO: 4,
-    PRESET_WATER_HEATING: 5,
-    PRESET_EMERGENCY: 0,
-}
+# Every preset stands for exactly one raw mode, so these maps invert. The HVAC
+# maps below do not: several raw modes share one HVAC mode.
+HA_TO_WPM_PRESET = {preset: mode for mode, preset in WPM_TO_HA_PRESET.items()}
 
 HA_TO_WPM_HVAC = {
     HVACMode.AUTO: 2,
@@ -107,15 +102,14 @@ LWZ_TO_HA_PRESET = {
     0: PRESET_EMERGENCY,
 }
 
-HA_TO_LWZ_PRESET = {
-    PRESET_READY: 1,
-    PRESET_COMFORT: 3,
-    PRESET_ECO: 4,
-    PRESET_WATER_HEATING: 5,
-    PRESET_AUTO: 11,
-    PRESET_MANUAL: MANUAL_MODE,
-    PRESET_EMERGENCY: 0,
-}
+HA_TO_LWZ_PRESET = {preset: mode for mode, preset in LWZ_TO_HA_PRESET.items()}
+
+_BASE_FEATURES = (
+    ClimateEntityFeature.TARGET_TEMPERATURE
+    | ClimateEntityFeature.PRESET_MODE
+    | ClimateEntityFeature.TURN_OFF
+    | ClimateEntityFeature.TURN_ON
+)
 
 LWZ_TO_HA_FAN = {0: FAN_OFF, 1: FAN_LOW, 2: FAN_MEDIUM, 3: FAN_HIGH}
 HA_TO_LWZ_FAN = {k: i for i, k in LWZ_TO_HA_FAN.items()}
@@ -137,175 +131,124 @@ class StiebelEltronClimateEntityDescription(ClimateEntityDescription):
     comfort_target_temp_write_field: str | None = None
 
 
-WPM_3I_CLIMATE_TYPES = [
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_1,
-        translation_key=CLIMATE_HK_1,
-        humidity_modbus_register=[
-            lambda api: api.system_values.relative_humidity,
-        ],
-        actual_temperature_register=[
-            lambda api: api.system_values.actual_temperature_fe7,
-            lambda api: api.system_values.actual_temperature_fek,
-        ],
-        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_1,
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.comfort_temperature_hk_1
-        ),
-        min_temp=5,
-        max_temp=30,
-        eco_target_temp_write_field="eco_temperature_hk_1",
-        comfort_target_temp_write_field="comfort_temperature_hk_1",
-    ),
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_2,
-        translation_key=CLIMATE_HK_2,
-        # The WPM 3i API exposes no room temperature or humidity assigned to HK2.
-        humidity_modbus_register=[],
-        actual_temperature_register=[],
-        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_2,
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.comfort_temperature_hk_2
-        ),
-        min_temp=5,
-        max_temp=30,
-        eco_target_temp_write_field="eco_temperature_hk_2",
-        comfort_target_temp_write_field="comfort_temperature_hk_2",
-    ),
-]
-
-WPM_CLIMATE_TYPES = [
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_1,
-        translation_key=CLIMATE_HK_1,
-        humidity_modbus_register=[
-            lambda api: api.system_values.room_temperatures[0].relative_humidity,
-            lambda api: api.system_values.relative_humidity,
-        ],
-        actual_temperature_register=[
-            lambda api: api.system_values.room_temperatures[0].actual_temperature,
-            lambda api: api.system_values.actual_temperature_fe7,
-            lambda api: api.system_values.actual_temperature_fek,
-        ],
-        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_1,
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.comfort_temperature_hk_1
-        ),
-        min_temp=5,
-        max_temp=30,
-        eco_target_temp_write_field="eco_temperature_hk_1",
-        comfort_target_temp_write_field="comfort_temperature_hk_1",
-    ),
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_2,
-        translation_key=CLIMATE_HK_2,
-        humidity_modbus_register=[
-            lambda api: api.system_values.room_temperatures[1].relative_humidity
-        ],
-        actual_temperature_register=[
-            lambda api: api.system_values.room_temperatures[1].actual_temperature
-        ],
-        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_2,
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.comfort_temperature_hk_2
-        ),
-        min_temp=5,
-        max_temp=30,
-        eco_target_temp_write_field="eco_temperature_hk_2",
-        comfort_target_temp_write_field="comfort_temperature_hk_2",
-    ),
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_3,
-        translation_key=CLIMATE_HK_3,
-        humidity_modbus_register=[
-            lambda api: api.system_values.room_temperatures[2].relative_humidity
-        ],
-        actual_temperature_register=[
-            lambda api: api.system_values.room_temperatures[2].actual_temperature
-        ],
-        eco_target_temp_register=lambda api: api.system_parameters.eco_temperature_hk_3,
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.comfort_temperature_hk_3
-        ),
-        min_temp=5,
-        max_temp=30,
-        eco_target_temp_write_field="eco_temperature_hk_3",
-        comfort_target_temp_write_field="comfort_temperature_hk_3",
-    ),
-]
-
-
-def _extension_circuit_climate(
-    circuit: int, key: str
+def _circuit(
+    key: str,
+    eco_field: str,
+    comfort_field: str,
+    *,
+    humidity: list[ValueAccessor],
+    temperature: list[ValueAccessor],
+    **kwargs: Any,
 ) -> StiebelEltronClimateEntityDescription:
-    """Describe heating circuit 4 or 5, which need the WPE extension module.
+    """Describe a heating circuit by its two setpoint fields and room sensors.
 
-    Only WPMsystem supports the module, and the entity is registered disabled,
-    like the circuit's sensors.
+    The range is the one of the WPM controllers unless stated otherwise.
     """
-    index = circuit - 1
-    comfort_field = f"comfort_temperature_hk_{circuit}"
-    eco_field = f"eco_temperature_hk_{circuit}"
     return StiebelEltronClimateEntityDescription(
         key=key,
         translation_key=key,
-        entity_registry_enabled_default=False,
-        humidity_modbus_register=[
-            lambda api: api.system_values.room_temperatures[index].relative_humidity
-        ],
-        actual_temperature_register=[
-            lambda api: api.system_values.room_temperatures[index].actual_temperature
-        ],
+        humidity_modbus_register=humidity,
+        actual_temperature_register=temperature,
         eco_target_temp_register=lambda api: getattr(api.system_parameters, eco_field),
         comfort_target_temp_register=lambda api: getattr(
             api.system_parameters, comfort_field
         ),
-        min_temp=5,
-        max_temp=30,
         eco_target_temp_write_field=eco_field,
         comfort_target_temp_write_field=comfort_field,
+        **{"min_temp": 5, "max_temp": 30} | kwargs,
     )
 
 
+def _room_circuit(
+    circuit: int,
+    key: str,
+    *,
+    humidity: tuple[ValueAccessor, ...] = (),
+    temperature: tuple[ValueAccessor, ...] = (),
+    **kwargs: Any,
+) -> StiebelEltronClimateEntityDescription:
+    """Describe a WPM heating circuit that has a room sensor slot of its own.
+
+    ``humidity`` and ``temperature`` are tried after that slot.
+    """
+    index = circuit - 1
+    return _circuit(
+        key,
+        f"eco_temperature_hk_{circuit}",
+        f"comfort_temperature_hk_{circuit}",
+        humidity=[
+            lambda api: api.system_values.room_temperatures[index].relative_humidity,
+            *humidity,
+        ],
+        temperature=[
+            lambda api: api.system_values.room_temperatures[index].actual_temperature,
+            *temperature,
+        ],
+        **kwargs,
+    )
+
+
+WPM_3I_CLIMATE_TYPES = [
+    _circuit(
+        CLIMATE_HK_1,
+        "eco_temperature_hk_1",
+        "comfort_temperature_hk_1",
+        humidity=[lambda api: api.system_values.relative_humidity],
+        temperature=[
+            lambda api: api.system_values.actual_temperature_fe7,
+            lambda api: api.system_values.actual_temperature_fek,
+        ],
+    ),
+    # The WPM 3i API exposes no room temperature or humidity assigned to HK2.
+    _circuit(
+        CLIMATE_HK_2,
+        "eco_temperature_hk_2",
+        "comfort_temperature_hk_2",
+        humidity=[],
+        temperature=[],
+    ),
+]
+
+WPM_CLIMATE_TYPES = [
+    _room_circuit(
+        1,
+        CLIMATE_HK_1,
+        humidity=(lambda api: api.system_values.relative_humidity,),
+        temperature=(
+            lambda api: api.system_values.actual_temperature_fe7,
+            lambda api: api.system_values.actual_temperature_fek,
+        ),
+    ),
+    _room_circuit(2, CLIMATE_HK_2),
+    _room_circuit(3, CLIMATE_HK_3),
+]
+
+# Heating circuits 4 and 5 need the WPE extension module. Only WPMsystem
+# supports it, and the entities are registered disabled, like the circuits'
+# sensors.
 WPMSYSTEM_CLIMATE_TYPES = [
     *WPM_CLIMATE_TYPES,
-    _extension_circuit_climate(4, CLIMATE_HK_4),
-    _extension_circuit_climate(5, CLIMATE_HK_5),
+    _room_circuit(4, CLIMATE_HK_4, entity_registry_enabled_default=False),
+    _room_circuit(5, CLIMATE_HK_5, entity_registry_enabled_default=False),
 ]
 
 
 LWZ_CLIMATE_TYPES = [
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_1,
-        translation_key=CLIMATE_HK_1,
-        humidity_modbus_register=[lambda api: api.system_values.relative_humidity_hc1],
-        actual_temperature_register=[lambda api: api.system_values.actual_room_t_hc1],
-        eco_target_temp_register=lambda api: (
-            api.system_parameters.room_temperature_night_hk1
-        ),
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.room_temperature_day_hk1
-        ),
+    _circuit(
+        CLIMATE_HK_1,
+        "room_temperature_night_hk1",
+        "room_temperature_day_hk1",
+        humidity=[lambda api: api.system_values.relative_humidity_hc1],
+        temperature=[lambda api: api.system_values.actual_room_t_hc1],
         min_temp=10,
-        max_temp=30,
-        eco_target_temp_write_field="room_temperature_night_hk1",
-        comfort_target_temp_write_field="room_temperature_day_hk1",
     ),
-    StiebelEltronClimateEntityDescription(
-        key=CLIMATE_HK_2,
-        translation_key=CLIMATE_HK_2,
-        humidity_modbus_register=[lambda api: api.system_values.relative_humidity_hc2],
-        actual_temperature_register=[lambda api: api.system_values.actual_room_t_hc2],
-        eco_target_temp_register=lambda api: (
-            api.system_parameters.room_temperature_night_hk2
-        ),
-        comfort_target_temp_register=lambda api: (
-            api.system_parameters.room_temperature_day_hk2
-        ),
+    _circuit(
+        CLIMATE_HK_2,
+        "room_temperature_night_hk2",
+        "room_temperature_day_hk2",
+        humidity=[lambda api: api.system_values.relative_humidity_hc2],
+        temperature=[lambda api: api.system_values.actual_room_t_hc2],
         min_temp=10,
-        max_temp=30,
-        eco_target_temp_write_field="room_temperature_night_hk2",
-        comfort_target_temp_write_field="room_temperature_day_hk2",
     ),
 ]
 
@@ -342,6 +285,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     """stiebel_eltron_isg climate class."""
 
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_target_temperature_step = 0.1
     # The controller's raw operating modes and their Home Assistant names.
     # Several raw modes map to one HVAC mode, so the raw value is what gets
     # compared and written.
@@ -349,12 +293,7 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     _mode_by_hvac: dict[HVACMode, int]
     _preset_by_mode: dict[int, str]
     _mode_by_preset: dict[str, int]
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.PRESET_MODE
-        | ClimateEntityFeature.TURN_OFF
-        | ClimateEntityFeature.TURN_ON
-    )
+    _attr_supported_features = _BASE_FEATURES
 
     def __init__(
         self,
@@ -367,7 +306,6 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
 
         self._attr_min_temp = description.min_temp
         self._attr_max_temp = description.max_temp
-        self._attr_target_temperature_step = 0.1
 
         super().__init__(coordinator, config_entry)
 
@@ -565,24 +503,15 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     _mode_by_hvac = HA_TO_WPM_HVAC
     _preset_by_mode = WPM_TO_HA_PRESET
     _mode_by_preset = HA_TO_WPM_PRESET
-
-    def __init__(
-        self,
-        coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronConfigEntry,
-        description: StiebelEltronClimateEntityDescription,
-    ) -> None:
-        """Initialize the climate entity."""
-        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
-        self._attr_preset_modes = [
-            PRESET_READY,
-            PRESET_PROGRAM,
-            PRESET_ECO,
-            PRESET_COMFORT,
-            PRESET_WATER_HEATING,
-            PRESET_EMERGENCY,
-        ]
-        super().__init__(coordinator, config_entry, description)
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
+    _attr_preset_modes = [
+        PRESET_READY,
+        PRESET_PROGRAM,
+        PRESET_ECO,
+        PRESET_COMFORT,
+        PRESET_WATER_HEATING,
+        PRESET_EMERGENCY,
+    ]
 
 
 class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
@@ -592,27 +521,18 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     _mode_by_hvac = HA_TO_LWZ_HVAC
     _preset_by_mode = LWZ_TO_HA_PRESET
     _mode_by_preset = HA_TO_LWZ_PRESET
-
-    def __init__(
-        self,
-        coordinator: StiebelEltronDataCoordinator,
-        config_entry: StiebelEltronConfigEntry,
-        description: StiebelEltronClimateEntityDescription,
-    ) -> None:
-        """Initialize the climate entity."""
-        self._attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
-        self._attr_preset_modes = [
-            PRESET_READY,
-            PRESET_AUTO,
-            PRESET_MANUAL,
-            PRESET_ECO,
-            PRESET_COMFORT,
-            PRESET_WATER_HEATING,
-            PRESET_EMERGENCY,
-        ]
-        self._attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
-        super().__init__(coordinator, config_entry, description)
-        self._attr_supported_features |= ClimateEntityFeature.FAN_MODE
+    _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
+    _attr_preset_modes = [
+        PRESET_READY,
+        PRESET_AUTO,
+        PRESET_MANUAL,
+        PRESET_ECO,
+        PRESET_COMFORT,
+        PRESET_WATER_HEATING,
+        PRESET_EMERGENCY,
+    ]
+    _attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
+    _attr_supported_features = _BASE_FEATURES | ClimateEntityFeature.FAN_MODE
 
     async def async_turn_on(self) -> None:
         """Return to automatic operation.
