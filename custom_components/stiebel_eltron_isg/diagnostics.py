@@ -29,7 +29,7 @@ def _diagnostics_for_entry(
 ) -> dict[str, Any]:
     """Build diagnostics shared by the config entry and device endpoints."""
     coordinator = entry.runtime_data
-    data = {str(k): v for k, v in coordinator.get_raw_data().items() if v is not None}
+    data = coordinator.get_raw_data()
 
     return {
         "config_entry": async_redact_data(entry.data, CONFIG_FIELDS_TO_REDACT),
