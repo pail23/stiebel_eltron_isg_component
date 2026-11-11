@@ -1372,5 +1372,11 @@ async def test_a_replacement_device_of_another_entry_stops_the_migration(
     migration.async_migrate_device_identifier(hass, config_entry_with_name)
 
     assert "belongs to another config entry" in caplog.text
-    assert device_registry.async_get(legacy.id).identifiers == {(DOMAIN, "My Heatpump")}
-    assert device_registry.async_get(foreign.id) is not None
+    kept = device_registry.async_get(legacy.id)
+    assert kept is not None
+    assert kept.identifiers == {(DOMAIN, "My Heatpump")}
+    assert kept.config_entry_id == config_entry_with_name.entry_id
+    theirs = device_registry.async_get(foreign.id)
+    assert theirs is not None
+    assert theirs.identifiers == {(DOMAIN, config_entry_with_name.entry_id)}
+    assert theirs.config_entry_id == stranger.entry_id
