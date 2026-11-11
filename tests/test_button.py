@@ -3,7 +3,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from modbus_connection import ModbusError
@@ -49,3 +49,26 @@ async def test_reset_button_becomes_unavailable_after_failed_refresh(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_pressing_the_reset_button_writes_the_reset_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wpm_api: MagicMock,
+) -> None:
+    """The button service reaches the reset register of the controller."""
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "button",
+        DOMAIN,
+        build_unique_id(mock_config_entry, RESET_HEATPUMP),
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        "button", "press", {ATTR_ENTITY_ID: entity_id}, blocking=True
+    )
+
+    mock_wpm_api.system_parameters.write.assert_awaited_once_with("reset", 3)
