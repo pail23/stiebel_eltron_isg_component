@@ -344,7 +344,12 @@ async def test_unknown_operating_mode_still_takes_a_mode_change_through_services
         ("humidity_modbus_register", [0, None, 47.9], 47),
         ("humidity_modbus_register", [0, None], None),
         ("actual_temperature_register", [0, None, 21.5], 21.5),
-        ("actual_temperature_register", [0, None], None),
+        ("actual_temperature_register", [None, -3.5, 21.5], -3.5),
+        # 0 °C is a real reading when no other sensor reports.
+        ("actual_temperature_register", [0, None], 0),
+        ("actual_temperature_register", [None, 0.0], 0),
+        ("actual_temperature_register", [None], None),
+        ("actual_temperature_register", [], None),
     ],
 )
 def test_climate_uses_the_first_nonzero_measurement(
@@ -352,7 +357,7 @@ def test_climate_uses_the_first_nonzero_measurement(
     values: list,
     expected,
 ) -> None:
-    """Fallback accessors ignore unavailable and zero-valued room sensors."""
+    """A zero-valued room sensor yields to a later one that reports."""
     entity = StiebelEltronISGClimateEntity.__new__(StiebelEltronISGClimateEntity)
     setattr(entity, attribute, [lambda api, value=value: value for value in values])
     entity.coordinator = make_coordinator(SimpleNamespace())
