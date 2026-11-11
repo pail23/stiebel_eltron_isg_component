@@ -1,5 +1,7 @@
 """Tests for the migration of legacy entity unique ids."""
 
+from types import SimpleNamespace
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
@@ -1324,3 +1326,57 @@ async def test_current_model_id_wins_over_a_historical_model_id(
         "count": "1",
         "entities": historical.entity_id,
     }
+
+
+def test_plan_ignores_an_entry_of_no_known_scheme() -> None:
+    """A unique id that starts with none of the prefixes is not planned."""
+    entry = SimpleNamespace(
+        id="1", unique_id="other_outdoor_temperature", domain="sensor"
+    )
+
+    planned, losers = migration._plan_migration([entry], ["legacy_"], "target_")
+
+    assert planned == {}
+    assert losers == []
+
+
+async def test_a_replacement_device_of_another_entry_stops_the_migration(
+    hass: HomeAssistant,
+    config_entry_with_name: MockConfigEntry,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """If the scoped lookup ever returns a foreign device, both stay as they are."""
+    config_entry_with_name.add_to_hass(hass)
+    stranger = MockConfigEntry(domain=DOMAIN, title="Something else")
+    stranger.add_to_hass(hass)
+    device_registry = dr.async_get(hass)
+    legacy = device_registry.async_get_or_create(
+        config_entry_id=config_entry_with_name.entry_id,
+        identifiers={(DOMAIN, "My Heatpump")},
+        name="My Heatpump",
+    )
+    foreign = device_registry.async_get_or_create(
+        config_entry_id=stranger.entry_id,
+        identifiers={(DOMAIN, config_entry_with_name.entry_id)},
+        name="Theirs",
+    )
+    monkeypatch.setattr(
+        migration,
+        "_async_get_device_by_identifier",
+        lambda _registry, identifier, _entry_id: (
+            legacy if identifier == (DOMAIN, "My Heatpump") else foreign
+        ),
+    )
+
+    migration.async_migrate_device_identifier(hass, config_entry_with_name)
+
+    assert "belongs to another config entry" in caplog.text
+    kept = device_registry.async_get(legacy.id)
+    assert kept is not None
+    assert kept.identifiers == {(DOMAIN, "My Heatpump")}
+    assert kept.config_entry_id == config_entry_with_name.entry_id
+    theirs = device_registry.async_get(foreign.id)
+    assert theirs is not None
+    assert theirs.identifiers == {(DOMAIN, config_entry_with_name.entry_id)}
+    assert theirs.config_entry_id == stranger.entry_id

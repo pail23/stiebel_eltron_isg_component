@@ -30,6 +30,8 @@ from custom_components.stiebel_eltron_isg.number import (
     NUMBER_TYPES_WPM,
     NUMBER_TYPES_WPM_3I,
     StiebelEltronISGNumberEntity,
+    StiebelEltronNumberEntityDescription,
+    number_device_class,
     number_mode,
 )
 from tests.pending import FakeApi, FakeComponent, attach, make_coordinator, poll
@@ -416,3 +418,17 @@ def test_number_device_class_follows_the_unit(description) -> None:
         UnitOfTemperature.KELVIN: NumberDeviceClass.TEMPERATURE_DELTA,
     }.get(description.native_unit_of_measurement)
     assert entity.device_class == expected
+
+
+def test_an_explicit_mode_and_device_class_win_over_the_unit() -> None:
+    """A description that sets them itself is not overridden by its unit."""
+    description = StiebelEltronNumberEntityDescription(
+        key="explicit",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        mode=NumberMode.SLIDER,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
+        modbus_register=lambda _api: None,
+    )
+
+    assert number_mode(description) == NumberMode.SLIDER
+    assert number_device_class(description) == NumberDeviceClass.TEMPERATURE_DELTA
