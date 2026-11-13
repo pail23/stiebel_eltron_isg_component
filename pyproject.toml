@@ -9,7 +9,7 @@ dependencies = [
     # Match Home Assistant Core's required shared Modbus backend for tests.
     "modbus-connection[tmodbus]==4.12.7",
     # Home Assistant's own test package; it pins the matching homeassistant.
-    "pytest-homeassistant==2026.11.0",
+    "pytest-homeassistant==2026.11.1",
     # PyPI's yanked 0.10.0 contains the 0.9.3 code; 0.10.1 is the first package
     # with the midnight day and total fix (home-assistant/core#189495).
     "pystiebeleltron[tmodbus]==0.10.1",
