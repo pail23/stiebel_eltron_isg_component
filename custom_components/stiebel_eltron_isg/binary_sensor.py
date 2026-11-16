@@ -1,6 +1,7 @@
 """Binary sensor platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass
+from typing import Any
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -89,276 +90,97 @@ class StiebelEltronBinarySensorEntityDescription(BinarySensorEntityDescription):
     bit_number: int = 0
 
 
-WPM_3I_BINARY_SENSOR_TYPES = [
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=PUMP_ON_HK1,
-        key=PUMP_ON_HK1,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=PUMP_ON_HK2,
-        key=PUMP_ON_HK2,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=1,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_UP_PROGRAM,
-        key=HEAT_UP_PROGRAM,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=NHZ_STAGES_RUNNING,
-        key=NHZ_STAGES_RUNNING,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=3,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_HEATING,
-        key=IS_HEATING,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=4,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_HEATING_WATER,
-        key=IS_HEATING_WATER,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=5,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=COMPRESSOR_ON,
-        key=COMPRESSOR_ON,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=6,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_SUMMER_MODE,
-        key=IS_SUMMER_MODE,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=7,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_COOLING,
-        key=IS_COOLING,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=8,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=EVAPORATOR_DEFROST,
-        key=EVAPORATOR_DEFROST,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=9,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=POWER_OFF,
-        key=POWER_OFF,
-        modbus_register=lambda api: api.system_state.power_off,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=ERROR_STATUS,
-        key=ERROR_STATUS,
+def _state(
+    key: str, field: str, bit_number: int = 0, **kwargs: Any
+) -> StiebelEltronBinarySensorEntityDescription:
+    """Describe one bit of a system state register."""
+    return StiebelEltronBinarySensorEntityDescription(
+        key=key,
+        translation_key=key,
+        modbus_register=lambda api: getattr(api.system_state, field),
+        bit_number=bit_number,
+        **kwargs,
+    )
+
+
+def _status_bits(*keys: str) -> list[StiebelEltronBinarySensorEntityDescription]:
+    """Describe the operating status bits, in ascending order from bit 0."""
+    return [
+        _state(key, "operating_status", bit_number)
+        for bit_number, key in enumerate(keys)
+    ]
+
+
+def _error_status() -> StiebelEltronBinarySensorEntityDescription:
+    return _state(
+        ERROR_STATUS,
+        "fault_status",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        modbus_register=lambda api: api.system_state.fault_status,
-        bit_number=0,
+    )
+
+
+WPM_3I_BINARY_SENSOR_TYPES = [
+    *_status_bits(
+        PUMP_ON_HK1,
+        PUMP_ON_HK2,
+        HEAT_UP_PROGRAM,
+        NHZ_STAGES_RUNNING,
+        IS_HEATING,
+        IS_HEATING_WATER,
+        COMPRESSOR_ON,
+        IS_SUMMER_MODE,
+        IS_COOLING,
+        EVAPORATOR_DEFROST,
     ),
+    _state(POWER_OFF, "power_off"),
+    _error_status(),
 ]
 
 
 WPM_BINARY_SENSOR_TYPES = [
     *WPM_3I_BINARY_SENSOR_TYPES,
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=COOLING_MODE,
-        key=COOLING_MODE,
-        modbus_register=lambda api: api.system_state.cooling_mode,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEATING_CIRCUIT_1_PUMP,
-        key=HEATING_CIRCUIT_1_PUMP,
-        modbus_register=lambda api: api.system_state.heating_circuit_pump_1,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEATING_CIRCUIT_2_PUMP,
-        key=HEATING_CIRCUIT_2_PUMP,
-        modbus_register=lambda api: api.system_state.heating_circuit_pump_2,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEATING_CIRCUIT_3_PUMP,
-        key=HEATING_CIRCUIT_3_PUMP,
-        modbus_register=lambda api: api.system_state.heating_circuit_pump_3,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEATING_CIRCUIT_4_PUMP,
-        key=HEATING_CIRCUIT_4_PUMP,
-        modbus_register=lambda api: api.system_state.heating_circuit_pump_4,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEATING_CIRCUIT_5_PUMP,
-        key=HEATING_CIRCUIT_5_PUMP,
-        modbus_register=lambda api: api.system_state.heating_circuit_pump_5,
-        bit_number=0,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=BUFFER_1_CHARGING_PUMP,
-        key=BUFFER_1_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.buffer_charging_pump_1,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=BUFFER_2_CHARGING_PUMP,
-        key=BUFFER_2_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.buffer_charging_pump_2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=BUFFER_3_CHARGING_PUMP,
-        key=BUFFER_3_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.buffer_charging_pump_3,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=BUFFER_4_CHARGING_PUMP,
-        key=BUFFER_4_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.buffer_charging_pump_4,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=BUFFER_5_CHARGING_PUMP,
-        key=BUFFER_5_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.buffer_charging_pump_5,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=BUFFER_6_CHARGING_PUMP,
-        key=BUFFER_6_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.buffer_charging_pump_6,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=DHW_CHARGING_PUMP,
-        key=DHW_CHARGING_PUMP,
-        modbus_register=lambda api: api.system_state.dhw_charging_pump,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=SOURCE_PUMP,
-        key=SOURCE_PUMP,
-        modbus_register=lambda api: api.system_state.source_pump,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=DIFF_CONTROLLER_1_PUMP,
-        key=DIFF_CONTROLLER_1_PUMP,
-        modbus_register=lambda api: api.system_state.diff_controller_pump_1,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=DIFF_CONTROLLER_2_PUMP,
-        key=DIFF_CONTROLLER_2_PUMP,
-        modbus_register=lambda api: api.system_state.diff_controller_pump_2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=POOL_PRIMARY_PUMP,
-        key=POOL_PRIMARY_PUMP,
-        modbus_register=lambda api: api.system_state.pool_pump_primary,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=POOL_SECONDARY_PUMP,
-        key=POOL_SECONDARY_PUMP,
-        modbus_register=lambda api: api.system_state.pool_pump_secondary,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_PUMP_1_ON,
-        key=HEAT_PUMP_1_ON,
-        modbus_register=lambda api: api.system_state.compressor_1,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_PUMP_2_ON,
-        key=HEAT_PUMP_2_ON,
-        modbus_register=lambda api: api.system_state.compressor_2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_PUMP_3_ON,
-        key=HEAT_PUMP_3_ON,
-        modbus_register=lambda api: api.system_state.compressor_3,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_PUMP_4_ON,
-        key=HEAT_PUMP_4_ON,
-        modbus_register=lambda api: api.system_state.compressor_4,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_PUMP_5_ON,
-        key=HEAT_PUMP_5_ON,
-        modbus_register=lambda api: api.system_state.compressor_5,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_PUMP_6_ON,
-        key=HEAT_PUMP_6_ON,
-        modbus_register=lambda api: api.system_state.compressor_6,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=SECOND_GENERATOR_DHW,
-        key=SECOND_GENERATOR_DHW,
-        modbus_register=lambda api: api.system_state.we_2_dhw,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=SECOND_GENERATOR_HEATING,
-        key=SECOND_GENERATOR_HEATING,
-        modbus_register=lambda api: api.system_state.we_2_heating,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_OPEN_HTG_CIRCUIT_2,
-        key=MIXER_OPEN_HTG_CIRCUIT_2,
-        modbus_register=lambda api: api.system_state.mixer_open_hc2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_OPEN_HTG_CIRCUIT_3,
-        key=MIXER_OPEN_HTG_CIRCUIT_3,
-        modbus_register=lambda api: api.system_state.mixer_open_hc3,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_OPEN_HTG_CIRCUIT_4,
-        key=MIXER_OPEN_HTG_CIRCUIT_4,
-        modbus_register=lambda api: api.system_state.mixer_open_hc4,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_OPEN_HTG_CIRCUIT_5,
-        key=MIXER_OPEN_HTG_CIRCUIT_5,
-        modbus_register=lambda api: api.system_state.mixer_open_hc5,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_CLOSE_HTG_CIRCUIT_2,
-        key=MIXER_CLOSE_HTG_CIRCUIT_2,
-        modbus_register=lambda api: api.system_state.mixer_close_hc2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_CLOSE_HTG_CIRCUIT_3,
-        key=MIXER_CLOSE_HTG_CIRCUIT_3,
-        modbus_register=lambda api: api.system_state.mixer_close_hc3,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_CLOSE_HTG_CIRCUIT_4,
-        key=MIXER_CLOSE_HTG_CIRCUIT_4,
-        modbus_register=lambda api: api.system_state.mixer_close_hc4,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=MIXER_CLOSE_HTG_CIRCUIT_5,
-        key=MIXER_CLOSE_HTG_CIRCUIT_5,
-        modbus_register=lambda api: api.system_state.mixer_close_hc5,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=EMERGENCY_HEATING_1,
-        key=EMERGENCY_HEATING_1,
-        modbus_register=lambda api: api.system_state.nhz_1,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=EMERGENCY_HEATING_2,
-        key=EMERGENCY_HEATING_2,
-        modbus_register=lambda api: api.system_state.nhz_2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=EMERGENCY_HEATING_1_2,
-        key=EMERGENCY_HEATING_1_2,
-        modbus_register=lambda api: api.system_state.nhz_1_2,
+    *(
+        _state(key, field)
+        for key, field in (
+            (COOLING_MODE, "cooling_mode"),
+            (HEATING_CIRCUIT_1_PUMP, "heating_circuit_pump_1"),
+            (HEATING_CIRCUIT_2_PUMP, "heating_circuit_pump_2"),
+            (HEATING_CIRCUIT_3_PUMP, "heating_circuit_pump_3"),
+            (HEATING_CIRCUIT_4_PUMP, "heating_circuit_pump_4"),
+            (HEATING_CIRCUIT_5_PUMP, "heating_circuit_pump_5"),
+            (BUFFER_1_CHARGING_PUMP, "buffer_charging_pump_1"),
+            (BUFFER_2_CHARGING_PUMP, "buffer_charging_pump_2"),
+            (BUFFER_3_CHARGING_PUMP, "buffer_charging_pump_3"),
+            (BUFFER_4_CHARGING_PUMP, "buffer_charging_pump_4"),
+            (BUFFER_5_CHARGING_PUMP, "buffer_charging_pump_5"),
+            (BUFFER_6_CHARGING_PUMP, "buffer_charging_pump_6"),
+            (DHW_CHARGING_PUMP, "dhw_charging_pump"),
+            (SOURCE_PUMP, "source_pump"),
+            (DIFF_CONTROLLER_1_PUMP, "diff_controller_pump_1"),
+            (DIFF_CONTROLLER_2_PUMP, "diff_controller_pump_2"),
+            (POOL_PRIMARY_PUMP, "pool_pump_primary"),
+            (POOL_SECONDARY_PUMP, "pool_pump_secondary"),
+            (HEAT_PUMP_1_ON, "compressor_1"),
+            (HEAT_PUMP_2_ON, "compressor_2"),
+            (HEAT_PUMP_3_ON, "compressor_3"),
+            (HEAT_PUMP_4_ON, "compressor_4"),
+            (HEAT_PUMP_5_ON, "compressor_5"),
+            (HEAT_PUMP_6_ON, "compressor_6"),
+            (SECOND_GENERATOR_DHW, "we_2_dhw"),
+            (SECOND_GENERATOR_HEATING, "we_2_heating"),
+            (MIXER_OPEN_HTG_CIRCUIT_2, "mixer_open_hc2"),
+            (MIXER_OPEN_HTG_CIRCUIT_3, "mixer_open_hc3"),
+            (MIXER_OPEN_HTG_CIRCUIT_4, "mixer_open_hc4"),
+            (MIXER_OPEN_HTG_CIRCUIT_5, "mixer_open_hc5"),
+            (MIXER_CLOSE_HTG_CIRCUIT_2, "mixer_close_hc2"),
+            (MIXER_CLOSE_HTG_CIRCUIT_3, "mixer_close_hc3"),
+            (MIXER_CLOSE_HTG_CIRCUIT_4, "mixer_close_hc4"),
+            (MIXER_CLOSE_HTG_CIRCUIT_5, "mixer_close_hc5"),
+            (EMERGENCY_HEATING_1, "nhz_1"),
+            (EMERGENCY_HEATING_2, "nhz_2"),
+            (EMERGENCY_HEATING_1_2, "nhz_1_2"),
+        )
     ),
 ]
 
@@ -366,118 +188,34 @@ WPM_BINARY_SENSOR_TYPES = [
 # see #607. Do not widen the model gate without controller-specific evidence.
 # pystiebeleltron exposes no matching writable WPM/LWZ parameter.
 CIRCULATION_PUMP_BINARY_SENSOR_TYPES = [
-    StiebelEltronBinarySensorEntityDescription(
-        key=CIRCULATION_PUMP,
-        translation_key=CIRCULATION_PUMP,
+    _state(
+        CIRCULATION_PUMP,
+        "dhw_circulation_pump",
         device_class=BinarySensorDeviceClass.RUNNING,
-        modbus_register=lambda api: api.system_state.dhw_circulation_pump,
     ),
 ]
 
 
 LWZ_BINARY_SENSOR_TYPES = [
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=SWITCHING_PROGRAM_ENABLED,
-        key=SWITCHING_PROGRAM_ENABLED,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=0,
+    *_status_bits(
+        SWITCHING_PROGRAM_ENABLED,
+        COMPRESSOR_ON,
+        IS_HEATING,
+        IS_COOLING,
+        IS_HEATING_WATER,
+        ELECTRIC_REHEATING,
+        SERVICE,
+        POWER_OFF,
+        FILTER,
+        VENTILATION,
+        PUMP_ON_HK1,
+        EVAPORATOR_DEFROST,
+        FILTER_EXTRACT_AIR,
+        FILTER_VENTILATION_AIR,
+        HEAT_UP_PROGRAM,
     ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=COMPRESSOR_ON,
-        key=COMPRESSOR_ON,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=1,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_HEATING,
-        key=IS_HEATING,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=2,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_COOLING,
-        key=IS_COOLING,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=3,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_HEATING_WATER,
-        key=IS_HEATING_WATER,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=4,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=ELECTRIC_REHEATING,
-        key=ELECTRIC_REHEATING,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=5,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=SERVICE,
-        key=SERVICE,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=6,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=POWER_OFF,
-        key=POWER_OFF,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=7,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=FILTER,
-        key=FILTER,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=8,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=VENTILATION,
-        key=VENTILATION,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=9,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=PUMP_ON_HK1,
-        key=PUMP_ON_HK1,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=10,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=EVAPORATOR_DEFROST,
-        key=EVAPORATOR_DEFROST,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=11,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=FILTER_EXTRACT_AIR,
-        key=FILTER_EXTRACT_AIR,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=12,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=FILTER_VENTILATION_AIR,
-        key=FILTER_VENTILATION_AIR,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=13,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=HEAT_UP_PROGRAM,
-        key=HEAT_UP_PROGRAM,
-        modbus_register=lambda api: api.system_state.operating_status,
-        bit_number=14,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=ERROR_STATUS,
-        key=ERROR_STATUS,
-        device_class=BinarySensorDeviceClass.PROBLEM,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        modbus_register=lambda api: api.system_state.fault_status,
-    ),
-    StiebelEltronBinarySensorEntityDescription(
-        translation_key=IS_SUMMER_MODE,
-        key=IS_SUMMER_MODE,
-        modbus_register=lambda api: api.system_state.operating_status_2,
-    ),
+    _error_status(),
+    _state(IS_SUMMER_MODE, "operating_status_2"),
 ]
 
 
