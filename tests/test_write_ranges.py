@@ -67,21 +67,10 @@ _CLIMATE_WRITE_FIELDS = (
     "comfort_target_temp_write_field",
 )
 
-# The manual gives no range for heating circuits 4 and 5, so the library
-# validates nothing there. The ISG object database declares 5 to 30 °C for their
-# comfort and eco setpoints on WPMsystem, the range the entities advertise.
-_UNVALIDATED_WRITE_FIELDS = frozenset({
-    (WpmStiebelEltronAPI, "system_parameters", "heating_curve_rise_hk_3"),
-    *(
-        (WpmStiebelEltronAPI, "system_parameters", f"{field}_hk_{circuit}")
-        for circuit in (4, 5)
-        for field in (
-            "comfort_temperature",
-            "eco_temperature",
-            "heating_curve_rise",
-        )
-    ),
-})
+# Since pystiebeleltron 0.11.0 every field an entity writes has a validator.
+# A field the library leaves at ``writable=True`` has to be listed here after
+# its Home Assistant range was checked by hand.
+_UNVALIDATED_WRITE_FIELDS: frozenset[tuple[type[Any], str, str]] = frozenset()
 
 
 @dataclass(frozen=True)

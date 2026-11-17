@@ -564,13 +564,13 @@ def test_lwz_exposes_compressor_frequency() -> None:
 @pytest.mark.parametrize(
     ("raw", "expected"), [(0, 0), (20, 20), (50, 50), (240, 240), (0x8000, None)]
 )
-async def test_lwz_compressor_speed_reads_whole_hz_from_installed_library(
+async def test_lwz_compressor_speed_reads_whole_hz(
     raw: int, expected: int | None
 ) -> None:
     """The ISG shows the raw register as the compressor speed in Hz (#784).
 
-    The installed library still scales register 32 by 0.1, which the sensor
-    undoes; once the library reads whole Hz this keeps passing unchanged.
+    pystiebeleltron 0.11.0 reads register 32 as whole Hz, so the sensor passes
+    the library value through.
     """
     unit = MockModbusConnection().for_unit(1)
     api = LwzStiebelEltronAPI(unit)
@@ -579,26 +579,6 @@ async def test_lwz_compressor_speed_reads_whole_hz_from_installed_library(
     await api.system_values.async_update()
 
     assert _lwz(COMPRESSOR_SPEED).modbus_register(api) == expected
-
-
-def test_lwz_compressor_speed_passes_a_whole_hz_library_through() -> None:
-    """A library that already reads whole Hz is not multiplied again."""
-
-    class FixedValues:
-        compressor_speed = SimpleNamespace(scale=1)
-
-    values = FixedValues()
-    values.__dict__["compressor_speed"] = 20
-    api = SimpleNamespace(system_values=values)
-
-    assert _lwz(COMPRESSOR_SPEED).modbus_register(api) == 20
-
-
-def test_lwz_compressor_speed_without_a_field_definition_is_unchanged() -> None:
-    """An unknown field definition is passed through rather than guessed at."""
-    api = SimpleNamespace(system_values=SimpleNamespace(compressor_speed=31.0))
-
-    assert _lwz(COMPRESSOR_SPEED).modbus_register(api) == 31.0
 
 
 def test_lwz_exposes_compressor_cooling_runtime_hours() -> None:

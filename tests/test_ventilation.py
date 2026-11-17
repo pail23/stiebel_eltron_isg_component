@@ -198,6 +198,14 @@ async def test_other_models_get_no_ventilation_entities(model) -> None:
             ventilation_stage_eco=1,
             ventilation_stage_standby=0,
         ),
+        # Answered, so the WPMsystem circuit 4 sensors are added at once and
+        # leave no listener behind.
+        heating_circuit_4_5_values=SimpleNamespace(
+            actual_temperature_hk_4=30.0,
+            set_temperature_hk_4=None,
+            actual_temperature_hk_5=None,
+            set_temperature_hk_5=None,
+        ),
     )
     coordinator = _Coordinator(api, model)
     coordinator.family = CONTROLLER_FAMILIES[model]
