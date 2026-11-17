@@ -30,6 +30,8 @@ from custom_components.stiebel_eltron_isg.const import (
     ACTUAL_ROOM_TEMPERATURE_HK3,
     ACTUAL_ROOM_TEMPERATURE_HK4,
     ACTUAL_ROOM_TEMPERATURE_HK5,
+    ACTUAL_TEMPERATURE_HK4,
+    ACTUAL_TEMPERATURE_HK5,
     COMFORT_TEMPERATURE_TARGET_HK3,
     COMFORT_TEMPERATURE_TARGET_HK4,
     COMFORT_TEMPERATURE_TARGET_HK5,
@@ -46,6 +48,8 @@ from custom_components.stiebel_eltron_isg.const import (
     TARGET_ROOM_TEMPERATURE_HK3,
     TARGET_ROOM_TEMPERATURE_HK4,
     TARGET_ROOM_TEMPERATURE_HK5,
+    TARGET_TEMPERATURE_HK4,
+    TARGET_TEMPERATURE_HK5,
 )
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
 from custom_components.stiebel_eltron_isg.number import (
@@ -57,6 +61,7 @@ from custom_components.stiebel_eltron_isg.sensor import (
     SYSTEM_VALUES_SENSOR_TYPES,
     WPM_3I_SENSOR_TYPES,
     WPM_SENSOR_TYPES,
+    WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES,
     WPMSYSTEM_SENSOR_TYPES,
 )
 
@@ -364,3 +369,89 @@ async def test_hk4_and_hk5_controls_are_registered_disabled_on_wpmsystem(
         entry = registry.async_get(entity_id)
         assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION, key
         assert hass.states.get(entity_id) is None, key
+
+
+CIRCUIT_TEMPERATURE_KEYS = (
+    ACTUAL_TEMPERATURE_HK4,
+    TARGET_TEMPERATURE_HK4,
+    ACTUAL_TEMPERATURE_HK5,
+    TARGET_TEMPERATURE_HK5,
+)
+
+
+def circuit_values(hk4_actual=None, hk4_set=None, hk5_actual=None, hk5_set=None):
+    """WpmHeatingCircuit45Values as the library decodes it."""
+    return SimpleNamespace(
+        actual_temperature_hk_4=hk4_actual,
+        set_temperature_hk_4=hk4_set,
+        actual_temperature_hk_5=hk5_actual,
+        set_temperature_hk_5=hk5_set,
+    )
+
+
+def test_circuit_temperatures_read_their_own_register() -> None:
+    """Each sensor reads its own field of the heating circuit 4 and 5 block."""
+    api = SimpleNamespace(
+        heating_circuit_4_5_values=circuit_values(35.1, 36.0, 28.4, 30.0)
+    )
+    descriptions = _descriptions_by_key(WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES)
+    values = [
+        descriptions[key].modbus_register(api) for key in CIRCUIT_TEMPERATURE_KEYS
+    ]
+    assert values == [35.1, 36.0, 28.4, 30.0]
+
+
+def test_circuit_5_temperatures_are_opt_in() -> None:
+    """Circuit 4 is confirmed on hardware, circuit 5 is not and stays disabled."""
+    descriptions = _descriptions_by_key(WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES)
+    assert descriptions[ACTUAL_TEMPERATURE_HK4].entity_registry_enabled_default
+    assert descriptions[TARGET_TEMPERATURE_HK4].entity_registry_enabled_default
+    assert not descriptions[ACTUAL_TEMPERATURE_HK5].entity_registry_enabled_default
+    assert not descriptions[TARGET_TEMPERATURE_HK5].entity_registry_enabled_default
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        (ControllerModel.WPMsystem, circuit_values(35.1, 36.0), True),
+        (ControllerModel.WPMsystem, circuit_values(), False),
+        (ControllerModel.WPM_3, circuit_values(35.1, 36.0), False),
+    ],
+    ids=["wpmsystem-served", "wpmsystem-not-served", "wpm3"],
+)
+async def test_circuit_temperatures_need_wpmsystem_and_an_answer(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model,
+    mock_wpm_api,
+    case,
+) -> None:
+    """The sensors exist only on a WPMsystem whose controller answers the block."""
+    model, values, created = case
+    mock_get_controller_model.return_value = model
+    mock_wpm_api.heating_circuit_4_5_values = values
+    mock_wpm_api.system_values.room_temperatures = [
+        *HK1_TO_HK3,
+        NOT_AVAILABLE,
+        NOT_AVAILABLE,
+    ]
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    registry = er.async_get(hass)
+    entity_ids = {
+        key: registry.async_get_entity_id(
+            "sensor", DOMAIN, build_unique_id(mock_config_entry, key)
+        )
+        for key in CIRCUIT_TEMPERATURE_KEYS
+    }
+    if not created:
+        assert set(entity_ids.values()) == {None}
+        return
+
+    assert float(hass.states.get(entity_ids[ACTUAL_TEMPERATURE_HK4]).state) == 35.1
+    assert float(hass.states.get(entity_ids[TARGET_TEMPERATURE_HK4]).state) == 36.0
+    hk5 = registry.async_get(entity_ids[ACTUAL_TEMPERATURE_HK5])
+    assert hk5.disabled_by is er.RegistryEntryDisabler.INTEGRATION

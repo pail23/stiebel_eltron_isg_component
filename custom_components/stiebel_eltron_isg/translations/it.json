@@ -164,6 +164,18 @@
             "target_temperature_hk3": {
                 "name": "Temperatura target CC 3"
             },
+            "actual_temperature_hk4": {
+                "name": "Temperatura attuale CC 4"
+            },
+            "target_temperature_hk4": {
+                "name": "Temperatura target CC 4"
+            },
+            "actual_temperature_hk5": {
+                "name": "Temperatura attuale CC 5"
+            },
+            "target_temperature_hk5": {
+                "name": "Temperatura target CC 5"
+            },
             "actual_temperature_cooling_fancoil": {
                 "name": "Temperatura attuale raffreddamento fancoil"
             },

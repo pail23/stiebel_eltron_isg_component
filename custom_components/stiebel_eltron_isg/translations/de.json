@@ -164,6 +164,18 @@
             "target_temperature_hk3": {
                 "name": "Soll-Temperatur HK 3"
             },
+            "actual_temperature_hk4": {
+                "name": "Ist-Temperatur HK 4"
+            },
+            "target_temperature_hk4": {
+                "name": "Soll-Temperatur HK 4"
+            },
+            "actual_temperature_hk5": {
+                "name": "Ist-Temperatur HK 5"
+            },
+            "target_temperature_hk5": {
+                "name": "Soll-Temperatur HK 5"
+            },
             "actual_temperature_cooling_fancoil": {
                 "name": "Ist-Temperatur Gebläsekühlung"
             },

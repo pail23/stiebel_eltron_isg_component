@@ -164,6 +164,18 @@
             "target_temperature_hk3": {
                 "name": "Požadovaná teplota TO 3"
             },
+            "actual_temperature_hk4": {
+                "name": "Skutočná teplota TO 4"
+            },
+            "target_temperature_hk4": {
+                "name": "Požadovaná teplota TO 4"
+            },
+            "actual_temperature_hk5": {
+                "name": "Skutočná teplota TO 5"
+            },
+            "target_temperature_hk5": {
+                "name": "Požadovaná teplota TO 5"
+            },
             "actual_temperature_cooling_fancoil": {
                 "name": "Skutočná teplota chladenia fancoil"
             },

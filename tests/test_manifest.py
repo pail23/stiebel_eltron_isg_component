@@ -74,15 +74,16 @@ def test_installed_versions_satisfy_home_assistant_modbus_requirements() -> None
 
 @pytest.mark.parametrize(
     ("version", "compatible"),
-    [("0.9.3", False), ("0.10.0", False), ("0.10.1", True), ("0.11.0", False)],
+    [("0.10.1", False), ("0.11.0", True), ("0.11.1", True), ("0.12.0", False)],
 )
-def test_runtime_library_range_requires_optional_hk3_handling(
+def test_runtime_library_range_matches_home_assistant_pin(
     version: str, compatible: bool
 ) -> None:
-    """Keep the 0.10 series without admitting an untested 0.11.
+    """Keep the 0.11 series without admitting an untested 0.12.
 
-    The yanked 0.10.0 contains the 0.9.3 code; 0.10.1 is the first package
-    with the midnight day and total fix, and Home Assistant 2026.11 pins it.
+    0.11.0 is the release Home Assistant 2026.12 pins. It reads the LWZ
+    compressor speed in whole Hz and the heating circuit 4 and 5 temperatures,
+    and validates every write the entities offer.
     """
     requirements = [
         Requirement(entry)

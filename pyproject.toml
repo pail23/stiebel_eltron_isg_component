@@ -12,7 +12,7 @@ dependencies = [
     "pytest-homeassistant==2026.11.1",
     # PyPI's yanked 0.10.0 contains the 0.9.3 code; 0.10.1 is the first package
     # with the midnight day and total fix (home-assistant/core#189495).
-    "pystiebeleltron[tmodbus]==0.10.1",
+    "pystiebeleltron[tmodbus]==0.11.0",
     # Keep the test stack aligned with Home Assistant's Modbus manifest.
     "pymodbus==3.13.1",
     "tmodbus==1.1.0",
