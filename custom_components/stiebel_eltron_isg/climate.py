@@ -293,6 +293,8 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
     _mode_by_hvac: dict[HVACMode, int]
     _preset_by_mode: dict[int, str]
     _mode_by_preset: dict[str, int]
+    # The raw modes in which the heat pump heats the rooms to a setpoint.
+    _running_modes: frozenset[int]
     _attr_supported_features = _BASE_FEATURES
 
     def __init__(
@@ -475,6 +477,21 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         """Set new operation mode."""
         await self._async_write_operating_mode(self._mode_by_hvac.get(hvac_mode))
 
+    async def async_turn_on(self) -> None:
+        """Start the mode behind AUTO unless the heat pump is running already.
+
+        Home Assistant's default sets an HVAC mode whatever the entity shows.
+        On a heat pump in eco or comfort operation that ended the mode, moved
+        the target to another setpoint and spent a write, although the entity
+        was on. Standby and emergency operation show as AUTO too but do not
+        heat the rooms to a setpoint, so turn_on still leaves them, like OFF
+        and an unknown mode.
+        """
+        async with self.coordinator.write_lock:
+            if self.operation_mode in self._running_modes:
+                return
+            await self._write_operating_mode_locked(self._mode_by_hvac[HVACMode.AUTO])
+
     @property
     def preset_mode(self) -> str | None:
         """Return current preset mode."""
@@ -514,6 +531,8 @@ class StiebelEltronWPMClimateEntity(StiebelEltronISGClimateEntity):
     _mode_by_hvac = HA_TO_WPM_HVAC
     _preset_by_mode = WPM_TO_HA_PRESET
     _mode_by_preset = HA_TO_WPM_PRESET
+    # Program, comfort and eco operation.
+    _running_modes = frozenset({2, 3, ECO_MODE})
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF]
     _attr_preset_modes = [
         PRESET_READY,
@@ -532,6 +551,8 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     _mode_by_hvac = HA_TO_LWZ_HVAC
     _preset_by_mode = LWZ_TO_HA_PRESET
     _mode_by_preset = HA_TO_LWZ_PRESET
+    # Automatic, comfort, eco and manual operation.
+    _running_modes = frozenset({11, 3, ECO_MODE, MANUAL_MODE})
     _attr_hvac_modes = [HVACMode.AUTO, HVACMode.OFF, HVACMode.HEAT]
     _attr_preset_modes = [
         PRESET_READY,
@@ -544,14 +565,6 @@ class StiebelEltronLWZClimateEntity(StiebelEltronISGClimateEntity):
     ]
     _attr_fan_modes = [FAN_OFF, FAN_LOW, FAN_MEDIUM, FAN_HIGH]
     _attr_supported_features = _BASE_FEATURES | ClimateEntityFeature.FAN_MODE
-
-    async def async_turn_on(self) -> None:
-        """Return to automatic operation.
-
-        Home Assistant's default picks HEAT when more than one mode besides OFF
-        is offered, and HEAT is the manual mode here.
-        """
-        await self.async_set_hvac_mode(HVACMode.AUTO)
 
     @property
     def _fan_stage_field(self) -> str | None:

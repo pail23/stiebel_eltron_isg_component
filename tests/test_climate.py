@@ -423,6 +423,48 @@ async def test_wpm_hvac_compares_raw_mode_not_mapped_auto_state() -> None:
     assert entity.coordinator.writes == [("system_parameters", "operating_mode", 2)]
 
 
+@pytest.mark.parametrize("operating_mode", [2, 3, ECO_MODE])
+async def test_wpm_turn_on_keeps_the_mode_that_is_running(operating_mode: int) -> None:
+    """turn_on on a running heat pump must not end eco or comfort operation."""
+    entity = _make_wpm_climate(operating_mode=operating_mode)
+
+    await entity.async_turn_on()
+
+    assert entity.coordinator.writes == []
+
+
+@pytest.mark.parametrize("operating_mode", [0, 1, 5, None])
+async def test_wpm_turn_on_starts_program_operation(operating_mode: int | None) -> None:
+    """Emergency, standby, OFF and an unknown mode are left for program."""
+    entity = _make_wpm_climate(operating_mode=operating_mode)
+
+    await entity.async_turn_on()
+
+    assert entity.coordinator.writes == [("system_parameters", "operating_mode", 2)]
+
+
+@pytest.mark.parametrize("operating_mode", [11, 3, ECO_MODE, 14])
+async def test_lwz_turn_on_keeps_the_mode_that_is_running(operating_mode: int) -> None:
+    """turn_on on a running unit keeps eco, comfort and manual operation."""
+    entity = _make_lwz_climate(operating_mode=operating_mode)
+
+    await entity.async_turn_on()
+
+    assert entity.coordinator.writes == []
+
+
+@pytest.mark.parametrize("operating_mode", [0, 1, 5, None])
+async def test_lwz_turn_on_starts_automatic_operation(
+    operating_mode: int | None,
+) -> None:
+    """turn_on selects automatic, not HEAT, which is the manual mode."""
+    entity = _make_lwz_climate(operating_mode=operating_mode)
+
+    await entity.async_turn_on()
+
+    assert entity.coordinator.writes == [("system_parameters", "operating_mode", 11)]
+
+
 async def test_lwz_hvac_and_preset_mapping() -> None:
     """LWZ exposes and writes Home Assistant modes through its mapping."""
     entity = _make_lwz_climate(operating_mode=1)
