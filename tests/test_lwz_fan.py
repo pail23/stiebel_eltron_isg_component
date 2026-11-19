@@ -141,6 +141,21 @@ async def test_turn_on_selects_automatic_not_manual(hass, lwz_fan_setup):
     assert hass.states.get(entity_id).state == "auto"
 
 
+async def test_turn_on_keeps_eco_on_a_running_unit(hass, lwz_fan_setup):
+    """Eco shows as AUTO: the unit is on, so turn_on has nothing to switch."""
+    unit, writes, entity_id = await lwz_fan_setup(ControllerModel.LWZ, 4)
+    assert hass.states.get(entity_id).state == "auto"
+    assert hass.states.get(entity_id).attributes["preset_mode"] == "eco"
+
+    await hass.services.async_call(
+        "climate", "turn_on", {"entity_id": entity_id}, blocking=True
+    )
+
+    assert writes == []
+    assert unit.holding[1000] == 4
+    assert hass.states.get(entity_id).attributes["preset_mode"] == "eco"
+
+
 async def test_set_temperature_applies_the_mode_it_is_given(hass, lwz_fan_setup):
     """A mode passed along with the temperature decides which setpoint is written."""
     _unit, writes, entity_id = await lwz_fan_setup(ControllerModel.LWZ, 4)
