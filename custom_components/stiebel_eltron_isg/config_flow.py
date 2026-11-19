@@ -27,6 +27,7 @@ from pystiebeleltron import (
 )
 
 from .const import DEFAULT_PORT, DOMAIN, UNIT_ID
+from .coordinator import CONTROLLER_FAMILIES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +60,7 @@ async def check_controller_model(
             ModbusTcpParams(host=host, port=port),
             UNIT_ID,
         ) as unit:
-            await get_controller_model(unit)
+            model = await get_controller_model(unit)
     except UnknownControllerModelError as exception:
         _LOGGER.debug("Unsupported controller model %s", exception.model_id)
         return ControllerCheckResult(
@@ -80,6 +81,14 @@ async def check_controller_model(
     except Exception:
         _LOGGER.exception("Unexpected exception")
         return ControllerCheckResult("unknown")
+    if model not in CONTROLLER_FAMILIES:
+        # The library knows the model, this integration does not yet. Setup
+        # would refuse it, so do not create an entry that cannot load.
+        _LOGGER.debug("Controller model %s has no register layout", model)
+        return ControllerCheckResult(
+            "unsupported_controller",
+            {"model_id": str(model.value)},
+        )
     return ControllerCheckResult()
 
 

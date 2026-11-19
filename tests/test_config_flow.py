@@ -1,6 +1,6 @@
 """Test the STIEBEL ELTRON config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import SOURCE_DHCP, SOURCE_RECONFIGURE, SOURCE_USER
@@ -19,6 +19,7 @@ import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
 from custom_components.stiebel_eltron_isg.const import DOMAIN, UNIT_ID
+from custom_components.stiebel_eltron_isg.coordinator import CONTROLLER_FAMILIES
 
 USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502}
 RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502}
@@ -182,6 +183,44 @@ async def test_form_reports_unsupported_controller(
     )
 
     mock_get_controller_model.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_form_reports_model_without_register_layout(
+    hass: HomeAssistant,
+    mock_get_controller_model: MagicMock,
+) -> None:
+    """A model the library knows but this integration does not is refused.
+
+    Setup would fail for it with a repair, so the flow must not create an
+    entry for it.
+    """
+    mock_get_controller_model.return_value = ControllerModel.LWZ
+    families = {
+        model: family
+        for model, family in CONTROLLER_FAMILIES.items()
+        if model is not ControllerModel.LWZ
+    }
+
+    with patch.dict(CONTROLLER_FAMILIES, families, clear=True):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], USER_INPUT
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unsupported_controller"}
+    assert result["description_placeholders"] == {
+        "model_id": str(ControllerModel.LWZ.value)
+    }
+    assert hass.config_entries.async_entries(DOMAIN) == []
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], USER_INPUT
     )
