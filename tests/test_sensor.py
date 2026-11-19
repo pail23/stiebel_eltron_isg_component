@@ -15,13 +15,14 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from modbus_connection.mock import MockModbusConnection
-from pystiebeleltron import ControllerModel
+from pystiebeleltron import UNAVAILABLE, ControllerModel
 from pystiebeleltron.lwz import LwzStiebelEltronAPI
 from pystiebeleltron.wpm import (
     WPM_HOLDING_RANGES,
     WPM_INPUT_RANGES,
     WpmStiebelEltronAPI,
 )
+from pystiebeleltron.wpm3i import Wpm3iStiebelEltronAPI
 import pytest
 from pytest_homeassistant.common import MockConfigEntry
 
@@ -69,6 +70,7 @@ from custom_components.stiebel_eltron_isg.const import (
     NHZ_1_2_RUNTIME,
     NHZ_1_RUNTIME,
     NHZ_2_RUNTIME,
+    OUTDOOR_TEMPERATURE,
     PRODUCED_COOLING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_HEATING_TOTAL,
     PRODUCED_ELECTRICAL_BOOSTER_WATER_HEATING_TOTAL,
@@ -90,6 +92,7 @@ from custom_components.stiebel_eltron_isg.const import (
     SOLAR_RUNTIME,
     TARGET_TEMPERATURE_HK1,
     TARGET_TEMPERATURE_HK3,
+    UNIT_ID,
 )
 from custom_components.stiebel_eltron_isg.coordinator import CONTROLLER_FAMILIES
 from custom_components.stiebel_eltron_isg.entity import build_unique_id
@@ -111,6 +114,7 @@ from custom_components.stiebel_eltron_isg.sensor import (
     async_setup_entry,
     window_efficiency,
 )
+from tests.pending import make_coordinator
 
 
 def _wpm(key: str):
@@ -326,24 +330,144 @@ async def test_wpmsystem_runtime_fix_does_not_change_unmeasured_models(model) ->
     }.isdisjoint(entity_keys)
 
 
+def _active_error_sensor(api) -> StiebelEltronISGSensor:
+    """Build the active error sensor on a real coordinator over ``api``."""
+    description = _wpm(ACTIVE_ERROR)
+    entity = StiebelEltronISGSensor.__new__(StiebelEltronISGSensor)
+    entity.entity_description = description
+    entity.modbus_register = description.modbus_register
+    entity.coordinator = make_coordinator(api)
+    return entity
+
+
 @pytest.mark.parametrize(
-    ("key", "value", "expected"),
+    ("active_error", "fault_status", "expected"),
     [
-        (ACTIVE_ERROR, None, None),
-        (ACTIVE_ERROR, 0, "no error"),
-        (ACTIVE_ERROR, 32768, "no error"),
-        (ACTIVE_ERROR, 42, "error 42"),
-        ("ordinary", 21.5, 21.5),
+        (None, False, "no error"),
+        (None, None, "no error"),
+        (0, False, "no error"),
+        (32768, False, "no error"),
+        (42, False, "error 42"),
+        (42, True, "error 42"),
+        (None, True, None),
+        (0, True, None),
     ],
 )
-def test_sensor_native_value_formats_active_errors(key: str, value, expected) -> None:
-    """The active-error register gets labels while ordinary values pass through."""
+def test_active_error_labels_the_error_register(
+    active_error: int | None, fault_status: bool | None, expected: str | None
+) -> None:
+    """The error register is labelled; a fault without a number is unknown."""
+    api = SimpleNamespace(
+        system_state=SimpleNamespace(
+            active_error=active_error, fault_status=fault_status
+        )
+    )
+    entity = _active_error_sensor(api)
+
+    assert entity.available is True
+    assert entity.native_value == expected
+
+
+@pytest.mark.parametrize("value", [21.5, None])
+def test_ordinary_sensor_passes_its_value_through(value: float | None) -> None:
+    """Only the active error is labelled."""
     entity = StiebelEltronISGSensor.__new__(StiebelEltronISGSensor)
-    entity.entity_description = SimpleNamespace(key=key)
+    entity.entity_description = SimpleNamespace(key="ordinary")
     entity.modbus_register = lambda api: None
     entity.coordinator = SimpleNamespace(get_value=lambda accessor: value)
 
+    assert entity.native_value == value
+
+
+@pytest.mark.parametrize(
+    ("raw", "expected"),
+    [(UNAVAILABLE, "no error"), (0, "no error"), (42, "error 42")],
+)
+async def test_active_error_reads_no_error_from_installed_library(
+    raw: int, expected: str
+) -> None:
+    """A controller with an empty error list may answer with the unavailable marker.
+
+    pail23 saw 32768 there (#25); other controllers answer 0 or keep the last
+    error number. The library decodes the marker to None, which every other
+    sensor shows as unavailable. Here it is a state, so the sensor stays
+    available.
+    """
+    unit = MockModbusConnection().for_unit(1)
+    api = WpmStiebelEltronAPI(unit)
+    # Doc register 2507 is wire address 2506; the fault status 2504 is 2503.
+    unit.load_raw({"input": {2503: 0, 2506: raw}})
+    await api.system_state.async_update()
+    entity = _active_error_sensor(api)
+
+    assert entity.available is True
     assert entity.native_value == expected
+
+
+async def test_active_error_is_unknown_while_a_fault_has_no_number() -> None:
+    """The marker next to an active fault must not read as "no error"."""
+    unit = MockModbusConnection().for_unit(1)
+    api = WpmStiebelEltronAPI(unit)
+    unit.load_raw({"input": {2503: 1, 2506: UNAVAILABLE}})
+    await api.system_state.async_update()
+    entity = _active_error_sensor(api)
+
+    assert entity.available is True
+    assert entity.native_value is None
+
+
+@pytest.mark.parametrize("case", [(UNAVAILABLE, "no error"), (42, "error 42")])
+async def test_active_error_state_through_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_get_controller_model: MagicMock,
+    mock_modbus_connection: MockModbusConnection,
+    case: tuple[int, str],
+) -> None:
+    """The state machine shows the error register of a set up controller."""
+    raw, expected = case
+    mock_get_controller_model.return_value = ControllerModel.WPM_3i
+    unit = mock_modbus_connection.for_unit(UNIT_ID)
+    unit.load_raw({"input": {2503: 0, 2506: raw}})
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "custom_components.stiebel_eltron_isg.coordinator.Wpm3iStiebelEltronAPI",
+        Wpm3iStiebelEltronAPI,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, build_unique_id(mock_config_entry, ACTIVE_ERROR)
+    )
+    assert entity_id is not None
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == expected
+
+
+def test_active_error_is_unavailable_after_a_failed_poll() -> None:
+    """Without a current poll there is no telling whether an error is active."""
+    api = SimpleNamespace(
+        system_state=SimpleNamespace(active_error=None, fault_status=False)
+    )
+    entity = _active_error_sensor(api)
+    entity.coordinator.last_update_success = False
+
+    assert entity.available is False
+
+
+def test_other_sensors_stay_unavailable_without_a_value() -> None:
+    """Only the active error treats the unavailable marker as a state."""
+    api = SimpleNamespace(system_values=SimpleNamespace(outside_temperature=None))
+    description = _wpm(OUTDOOR_TEMPERATURE)
+    entity = StiebelEltronISGSensor.__new__(StiebelEltronISGSensor)
+    entity.entity_description = description
+    entity.modbus_register = description.modbus_register
+    entity.coordinator = make_coordinator(api)
+
+    assert entity.available is False
 
 
 def test_wpm_exposes_compressor_runtime_hours() -> None:

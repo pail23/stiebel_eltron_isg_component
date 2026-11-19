@@ -1530,6 +1530,12 @@ async def async_setup_entry(
         )
 
 
+def _fault_status(api: Any) -> bool | None:
+    """Return whether the controller reports a fault, next to the active error."""
+    status: bool | None = api.system_state.fault_status
+    return status
+
+
 class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
     """stiebel_eltron_isg Sensor class."""
 
@@ -1545,14 +1551,30 @@ class StiebelEltronISGSensor(StiebelEltronISGEntity, SensorEntity):
         self.modbus_register = description.modbus_register
 
     @property
+    def available(self) -> bool:
+        """Return True if entity is available.
+
+        Some controllers answer the error register with the unavailable marker
+        while their error list is empty (#25), which the library decodes to
+        None. For this sensor that is a state, not a missing value. The
+        register sits in a block every WPM serves and every poll reads, so a
+        successful poll is all it takes for the answer to be current.
+        """
+        if self.entity_description.key == ACTIVE_ERROR:
+            return self.coordinator.last_update_success
+        return super().available
+
+    @property
     def native_value(self) -> str | float | None:
         """Return the state of the sensor."""
         if self.entity_description.key == ACTIVE_ERROR:
-            error_raw = self.coordinator.get_value(self.modbus_register)
-            if error_raw is None:
-                return None
-            error = int(error_raw)
-            if error in (32768, 0):
+            error = self.coordinator.get_value(self.modbus_register)
+            # The library reports the unavailable marker as None. 32768 is that
+            # marker undecoded, should a library release pass it through.
+            if error is None or int(error) in (32768, 0):
+                # A fault without an error number is not "no error".
+                if self.coordinator.get_value(_fault_status):
+                    return None
                 return "no error"
-            return f"error {error}"
+            return f"error {int(error)}"
         return self.coordinator.get_value(self.modbus_register)
