@@ -1,8 +1,7 @@
 """Sensor platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass, replace
-from math import isclose, isfinite
-from typing import Any
+from math import isfinite
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -46,6 +45,8 @@ from .const import (
     ACTUAL_TEMPERATURE_HK1,
     ACTUAL_TEMPERATURE_HK2,
     ACTUAL_TEMPERATURE_HK3,
+    ACTUAL_TEMPERATURE_HK4,
+    ACTUAL_TEMPERATURE_HK5,
     ACTUAL_TEMPERATURE_WATER,
     COMPRESSOR_COOLING,
     COMPRESSOR_HEATING,
@@ -170,6 +171,8 @@ from .const import (
     TARGET_TEMPERATURE_HK1,
     TARGET_TEMPERATURE_HK2,
     TARGET_TEMPERATURE_HK3,
+    TARGET_TEMPERATURE_HK4,
+    TARGET_TEMPERATURE_HK5,
     TARGET_TEMPERATURE_WATER,
     VENTILATION_AIR_ACTUAL_FAN_SPEED,
     VENTILATION_AIR_TARGET_FLOW_RATE,
@@ -997,24 +1000,6 @@ LWZ_ENERGY_DAILY_SENSOR_TYPES = [
 ]
 
 
-def _lwz_compressor_speed(api: Any) -> float | int | None:
-    """Return the LWZ compressor speed in whole Hz.
-
-    The manual gives register 32 data type 2, so pystiebeleltron 0.10.1 scales
-    it by 0.1, but a THZ 5.5 eco and a THZ 5.5 cool both show the raw value on
-    the ISG (#536, #784). The value is only corrected while the library still
-    declares that 0.1 scale, so a library that reads whole Hz is passed through
-    unchanged. Drop this once the minimum library version reads whole Hz.
-    """
-    value = api.system_values.compressor_speed
-    if not isinstance(value, (int, float)):
-        return None
-    field = getattr(type(api.system_values), "compressor_speed", None)
-    if isclose(getattr(field, "scale", 1), 0.1):
-        return round(value * 10)
-    return value
-
-
 LWZ_COMPRESSOR_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
         key=COMPRESSOR_STARTS,
@@ -1027,7 +1012,7 @@ LWZ_COMPRESSOR_SENSOR_TYPES = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         device_class=SensorDeviceClass.FREQUENCY,
         state_class=SensorStateClass.MEASUREMENT,
-        modbus_register=_lwz_compressor_speed,
+        modbus_register=lambda api: api.system_values.compressor_speed,
     ),
     create_runtime_entity_description(
         COMPRESSOR_HEATING,
@@ -1369,6 +1354,34 @@ WPMSYSTEM_COOLING_SENSOR_TYPES = [
 ]
 
 
+# Heating circuits 4 and 5 need the WPE extension module. pystiebeleltron
+# 0.11.0 reads their temperatures as an optional block, so the sensors are only
+# created once the controller answers it. Circuit 5 is not confirmed on
+# hardware yet and stays disabled by default.
+WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES = [
+    create_temperature_entity_description(
+        ACTUAL_TEMPERATURE_HK4,
+        lambda api: api.heating_circuit_4_5_values.actual_temperature_hk_4,
+    ),
+    create_temperature_entity_description(
+        TARGET_TEMPERATURE_HK4,
+        lambda api: api.heating_circuit_4_5_values.set_temperature_hk_4,
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            ACTUAL_TEMPERATURE_HK5,
+            lambda api: api.heating_circuit_4_5_values.actual_temperature_hk_5,
+        )
+    ),
+    optional_heating_circuit(
+        create_temperature_entity_description(
+            TARGET_TEMPERATURE_HK5,
+            lambda api: api.heating_circuit_4_5_values.set_temperature_hk_5,
+        )
+    ),
+]
+
+
 THZ_VENTILATION_SENSOR_TYPES = [
     create_temperature_entity_description(
         EXTRACT_AIR_TEMPERATURE,
@@ -1519,6 +1532,16 @@ async def async_setup_entry(
         StiebelEltronISGSensor(coordinator, entry, description)
         for description in descriptions
     ])
+    if model is ControllerModel.WPMsystem:
+        # Like the circuits' climate entities, limited to WPMsystem, the only
+        # controller confirmed with the WPE extension module.
+        async_add_when_served(
+            entry,
+            "heating_circuit_4_5_values",
+            WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES,
+            lambda description: StiebelEltronISGSensor(coordinator, entry, description),
+            async_add_devices,
+        )
     if model is ControllerModel.LWZ_R290:
         # Only the THZ 7.1 (LWZ_R290) is confirmed on hardware.
         async_add_when_served(

@@ -18,6 +18,8 @@ actual_temperature_fek
 actual_temperature_hk1
 actual_temperature_hk2
 actual_temperature_hk3
+actual_temperature_hk4
+actual_temperature_hk5
 actual_temperature_water
 area_cooling_flow_temperature_hysteresis
 area_cooling_target_flow_temperature
@@ -242,6 +244,8 @@ target_temperature_fek
 target_temperature_hk1
 target_temperature_hk2
 target_temperature_hk3
+target_temperature_hk4
+target_temperature_hk5
 target_temperature_water
 ventilation
 ventilation_air_actual_fan_speed

@@ -164,6 +164,18 @@
             "target_temperature_hk3": {
                 "name": "Target Temperature HK 3"
             },
+            "actual_temperature_hk4": {
+                "name": "Actual Temperature HK 4"
+            },
+            "target_temperature_hk4": {
+                "name": "Target Temperature HK 4"
+            },
+            "actual_temperature_hk5": {
+                "name": "Actual Temperature HK 5"
+            },
+            "target_temperature_hk5": {
+                "name": "Target Temperature HK 5"
+            },
             "actual_temperature_cooling_fancoil": {
                 "name": "Actual Temperature Cooling Fancoil"
             },
