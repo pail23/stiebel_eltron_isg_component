@@ -27,6 +27,7 @@ import pathlib
 from string import Formatter
 from types import ModuleType
 
+from homeassistant.components.climate import PRESET_COMFORT, PRESET_ECO
 from homeassistant.generated.languages import LANGUAGES
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.translation import async_get_translations
@@ -357,6 +358,35 @@ def test_entity_icons_use_icon_translations(module: ModuleType) -> None:
         f"{platform} translation keys with inconsistent device classes: "
         f"{inconsistent_device_classes}"
     )
+
+
+def test_climate_preset_icons_cover_custom_presets() -> None:
+    """Every heating circuit gets an icon for each preset of its own.
+
+    Icon translations are looked up under the entity's ``translation_key``,
+    which is ``climate_hk_1`` to ``climate_hk_5``, so a block under any other
+    key is never used. ``comfort`` and ``eco`` are Home Assistant presets with
+    built-in icons. The frontend only falls back to those when the
+    integration's ``preset_mode`` block has no ``default``, so it must not
+    carry one.
+    """
+    translation_keys = {
+        description.translation_key
+        for description in _descriptions(climate)
+        if description.translation_key is not None
+    }
+    custom_presets = {
+        *climate.WPM_TO_HA_PRESET.values(),
+        *climate.LWZ_TO_HA_PRESET.values(),
+    } - {PRESET_COMFORT, PRESET_ECO}
+    climate_icons = _load_json(_ICONS_FILE)["entity"].get("climate", {})
+
+    assert set(climate_icons) == translation_keys
+    for key in sorted(translation_keys):
+        preset_icons = climate_icons[key]["state_attributes"]["preset_mode"]
+        assert "default" not in preset_icons, key
+        assert set(preset_icons["state"]) == custom_presets, key
+        assert all(icon.startswith("mdi:") for icon in preset_icons["state"].values())
 
 
 def test_shared_heating_curve_icons_are_intentionally_unified() -> None:
