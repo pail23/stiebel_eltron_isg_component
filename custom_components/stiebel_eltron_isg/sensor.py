@@ -184,6 +184,7 @@ from .coordinator import (
 )
 from .entity import StiebelEltronISGEntity, ValueAccessor, async_add_when_served
 from .estimated_cop import estimated_water_inverter_cop
+from .values import is_finite_number
 
 PARALLEL_UPDATES = 1
 
@@ -283,13 +284,9 @@ def window_efficiency(
 ) -> float | None:
     """Calculate a heat/electricity ratio only from two valid values for one window."""
     if (
-        isinstance(heat, bool)
-        or not isinstance(heat, (int, float))
-        or not isfinite(heat)
+        not is_finite_number(heat)
         or heat < 0
-        or isinstance(electricity, bool)
-        or not isinstance(electricity, (int, float))
-        or not isfinite(electricity)
+        or not is_finite_number(electricity)
         or electricity <= 0
     ):
         return None

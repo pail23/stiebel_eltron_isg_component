@@ -1,7 +1,9 @@
 """Optional water-side inverter COP estimates for a single WPMsystem unit."""
 
 from math import isfinite
-from typing import TYPE_CHECKING, Literal, TypeGuard
+from typing import TYPE_CHECKING, Literal
+
+from .values import is_finite_number
 
 if TYPE_CHECKING:
     from pystiebeleltron.wpm import WpmStiebelEltronAPI
@@ -13,15 +15,6 @@ _EXCLUDED = (1 << 3) | (1 << 8) | (1 << 9)  # Booster, cooling, defrost.
 
 # Approximate rho * cp / 60 for liquid water, in kW per (L/min * K).
 _WATER_KW_PER_L_MIN_K = 0.06977
-
-
-def _is_finite_number(value: object) -> TypeGuard[int | float]:
-    """Validate a register value and narrow its type for the calculation."""
-    return (
-        not isinstance(value, bool)
-        and isinstance(value, (int, float))
-        and isfinite(value)
-    )
 
 
 def estimated_water_inverter_cop(
@@ -54,10 +47,10 @@ def estimated_water_inverter_cop(
     return_temp = pump.return_temperature
     electricity = api.extended_energy_data.inverter_power_iws_1
     if (
-        not _is_finite_number(flow)
-        or not _is_finite_number(supply)
-        or not _is_finite_number(return_temp)
-        or not _is_finite_number(electricity)
+        not is_finite_number(flow)
+        or not is_finite_number(supply)
+        or not is_finite_number(return_temp)
+        or not is_finite_number(electricity)
     ):
         return None
 

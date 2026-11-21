@@ -341,7 +341,9 @@ async def test_unknown_operating_mode_still_takes_a_mode_change_through_services
 @pytest.mark.parametrize(
     ("attribute", "values", "expected"),
     [
-        ("humidity_modbus_register", [0, None, 47.9], 47),
+        # Not truncated to whole percent.
+        ("humidity_modbus_register", [0, None, 47.9], 47.9),
+        ("humidity_modbus_register", [45], 45.0),
         ("humidity_modbus_register", [0, None], None),
         ("actual_temperature_register", [0, None, 21.5], 21.5),
         ("actual_temperature_register", [None, -3.5, 21.5], -3.5),

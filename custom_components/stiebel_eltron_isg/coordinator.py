@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import Enum
 import logging
+from math import isfinite
 from typing import Any, Protocol
 
 from homeassistant.config_entries import ConfigEntry
@@ -276,11 +277,15 @@ class StiebelEltronDataCoordinator(DataUpdateCoordinator[None]):
 
         Accessors read the library's cache and raise nothing on their own; a
         non-numeric result, such as the unavailable marker decoded to None, is
-        reported as no value. The client is passed untyped because accessors
+        reported as no value, and so is ``nan`` or ``inf``. A ``bool`` stays a
+        value: the library decodes flags such as the fault status and the SG
+        Ready inputs to ``bool``. The client is passed untyped because accessors
         reach model-specific attributes the shared protocol cannot express.
         """
         value = value_reference(self._api)
-        return value if isinstance(value, (int, float)) else None
+        if not isinstance(value, (int, float)):
+            return None
+        return value if isinstance(value, bool) or isfinite(value) else None
 
     def has_value(
         self,
