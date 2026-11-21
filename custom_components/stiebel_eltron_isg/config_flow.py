@@ -42,6 +42,15 @@ STEP_USER_DATA_SCHEMA = probatio.Schema({
 })
 
 
+def _strip_host(user_input: dict[str, Any]) -> dict[str, Any]:
+    """Return the form input with whitespace around the host removed.
+
+    A space pasted along with the address would make the connection fail, or
+    end up in the entry and in the duplicate check.
+    """
+    return {**user_input, CONF_HOST: user_input[CONF_HOST].strip()}
+
+
 @dataclass(frozen=True)
 class ControllerCheckResult:
     """Result of validating a controller during a config flow."""
@@ -171,6 +180,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
+            user_input = _strip_host(user_input)
             self._abort_if_host_port_configured(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )
@@ -201,6 +211,7 @@ class StiebelEltronConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         description_placeholders: dict[str, str] | None = None
         if user_input is not None:
+            user_input = _strip_host(user_input)
             self._abort_if_host_port_configured(
                 user_input[CONF_HOST], user_input[CONF_PORT]
             )

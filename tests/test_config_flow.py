@@ -58,6 +58,59 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
+async def test_user_flow_strips_the_host(hass: HomeAssistant) -> None:
+    """Whitespace pasted along with the address is not stored."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: " 1.1.1.1 ", CONF_PORT: 502}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == USER_INPUT
+
+
+async def test_user_flow_with_padded_host_is_a_duplicate(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """The duplicate check compares the stripped host."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**mock_config_entry.data, CONF_HOST: f"{mock_config_entry.data[CONF_HOST]} "},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_reconfigure_flow_strips_the_host(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reconfiguration stores the host without surrounding whitespace."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": mock_config_entry.entry_id},
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "\t2.2.2.2 ", CONF_PORT: 502}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "2.2.2.2"
+
+    await hass.async_block_till_done()
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("failing_fixture", "side_effect"),
     [

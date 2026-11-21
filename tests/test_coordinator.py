@@ -183,10 +183,21 @@ async def test_get_raw_data_keeps_components_apart_and_follows_groups() -> None:
 
 @pytest.mark.parametrize(
     ("value", "expected"),
-    [(1, 1), (1.5, 1.5), (True, True), ("not numeric", None), (None, None)],
+    [
+        (1, 1),
+        (1.5, 1.5),
+        # The library decodes flags such as the fault status to bool.
+        (True, True),
+        (False, False),
+        (float("nan"), None),
+        (float("inf"), None),
+        (float("-inf"), None),
+        ("not numeric", None),
+        (None, None),
+    ],
 )
 def test_get_value_only_accepts_numeric_states(value, expected) -> None:
-    """Entity state accessors may only return numeric Modbus values."""
+    """Entity state accessors may only return finite numeric Modbus values."""
     coordinator = _coordinator(SimpleNamespace(value=value))
 
     assert coordinator.get_value(lambda api: api.value) == expected

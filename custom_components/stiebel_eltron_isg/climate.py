@@ -359,18 +359,19 @@ class StiebelEltronISGClimateEntity(StiebelEltronISGEntity, ClimateEntity):
         return int(value) if value is not None else None
 
     @property
-    def current_humidity(self) -> int | None:
+    def current_humidity(self) -> float | None:
         """Return the current humidity.
 
         A reading of 0 is skipped as a sensor that is not there: unlike 0 °C,
-        0 % relative humidity does not occur in a room.
+        0 % relative humidity does not occur in a room. The reading is not
+        truncated, so 45.9 % stays 45.9 %.
         """
         for accessor in self.humidity_modbus_register:
             value = self._read_accessor(accessor)
             if value == 0:
                 continue
             if value is not None:
-                return int(value)
+                return float(value)
         return None
 
     @property
