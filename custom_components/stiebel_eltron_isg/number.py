@@ -1,4 +1,4 @@
-"""Sensor number for stiebel_eltron_isg."""
+"""Number platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass, replace
 import math
@@ -77,8 +77,13 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     entity_category: EntityCategory | None = EntityCategory.CONFIG
     modbus_register: ValueAccessor
     write_component: str = "system_parameters"
-    write_field: str | None = None
+    write_field: str
     enforce_step: bool = False
+
+    def __post_init__(self) -> None:
+        """Refuse a step check without a positive step to check against."""
+        if self.enforce_step and (self.native_step is None or self.native_step <= 0):
+            raise ValueError(f"{self.key}: enforce_step needs a positive native_step")
 
 
 def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode:
@@ -406,7 +411,7 @@ async def async_setup_entry(
 
 
 class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
-    """stiebel_eltron_isg select class."""
+    """stiebel_eltron_isg number class."""
 
     entity_description: StiebelEltronNumberEntityDescription
 
@@ -416,7 +421,7 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronNumberEntityDescription,
     ):
-        """Initialize the sensor."""
+        """Initialize the number."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
         self._attr_mode = number_mode(description)
@@ -437,13 +442,11 @@ class StiebelEltronISGNumberEntity(StiebelEltronISGEntity, NumberEntity):
         registers as ``raw * 0.1``, which is not exactly equal to the decimal
         value the user sets (e.g. ``71 * 0.1 != 7.1``).
         """
-        if self.write_field is None:
-            return
-
-        if self.entity_description.enforce_step:
+        description = self.entity_description
+        # The description refuses enforce_step without a native_step.
+        step = description.native_step if description.enforce_step else None
+        if step is not None:
             # Home Assistant validates bounds but does not enforce native_step.
-            step = self.native_step
-            assert step is not None
             steps = (value - self.native_min_value) / step
             # Home Assistant converts the value of an instance that shows
             # another unit, but offers the native step unchanged, so a value

@@ -102,16 +102,6 @@ async def test_number_writes_when_current_value_unknown() -> None:
     ]
 
 
-async def test_number_without_write_field_does_not_write() -> None:
-    """A number without a write field must never write."""
-    entity = _make_number(current=10.0)
-    entity.write_field = None
-
-    await entity.async_set_native_value(12.0)
-
-    assert entity.coordinator.writes == []
-
-
 async def test_number_shows_written_value_before_the_next_poll() -> None:
     """A written value must be reported at once, not only after the next poll."""
     entity = _make_number(current=10.0)
@@ -428,7 +418,21 @@ def test_an_explicit_mode_and_device_class_win_over_the_unit() -> None:
         mode=NumberMode.SLIDER,
         device_class=NumberDeviceClass.TEMPERATURE_DELTA,
         modbus_register=lambda _api: None,
+        write_field="explicit",
     )
 
     assert number_mode(description) == NumberMode.SLIDER
     assert number_device_class(description) == NumberDeviceClass.TEMPERATURE_DELTA
+
+
+@pytest.mark.parametrize("step", [None, 0, -0.5])
+def test_enforce_step_needs_a_positive_step(step: float | None) -> None:
+    """A step check without a positive step is refused when it is described."""
+    with pytest.raises(ValueError, match="enforce_step needs a positive native_step"):
+        StiebelEltronNumberEntityDescription(
+            key="bad_step",
+            modbus_register=lambda _api: None,
+            write_field="bad_step",
+            native_step=step,
+            enforce_step=True,
+        )

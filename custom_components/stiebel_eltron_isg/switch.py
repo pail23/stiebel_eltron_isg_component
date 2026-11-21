@@ -20,8 +20,8 @@ class StiebelEltronSwitchEntityDescription(SwitchEntityDescription):
     """Entity description for stiebel eltron with modbus register."""
 
     modbus_register: ValueAccessor
-    write_component: str | None = None
-    write_field: str | None = None
+    write_component: str
+    write_field: str
 
 
 SWITCH_TYPES = [
@@ -75,7 +75,7 @@ async def async_setup_entry(
 
 
 class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
-    """stiebel_eltron_isg Sensor class."""
+    """stiebel_eltron_isg switch class."""
 
     def __init__(
         self,
@@ -83,7 +83,7 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         config_entry: StiebelEltronConfigEntry,
         description: StiebelEltronSwitchEntityDescription,
     ):
-        """Initialize the sensor."""
+        """Initialize the switch."""
         self.entity_description = description
         super().__init__(coordinator, config_entry)
         self.modbus_register = description.modbus_register
@@ -119,9 +119,6 @@ class StiebelEltronISGSwitch(StiebelEltronISGEntity, SwitchEntity):
         after a write still shows the old state, and comparing with that would
         drop the command that reverses the write.
         """
-        if self.write_component is None or self.write_field is None:
-            return
-
         async with self.coordinator.write_lock:
             current = self.is_on
             if current is not None and current == bool(value):
