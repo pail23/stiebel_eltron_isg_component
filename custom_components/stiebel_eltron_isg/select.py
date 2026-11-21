@@ -1,6 +1,7 @@
 """Select platform for stiebel_eltron_isg."""
 
 from dataclasses import dataclass, replace
+from functools import cached_property
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -44,7 +45,7 @@ class StiebelEltronSelectEntityDescription(SelectEntityDescription):
 
     modbus_register: ValueAccessor
     write_component: str = "system_parameters"
-    write_field: str | None = None
+    write_field: str
     operation_modes: dict[int, str]
 
 
@@ -97,14 +98,6 @@ async def async_setup_entry(
     ])
 
 
-def get_key_from_value(d: dict[int, str], val: str) -> int | None:
-    """Return the value for a given key from a dictionary."""
-    keys = [k for k, v in d.items() if v == val]
-    if keys:
-        return keys[0]
-    return None
-
-
 class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
     """stiebel_eltron_isg select class."""
 
@@ -121,6 +114,11 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
         self.modbus_register = description.modbus_register
         self.write_component = description.write_component
         self.write_field = description.write_field
+
+    @cached_property
+    def _keys(self) -> dict[str, int]:
+        """Return the register value of each option, built once."""
+        return {option: key for key, option in self._options.items()}
 
     @property
     def options(self) -> list[str]:
@@ -139,8 +137,8 @@ class StiebelEltronISGSelectEntity(StiebelEltronISGEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Update the current selected option."""
-        key = get_key_from_value(self._options, option)
-        if key is None or self.write_field is None:
+        key = self._keys.get(option)
+        if key is None:
             return
 
         async with self.coordinator.write_lock:

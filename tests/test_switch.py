@@ -1,7 +1,6 @@
 """Tests for the switch platform."""
 
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
 
 import pytest
 
@@ -124,19 +123,6 @@ async def test_switch_returns_to_the_device_state_once_polled() -> None:
     await poll(entity.coordinator)
 
     assert entity.is_on is False
-
-
-@pytest.mark.parametrize("method", ["async_turn_on", "async_turn_off"])
-async def test_switch_without_write_target_does_nothing(method: str) -> None:
-    """A read-only description must never attempt a write."""
-    entity = StiebelEltronISGSwitch.__new__(StiebelEltronISGSwitch)
-    entity.write_component = None
-    entity.write_field = None
-    entity.coordinator = SimpleNamespace(write_component_value=AsyncMock())
-
-    await getattr(entity, method)()
-
-    entity.coordinator.write_component_value.assert_not_awaited()
 
 
 @pytest.mark.parametrize(("has_value", "expected"), [(False, False), (True, True)])

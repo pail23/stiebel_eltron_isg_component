@@ -244,7 +244,7 @@ async def async_setup_entry(
 
 
 class StiebelEltronISGBinarySensor(StiebelEltronISGEntity, BinarySensorEntity):
-    """integration_blueprint binary_sensor class."""
+    """stiebel_eltron_isg binary_sensor class."""
 
     def __init__(
         self,

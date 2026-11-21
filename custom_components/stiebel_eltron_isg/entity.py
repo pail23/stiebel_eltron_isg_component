@@ -1,10 +1,10 @@
 """StiebelEltronISGEntity class."""
 
 from collections.abc import Callable, Sequence
-from typing import Any
+from typing import Any, Protocol
 
 from homeassistant.core import callback
-from homeassistant.helpers.entity import Entity, EntityDescription
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -19,6 +19,15 @@ def build_unique_id(entry: StiebelEltronConfigEntry, key: str) -> str:
 # Reads one value from the model-specific API client. The client type is
 # erased to Any at this boundary, see StiebelEltronDataCoordinator.get_value.
 type ValueAccessor = Callable[[Any], float | int | None]
+
+
+class DescriptionWithRegister(Protocol):
+    """An entity description that reads its value through an accessor."""
+
+    @property
+    def modbus_register(self) -> ValueAccessor:
+        """Return the accessor for the entity's value."""
+        ...
 
 
 class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
@@ -60,7 +69,7 @@ class StiebelEltronISGEntity(CoordinatorEntity[StiebelEltronDataCoordinator]):
 
 
 @callback
-def async_add_when_served[D: EntityDescription](
+def async_add_when_served[D: DescriptionWithRegister](
     entry: StiebelEltronConfigEntry,
     component: str,
     descriptions: Sequence[D],
@@ -75,14 +84,12 @@ def async_add_when_served[D: EntityDescription](
     until the entry is reloaded, so the decision is repeated after every update
     until the entities were added. Nothing is listened for when the installed
     library does not have the component, because that cannot change.
-
-    ``descriptions`` must carry a ``modbus_register`` accessor.
     """
     coordinator = entry.runtime_data
     if not coordinator.offers_component(component):
         return
 
-    registers = [description.modbus_register for description in descriptions]  # type: ignore[attr-defined]
+    registers = [description.modbus_register for description in descriptions]
     remove_listener: Callable[[], None] | None = None
 
     @callback

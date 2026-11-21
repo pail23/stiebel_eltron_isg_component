@@ -92,6 +92,8 @@ from .const import (
     EFFICIENCY_HEATING_13_24_M,
     ELECTRICAL_BOOSTER_HEATING,
     ELECTRICAL_BOOSTER_HEATING_WATER,
+    ESTIMATED_WATER_INVERTER_COP_DHW_HP_1,
+    ESTIMATED_WATER_INVERTER_COP_HEATING_HP_1,
     EXHAUST_AIR_FAN_CONTROL,
     EXHAUST_AIR_FLOW_RATE,
     EXTRACT_AIR_ACTUAL_FAN_SPEED,
@@ -212,16 +214,14 @@ def create_temperature_entity_description(
 def create_energy_entity_description(
     key: str,
     modbus_register: ValueAccessor,
-    visible_default: bool = True,
 ) -> StiebelEltronSensorEntityDescription:
-    """Create an entry description for a energy sensor."""
+    """Create an entry description for an energy sensor."""
     return StiebelEltronSensorEntityDescription(
         key=key,
         translation_key=key,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.ENERGY,
-        entity_registry_visible_default=visible_default,
         modbus_register=modbus_register,
     )
 
@@ -1453,16 +1453,16 @@ WPMSYSTEM_SENSOR_TYPES = WPM_BASE_SENSOR_TYPES + WPM_POWER_CONSUMPTION_SENSOR_TY
 # separate from the device's energy windows and intentionally creates no LTS.
 WPMSYSTEM_ESTIMATED_COP_SENSOR_TYPES = [
     StiebelEltronSensorEntityDescription(
-        key="estimated_water_inverter_cop_heating_hp_1",
-        translation_key="estimated_water_inverter_cop_heating_hp_1",
+        key=ESTIMATED_WATER_INVERTER_COP_HEATING_HP_1,
+        translation_key=ESTIMATED_WATER_INVERTER_COP_HEATING_HP_1,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=None,
         modbus_register=lambda api: estimated_water_inverter_cop(api, "heating"),
     ),
     StiebelEltronSensorEntityDescription(
-        key="estimated_water_inverter_cop_dhw_hp_1",
-        translation_key="estimated_water_inverter_cop_dhw_hp_1",
+        key=ESTIMATED_WATER_INVERTER_COP_DHW_HP_1,
+        translation_key=ESTIMATED_WATER_INVERTER_COP_DHW_HP_1,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         state_class=None,
