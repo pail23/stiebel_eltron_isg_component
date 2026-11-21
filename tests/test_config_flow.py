@@ -58,8 +58,10 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["data"] == USER_INPUT
 
 
-async def test_user_flow_strips_the_host(hass: HomeAssistant) -> None:
-    """Whitespace pasted along with the address is not stored."""
+async def test_user_flow_strips_the_host(
+    hass: HomeAssistant, mock_modbus_connection_class: MagicMock
+) -> None:
+    """The controller check and the entry get the host without whitespace."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -69,6 +71,10 @@ async def test_user_flow_strips_the_host(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == USER_INPUT
+    # The controller check and the setup of the new entry both connect.
+    assert {call.args for call in mock_modbus_connection_class.call_args_list} == {
+        (ModbusTcpParams(host="1.1.1.1", port=502),)
+    }
 
 
 async def test_user_flow_with_padded_host_is_a_duplicate(
@@ -91,8 +97,9 @@ async def test_user_flow_with_padded_host_is_a_duplicate(
 async def test_reconfigure_flow_strips_the_host(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_modbus_connection_class: MagicMock,
 ) -> None:
-    """Reconfiguration stores the host without surrounding whitespace."""
+    """The controller check and the entry get the host without whitespace."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -105,6 +112,10 @@ async def test_reconfigure_flow_strips_the_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_HOST] == "2.2.2.2"
+    # The controller check and the reload of the entry both connect.
+    assert {call.args for call in mock_modbus_connection_class.call_args_list} == {
+        (ModbusTcpParams(host="2.2.2.2", port=502),)
+    }
 
     await hass.async_block_till_done()
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
