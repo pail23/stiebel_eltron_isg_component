@@ -1,5 +1,7 @@
 [project]
 name = "stiebel-eltron-isg-component"
+# uv requires a version. Releases do not read it: scripts/build_release.py
+# writes the release version into manifest.json.
 version = "2025.1.0"
 description = "Home assistant component for the Stiebel Eltron ISG"
 readme = "README.md"
@@ -48,7 +50,6 @@ addopts = [
 
 [tool.ruff]
 target-version = "py314"
-exclude = ["custom_components/stiebel_eltron_isg/python_stiebel_eltron"]
 format.preview = true
 
 [tool.ruff.lint]

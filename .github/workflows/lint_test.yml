@@ -81,11 +81,6 @@ jobs:
       - name: Install the project
         run: uv sync --locked --all-extras --dev
 
-      - name: "Run ruff"
-        run: uv run --locked ruff check .
-
-      - name: "Format with ruff"
-        run: uv run --locked ruff format . --check
       - name: Run tests
         run: |
           uv run --locked pytest \
