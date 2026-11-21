@@ -168,15 +168,72 @@
             }
         },
         "climate": {
-            "climate": {
+            "climate_hk_1": {
                 "state_attributes": {
                     "preset_mode": {
-                        "default": "mdi:thermometer",
                         "state": {
-                            "water_heating": "mdi:water-thermometer",
+                            "auto": "mdi:thermostat-auto",
                             "emergency": "mdi:alert",
+                            "manual": "mdi:hand-back-right",
+                            "program": "mdi:clock-outline",
                             "ready": "mdi:snowflake-thermometer",
-                            "program": "mdi:clock-outline"
+                            "water_heating": "mdi:water-thermometer"
+                        }
+                    }
+                }
+            },
+            "climate_hk_2": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "auto": "mdi:thermostat-auto",
+                            "emergency": "mdi:alert",
+                            "manual": "mdi:hand-back-right",
+                            "program": "mdi:clock-outline",
+                            "ready": "mdi:snowflake-thermometer",
+                            "water_heating": "mdi:water-thermometer"
+                        }
+                    }
+                }
+            },
+            "climate_hk_3": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "auto": "mdi:thermostat-auto",
+                            "emergency": "mdi:alert",
+                            "manual": "mdi:hand-back-right",
+                            "program": "mdi:clock-outline",
+                            "ready": "mdi:snowflake-thermometer",
+                            "water_heating": "mdi:water-thermometer"
+                        }
+                    }
+                }
+            },
+            "climate_hk_4": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "auto": "mdi:thermostat-auto",
+                            "emergency": "mdi:alert",
+                            "manual": "mdi:hand-back-right",
+                            "program": "mdi:clock-outline",
+                            "ready": "mdi:snowflake-thermometer",
+                            "water_heating": "mdi:water-thermometer"
+                        }
+                    }
+                }
+            },
+            "climate_hk_5": {
+                "state_attributes": {
+                    "preset_mode": {
+                        "state": {
+                            "auto": "mdi:thermostat-auto",
+                            "emergency": "mdi:alert",
+                            "manual": "mdi:hand-back-right",
+                            "program": "mdi:clock-outline",
+                            "ready": "mdi:snowflake-thermometer",
+                            "water_heating": "mdi:water-thermometer"
                         }
                     }
                 }
