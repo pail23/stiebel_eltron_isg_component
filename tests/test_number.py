@@ -425,12 +425,14 @@ def test_an_explicit_mode_and_device_class_win_over_the_unit() -> None:
     assert number_device_class(description) == NumberDeviceClass.TEMPERATURE_DELTA
 
 
-def test_enforce_step_needs_a_step() -> None:
-    """A step check without a step is refused when the description is built."""
-    with pytest.raises(ValueError, match="enforce_step needs a native_step"):
+@pytest.mark.parametrize("step", [None, 0, -0.5])
+def test_enforce_step_needs_a_positive_step(step: float | None) -> None:
+    """A step check without a positive step is refused when it is described."""
+    with pytest.raises(ValueError, match="enforce_step needs a positive native_step"):
         StiebelEltronNumberEntityDescription(
-            key="no_step",
+            key="bad_step",
             modbus_register=lambda _api: None,
-            write_field="no_step",
+            write_field="bad_step",
+            native_step=step,
             enforce_step=True,
         )

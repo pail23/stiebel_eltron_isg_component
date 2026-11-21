@@ -81,9 +81,9 @@ class StiebelEltronNumberEntityDescription(NumberEntityDescription):
     enforce_step: bool = False
 
     def __post_init__(self) -> None:
-        """Refuse a step check without a step to check against."""
-        if self.enforce_step and self.native_step is None:
-            raise ValueError(f"{self.key}: enforce_step needs a native_step")
+        """Refuse a step check without a positive step to check against."""
+        if self.enforce_step and (self.native_step is None or self.native_step <= 0):
+            raise ValueError(f"{self.key}: enforce_step needs a positive native_step")
 
 
 def number_mode(description: StiebelEltronNumberEntityDescription) -> NumberMode:
