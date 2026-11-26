@@ -22,9 +22,10 @@ DOCUMENTATION_REFERENCE = re.compile(
 )
 MARKDOWN_HEADING = re.compile(r"^#{1,6}\s+(?P<title>.+?)\s*#*$")
 
-# Independently verified on 2026-10-10: AST extraction of ALL_RULES from
-# https://github.com/home-assistant/core/blob/HEAD/script/hassfest/quality_scale.py
-# (Home Assistant 2026.10.0) matched all 54 names below and in the YAML.
+# Independently verified on 2026-11-21: AST extraction of ALL_RULES from
+# https://github.com/home-assistant/core/blob/2026.11.2/script/hassfest/quality_scale.py
+# (Home Assistant 2026.11.2) matched all 54 names below and in the YAML,
+# unchanged from 2026.10.0.
 # This offline test checks local consistency, not upstream provenance. When
 # changing either inventory or its pin, repeat the independent source comparison;
 # do not merely edit both local inventories until they agree.
@@ -213,8 +214,9 @@ def test_quality_scale_is_explicitly_a_custom_self_assessment(
     assert separator
     assert "custom integration" in header.lower()
     assert "self-assessment" in header.lower()
-    assert "Home Assistant Core 2026.10.0" in header
-    assert "HEAD" in header
+    assert "Home Assistant Core 2026.11.2" in header
+    # The source link names the pinned tag, not a moving branch.
+    assert "/blob/2026.11.2/" in header
 
 
 def test_manifest_does_not_claim_an_official_quality_tier() -> None:

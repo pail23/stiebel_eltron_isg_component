@@ -77,6 +77,11 @@ _DESCRIPTION_LISTS: list[tuple[str, str, list[Any]]] = [
     ("WPM_AMOUNT_OF_HEAT_SENSOR_TYPES", WPM, sensor.WPM_AMOUNT_OF_HEAT_SENSOR_TYPES),
     # Created only when the installed library offers the ventilation components.
     ("THZ_VENTILATION_SENSOR_TYPES", WPM, sensor.THZ_VENTILATION_SENSOR_TYPES),
+    (
+        "WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES",
+        WPM,
+        sensor.WPMSYSTEM_HEATING_CIRCUIT_4_5_SENSOR_TYPES,
+    ),
     ("THZ_VENTILATION_NUMBER_TYPES", WPM, number.THZ_VENTILATION_NUMBER_TYPES),
     # WPMsystem only, see the comment on the list itself.
     ("WPM_INVERTER_POWER_SENSOR_TYPES", WPM, sensor.WPM_INVERTER_POWER_SENSOR_TYPES),
